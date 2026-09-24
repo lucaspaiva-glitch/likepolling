@@ -23,11 +23,24 @@ body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);
 
 .terminal{display:grid;min-height:100vh;gap:0;
   grid-template-columns:repeat(12,minmax(0,1fr));
-  grid-template-rows:auto auto 1fr;
+  grid-template-rows:auto auto auto 1fr;
   grid-template-areas:
+    "nav    nav    nav    nav    nav    nav    nav    nav    nav    nav    nav    nav"
     "tape   tape   tape   tape   tape   tape   tape   tape   tape   tape   tape   tape"
     "auth   auth   auth   auth   views  views  views  views  views  win    win    win"
     "log    log    log    log    log    log    log    log    log    win2   win2   win2"}
+.nav{grid-area:nav;display:flex;align-items:center;justify-content:space-between;gap:12px 20px;flex-wrap:wrap;padding:12px 20px;border-bottom:1px solid var(--rule)}
+.nav strong{font-weight:600}
+.pick{display:flex;align-items:center;gap:12px}
+.pick label{color:var(--mute)}
+.pick select{font:inherit;font-weight:600;color:var(--ink);background-color:var(--bg);border:2px solid var(--ink);border-radius:0;padding:8px 40px 8px 12px;min-width:240px;cursor:pointer;-webkit-appearance:none;appearance:none;background-repeat:no-repeat;background-position:right 12px center;background-size:12px 8px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%2322262B' stroke-width='2'/%3E%3C/svg%3E")}
+.pick select:hover,.pick select:focus-visible{box-shadow:3px 3px 0 var(--ink)}
+.pick option,.pick optgroup{background:#F4F1EA;color:#22262B;font-family:inherit}
+.pick optgroup{font-weight:600}
+.panel{transition:opacity .18s ease}
+.terminal.swapping #auth,.terminal.swapping #views,.terminal.swapping #log,.terminal.swapping #win2{opacity:0}
+@media (max-width:860px){.pick{width:100%}.pick select{flex:1;min-width:0}}
+@media (prefers-reduced-motion:reduce){.panel{transition:none}}
 .tape{grid-area:tape;background:var(--tape);color:var(--tape-ink);overflow:hidden;white-space:nowrap;
   padding:10px 0;font-weight:500;letter-spacing:.04em}
 .tape-track{display:inline-flex;animation:scroll 28s linear infinite;will-change:transform}
@@ -62,7 +75,7 @@ dt{color:var(--mute)}dd{margin:0;text-align:right;font-variant-numeric:tabular-n
 
 @media (max-width:860px){
   .terminal{grid-template-columns:1fr;grid-template-rows:none;
-    grid-template-areas:"tape" "auth" "views" "win" "win2" "log"}
+    grid-template-areas:"nav" "tape" "auth" "views" "win" "win2" "log"}
   .panel{border-right:0}
 }
 @media (prefers-reduced-motion:reduce){
@@ -72,8 +85,12 @@ dt{color:var(--mute)}dd{margin:0;text-align:right;font-variant-numeric:tabular-n
 </style>
 </head>
 <body>
-<main class="terminal">
-  <div class="tape" role="marquee" aria-label="BOT AUTHENTICITY: 89%, CAZÉTV: 240K PEAK, B3 WINDOW: ACTIVE">
+<main class="terminal" id="terminal">
+  <header class="nav">
+    <strong>Live data terminal</strong>
+    <div class="pick"><label for="entity">Entity</label><select id="entity"></select></div>
+  </header>
+  <div class="tape" id="tapeBox" role="marquee" aria-label="BOT AUTHENTICITY: 89%, CAZÉTV: 240K PEAK, B3 WINDOW: ACTIVE">
     <div class="tape-track" aria-hidden="true" id="track"></div>
   </div>
 
@@ -86,11 +103,11 @@ dt{color:var(--mute)}dd{margin:0;text-align:right;font-variant-numeric:tabular-n
 
   <section class="panel" id="views" aria-labelledby="t-views">
     <h2 id="t-views">CAZÉTV viewers</h2>
-    <div class="big"><span id="viewV">238.4</span>K</div>
+    <div class="big"><span id="viewV">238.4K</span></div>
     <svg class="spark" viewBox="0 0 120 40" preserveAspectRatio="none" aria-hidden="true">
       <line x1="0" x2="120" y1="2" y2="2"/><polyline id="spark" points=""/>
     </svg>
-    <div class="sub">Peak 240K, dashed line</div>
+    <div class="sub" id="peakNote">Peak 240K, dashed line</div>
   </section>
 
   <section class="panel" id="win" aria-labelledby="t-win">
@@ -108,7 +125,7 @@ dt{color:var(--mute)}dd{margin:0;text-align:right;font-variant-numeric:tabular-n
   <section class="panel" id="win2" aria-labelledby="t-sum">
     <h2 id="t-sum">Session</h2>
     <dl>
-      <dt>Peak viewers</dt><dd>240K</dd>
+      <dt id="sPeakL">Peak viewers</dt><dd id="sPeak">240K</dd>
       <dt>Authenticity</dt><dd id="sAuth">89%</dd>
       <dt>Flagged accounts</dt><dd id="sFlag">1,204</dd>
       <dt>Feed updated</dt><dd id="sTime">--:--:--</dd>
@@ -118,46 +135,104 @@ dt{color:var(--mute)}dd{margin:0;text-align:right;font-variant-numeric:tabular-n
 
 <script>
 (function(){
-  var items=['BOT AUTHENTICITY: <b>89%</b>','CAZÉTV: <b>240K PEAK</b>','B3 WINDOW: <b>ACTIVE</b>'];
-  var seg=items.map(function(t){return '<span>'+t+'</span>'}).join('<span>|</span>');
-  var one=seg+'<span>|</span>';
-  document.getElementById('track').innerHTML=one+one+one+one;
-
   var $=function(i){return document.getElementById(i)};
+  var REG=[
+   {label:'Live Broadcasters',items:[
+    {id:'cazetv',name:'CazéTV',metric:'viewers',auth:89,peak:240,base:238.4,flag:1204,
+     spark:[201,208,214,219,226,231,236,239,240,238,239,237,239,238],
+     log:['Chat burst from 3 accounts scored as human','Flagged 6 accounts with repeated phrasing','Viewer count rose in last 10 seconds','Signup spike checked against known bot patterns','B3 window heartbeat received','Cleared 4 accounts after manual sample']},
+    {id:'flow',name:'Flow Podcast',metric:'viewers',auth:93,peak:118,base:104.2,flag:640,
+     spark:[78,82,88,91,95,99,104,108,112,110,107,105,106,104],
+     log:['Guest segment lifted concurrent viewers','Clip reposts flagged from 12 new accounts','Live chat pace steady in human range','Sponsor read drew a spike in replies','Cleared 3 accounts after manual sample','B3 window heartbeat received']},
+    {id:'podpah',name:'Podpah',metric:'viewers',auth:91,peak:86,base:71.5,flag:388,
+     spark:[52,55,58,61,64,68,72,76,74,73,71,72,70,71],
+     log:['Replay traffic separated from live viewers','Flagged 4 accounts posting identical links','Comment growth matches audience size','Guest name trending in live chat','Cleared 2 accounts after manual sample','B3 window heartbeat received']}]},
+   {label:'Cultural Creators',items:[
+    {id:'alok',name:'Alok',metric:'attention',auth:84,peak:412,base:388,flag:2210,
+     spark:[290,310,335,352,371,390,405,412,401,396,392,389,390,388],
+     log:['Set clip shared by 40 fan accounts','Flagged 22 accounts boosting a hashtag','Mentions per hour up after festival post','Fan chat scored mostly human','Cleared 9 accounts after manual sample','B3 window heartbeat received']},
+    {id:'anitta',name:'Anitta',metric:'attention',auth:78,peak:1350,base:1210,flag:5870,
+     spark:[880,940,1010,1080,1150,1230,1290,1350,1300,1260,1230,1215,1220,1210],
+     log:['Release teaser drove a mention surge','Flagged 140 accounts in a coordinated reply thread','Engagement rate holds above baseline','Fan translations counted as human traffic','Cleared 31 accounts after manual sample','B3 window heartbeat received']},
+    {id:'casimiro',name:'Casimiro',metric:'attention',auth:90,peak:305,base:271,flag:910,
+     spark:[180,205,226,244,259,281,296,305,290,282,276,272,273,271],
+     log:['Stream clip cross-posted to short video','Flagged 8 accounts spamming emotes','Mentions per hour steady after match','Chat cadence scored as human','Cleared 5 accounts after manual sample','B3 window heartbeat received']}]},
+   {label:'Corporate Brands',items:[
+    {id:'nubank',name:'Nubank',metric:'attention',auth:72,peak:640,base:588,flag:3310,
+     spark:[470,495,520,548,575,610,640,622,604,595,590,586,589,588],
+     log:['Complaint thread shows bot-like repetition','Flagged 88 accounts amplifying a promo hashtag','App feature mentions rose this hour','Support replies matched to real customers','Cleared 17 accounts after manual sample','B3 window heartbeat received']},
+    {id:'mercado',name:'Mercado Livre',metric:'attention',auth:81,peak:455,base:402,flag:2740,
+     spark:[330,348,366,384,401,428,455,431,415,408,404,401,403,402],
+     log:['Sale campaign lifted mentions per hour','Flagged 64 accounts posting duplicate reviews','Delivery complaints scored as human','Influencer promo checked for paid boosting','Cleared 12 accounts after manual sample','B3 window heartbeat received']},
+    {id:'itau',name:'Itaú',metric:'attention',auth:86,peak:298,base:264,flag:1450,
+     spark:[205,218,229,240,252,268,298,280,272,268,266,263,265,264],
+     log:['Earnings mention spike tracked','Flagged 21 accounts repeating investor claims','Branch and app posts scored mostly human','Sponsorship post drew steady replies','Cleared 8 accounts after manual sample','B3 window heartbeat received']}]}
+  ];
+
+  var flat={},sel=$('entity'),cur,authF,views,flagged,pts,secs=899,lastTape='',lines=$('lines');
+  REG.forEach(function(g){
+    var og=document.createElement('optgroup');og.label=g.label;
+    g.items.forEach(function(e){flat[e.id]=e;var o=document.createElement('option');o.value=e.id;o.textContent=e.name;og.appendChild(o)});
+    sel.appendChild(og);
+  });
+
+  function pad(n){return n<10?'0'+n:''+n}
+  function stamp(){var d=new Date();return pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds())}
+  function fmt(k){return k>=1000?(k/1000).toFixed(2)+'M':k.toFixed(1)+'K'}
+  function fmtP(k){return k>=1000?(k/1000)+'M':Math.round(k)+'K'}
+
   var bar=$('bar'),i;for(i=0;i<20;i++)bar.appendChild(document.createElement('i'));
   function setBar(p){var n=Math.round(p/5);[].forEach.call(bar.children,function(e,k){e.className=k<n?'on':''})}
 
-  var auth=89,views=238400,flagged=1204,secs=899,pts=[];
-  for(i=0;i<40;i++)pts.push(238000+Math.random()*2000);
-  var msgs=['Chat burst from 3 accounts scored as human','Flagged 6 accounts with repeated phrasing','Viewer count rose in last 10 seconds','Signup spike checked against known bot patterns','B3 window heartbeat received','Cleared 4 accounts after manual sample'];
-  var lines=$('lines');
-  function pad(n){return n<10?'0'+n:''+n}
-  function stamp(){var d=new Date();return pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds())}
+  function tape(){
+    var a=Math.round(authF),key=cur.id+a;if(key===lastTape)return;lastTape=key;
+    var items=['BOT AUTHENTICITY: <b>'+a+'%</b>',cur.name.toUpperCase()+': <b>'+fmtP(cur.peak)+' PEAK</b>','B3 WINDOW: <b>ACTIVE</b>'];
+    var one=items.map(function(t){return '<span>'+t+'</span>'}).join('<span>|</span>')+'<span>|</span>';
+    $('track').innerHTML=one+one+one+one;
+    $('tapeBox').setAttribute('aria-label',items.join(', ').replace(/<\/?b>/g,''));
+  }
   function log(){
     var li=document.createElement('li');
-    li.innerHTML='<time>'+stamp()+'</time><span>'+msgs[Math.floor(Math.random()*msgs.length)]+'</span>';
+    li.innerHTML='<time>'+stamp()+'</time><span>'+cur.log[Math.floor(Math.random()*cur.log.length)]+'</span>';
     lines.appendChild(li);while(lines.children.length>8)lines.removeChild(lines.firstChild);
   }
   function spark(){
-    var lo=236000,hi=240000;
+    var hi=cur.peak,lo=Math.min.apply(null,pts)-(hi-Math.min.apply(null,pts))*.15-1;
     $('spark').setAttribute('points',pts.map(function(v,k){
       return (k/(pts.length-1)*120).toFixed(1)+','+(38-(v-lo)/(hi-lo)*34).toFixed(1)}).join(' '));
   }
-  function tick(){
-    auth=Math.max(87,Math.min(91,auth+(Math.random()-.5)*.6));
-    views=Math.max(236000,Math.min(240000,views+(Math.random()-.5)*900));
-    flagged+=Math.random()<.5?1:0;
-    secs=secs>0?secs-1:899;
-    pts.push(views);pts.shift();
-    $('authV').textContent=Math.round(auth);$('sAuth').textContent=Math.round(auth)+'%';
-    $('viewV').textContent=(views/1000).toFixed(1);
-    $('sFlag').textContent=flagged.toLocaleString('en-US');
+  function render(e){
+    cur=e;authF=e.auth;views=e.base;flagged=e.flag;pts=e.spark.slice();lastTape='';
+    var att=e.metric==='attention';
+    $('t-views').textContent=e.name+(att?' attention':' viewers');
+    $('peakNote').textContent=(att?'Mentions per hour. ':'')+'Peak '+fmtP(e.peak)+', dashed line';
+    $('sPeakL').textContent=att?'Peak attention':'Peak viewers';
+    $('sPeak').textContent=fmtP(e.peak);
+    lines.innerHTML='';for(var k=0;k<6;k++)log();
+    tick(true);
+  }
+  function tick(fresh){
+    if(!fresh){
+      authF=Math.max(cur.auth-1.4,Math.min(cur.auth+1.4,authF+(Math.random()-.5)*.6));
+      views=Math.max(cur.base*.97,Math.min(cur.peak,views+(Math.random()-.5)*cur.peak*.004));
+      flagged+=Math.random()<.5?1:0;
+      pts.push(views);pts.shift();
+    }
+    secs=fresh?secs:(secs>0?secs-1:899);
+    $('authV').textContent=Math.round(authF);$('sAuth').textContent=Math.round(authF)+'%';
+    $('viewV').textContent=fmt(views);
+    $('sFlag').textContent=Math.round(flagged).toLocaleString('en-US');
     $('clock').textContent=pad(Math.floor(secs/60))+':'+pad(secs%60);
     $('sTime').textContent=stamp();
-    setBar(auth);spark();
+    setBar(authF);spark();tape();
   }
-  for(i=0;i<6;i++)log();tick();
-  setInterval(tick,1000);
+
+  sel.addEventListener('change',function(){
+    var t=$('terminal');t.classList.add('swapping');
+    setTimeout(function(){render(flat[sel.value]);t.classList.remove('swapping')},180);
+  });
+  render(flat.cazetv);
+  setInterval(function(){tick(false)},1000);
   setInterval(log,2600);
 })();
 </script>
