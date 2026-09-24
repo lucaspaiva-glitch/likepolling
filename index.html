@@ -1,138 +1,165 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Like Polling | Terminal</title>
-    <style>
-        /* Global & Aesthetic Style */
-        :root {
-            --cardboard: #F4F1EA;
-            --pure-green: #00FF00;
-            --pure-red: #FF0000;
-            --text-dark: #111111;
-        }
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Live data terminal</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root{
+  box-sizing:border-box;
+  --bg:#F4F1EA; --ink:#22262B; --mute:#6B6F73; --rule:#22262B;
+  --live:#1E4BD8; --ok:#1F7A4D; --tape:#22262B; --tape-ink:#F4F1EA;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){--bg:#F4F1EA;--ink:#22262B;--mute:#6B6F73;--rule:#22262B}
+}
+:root[data-theme="dark"]{--bg:#F4F1EA;--ink:#22262B;--mute:#6B6F73;--rule:#22262B}
+*,*::before,*::after{box-sizing:inherit}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);
+  font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:14px;line-height:1.5}
 
-        body, html {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            font-family: "Courier New", Courier, monospace;
-            background-color: var(--cardboard);
-            color: var(--text-dark);
-            overflow: hidden; /* Hide default scrollbar */
-        }
+.terminal{display:grid;min-height:100vh;gap:0;
+  grid-template-columns:repeat(12,minmax(0,1fr));
+  grid-template-rows:auto auto 1fr;
+  grid-template-areas:
+    "tape   tape   tape   tape   tape   tape   tape   tape   tape   tape   tape   tape"
+    "auth   auth   auth   auth   views  views  views  views  views  win    win    win"
+    "log    log    log    log    log    log    log    log    log    win2   win2   win2"}
+.tape{grid-area:tape;background:var(--tape);color:var(--tape-ink);overflow:hidden;white-space:nowrap;
+  padding:10px 0;font-weight:500;letter-spacing:.04em}
+.tape-track{display:inline-flex;animation:scroll 28s linear infinite;will-change:transform}
+.tape:hover .tape-track{animation-play-state:paused}
+.tape span{padding-right:4ch}
+.tape b{color:#8FB0FF;font-weight:600}
+@keyframes scroll{to{transform:translateX(-50%)}}
 
-        /* Subtle CSS Noise Filter */
-        body::before {
-            content: "";
-            position: fixed;
-            top: 0; left: 0; width: 100vw; height: 100vh;
-            background-image: url('data:image/svg+xml;utf8,%3Csvg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noise"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23noise)" opacity="0.05"/%3E%3C/svg%3E');
-            pointer-events: none;
-            z-index: 9999;
-        }
+.panel{padding:20px;border-bottom:1px solid var(--rule);border-right:1px solid var(--rule);min-width:0}
+.panel h2{margin:0 0 14px;font-size:13px;font-weight:500;color:var(--mute)}
+.big{font-size:clamp(44px,7vw,84px);font-weight:600;line-height:1;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.sub{margin-top:8px;color:var(--mute)}
+#auth{grid-area:auth}#views{grid-area:views}#win{grid-area:win;border-right:0}
+#log{grid-area:log;overflow:hidden}#win2{grid-area:win2;border-right:0}
 
-        /* Viewport Mechanics: Seamless Two-Page Layout */
-        .scroll-container {
-            height: 100vh;
-            overflow-y: scroll;
-            scroll-snap-type: y mandatory;
-        }
+.bar{display:grid;grid-template-columns:repeat(20,1fr);gap:3px;margin-top:18px}
+.bar i{height:14px;background:var(--rule);opacity:.14}
+.bar i.on{background:var(--live);opacity:1}
+.spark{width:100%;height:64px;margin-top:16px;display:block}
+.spark polyline{fill:none;stroke:var(--live);stroke-width:1.5;vector-effect:non-scaling-stroke}
+.spark line{stroke:var(--ink);stroke-dasharray:3 4;opacity:.4;vector-effect:non-scaling-stroke}
 
-        section {
-            height: 100vh;
-            width: 100vw;
-            scroll-snap-align: start;
-            display: grid;
-            padding: 2rem;
-            box-sizing: border-box;
-            position: relative;
-        }
+.state{display:flex;align-items:center;gap:10px;font-size:clamp(24px,3vw,34px);font-weight:600;color:var(--ok)}
+.dot{width:12px;height:12px;background:var(--ok);border-radius:50%;animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.25}}
+dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:6px 16px}
+dt{color:var(--mute)}dd{margin:0;text-align:right;font-variant-numeric:tabular-nums}
 
-        /* Layout Structure & Navigation */
-        .global-nav {
-            position: absolute;
-            top: 2rem;
-            right: 2rem;
-            display: grid;
-            grid-template-columns: repeat(3, auto);
-            gap: 15px;
-            font-weight: bold;
-            z-index: 100;
-        }
+#lines{margin:0;padding:0;list-style:none;height:230px;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end}
+#lines li{display:grid;grid-template-columns:9ch 1fr;gap:12px;padding:3px 0;border-top:1px dashed rgba(34,38,43,.25)}
+#lines time{color:var(--mute)}
 
-        .global-nav span { cursor: pointer; }
-        .global-nav span:hover { text-decoration: underline; }
-
-        /* Chromatographic Rules: Trend Deltas */
-        .delta-positive { color: var(--pure-green); }
-        .delta-negative { color: var(--pure-red); }
-
-        /* Modular Container Boundaries */
-        .data-module {
-            border: 1px solid var(--text-dark);
-            padding: 1.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .newsstand-module {
-            border: 2px solid var(--text-dark);
-            padding: 2rem;
-            max-width: 400px;
-            text-align: center;
-        }
-
-        h1, h2, h3 { text-transform: uppercase; margin-top: 0; }
-    </style>
+@media (max-width:860px){
+  .terminal{grid-template-columns:1fr;grid-template-rows:none;
+    grid-template-areas:"tape" "auth" "views" "win" "win2" "log"}
+  .panel{border-right:0}
+}
+@media (prefers-reduced-motion:reduce){
+  .tape{overflow-x:auto}.tape-track{animation:none}.dot{animation:none}
+}
+:focus-visible{outline:2px solid var(--live);outline-offset:2px}
+</style>
 </head>
 <body>
+<main class="terminal">
+  <div class="tape" role="marquee" aria-label="BOT AUTHENTICITY: 89%, CAZÉTV: 240K PEAK, B3 WINDOW: ACTIVE">
+    <div class="tape-track" aria-hidden="true" id="track"></div>
+  </div>
 
-    <div class="scroll-container">
-        
-        <!-- TOP PAGE: THE TERMINAL (The Melody) -->
-        <section id="terminal">
-            <div class="global-nav">
-                <span>EN</span> | <span>PT</span> | <span>ES</span>
-            </div>
-            
-            <div>
-                <h1>Like Polling Terminal</h1>
-                <p>REAL-TIME CULTURAL SENTIMENT & BOT QUANTIZATION</p>
-                <hr style="border-color: #111; margin-bottom: 2rem;">
+  <section class="panel" id="auth" aria-labelledby="t-auth">
+    <h2 id="t-auth">Bot authenticity</h2>
+    <div class="big"><span id="authV">89</span>%</div>
+    <div class="bar" id="bar" aria-hidden="true"></div>
+    <div class="sub">Share of chat traffic judged human</div>
+  </section>
 
-                <div class="data-module">
-                    <h3>CazéTV Broadcast</h3>
-                    <p>Concurrent Attention: 145,230 VIEWS</p>
-                    <p>Velocity: <span class="delta-positive">▲ +14.2%</span></p>
-                </div>
+  <section class="panel" id="views" aria-labelledby="t-views">
+    <h2 id="t-views">CAZÉTV viewers</h2>
+    <div class="big"><span id="viewV">238.4</span>K</div>
+    <svg class="spark" viewBox="0 0 120 40" preserveAspectRatio="none" aria-hidden="true">
+      <line x1="0" x2="120" y1="2" y2="2"/><polyline id="spark" points=""/>
+    </svg>
+    <div class="sub">Peak 240K, dashed line</div>
+  </section>
 
-                <div class="data-module">
-                    <h3>X/Twitter Risk Index</h3>
-                    <p>Bot-to-Human Authenticity: HIGH RISK</p>
-                    <p>Organic Volume: <span class="delta-negative">▼ -8.4%</span></p>
-                </div>
-            </div>
-        </section>
+  <section class="panel" id="win" aria-labelledby="t-win">
+    <h2 id="t-win">B3 window</h2>
+    <div class="state"><span class="dot"></span>Active</div>
+    <div class="big" style="margin-top:16px;font-size:clamp(32px,4vw,52px)" id="clock">14:59</div>
+    <div class="sub">Time left in window</div>
+  </section>
 
-        <!-- BOTTOM PAGE: THE NEWSSTAND (The Bass) -->
-        <section id="newsstand" style="align-content: center; justify-items: center;">
-            <div class="newsstand-module">
-                <h2>The Newsstand</h2>
-                <p><i>[ 1950s Vendor Character Illustration Placeholder ]</i></p>
-                <hr style="border-color: #111; margin: 1.5rem 0;">
-                
-                <h3>Closing Bell Briefing</h3>
-                <p>Daily Sentiment Analytics Pass</p>
-                <p><strong>$2.00</strong></p>
-                
-                <button style="background:#111; color:#F4F1EA; padding:10px 20px; font-family:inherit; cursor:pointer; border:none; margin-top:10px;">
-                    SECURE VIA STRIPE / PIX
-                </button>
-            </div>
-        </section>
+  <section class="panel" id="log" aria-labelledby="t-log">
+    <h2 id="t-log">Event feed</h2>
+    <ul id="lines" aria-live="off"></ul>
+  </section>
 
-    </div>
+  <section class="panel" id="win2" aria-labelledby="t-sum">
+    <h2 id="t-sum">Session</h2>
+    <dl>
+      <dt>Peak viewers</dt><dd>240K</dd>
+      <dt>Authenticity</dt><dd id="sAuth">89%</dd>
+      <dt>Flagged accounts</dt><dd id="sFlag">1,204</dd>
+      <dt>Feed updated</dt><dd id="sTime">--:--:--</dd>
+    </dl>
+  </section>
+</main>
 
+<script>
+(function(){
+  var items=['BOT AUTHENTICITY: <b>89%</b>','CAZÉTV: <b>240K PEAK</b>','B3 WINDOW: <b>ACTIVE</b>'];
+  var seg=items.map(function(t){return '<span>'+t+'</span>'}).join('<span>|</span>');
+  var one=seg+'<span>|</span>';
+  document.getElementById('track').innerHTML=one+one+one+one;
+
+  var $=function(i){return document.getElementById(i)};
+  var bar=$('bar'),i;for(i=0;i<20;i++)bar.appendChild(document.createElement('i'));
+  function setBar(p){var n=Math.round(p/5);[].forEach.call(bar.children,function(e,k){e.className=k<n?'on':''})}
+
+  var auth=89,views=238400,flagged=1204,secs=899,pts=[];
+  for(i=0;i<40;i++)pts.push(238000+Math.random()*2000);
+  var msgs=['Chat burst from 3 accounts scored as human','Flagged 6 accounts with repeated phrasing','Viewer count rose in last 10 seconds','Signup spike checked against known bot patterns','B3 window heartbeat received','Cleared 4 accounts after manual sample'];
+  var lines=$('lines');
+  function pad(n){return n<10?'0'+n:''+n}
+  function stamp(){var d=new Date();return pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds())}
+  function log(){
+    var li=document.createElement('li');
+    li.innerHTML='<time>'+stamp()+'</time><span>'+msgs[Math.floor(Math.random()*msgs.length)]+'</span>';
+    lines.appendChild(li);while(lines.children.length>8)lines.removeChild(lines.firstChild);
+  }
+  function spark(){
+    var lo=236000,hi=240000;
+    $('spark').setAttribute('points',pts.map(function(v,k){
+      return (k/(pts.length-1)*120).toFixed(1)+','+(38-(v-lo)/(hi-lo)*34).toFixed(1)}).join(' '));
+  }
+  function tick(){
+    auth=Math.max(87,Math.min(91,auth+(Math.random()-.5)*.6));
+    views=Math.max(236000,Math.min(240000,views+(Math.random()-.5)*900));
+    flagged+=Math.random()<.5?1:0;
+    secs=secs>0?secs-1:899;
+    pts.push(views);pts.shift();
+    $('authV').textContent=Math.round(auth);$('sAuth').textContent=Math.round(auth)+'%';
+    $('viewV').textContent=(views/1000).toFixed(1);
+    $('sFlag').textContent=flagged.toLocaleString('en-US');
+    $('clock').textContent=pad(Math.floor(secs/60))+':'+pad(secs%60);
+    $('sTime').textContent=stamp();
+    setBar(auth);spark();
+  }
+  for(i=0;i<6;i++)log();tick();
+  setInterval(tick,1000);
+  setInterval(log,2600);
+})();
+</script>
 </body>
 </html>
