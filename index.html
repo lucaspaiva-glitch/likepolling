@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Like Polling | Terminal</title>
+    <style>
+        /* Global & Aesthetic Style */
+        :root {
+            --cardboard: #F4F1EA;
+            --pure-green: #00FF00;
+            --pure-red: #FF0000;
+            --text-dark: #111111;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: "Courier New", Courier, monospace;
+            background-color: var(--cardboard);
+            color: var(--text-dark);
+            overflow: hidden; /* Hide default scrollbar */
+        }
+
+        /* Subtle CSS Noise Filter */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background-image: url('data:image/svg+xml;utf8,%3Csvg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noise"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23noise)" opacity="0.05"/%3E%3C/svg%3E');
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        /* Viewport Mechanics: Seamless Two-Page Layout */
+        .scroll-container {
+            height: 100vh;
+            overflow-y: scroll;
+            scroll-snap-type: y mandatory;
+        }
+
+        section {
+            height: 100vh;
+            width: 100vw;
+            scroll-snap-align: start;
+            display: grid;
+            padding: 2rem;
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        /* Layout Structure & Navigation */
+        .global-nav {
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+            display: grid;
+            grid-template-columns: repeat(3, auto);
+            gap: 15px;
+            font-weight: bold;
+            z-index: 100;
+        }
+
+        .global-nav span { cursor: pointer; }
+        .global-nav span:hover { text-decoration: underline; }
+
+        /* Chromatographic Rules: Trend Deltas */
+        .delta-positive { color: var(--pure-green); }
+        .delta-negative { color: var(--pure-red); }
+
+        /* Modular Container Boundaries */
+        .data-module {
+            border: 1px solid var(--text-dark);
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .newsstand-module {
+            border: 2px solid var(--text-dark);
+            padding: 2rem;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        h1, h2, h3 { text-transform: uppercase; margin-top: 0; }
+    </style>
+</head>
+<body>
+
+    <div class="scroll-container">
+        
+        <!-- TOP PAGE: THE TERMINAL (The Melody) -->
+        <section id="terminal">
+            <div class="global-nav">
+                <span>EN</span> | <span>PT</span> | <span>ES</span>
+            </div>
+            
+            <div>
+                <h1>Like Polling Terminal</h1>
+                <p>REAL-TIME CULTURAL SENTIMENT & BOT QUANTIZATION</p>
+                <hr style="border-color: #111; margin-bottom: 2rem;">
+
+                <div class="data-module">
+                    <h3>CazéTV Broadcast</h3>
+                    <p>Concurrent Attention: 145,230 VIEWS</p>
+                    <p>Velocity: <span class="delta-positive">▲ +14.2%</span></p>
+                </div>
+
+                <div class="data-module">
+                    <h3>X/Twitter Risk Index</h3>
+                    <p>Bot-to-Human Authenticity: HIGH RISK</p>
+                    <p>Organic Volume: <span class="delta-negative">▼ -8.4%</span></p>
+                </div>
+            </div>
+        </section>
+
+        <!-- BOTTOM PAGE: THE NEWSSTAND (The Bass) -->
+        <section id="newsstand" style="align-content: center; justify-items: center;">
+            <div class="newsstand-module">
+                <h2>The Newsstand</h2>
+                <p><i>[ 1950s Vendor Character Illustration Placeholder ]</i></p>
+                <hr style="border-color: #111; margin: 1.5rem 0;">
+                
+                <h3>Closing Bell Briefing</h3>
+                <p>Daily Sentiment Analytics Pass</p>
+                <p><strong>$2.00</strong></p>
+                
+                <button style="background:#111; color:#F4F1EA; padding:10px 20px; font-family:inherit; cursor:pointer; border:none; margin-top:10px;">
+                    SECURE VIA STRIPE / PIX
+                </button>
+            </div>
+        </section>
+
+    </div>
+
+</body>
+</html>
