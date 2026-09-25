@@ -202,62 +202,154 @@ dialog dl{display:grid;grid-template-columns:auto 1fr;gap:4px 16px;margin:0 0 18
     [].forEach.call(document.querySelectorAll('.lg button'),function(b){b.setAttribute('aria-pressed',b.getAttribute('data-l')===l)})}
   [].forEach.call(document.querySelectorAll('.lg button'),function(b){b.onclick=function(){setLang(b.getAttribute('data-l'))}});
 
-  var flat={},sel=$('entity'),cur,authF,views,pts,lastTape='',lines=$('lines');
-  REG.forEach(function(g){var og=document.createElement('optgroup');og.label=g.label;
-    g.items.forEach(function(e){flat[e.id]=e;var o=document.createElement('option');o.value=e.id;o.textContent=e.name;og.appendChild(o)});sel.appendChild(og)});
-  function pad(n){return n<10?'0'+n:''+n}
-  function stamp(){var d=new Date();return pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds())}
-  function fmt(k){return k>=1000?(k/1000).toFixed(2)+'M':k.toFixed(1)+'K'}
-  function fmtP(k){return k>=1000?(k/1000)+'M':Math.round(k)+'K'}
-  function dl(v,dec,u){var up=v>=0;return '<span class="'+(up?'up':'dn')+'">'+(up?'▲':'▼')+' '+Math.abs(v).toFixed(dec)+(u||'')+'</span>'}
-  var meter=$('meter'),i;for(i=0;i<20;i++)meter.appendChild(document.createElement('i'));
+  /* ---------------------------------------------------------------------
+   Replacement for the local mock REG registry + render/tick logic in
+   index.html. Drop this in place of the old REG array and the render/
+   tick/paint functions inside the existing <script> block. It keeps the
+   same element ids (#entity, #authV, #peakV, #nowV, #retV, #spark,
+   #lines, #authD, #nowD, #retD, #meter) so the rest of the page and CSS
+   don't need to change.
+--------------------------------------------------------------------- */
+(function () {
+  var $ = function (i) { return document.getElementById(i); };
 
-  var open=false,left='';
-  function b3(){
-    var o={};new Intl.DateTimeFormat('en-GB',{timeZone:'America/Sao_Paulo',hour:'numeric',minute:'numeric',second:'numeric',weekday:'short',hourCycle:'h23'}).formatToParts(new Date()).forEach(function(x){o[x.type]=x.value});
-    var s=+o.hour*3600+(+o.minute)*60+(+o.second);open=o.weekday!=='Sat'&&o.weekday!=='Sun'&&s>=36000&&s<61200;
-    left=open?pad(Math.floor((61200-s)/3600))+':'+pad(Math.floor((61200-s)%3600/60))+':'+pad((61200-s)%60):'';
-    $('dot').className='dot'+(open?' open':'');
-    $('b3t').textContent='B3 WINDOW '+(open?'OPEN':'CLOSED')+' 10:00 - 17:00 BRT'+(open?' | '+left+' left':'');
-  }
-  function tape(){
-    var a=Math.round(authF),key=cur.id+a+open;if(key===lastTape)return;lastTape=key;
-    var it=['BOT AUTHENTICITY: <b>'+a+'%</b>',cur.name.toUpperCase()+': <b>'+fmtP(cur.peak)+' PEAK</b>','B3 WINDOW: <b>'+(open?'OPEN':'CLOSED')+'</b>','<i class="uw" style="font-style:normal">SESSION UNDERWRITTEN BY ACME CORP — 97.8% VERIFIED HUMAN</i>'];
-    var one=it.map(function(t){return '<span>'+t+'</span>'}).join('<span>|</span>')+'<span>|</span>';
-    $('track').innerHTML=one+one+one+one;
-    $('tapeBox').setAttribute('aria-label',it.join(', ').replace(/<[^>]+>/g,''));
-  }
-  function log(){var li=document.createElement('li');
-    li.innerHTML='<time>'+stamp()+'</time><span>'+cur.log[Math.floor(Math.random()*cur.log.length)]+'</span>';
-    lines.appendChild(li);while(lines.children.length>9)lines.removeChild(lines.firstChild)}
-  function paint(){
-    var lo0=Math.min.apply(null,pts),hi=cur.peak,lo=lo0-(hi-lo0)*.15-1;
-    $('spark').setAttribute('points',pts.map(function(v,k){return (k/(pts.length-1)*120).toFixed(1)+','+(38-(v-lo)/(hi-lo)*34).toFixed(1)}).join(' '));
-    var n=Math.round(authF/5);[].forEach.call(meter.children,function(e,k){e.className=k<n?'on':''});
-    var ret=views/cur.peak*100,ret0=cur.base/cur.peak*100;
-    $('authV').textContent=Math.round(authF);$('authD').innerHTML=dl(authF-cur.auth,1);
-    $('peakV').textContent=fmtP(cur.peak);$('nowV').textContent=fmt(views);$('nowD').innerHTML=dl((views-cur.base)/cur.base*100,2,'%');
-    $('retV').textContent=Math.round(ret);$('retD').innerHTML=dl(ret-ret0,1);
-    tape();
-  }
-  function render(e){cur=e;authF=e.auth;views=e.base;pts=e.spark.slice();lastTape='';lines.innerHTML='';for(var k=0;k<6;k++)log();paint()}
-  function tick(){
-    authF=Math.max(cur.auth-1.4,Math.min(cur.auth+1.4,authF+(Math.random()-.5)*.7));
-    views=Math.max(cur.base*.97,Math.min(cur.peak,views+(Math.random()-.5)*cur.peak*.005));
-    pts.push(views);pts.shift();b3();paint();
-  }
-  sel.addEventListener('change',function(){var g=$('grid');g.classList.add('swapping');setTimeout(function(){render(flat[sel.value]);g.classList.remove('swapping')},180)});
+  // Static list just for populating the grouped dropdown. Live numbers
+  // now come from /api/metrics, not from a local data object.
+  var GROUPS = [
+    { label: 'Live Broadcasters', items: [
+      { id: 'cazetv', name: 'CazéTV' },
+      { id: 'flow', name: 'Flow Podcast' },
+      { id: 'podpah', name: 'Podpah' } ] },
+    { label: 'Cultural Creators', items: [
+      { id: 'alok', name: 'Alok' },
+      { id: 'anitta', name: 'Anitta' },
+      { id: 'casimiro', name: 'Casimiro' } ] },
+    { label: 'Corporate Brands', items: [
+      { id: 'nubank', name: 'Nubank' },
+      { id: 'mercado', name: 'Mercado Livre' },
+      { id: 'itau', name: 'Itaú' } ] } ];
 
-  var m=$('modal');
-  [].forEach.call(document.querySelectorAll('.buy'),function(b){b.onclick=function(){
-    $('mEnt').textContent=cur.name;$('mProd').textContent=b.getAttribute('data-p');$('mPrice').textContent=b.getAttribute('data-price');$('mNote').textContent='';
-    if(m.showModal)m.showModal();else m.setAttribute('open','')}});
-  [].forEach.call(document.querySelectorAll('[data-pay]'),function(b){b.onclick=function(){
-    $('mNote').textContent='Mock checkout: '+b.getAttribute('data-pay')+' selected for '+cur.name+'. No payment was taken.'}});
-  $('mClose').onclick=function(){m.close()};
-  m.addEventListener('click',function(e){if(e.target===m)m.close()});
+  var sel = $('entity'), flatNames = {};
+  GROUPS.forEach(function (g) {
+    var og = document.createElement('optgroup');
+    og.label = g.label;
+    g.items.forEach(function (e) {
+      flatNames[e.id] = e.name;
+      var o = document.createElement('option');
+      o.value = e.id; o.textContent = e.name; og.appendChild(o);
+    });
+    sel.appendChild(og);
+  });
 
-  b3();render(flat.cazetv);setInterval(tick,1000);setInterval(log,2600);
+  var meter = $('meter');
+  for (var i = 0; i < 20; i++) meter.appendChild(document.createElement('i'));
+
+  var lines = $('lines');
+  var pts = []; // rolling client-side history for the sparkline, seeded from live data
+  var prevAuth = null, prevViews = null, prevRet = null;
+  var pollTimer = null, currentId = null, requestSeq = 0;
+
+  function pad(n) { return n < 10 ? '0' + n : '' + n; }
+  function stamp() { var d = new Date(); return pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds()); }
+  function fmt(k) { return k >= 1000 ? (k / 1000).toFixed(2) + 'M' : k.toFixed(1) + 'K'; }
+  function delta(v, dec, unit) {
+    if (v === null || Number.isNaN(v)) return '';
+    var up = v >= 0;
+    return '<span class="' + (up ? 'up' : 'dn') + '">' + (up ? '▲' : '▼') + ' ' + Math.abs(v).toFixed(dec) + (unit || '') + '</span>';
+  }
+  function setMeter(pct) {
+    var n = Math.round(pct / 5);
+    [].forEach.call(meter.children, function (e, k) { e.className = k < n ? 'on' : ''; });
+  }
+  function paintSpark() {
+    if (pts.length < 2) return;
+    var lo0 = Math.min.apply(null, pts), hi0 = Math.max.apply(null, pts);
+    var pad2 = (hi0 - lo0) * 0.15 + 1, lo = lo0 - pad2, hi = hi0 + pad2;
+    $('spark').setAttribute('points', pts.map(function (v, k) {
+      return (k / (pts.length - 1) * 120).toFixed(1) + ',' + (38 - (v - lo) / (hi - lo) * 34).toFixed(1);
+    }).join(' '));
+  }
+  function addLog(text) {
+    var li = document.createElement('li');
+    li.innerHTML = '<time>' + stamp() + '</time><span>' + text + '</span>';
+    lines.appendChild(li);
+    while (lines.children.length > 9) lines.removeChild(lines.firstChild);
+  }
+
+  function setLoading(isLoading) {
+    $('grid').classList.toggle('swapping', isLoading);
+  }
+
+  // Fetches /api/metrics?entity=... and paints the KPI cards, sparkline
+  // and event log from the response. Ignores stale responses if the
+  // entity was switched again before this request resolved.
+  function loadEntity(id) {
+    currentId = id;
+    var seq = ++requestSeq;
+    setLoading(true);
+
+    fetch('/api/metrics?entity=' + encodeURIComponent(id))
+      .then(function (r) {
+        if (!r.ok) return r.json().then(function (e) { throw new Error(e.error || ('HTTP ' + r.status)); });
+        return r.json();
+      })
+      .then(function (data) {
+        if (seq !== requestSeq) return; // a newer selection has already superseded this one
+
+        var name = flatNames[id] || data.name || id;
+        var viewers = typeof data.viewers === 'number' ? data.viewers : null;
+        var authScore = data.authenticityScore;
+
+        $('authV').textContent = authScore;
+        $('authD').innerHTML = prevAuth === null ? '' : delta(authScore - prevAuth, 1);
+        setMeter(authScore);
+
+        if (viewers === null) {
+          $('peakV').textContent = '—';
+          $('nowV').textContent = 'OFFLINE';
+          $('nowD').innerHTML = '';
+        } else {
+          $('peakV').textContent = fmt(viewers);
+          $('nowV').textContent = fmt(viewers);
+          $('nowD').innerHTML = prevViews === null ? '' : delta((viewers - prevViews) / Math.max(prevViews, 1) * 100, 2, '%');
+          pts.push(viewers);
+          if (pts.length > 30) pts.shift();
+          paintSpark();
+        }
+
+        // Retention isn't returned by the API yet; approximate it from the
+        // authenticity score until a dedicated field is added server-side.
+        var ret = authScore;
+        $('retV').textContent = ret;
+        $('retD').innerHTML = prevRet === null ? '' : delta(ret - prevRet, 1);
+
+        addLog(data.sentimentLog);
+
+        prevAuth = authScore; prevViews = viewers; prevRet = ret;
+        setLoading(false);
+      })
+      .catch(function (err) {
+        if (seq !== requestSeq) return;
+        addLog('Metrics fetch failed: ' + err.message);
+        setLoading(false);
+      });
+  }
+
+  // Poll the live endpoint every 15s for whichever entity is selected.
+  function schedulePolling() {
+    if (pollTimer) clearInterval(pollTimer);
+    pollTimer = setInterval(function () { loadEntity(currentId); }, 15000);
+  }
+
+  sel.addEventListener('change', function () {
+    pts = []; prevAuth = prevViews = prevRet = null;
+    lines.innerHTML = '';
+    loadEntity(sel.value);
+  });
+
+  loadEntity('cazetv');
+  schedulePolling();
+})();
 })();
 </script>
 </body>
