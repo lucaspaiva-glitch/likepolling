@@ -12,7 +12,7 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 // --- Entity registry -------------------------------------------------
 // Map each dropdown entity id to the YouTube channel that should be polled
-// for a live viewer count. Fill in real channel IDs for production use.
+// for total monthly views. Fill in real channel IDs for production use.
 const ENTITIES = {
   cazetv:  { name: 'CazéTV',        channelId: 'UCJH98Ic8j2SUFY4E1RXNQAg' },
   flow:    { name: 'Flow Podcast',  channelId: 'UC5DVpxWKlktoTVDlT4LNqRA' },
@@ -132,22 +132,6 @@ async function fetchTotalViews(channelId, apiKey) {
   return { viewers: totalViews, live: true };
 }
 
-  const videosUrl =
-    'https://www.googleapis.com/youtube/v3/videos' +
-    `?part=liveStreamingDetails&id=${encodeURIComponent(videoId)}` +
-    `&key=${apiKey}`;
-
-  const videosRes = await fetch(videosUrl);
-  if (!videosRes.ok) {
-    throw new Error(`YouTube videos.list failed: ${videosRes.status}`);
-  }
-  const videosData = await videosRes.json();
-  const details = videosData.items && videosData.items[0] && videosData.items[0].liveStreamingDetails;
-  const concurrent = details && details.concurrentViewers ? Number(details.concurrentViewers) : null;
-
-  return { viewers: concurrent, live: true, videoId };
-}
-
 // --- Gemini "Truth Engine": score the chat sample for bot-like patterns
 // (repetitive syntax, copy-pasted lines, dialect consistency) and produce
 // a one-sentence sentiment log line. Expects strict JSON back from the model.
@@ -159,7 +143,7 @@ async function runTruthEngine(entityName, chatSample, apiKey) {
 Entity: ${entityName}
 
 Below is a sample of recent live-chat messages for this entity:
-${chatSample.map((line, i) => `${i + 1}. ${line}`).join('\n')}
+${chatSample.map((line, i) => `${i + 1}.${line}`).join('\n')}
 
 Analyze the sample for signs of bot or coordinated activity: repetitive syntax,
 copy-pasted phrasing, unnatural posting cadence, and whether the dialect/slang
@@ -209,7 +193,7 @@ module.exports = async function handler(req, res) {
 
   try {
     const [viewerResult, truthResult] = await Promise.all([
-      fetchConcurrentViewers(entity.channelId, youtubeKey),
+      fetchTotalViews(entity.channelId, youtubeKey),
       runTruthEngine(entity.name, chatSample, geminiKey),
     ]);
 
@@ -217,7 +201,7 @@ module.exports = async function handler(req, res) {
     return res.status(200).json({
       entity: entityId,
       name: entity.name,
-      viewers: viewerResult.viewers,       // null when no live broadcast is active
+      viewers: viewerResult.viewers,       
       live: viewerResult.live,
       authenticityScore: truthResult.authenticityScore,
       sentimentLog: truthResult.sentimentLog,
