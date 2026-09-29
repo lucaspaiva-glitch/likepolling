@@ -106,27 +106,31 @@ function jsonError(res, status, message) {
   res.status(status).json({ error: message });
 }
 
-// --- YouTube: resolve the channel's current live broadcast, then read
-// concurrentViewers from its liveStreamingDetails. Falls back to null
-// (no live broadcast right now) instead of throwing.
-async function fetchConcurrentViewers(channelId, apiKey) {
-  const searchUrl =
-    'https://www.googleapis.com/youtube/v3/search' +
-    `?part=id&channelId=${encodeURIComponent(channelId)}` +
-    '&eventType=live&type=video&maxResults=1' +
+// --- YouTube: resolve the channel's total view count instead of live viewers.
+async function fetchTotalViews(channelId, apiKey) {
+  const channelUrl = 
+    'https://www.googleapis.com/youtube/v3/channels' +
+    `?part=statistics&id=${encodeURIComponent(channelId)}` +
     `&key=${apiKey}`;
 
-  const searchRes = await fetch(searchUrl);
-  if (!searchRes.ok) {
-    throw new Error(`YouTube search.list failed: ${searchRes.status}`);
+  const res = await fetch(channelUrl);
+  if (!res.ok) {
+    throw new Error(`YouTube channels.list failed: ${res.status}`);
   }
-  const searchData = await searchRes.json();
-  const videoId = searchData.items && searchData.items[0] && searchData.items[0].id.videoId;
+  const data = await res.json();
+  const stats = data.items && data.items[0] && data.items[0].statistics;
+  
+  if (!stats || !stats.viewCount) {
+    return { viewers: null, live: false }; // Fallback if no views found
+  }
 
-  if (!videoId) {
-    // No active live stream for this channel right now.
-    return { viewers: null, live: false, videoId: null };
-  }
+  // Convert the string viewCount to a Number
+  const totalViews = Number(stats.viewCount);
+
+  // We set live: true here just so the frontend knows data was successfully pulled,
+  // even though it is no longer specifically a "live stream" metric.
+  return { viewers: totalViews, live: true };
+}
 
   const videosUrl =
     'https://www.googleapis.com/youtube/v3/videos' +
