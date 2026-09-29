@@ -137,7 +137,8 @@ async function fetchTotalViews(channelId, apiKey) {
 // a one-sentence sentiment log line. Expects strict JSON back from the model.
 async function runTruthEngine(entityName, chatSample, apiKey) {
   const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+  // UPDATED: Now using the correct gemini-3.5-flash model
+  const model = genAI.getGenerativeModel({ model: 'gemini-3.5-flash' });
 
   const prompt = `You are the "Truth Engine" for a live-audience analytics terminal called Like Polling.
 Entity: ${entityName}
