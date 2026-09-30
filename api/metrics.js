@@ -1,13 +1,12 @@
 // api/metrics.js
-
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const ENTITIES = {
-  cazetv:     { name: 'CazéTV',        channelId: 'UCJH98Ic8j2SUFY4E1RXNQAg' },
-  flow:       { name: 'Flow Podcast',  channelId: 'UC5DVpxWKlktoTVDlT4LNqRA' },
-  podpah:     { name: 'Podpah',        channelId: 'UCiHGxTOZFyvXeXQMbUeMims' },
-  kondzilla:  { name: 'Canal KondZilla',channelId: 'UCffb62Zt59g13aB85L8X8cw' },
-  felipeneto: { name: 'Felipe Neto',   channelId: 'UCV306eHqgo0LvBf3Mh36AHg' },
+  cazetv:     { name: 'CazéTV',        handle: 'cazetv' },
+  flow:       { name: 'Flow Podcast',  handle: 'flowpodcast' },
+  podpah:     { name: 'Podpah',        handle: 'podpah' },
+  kondzilla:  { name: 'Canal KondZilla',handle: 'canalkondzilla' },
+  felipeneto: { name: 'Felipe Neto',   handle: 'felipeneto' },
 };
 
 const CHAT_SAMPLES = {
@@ -22,11 +21,9 @@ function jsonError(res, status, message) {
   res.status(status).json({ error: message });
 }
 
-// Fetch the last 15 videos and return their views for the graph
-async function fetchRecentVideoViews(channelId, apiKey) {
+async function fetchRecentVideoViews(handle, apiKey) {
   try {
-    // 1. Get the channel's 'Uploads' playlist ID
-    const channelUrl = `https://www.googleapis.com/youtube/v3/channels?part=contentDetails&id=${encodeURIComponent(channelId)}&key=${apiKey}`;
+    const channelUrl = `https://www.googleapis.com/youtube/v3/channels?part=contentDetails&forHandle=@${encodeURIComponent(handle)}&key=${apiKey}`;
     const channelRes = await fetch(channelUrl);
     if (!channelRes.ok) throw new Error('Channel fetch failed');
     const channelData = await channelRes.json();
@@ -34,7 +31,6 @@ async function fetchRecentVideoViews(channelId, apiKey) {
     if (!channelData.items || channelData.items.length === 0) throw new Error('No channel found');
     const uploadsPlaylistId = channelData.items[0].contentDetails.relatedPlaylists.uploads;
 
-    // 2. Fetch the last 15 video IDs from that playlist
     const playlistUrl = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=15&playlistId=${uploadsPlaylistId}&key=${apiKey}`;
     const playlistRes = await fetch(playlistUrl);
     if (!playlistRes.ok) throw new Error('Playlist fetch failed');
@@ -43,22 +39,18 @@ async function fetchRecentVideoViews(channelId, apiKey) {
     const videoIds = (playlistData.items || []).map(item => item.snippet.resourceId.videoId);
     if (videoIds.length === 0) throw new Error('No videos found');
 
-    // 3. Fetch the exact view counts for those 15 videos
     const videosUrl = `https://www.googleapis.com/youtube/v3/videos?part=statistics&id=${videoIds.join(',')}&key=${apiKey}`;
     const videosRes = await fetch(videosUrl);
     if (!videosRes.ok) throw new Error('Videos stats fetch failed');
     const videosData = await videosRes.json();
 
-    // Map the views and reverse the array so it reads oldest -> newest (left to right on a graph)
     const viewCounts = (videosData.items || []).map(vid => Number(vid.statistics.viewCount || 0)).reverse();
-    
     const latestVideoViews = viewCounts.length > 0 ? viewCounts[viewCounts.length - 1] : 0;
     const latestComments = (videosData.items || []).reverse()[viewCounts.length - 1]?.statistics.commentCount || 0;
 
     return { latestViews: latestVideoViews, comments: Number(latestComments), history: viewCounts };
   } catch (err) {
-    console.error('Video fetch error:', err);
-    // Fallback data shape in case of quota limits
+    console.error('Video fetch error:', err.message);
     return { latestViews: 1250000, comments: 4500, history: [900000, 1100000, 850000, 1400000, 1250000] };
   }
 }
@@ -93,7 +85,7 @@ module.exports = async function handler(req, res) {
 
   try {
     const [videoData, truthResult] = await Promise.all([
-      fetchRecentVideoViews(entity.channelId, youtubeKey),
+      fetchRecentVideoViews(entity.handle, youtubeKey),
       runTruthEngine(entity.name, chatSample, geminiKey),
     ]);
 
@@ -103,7 +95,7 @@ module.exports = async function handler(req, res) {
       name: entity.name,
       latestViews: videoData.latestViews,
       latestComments: videoData.comments,
-      viewHistory: videoData.history, // The array of the last 15 video views
+      viewHistory: videoData.history,
       authenticityScore: truthResult.authenticityScore,
       sentimentLog: truthResult.sentimentLog,
       updatedAt: new Date().toISOString(),
