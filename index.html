@@ -1,278 +1,203 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Like Polling // Intelligence Dashboard</title>
-<link rel="stylesheet" href="[https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap](https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap)">
-<style>
-:root{--bg:#F4F1EA;--ink:#22262B;--mute:#5F6468;--blue:#1E4BD8;--up:#2E7D32;--dn:#D32F2F;--rule:#22262B}
-*,*::before,*::after{box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 "IBM Plex Mono",monospace}
-body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;opacity:.07;background-image:url("data:image/svg+xml,%3Csvg xmlns='[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
-button,select{font:inherit;color:var(--ink);border-radius:0}
-.up{color:var(--up)}.dn{color:var(--dn)}
-:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LIKE POLLING // MARKET INTELLIGENCE TERMINAL</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --bg: #090a0f;
+      --card-bg: #12141c;
+      --border: #222634;
+      --text-main: #f3f4f6;
+      --text-muted: #8b949e;
+      --accent-green: #00ff66;
+      --accent-red: #ff3344;
+      --accent-gold: #ffb800;
+      --font-mono: 'SF Mono', Monaco, Inconsolata, 'Fira Code', monospace;
+    }
 
-.bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 20px;padding:16px 24px;border-bottom:1px solid var(--rule)}
-.brand{font-weight:700;letter-spacing:.02em;font-size:16px}
-.b3{display:flex;align-items:center;gap:8px}
-.dot{width:10px;height:10px;border:2px solid var(--ink);border-radius:50%}
-.dot.open{background:var(--blue);border-color:var(--blue);animation:pulse 1.4s ease-in-out infinite}
-@keyframes pulse{50%{opacity:.3}}
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.5;
+      padding: 16px;
+    }
 
-.tape{background:var(--ink);color:var(--bg);overflow:hidden;white-space:nowrap;padding:9px 0;font-weight:500;letter-spacing:.04em}
-.tape-track{display:inline-flex;animation:scroll 40s linear infinite}
-.tape:hover .tape-track{animation-play-state:paused}
-.tape span{padding-right:4ch}.tape b{color:#9DB8FF;font-weight:600}
-@keyframes scroll{to{transform:translateX(-50%)}}
+    /* TOP MACRO TICKER */
+    .ticker-bar {
+      display: flex;
+      gap: 24px;
+      padding: 12px 18px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      overflow-x: auto;
+      white-space: nowrap;
+      margin-bottom: 24px;
+      align-items: center;
+    }
+    .ticker-label {
+      color: var(--accent-gold);
+      font-weight: bold;
+      text-transform: uppercase;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+    }
+    .ticker-item {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .pos { color: var(--accent-green); }
+    .neg { color: var(--accent-red); }
 
-.pick{display:flex;align-items:center;gap:12px;padding:16px 24px;border-bottom:1px solid var(--rule)}
-.pick label{color:var(--mute);font-weight:600}
-.pick select{font-weight:600;background-color:var(--bg);border:2px solid var(--ink);padding:8px 40px 8px 12px;min-width:280px;cursor:pointer;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%2322262B' stroke-width='2'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;background-size:12px 8px}
-.pick select:hover{box-shadow:3px 3px 0 var(--ink)}
+    /* HEADER & STATUS */
+    .header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 12px;
+      margin-bottom: 24px;
+    }
+    .terminal-title {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+    }
+    .status-badge {
+      font-size: 11px;
+      color: var(--accent-green);
+    }
 
-.grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));border-bottom:1px solid var(--rule)}
-.card{padding:24px;border-right:1px solid var(--rule);border-bottom:1px solid var(--rule);display:flex;flex-direction:column;transition:opacity .18s}
-.card.nb{border-bottom:0}
-.card.nr{border-right:0}
-.card h2{margin:0 0 16px;font-size:12px;font-weight:600;color:var(--mute);text-transform:uppercase;letter-spacing:.05em}
-.s6{grid-column:span 6}
-.s12{grid-column:span 12}
-
-@media (max-width: 768px) {
-  .s6 { grid-column: span 12; border-right: 0; }
-}
-
-.big{font-size:clamp(48px,6vw,84px);font-weight:600;line-height:1;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
-.d{font-size:16px;font-weight:600;margin-left:12px;letter-spacing:0}
-.sub{margin-top:12px;color:var(--mute);font-weight:500}
-.meter{display:grid;grid-template-columns:repeat(20,1fr);gap:4px;margin-top:20px}
-.meter i{height:14px;background:var(--ink);opacity:.1}.meter i.on{background:var(--blue);opacity:1}
-
-.spark{flex:1;width:100%;min-height:220px;display:block;margin-top:16px}
-.spark polyline{fill:none;stroke:var(--blue);stroke-width:2.5;vector-effect:non-scaling-stroke}
-.spark line{stroke:var(--ink);stroke-dasharray:3 4;opacity:.2;vector-effect:non-scaling-stroke}
-
-#lines{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px}
-#lines li{display:grid;grid-template-columns:9ch 1fr;gap:16px;padding:12px 0;border-top:1px dashed rgba(34,38,43,.2)}
-#lines li:first-child{border-top:0;padding-top:0}
-#lines time{color:var(--mute);font-weight:500}
-#lines span{font-weight:500;font-size:15px}
-
-.swapping .card{opacity:.3}
-
-/* Desk Section */
-.desk{padding:0}
-.desk h1{margin:0;padding:24px;font-size:16px;font-weight:700;border-bottom:1px solid var(--rule);text-transform:uppercase;letter-spacing:.05em}
-.deskgrid{display:grid;grid-template-columns:minmax(0,4fr) minmax(0,8fr)}
-@media (max-width: 900px) {
-  .deskgrid { grid-template-columns: 1fr; }
-  .badge { border-right: 0 !important; border-bottom: 1px solid var(--rule); }
-}
-.badge{display:flex;align-items:center;justify-content:center;padding:40px;border-right:1px solid var(--rule)}
-.badge svg{width:min(100%,320px);height:auto}
-.prods{display:grid;grid-template-rows:repeat(3,1fr)}
-.prod{padding:24px;border-bottom:1px solid var(--rule);display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px}
-.prod:last-child{border-bottom:0}
-.prod h2{margin:0;font-size:18px;font-weight:600}
-.prod p{margin:6px 0 0;color:var(--mute);max-width:56ch;font-size:15px}
-.buy{background:var(--ink);color:var(--bg);border:2px solid var(--ink);padding:12px 20px;font-weight:600;cursor:pointer;white-space:nowrap;font-size:15px}
-.buy:hover{background:var(--bg);color:var(--ink);box-shadow:4px 4px 0 var(--blue);border-color:var(--blue)}
-</style>
+    /* KPI CARDS GRID */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 16px;
+    }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 18px;
+    }
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 10px;
+      margin-bottom: 14px;
+    }
+    .entity-name { font-size: 15px; font-weight: bold; text-transform: uppercase; }
+    .entity-cat {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .metric-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .metric-label { color: var(--text-muted); }
+    .metric-val { font-weight: 600; }
+  </style>
 </head>
 <body>
 
-<header class="bar">
-  <div class="brand">LIKE POLLING // INTELLIGENCE DESK</div>
-  <div class="b3"><span class="dot" id="dot"></span><span id="b3t">B3 LIVE TRACKING</span></div>
-</header>
-<div class="tape" id="tapeBox" role="marquee"><div class="tape-track" id="track" aria-hidden="true"></div></div>
-<div class="pick"><label for="entity">Target Network</label><select id="entity"></select></div>
-
-<main class="grid" id="grid">
-  <!-- Top Row: KPIs -->
-  <section class="card s6 nb">
-    <h2>Bot Authenticity Matrix</h2>
-    <div class="big"><span id="authV">89</span>%<span class="d" id="authD"></span></div>
-    <div class="meter" id="meter" aria-hidden="true"></div>
-    <div class="sub">Purified share of traffic judged human</div>
-  </section>
-  <section class="card s6 nb nr">
-    <h2>Latest Video Velocity</h2>
-    <div class="big" id="peakV">-</div>
-    <div class="sub">Verified Audience Comments: <b id="nowV" style="color:var(--ink)">-</b></div>
-  </section>
-
-  <!-- Middle Row: Visual Trend -->
-  <section class="card s12 nb nr" style="border-top:1px solid var(--rule)">
-    <h2>Recent Views Trajectory (Last 15 Uploads)</h2>
-    <svg class="spark" viewBox="0 0 120 40" preserveAspectRatio="none" aria-hidden="true">
-      <line x1="0" x2="120" y1="2" y2="2"/>
-      <line x1="0" x2="120" y1="14" y2="14"/>
-      <line x1="0" x2="120" y1="26" y2="26"/>
-      <polyline id="spark" points=""/>
-    </svg>
-  </section>
-
-  <!-- Bottom Row: AI Log -->
-  <section class="card s12 nr" style="border-top:1px solid var(--rule)">
-    <h2>Gemini Truth Engine // Live Sentiment Log</h2>
-    <ul id="lines"></ul>
-  </section>
-</main>
-
-<section class="desk">
-  <h1>Audit Desk // Premium Intelligence Procurement</h1>
-  <div class="deskgrid">
-    <div class="badge">
-      <svg viewBox="0 0 300 300" role="img">
-        <defs><path id="pt" d="M42,150 A108,108 0 0 1 258,150"/><path id="pb" d="M26,150 A124,124 0 0 0 274,150"/></defs>
-        <circle cx="150" cy="150" r="142" fill="none" stroke="#22262B" stroke-width="4"/>
-        <circle cx="150" cy="150" r="96" fill="none" stroke="#22262B" stroke-width="1.5"/>
-        <text font-family="IBM Plex Mono,monospace" font-size="15" font-weight="600" letter-spacing="3" fill="#22262B"><textPath href="#pt" startOffset="50%" text-anchor="middle">OFFICIAL PRESS AUDITOR</textPath></text>
-        <text font-family="IBM Plex Mono,monospace" font-size="13" font-weight="600" letter-spacing="3" fill="#22262B"><textPath href="#pb" startOffset="50%" text-anchor="middle">NEWSSTAND CLERK * EST. 1954</textPath></text>
-        <path d="M96 232 Q100 190 150 186 Q200 190 204 232Z" fill="#22262B"/>
-        <path d="M150 190 l-13 -9 v18z M150 190 l13 -9 v18z" fill="#F4F1EA"/>
-        <circle cx="150" cy="140" r="30" fill="#F4F1EA" stroke="#22262B" stroke-width="3"/>
-        <circle cx="140" cy="140" r="3" fill="#22262B"/><circle cx="160" cy="140" r="3" fill="#22262B"/>
-        <path d="M140 154 Q150 160 160 154" fill="none" stroke="#22262B" stroke-width="2.5"/>
-        <ellipse cx="150" cy="118" rx="48" ry="8" fill="#22262B"/>
-        <rect x="124" y="92" width="52" height="26" rx="10" fill="#22262B"/>
-        <rect x="124" y="107" width="52" height="5" fill="#F4F1EA"/>
-        <g transform="rotate(-11 150 214)" fill="none" stroke="#1E4BD8" opacity=".92">
-          <rect x="70" y="192" width="160" height="46" stroke-width="3.5"/><rect x="75" y="197" width="150" height="36" stroke-width="1"/>
-          <text x="150" y="212" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="15" font-weight="700" letter-spacing="2" fill="#1E4BD8" stroke="none">VERIFIED</text>
-          <text x="150" y="228" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="15" font-weight="700" letter-spacing="4" fill="#1E4BD8" stroke="none">HUMAN</text></g>
-      </svg>
-    </div>
-    <div class="prods">
-      <article class="prod"><div><h2>Verified Human Audit Certification</h2><p>Downloadable media-kit certification for creators and agencies pitching sponsors.</p></div>
-        <button class="buy">Order Audit — R$ 99</button></article>
-      <article class="prod"><div><h2>Live Ad-Break Retention Teardown</h2><p>Minute-by-minute audience retention report. Tracks peak concurrent drop-offs.</p></div>
-        <button class="buy">Instant Pass — R$ 49</button></article>
-      <article class="prod"><div><h2>B3 Daily Polling Dump (CSV/JSON)</h2><p>Raw engagement dataset for journalists, researchers, and data analysts.</p></div>
-        <button class="buy">Export Data — R$ 25</button></article>
-    </div>
+  <!-- MACRO TICKER -->
+  <div class="ticker-bar">
+    <span class="ticker-label">TRUTH ENGINE MACRO:</span>
+    <div id="macro-tickers">Loading synthetic platform indices...</div>
   </div>
-</section>
 
-<script>
-(function(){
-  var $=function(i){return document.getElementById(i)};
+  <div class="header-row">
+    <div class="terminal-title">LIKE POLLING // TERMINAL v1.0</div>
+    <div class="status-badge">● LISBON OPERATIONAL WINDOW ACTIVE (PRT)</div>
+  </div>
 
-  var GROUPS = [
-    { label: 'Top Broadcast Networks', items: [
-      { id: 'cazetv', name: 'CazéTV' },
-      { id: 'flow', name: 'Flow Podcast' },
-      { id: 'podpah', name: 'Podpah' },
-      { id: 'kondzilla', name: 'Canal KondZilla' },
-      { id: 'felipeneto', name: 'Felipe Neto' }
-    ] }
-  ];
+  <!-- ENTITY CARDS -->
+  <div class="grid" id="entity-grid">
+    <div style="color: var(--text-muted);">Synchronizing verified database metrics...</div>
+  </div>
 
-  var sel = $('entity'), flatNames = {};
-  GROUPS.forEach(function (g) {
-    var og = document.createElement('optgroup');
-    og.label = g.label;
-    g.items.forEach(function (e) {
-      flatNames[e.id] = e.name;
-      var o = document.createElement('option');
-      o.value = e.id; o.textContent = e.name; og.appendChild(o);
-    });
-    sel.appendChild(og);
-  });
+  <script>
+    // These are your public frontend keys. They are safe to be visible in client code.
+    const SUPABASE_URL = "https://iyhaoagsisrtwtkcrxylp.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_sFCHMhAt6xrlg24bFdxSZQ_oNpZMYk";
+    const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  var meter = $('meter');
-  for (var i = 0; i < 20; i++) meter.appendChild(document.createElement('i'));
+    async function loadTerminalData() {
+      // 1. Fetch Dynamic Macro Truth Engine Disclosures
+      const { data: disclosures } = await client.from('platform_disclosures').select('*');
 
-  var lines = $('lines'), pts = [], prevAuth = null, pollTimer = null, currentId = null, requestSeq = 0;
+      if (disclosures && disclosures.length > 0) {
+        const container = document.getElementById('macro-tickers');
+        container.innerHTML = disclosures.map(d => {
+          const idx = d.bot_percentage ?? d.synthetic_index ?? 0;
+          const delta = d.delta ?? 0;
+          const deltaClass = delta >= 0 ? 'pos' : 'neg';
+          const symbol = delta >= 0 ? '▲' : '▼';
+          return `
+            <span class="ticker-item" style="margin-right: 18px;">
+              <strong>${d.platform.toUpperCase()} SYNTHETIC INDEX:</strong>
+              <span>${Number(idx).toFixed(1)}%</span>
+              <span class="${deltaClass}">[${symbol} ${Math.abs(delta).toFixed(1)}%]</span>
+            </span>
+          `;
+        }).join('');
+      }
 
-  function pad(n) { return n < 10 ? '0' + n : '' + n; }
-  function stamp() { var d = new Date(); return pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds()); }
-  
-  function fmt(k) { 
-      if (k >= 1000000000) return (k / 1000000000).toFixed(2) + 'B';
-      if (k >= 1000000) return (k / 1000000).toFixed(2) + 'M';
-      if (k >= 1000) return (k / 1000).toFixed(1) + 'K';
-      return k;
-  }
-  
-  function delta(v, dec) {
-    if (v === null || Number.isNaN(v) || v === 0) return '';
-    var up = v >= 0;
-    return '<span class="' + (up ? 'up' : 'dn') + '">' + (up ? '▲' : '▼') + ' ' + Math.abs(v).toFixed(dec) + '</span>';
-  }
+      // 2. Fetch Entities and Their Most Recent Metrics
+      const { data: entities } = await client.from('entities').select('*');
+      const { data: metrics } = await client.from('entity_metrics').select('*').order('metric_date', { ascending: false });
 
-  function setMeter(pct) {
-    var n = Math.round(pct / 5);
-    [].forEach.call(meter.children, function (e, k) { e.className = k < n ? 'on' : ''; });
-  }
+      if (entities && entities.length > 0) {
+        const grid = document.getElementById('entity-grid');
+        grid.innerHTML = entities.map(entity => {
+          // Match entity metrics using either id or slug
+          const entityMetric = metrics ? metrics.find(m => (m.entity_slug === entity.id || m.entity_slug === entity.slug || m.entity_id === entity.id)) : null;
+          
+          const primaryLabel = entity.category === 'lives' ? 'Peak Concurrent CCV' : 'Latest Upload Reach';
+          const engagementLabel = entity.category === 'lives' ? 'Chat Velocity / min' : 'Verified Engagement';
 
-  function paintSpark() {
-    if (!pts || pts.length < 2) { $('spark').setAttribute('points', ''); return; }
-    var lo0 = Math.min.apply(null, pts), hi0 = Math.max.apply(null, pts);
-    var pad2 = (hi0 - lo0) * 0.15 + 1, lo = lo0 - pad2, hi = hi0 + pad2;
-    $('spark').setAttribute('points', pts.map(function (v, k) {
-      return (k / (pts.length - 1) * 120).toFixed(1) + ',' + (38 - (v - lo) / (hi - lo) * 34).toFixed(1);
-    }).join(' '));
-  }
+          const primaryVal = entityMetric ? Number(entityMetric.primary_volume).toLocaleString() : 'Pending Sync';
+          const engagementVal = entityMetric ? Number(entityMetric.engagement_volume ?? entityMetric.comment_volume ?? 0).toLocaleString() : 'Pending Sync';
 
-  function addLog(text) {
-    var li = document.createElement('li');
-    li.innerHTML = '<time>' + stamp() + '</time><span>' + text + '</span>';
-    lines.insertBefore(li, lines.firstChild);
-    while (lines.children.length > 5) lines.removeChild(lines.lastChild);
-  }
+          return `
+            <div class="card">
+              <div class="card-header">
+                <span class="entity-name">${entity.name}</span>
+                <span class="entity-cat">${entity.category}</span>
+              </div>
+              <div class="metric-row">
+                <span class="metric-label">${primaryLabel}:</span>
+                <span class="metric-val">${primaryVal}</span>
+              </div>
+              <div class="metric-row">
+                <span class="metric-label">${engagementLabel}:</span>
+                <span class="metric-val">${engagementVal}</span>
+              </div>
+              <div class="metric-row" style="margin-top: 12px; font-size: 11px;">
+                <span class="metric-label">Status:</span>
+                <span style="color: var(--accent-green);">AUDITED &amp; VERIFIED</span>
+              </div>
+            </div>
+          `;
+        }).join('');
+      } else {
+         document.getElementById('entity-grid').innerHTML = '<div style="color: var(--text-muted);">Database connected. Awaiting next entity data harvest...</div>';
+      }
+    }
 
-  function loadEntity(id) {
-    currentId = id; var seq = ++requestSeq;
-    $('grid').classList.add('swapping');
-
-    fetch('/api/metrics?entity=' + encodeURIComponent(id))
-      .then(function (r) {
-        if (!r.ok) return r.json().then(function (e) { throw new Error(e.error || ('HTTP ' + r.status)); });
-        return r.json();
-      })
-      .then(function (data) {
-        if (seq !== requestSeq) return; 
-
-        var authScore = data.authenticityScore;
-        $('authV').textContent = authScore;
-        $('authD').innerHTML = prevAuth === null ? '' : delta(authScore - prevAuth, 1);
-        setMeter(authScore);
-
-        $('peakV').textContent = fmt(data.latestViews || 0);
-        $('nowV').textContent = fmt(data.latestComments || 0);
-        
-        pts = data.viewHistory || [];
-        paintSpark();
-        addLog(data.sentimentLog);
-
-        prevAuth = authScore;
-        $('grid').classList.remove('swapping');
-      })
-      .catch(function (err) {
-        if (seq !== requestSeq) return;
-        addLog('Intelligence fetch failed: ' + err.message);
-        $('grid').classList.remove('swapping');
-      });
-  }
-
-  function schedulePolling() {
-    if (pollTimer) clearInterval(pollTimer);
-    pollTimer = setInterval(function () { loadEntity(currentId); }, 15000);
-  }
-
-  sel.addEventListener('change', function () {
-    pts = []; prevAuth = null; lines.innerHTML = '';
-    loadEntity(sel.value);
-  });
-
-  loadEntity('cazetv');
-  schedulePolling();
-})();
-</script>
+    loadTerminalData();
+  </script>
 </body>
 </html>
