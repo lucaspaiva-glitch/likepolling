@@ -44,6 +44,8 @@
         // Supabase Initialization
         const SUPABASE_URL = 'https://iyhaoagslsrwtkcrxylp.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_sFCHMhAt6xrlg24bFdxSZQ_oNpZMYKr';
+        
+        // Using 'supabaseClient' to avoid naming conflicts with the Supabase library
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         async function loadCategory(category, element) {
@@ -55,7 +57,7 @@
             grid.innerHTML = '<p class="text-gray-500 font-medium">Fetching terminal data...</p>';
 
             try {
-                // 1. Fetch entities using the new 'supabaseClient' name
+                // 1. Fetch entities for the selected category
                 const { data: entities, error: eErr } = await supabaseClient
                     .from('entities')
                     .select('id, name, category')
@@ -68,7 +70,7 @@
                     return;
                 }
 
-                // 2. Fetch the latest metrics using the new 'supabaseClient' name
+                // 2. Fetch the latest metrics for those entities
                 const entityIds = entities.map(e => e.id);
                 const { data: metrics, error: mErr } = await supabaseClient
                     .from('entity_metrics')
@@ -124,6 +126,5 @@
         // Initialize terminal with Companies tab on page load
         document.addEventListener("DOMContentLoaded", () => loadCategory('companies', document.querySelector('.tab-btn')));
     </script>
-
 </body>
 </html>
