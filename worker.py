@@ -14,7 +14,7 @@ GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 genai.configure(api_key=GEMINI_API_KEY)
 
-model = genai.GenerativeModel('gemini-3.0-flash')
+model = genai.GenerativeModel('gemini-1.5-flash')
 
 def fetch_news_and_analyze(entity_name, query, category):
     """Fetches rolling 7-day RSS feed, calculates velocity, and prompts Gemini for intelligence."""
