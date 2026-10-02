@@ -14,8 +14,9 @@ GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 def ask_gemini(prompt):
-    """Bypasses the broken SDKs and calls the active Gemini REST API directly."""
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key={GEMINI_API_KEY}"
+    """Bypasses broken SDKs and calls the active 2.5 Gemini REST API directly."""
+    # Pointing exactly to the proven gemini-2.5-flash model from your notebook
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
     payload = {
         "contents": [{"parts": [{"text": prompt}]}]
     }
