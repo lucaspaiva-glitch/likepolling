@@ -4,7 +4,7 @@ import urllib.parse
 from datetime import datetime, timezone
 import feedparser
 from supabase import create_client, Client
-from google import genai
+import google.generativeai as genai
 
 # 1. Initialize API Clients from GitHub Secrets
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
@@ -12,9 +12,10 @@ SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+genai.configure(api_key=GEMINI_API_KEY)
 
-# Use the modern Google GenAI Client
-client = genai.Client(api_key=GEMINI_API_KEY) if GEMINI_API_KEY else None
+# Stable active model
+model = genai.GenerativeModel('gemini-1.5-flash')
 
 def fetch_news_and_analyze(entity_name, query, category):
     """Fetches rolling 7-day RSS feed, calculates velocity, and prompts Gemini for intelligence."""
@@ -60,11 +61,7 @@ def fetch_news_and_analyze(entity_name, query, category):
     """
 
     try:
-        # Use the modern client model invocation pointing to the active 3.5 server
-        response = client.models.generate_content(
-            model='gemini-3.5-flash',
-            contents=prompt,
-        )
+        response = model.generate_content(prompt)
         raw_json = response.text.replace("```json", "").replace("```", "").strip()
         analysis = json.loads(raw_json)
         analysis["primary_volume"] = press_velocity
