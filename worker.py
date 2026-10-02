@@ -1,10 +1,10 @@
 import os
 import json
 import urllib.parse
+import urllib.request
 from datetime import datetime, timezone
 import feedparser
 from supabase import create_client, Client
-import google.generativeai as genai
 
 # 1. Initialize API Clients from GitHub Secrets
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
@@ -12,10 +12,19 @@ SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
-genai.configure(api_key=GEMINI_API_KEY)
 
-# Stable active model
-model = genai.GenerativeModel('gemini-1.5-flash')
+def ask_gemini(prompt):
+    """Bypasses the broken SDKs and calls the active Gemini REST API directly."""
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key={GEMINI_API_KEY}"
+    payload = {
+        "contents": [{"parts": [{"text": prompt}]}]
+    }
+    data = json.dumps(payload).encode('utf-8')
+    req = urllib.request.Request(url, data=data, headers={'Content-Type': 'application/json'})
+    
+    with urllib.request.urlopen(req) as response:
+        result = json.loads(response.read().decode('utf-8'))
+        return result["candidates"][0]["content"]["parts"][0]["text"]
 
 def fetch_news_and_analyze(entity_name, query, category):
     """Fetches rolling 7-day RSS feed, calculates velocity, and prompts Gemini for intelligence."""
@@ -61,8 +70,8 @@ def fetch_news_and_analyze(entity_name, query, category):
     """
 
     try:
-        response = model.generate_content(prompt)
-        raw_json = response.text.replace("```json", "").replace("```", "").strip()
+        raw_text = ask_gemini(prompt)
+        raw_json = raw_text.replace("```json", "").replace("```", "").strip()
         analysis = json.loads(raw_json)
         analysis["primary_volume"] = press_velocity
         return analysis
