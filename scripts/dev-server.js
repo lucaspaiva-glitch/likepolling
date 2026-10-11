@@ -19,6 +19,12 @@ http.createServer(async (req, res) => {
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     return fs.createReadStream(path.join(root, 'index.html')).pipe(res);
   }
+  const types = { '.css': 'text/css', '.js': 'text/javascript', '.woff2': 'font/woff2', '.txt': 'text/plain' };
+  const file = path.join(root, path.normalize(url.pathname));
+  if (url.pathname.startsWith('/assets/') && file.startsWith(path.join(root, 'assets')) && fs.existsSync(file)) {
+    res.setHeader('Content-Type', types[path.extname(file)] || 'application/octet-stream');
+    return fs.createReadStream(file).pipe(res);
+  }
   res.statusCode = 404;
   res.end('Not found');
 }).listen(port, () => console.log(`likepolling dev server on http://localhost:${port}`));
