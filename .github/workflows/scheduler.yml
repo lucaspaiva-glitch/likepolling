@@ -2,8 +2,8 @@ name: Scheduled Intelligence Harvester
 
 on:
   schedule:
-    # Runs automatically during Lisbon business hours
-    - cron: '0 9 * * 1-5'
+    # Runs daily, every day of the week (no business-hours gating)
+    - cron: '0 9 * * *'
   workflow_dispatch: # This line enables the manual "Run workflow" button!
 
 jobs:

@@ -1,7 +1,16 @@
 {
   "name": "likepolling",
   "version": "1.0.0",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "node scripts/dev-server.js",
+    "test": "node --test"
+  },
   "dependencies": {
-    "@google/generative-ai": "latest"
+    "@google/genai": "^2.28.0",
+    "@supabase/supabase-js": "^2.117.3"
   }
 }
