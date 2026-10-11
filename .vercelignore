@@ -2,3 +2,4 @@ scripts/
 test/
 worker.py
 .github/
+supabase/
