@@ -109,6 +109,9 @@ function aggregate(videos) {
 }
 
 async function generateSummary(ai, channel, stats) {
+  if (stats.videoCount === 0) {
+    return `${channel.snippet.title} has not uploaded any videos in the last ${WINDOW_DAYS} days, so there is no recent trend to explain.`;
+  }
   const topList = stats.topVideos.map((v) => `- "${v.title}" (${v.views.toLocaleString('en-US')} views)`).join('\n') || '- no uploads in the last 30 days';
   const prompt = [
     `You are a media analyst. In ONE crisp sentence (max 30 words), explain why the YouTube channel "${channel.snippet.title}" is trending right now.`,

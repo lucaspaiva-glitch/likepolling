@@ -98,6 +98,26 @@ test('handler writes entity + metric row with Gemini summary', async () => {
   assert.equal(res.body.summaryError, null);
 });
 
+test('channels with no recent uploads get a factual note without calling Gemini', async () => {
+  const db = mockDb();
+  const old = new Date(Date.now() - 60 * 864e5).toISOString();
+  const fetchImpl = async (url) => {
+    const path = new URL(url).pathname.split('/').pop();
+    const json = (b) => ({ ok: true, status: 200, json: async () => b });
+    if (path === 'channels') return json({ items: [CHANNEL] });
+    if (path === 'playlistItems') return json({ items: [{ contentDetails: { videoId: 'v9', videoPublishedAt: old } }] });
+    throw new Error('unexpected ' + url);
+  };
+  let geminiCalled = false;
+  const handler = createHandler({ env: ENV, fetch: fetchImpl, db, ai: mockAi(async () => { geminiCalled = true; return { text: 'x' }; }) });
+  const res = mockRes();
+  await handler({ query: { channel: 'MrBeast' } }, res);
+  assert.equal(res.statusCode, 200, JSON.stringify(res.body));
+  assert.equal(geminiCalled, false);
+  assert.equal(db.calls.insert[0].row.primary_volume, 0);
+  assert.match(db.calls.insert[0].row.intelligence_note, /not uploaded any videos in the last 30 days/);
+});
+
 test('Gemini failure still writes metrics and reports the error', async () => {
   const db = mockDb();
   const handler = createHandler({ env: ENV, fetch: mockFetch(), db, ai: mockAi(async () => { throw new Error('quota'); }) });
