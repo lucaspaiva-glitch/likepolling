@@ -166,6 +166,14 @@ async function insertMetric(db, entityId, stats, summary, now = new Date()) {
   return data;
 }
 
+function createSupabase(env) {
+  const url = env.SUPABASE_URL.trim();
+  if (!/^https?:\/\/[^\s"'=]+$/.test(url)) {
+    throw new HttpError(500, 'SUPABASE_URL is malformed: expected a bare URL like https://<project>.supabase.co (no quotes or "SUPABASE_URL=" prefix).');
+  }
+  return createClient(url, env.SUPABASE_KEY.trim(), { auth: { persistSession: false } });
+}
+
 function createHandler(deps = {}) {
   return async function handler(req, res) {
     const env = deps.env || process.env;
@@ -176,10 +184,9 @@ function createHandler(deps = {}) {
     const query = parseChannelQuery(req.query?.channel);
     if (!query) return res.status(400).json({ error: 'Provide ?channel=<handle, URL, or channel ID>.' });
 
-    const db = deps.db || createClient(env.SUPABASE_URL, env.SUPABASE_KEY, { auth: { persistSession: false } });
-    const ai = deps.ai || new GoogleGenAI({ apiKey: env.GEMINI_API_KEY });
-
     try {
+      const db = deps.db || createSupabase(env);
+      const ai = deps.ai || new GoogleGenAI({ apiKey: env.GEMINI_API_KEY.trim() });
       const channel = await resolveChannel(query, env.YOUTUBE_API_KEY, fetchImpl);
       const uploads = channel.contentDetails?.relatedPlaylists?.uploads;
       const videos = uploads ? await fetchRecentVideos(uploads, env.YOUTUBE_API_KEY, fetchImpl) : [];

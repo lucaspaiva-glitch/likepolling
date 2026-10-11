@@ -125,3 +125,12 @@ test('missing env vars and empty query are rejected', async () => {
   await createHandler({ env: ENV, db: mockDb(), ai: mockAi(async () => ({})) })({ query: {} }, res);
   assert.equal(res.statusCode, 400);
 });
+
+test('malformed SUPABASE_URL returns a JSON error instead of crashing', async () => {
+  for (const bad of ['"https://x.supabase.co"', 'SUPABASE_URL=https://x.supabase.co', 'x.supabase.co']) {
+    const res = mockRes();
+    await createHandler({ env: { ...ENV, SUPABASE_URL: bad }, ai: mockAi(async () => ({})) })({ query: { channel: 'MrBeast' } }, res);
+    assert.equal(res.statusCode, 500);
+    assert.match(res.body.error, /SUPABASE_URL is malformed/);
+  }
+});
