@@ -1,9 +1,8 @@
 name: Scheduled Intelligence Harvester
 
 on:
-  schedule:
-    # Runs daily, every day of the week (no business-hours gating)
-    - cron: '0 9 * * *'
+  # Schedule paused: YouTube channels refresh on search via api/metrics.js,
+  # and the news-harvested entities were removed. Manual runs still work.
   workflow_dispatch: # This line enables the manual "Run workflow" button!
 
 jobs:
