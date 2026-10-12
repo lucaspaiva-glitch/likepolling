@@ -1,17 +1,20 @@
 // Serves /api/metrics/youtube-active (rewritten in vercel.json): the latest
 // modelled snapshot of active YouTube users per country, refreshed by pg_cron
-// at 00:00 and 12:00 UTC. Cached at Vercel's edge until the next refresh.
+// at 03:00 and 15:00 UTC (the model's two daily peaks). Cached at Vercel's edge until the next refresh.
 const { createSupabase } = require('./metrics');
 
-const REFRESH_HOURS_UTC = [0, 12];
+const REFRESH_HOURS_UTC = [3, 15];
 const BUFFER_S = 120;       // let pg_cron finish before the cache turns over
 const LATE_RETRY_S = 300;   // snapshot missed its slot: check again soon
 const MAX_AGE_S = 43200;
 
 function lastSlot(now) {
   const d = new Date(now);
-  const h = Math.max(...REFRESH_HOURS_UTC.filter((x) => x <= d.getUTCHours()));
-  return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), h);
+  const day = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+  const past = REFRESH_HOURS_UTC.filter((x) => x <= d.getUTCHours());
+  return past.length
+    ? day + Math.max(...past) * 3600_000
+    : day - 86400_000 + Math.max(...REFRESH_HOURS_UTC) * 3600_000;
 }
 
 // Seconds the edge may keep this response: until the next refresh slot, or a
