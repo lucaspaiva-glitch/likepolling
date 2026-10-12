@@ -27,6 +27,33 @@
     button, input { font: inherit; }
 
 
+    /* Active-users ticker */
+    .yt-ticker { position: sticky; top: 0; z-index: 50; display: flex; align-items: stretch; height: 34px; background: var(--red-dark); color: #fff; font-size: 12px; overflow: hidden; }
+    .yt-ticker[hidden] { display: none; }
+    .yt-ticker-label { flex: none; display: flex; align-items: center; gap: 8px; padding: 0 16px; background: rgba(0,0,0,.22); font-size: 10.5px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; cursor: help; }
+    .yt-ticker-label .pulse { width: 6px; height: 6px; border-radius: 50%; background: #fff; animation: yt-pulse 2s ease-out infinite; }
+    @keyframes yt-pulse { 0% { box-shadow: 0 0 0 0 rgba(255,255,255,.55); } 70%, 100% { box-shadow: 0 0 0 6px rgba(255,255,255,0); } }
+    .yt-ticker-viewport { flex: 1; min-width: 0; display: flex; align-items: center; overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 28px, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(90deg, transparent, #000 28px, #000 calc(100% - 28px), transparent); }
+    .yt-ticker-rail { display: flex; width: max-content; animation: yt-marquee var(--yt-duration, 120s) linear infinite; will-change: transform; }
+    .yt-ticker:hover .yt-ticker-rail, .yt-ticker:focus-within .yt-ticker-rail { animation-play-state: paused; }
+    @keyframes yt-marquee { from { transform: translate3d(0,0,0); } to { transform: translate3d(-50%,0,0); } }
+    .yt-ticker-group { display: flex; flex: none; }
+    .yt-ticker-item { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+    .yt-ticker-item::after { content: '\2022'; padding: 0 16px; color: rgba(255,255,255,.32); }
+    .yt-ticker-item .flag { width: 16px; height: 12px; border-radius: 2px; box-shadow: 0 0 0 1px rgba(255,255,255,.18); object-fit: cover; }
+    .yt-ticker-item .name { color: rgba(255,255,255,.78); font-weight: 500; }
+    .yt-ticker-item .num, .yt-ticker-meta { font-family: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace; font-variant-numeric: tabular-nums; }
+    .yt-ticker-item .num { color: #fff; font-weight: 600; letter-spacing: -.01em; }
+    .yt-ticker-meta { flex: none; display: flex; align-items: center; padding: 0 16px; border-left: 1px solid rgba(255,255,255,.14); font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; color: rgba(255,255,255,.62); }
+    @media (max-width: 640px) { .yt-ticker-meta { display: none; } .yt-ticker-label { padding: 0 12px; } .yt-ticker-label .long { display: none; } }
+    @media (prefers-reduced-motion: reduce) {
+      .yt-ticker-rail { animation: none; }
+      .yt-ticker-viewport { overflow-x: auto; scrollbar-width: none; }
+      .yt-ticker-viewport::-webkit-scrollbar { display: none; }
+      .yt-ticker-group[aria-hidden] { display: none; }
+      .yt-ticker-label .pulse { animation: none; }
+    }
+
     /* Layout */
     .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
     header.top { display: flex; justify-content: space-between; align-items: center; padding: 26px 0 8px; }
@@ -112,6 +139,11 @@
   </style>
 </head>
 <body>
+  <div class="yt-ticker" id="yt-ticker" role="region" aria-label="Estimated active YouTube users by country">
+    <div class="yt-ticker-label" title="Modelled estimate, not live measurement: approximate YouTube users per country x typical share watching at this local time of day. Recalculated at 00:00 and 12:00 UTC."><span class="pulse" aria-hidden="true"></span><span>Est. active<span class="long"> now</span></span></div>
+    <div class="yt-ticker-viewport"><div class="yt-ticker-rail" id="yt-rail"></div></div>
+    <div class="yt-ticker-meta" id="yt-updated"></div>
+  </div>
   <div class="wrap">
     <header class="top">
       <a class="brand" href="/" aria-label="Like Polling home"><svg class="brand-mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="var(--red)"/><polyline points="5,21 8,19 10.5,20.2 13.5,16.5 15.5,17.6 18.5,12.5 20.5,13.6 23,6" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="23" cy="6" r="1.9" fill="#fff"/></svg>Like Polling</a>
@@ -161,6 +193,30 @@
     const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     let versus = false;
     let searchToken = 0;
+
+    // ---------- Active-users ticker ----------
+    const tickerFlag = (code) => /^[A-Z]{2}$/.test(code) ? `<img class="flag" src="/assets/flags/${code.toLowerCase()}.svg" width="16" height="12" alt="" loading="lazy">` : '';
+    const tickerNum = (n) => n >= 1e6 ? (n / 1e6).toFixed(1) + 'M' : n >= 1e3 ? Math.round(n / 1e3) + 'K' : String(n);
+
+    async function loadActiveUsers() {
+      const rail = $('yt-rail');
+      try {
+        const res = await fetch('/api/metrics/youtube-active');
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const { countries, updated_at } = await res.json();
+        if (!countries?.length) throw new Error('empty snapshot');
+        const items = countries.map((c) =>
+          `<span class="yt-ticker-item">${tickerFlag(c.code)}<span class="name">${esc(c.name)}:</span><span class="num">${tickerNum(Number(c.active))}</span></span>`
+        ).join('');
+        rail.innerHTML = `<div class="yt-ticker-group">${items}</div><div class="yt-ticker-group" aria-hidden="true">${items}</div>`;
+        if (updated_at) $('yt-updated').textContent = `Updated ${new Date(updated_at).toISOString().slice(11, 16)} UTC`;
+        const width = rail.firstElementChild.getBoundingClientRect().width;
+        rail.style.setProperty('--yt-duration', `${Math.max(30, width / 45).toFixed(1)}s`);
+      } catch (err) {
+        console.error('Active users ticker:', err);
+        $('yt-ticker').hidden = true;
+      }
+    }
 
     // ---------- Suggestions ----------
     async function loadChips() {
@@ -328,6 +384,7 @@
     });
 
     document.addEventListener('DOMContentLoaded', () => {
+      loadActiveUsers();
       loadChips();
       const params = new URLSearchParams(location.search);
       if (params.get('q')) {

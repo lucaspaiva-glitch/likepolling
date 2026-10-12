@@ -236,3 +236,4 @@ module.exports.createHandler = createHandler;
 module.exports.parseChannelQuery = parseChannelQuery;
 module.exports.aggregate = aggregate;
 module.exports.GEMINI_MODEL = GEMINI_MODEL;
+module.exports.createSupabase = createSupabase;
