@@ -139,8 +139,8 @@
   </style>
 </head>
 <body>
-  <div class="yt-ticker" id="yt-ticker" role="region" aria-label="Estimated active YouTube users by country">
-    <div class="yt-ticker-label" title="Modelled estimate, not live measurement: approximate YouTube users per country x typical share watching at this local time of day. Recalculated at 00:00 and 12:00 UTC."><span class="pulse" aria-hidden="true"></span><span>Est. active<span class="long"> now</span></span></div>
+  <div class="yt-ticker" id="yt-ticker" role="region" aria-label="Estimated number of people watching YouTube right now, by country">
+    <div class="yt-ticker-label" title="Estimated number of people watching YouTube at the same moment in each country (not monthly users). Modelled from approximate YouTube users per country and the typical share watching at that local time of day, not measured. Recalculated at 00:00 and 12:00 UTC."><span class="pulse" aria-hidden="true"></span><span>Est. watching<span class="long"> YouTube</span></span></div>
     <div class="yt-ticker-viewport"><div class="yt-ticker-rail" id="yt-rail"></div></div>
     <div class="yt-ticker-meta" id="yt-updated"></div>
   </div>
@@ -209,7 +209,7 @@
           `<span class="yt-ticker-item">${tickerFlag(c.code)}<span class="name">${esc(c.name)}:</span><span class="num">${tickerNum(Number(c.active))}</span></span>`
         ).join('');
         rail.innerHTML = `<div class="yt-ticker-group">${items}</div><div class="yt-ticker-group" aria-hidden="true">${items}</div>`;
-        if (updated_at) $('yt-updated').textContent = `Updated ${new Date(updated_at).toISOString().slice(11, 16)} UTC`;
+        if (updated_at) $('yt-updated').textContent = `As of ${new Date(updated_at).toISOString().slice(11, 16)} UTC`;
         const width = rail.firstElementChild.getBoundingClientRect().width;
         rail.style.setProperty('--yt-duration', `${Math.max(30, width / 45).toFixed(1)}s`);
       } catch (err) {
