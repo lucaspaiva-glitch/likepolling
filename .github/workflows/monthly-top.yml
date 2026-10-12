@@ -1,0 +1,26 @@
+name: Most Viewed This Month
+
+on:
+  schedule:
+    - cron: '23 8 * * *' # daily, just after YouTube's quota resets (midnight Pacific)
+  workflow_dispatch:
+
+concurrency:
+  group: youtube-monthly-top
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+      - name: Refresh youtube_monthly_top
+        env:
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: node scripts/monthly-top-routine.js
