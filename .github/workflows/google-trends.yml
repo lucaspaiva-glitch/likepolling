@@ -1,8 +1,6 @@
 name: Google Trending Searches
 
 on:
-  schedule:
-    - cron: '47 * * * *' # hourly, offset from the YouTube Trending Index run
   workflow_dispatch:
 
 concurrency:
