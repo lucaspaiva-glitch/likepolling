@@ -1,12 +1,12 @@
-name: Most Viewed This Month
+name: YouTube Music Index
 
 on:
   schedule:
-    - cron: '23 8 * * *' # daily, just after YouTube's quota resets (midnight Pacific)
+    - cron: '37 * * * *' # hourly, offset from the Trending Index run at :17
   workflow_dispatch:
 
 concurrency:
-  group: youtube-monthly-top
+  group: youtube-music-chart
   cancel-in-progress: false
 
 jobs:
@@ -18,9 +18,9 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: '22'
-      - name: Refresh youtube_monthly_top
+      - name: Refresh youtube_music_chart
         env:
           YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
-        run: node scripts/monthly-top-routine.js
+        run: node scripts/music-chart-routine.js
