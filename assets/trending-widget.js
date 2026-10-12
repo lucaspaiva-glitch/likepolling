@@ -1,0 +1,106 @@
+// YouTube Trending Index widget. Standalone: mount with
+//   <section id="yt-trending" data-supabase-url="…" data-supabase-key="sb_publishable_…"></section>
+//   <script src="/assets/trending-widget.js" defer></script>
+// Reads public.youtube_trending (filled by scripts/trending-routine.js) with the
+// publishable key. Hides itself if the data can't be loaded.
+(function () {
+  'use strict';
+  const mount = document.getElementById('yt-trending');
+  if (!mount) return;
+  const base = (mount.dataset.supabaseUrl || '').replace(/\/$/, '');
+  const key = mount.dataset.supabaseKey || '';
+  if (!base || !key) return;
+
+  const css = document.createElement('link');
+  css.rel = 'stylesheet';
+  css.href = '/assets/trending-widget.css';
+  document.head.appendChild(css);
+
+  const compact = new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 });
+  const fmt = (n) => (n == null || isNaN(n) ? '—' : compact.format(Number(n)));
+  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const headers = { apikey: key, Authorization: `Bearer ${key}` };
+
+  async function get(path) {
+    const res = await fetch(`${base}/rest/v1/${path}`, { headers });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
+  }
+
+  function defaultCountry(codes) {
+    const langs = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || ''];
+    for (const l of langs) {
+      const region = (l.split('-')[1] || '').toUpperCase();
+      if (codes.includes(region)) return region;
+    }
+    return codes.includes('US') ? 'US' : codes[0];
+  }
+
+  mount.className = 'ytt';
+  mount.setAttribute('aria-label', 'YouTube trending videos by country');
+  mount.innerHTML = `
+    <div class="ytt-head">
+      <h2 class="ytt-title">Trending Index</h2>
+      <span class="ytt-sym">YT·TOP10</span>
+      <span class="ytt-spacer"></span>
+      <select class="ytt-select" aria-label="Country"></select>
+      <span class="ytt-asof"></span>
+    </div>
+    <div class="ytt-body"></div>
+    <div class="ytt-foot">YouTube's own Trending chart for each country, via the YouTube Data API. Refreshed hourly.</div>`;
+  const select = mount.querySelector('.ytt-select');
+  const body = mount.querySelector('.ytt-body');
+  const asof = mount.querySelector('.ytt-asof');
+  let token = 0;
+
+  async function show(code) {
+    const mine = ++token;
+    try {
+      const rows = await get(`youtube_trending?select=rank,video_id,title,channel_title,thumbnail_url,view_count,like_count,fetched_at&country_code=eq.${encodeURIComponent(code)}&order=rank`);
+      if (mine !== token) return;
+      if (!rows.length) {
+        body.innerHTML = '<div class="ytt-empty">No trending data for this country yet.</div>';
+        asof.textContent = '';
+        return;
+      }
+      const top = Math.max(...rows.map((r) => Number(r.view_count) || 0), 1);
+      body.innerHTML = `
+        <table class="ytt-table">
+          <colgroup><col class="ytt-rank-col"><col><col class="ytt-vol-col"><col class="ytt-likes-col"></colgroup>
+          <thead><tr><th>#</th><th>Video</th><th class="n">Views</th><th class="n ytt-likes">Likes</th></tr></thead>
+          <tbody>${rows.map((r) => `
+            <tr>
+              <td><span class="ytt-rank">${String(r.rank).padStart(2, '0')}</span></td>
+              <td><a class="ytt-video" href="https://www.youtube.com/watch?v=${encodeURIComponent(r.video_id)}" target="_blank" rel="noopener">
+                ${r.thumbnail_url ? `<img class="ytt-thumb" src="${esc(r.thumbnail_url)}" alt="" width="64" height="36" loading="lazy">` : '<span class="ytt-thumb"></span>'}
+                <span class="ytt-text"><span class="ytt-vt" title="${esc(r.title)}">${esc(r.title)}</span><span class="ytt-ch">${esc(r.channel_title)}</span></span>
+              </a></td>
+              <td class="n ytt-vol"><span class="ytt-num">${fmt(r.view_count)}</span><div class="ytt-bar" style="width:${Math.max(4, Math.round((Number(r.view_count) || 0) / top * 100))}%"></div></td>
+              <td class="n ytt-likes"><span class="ytt-num">${fmt(r.like_count)}</span></td>
+            </tr>`).join('')}
+          </tbody>
+        </table>`;
+      asof.textContent = `As of ${new Date(rows[0].fetched_at).toISOString().slice(11, 16)} UTC`;
+    } catch (err) {
+      if (mine !== token) return;
+      console.error('Trending widget:', err);
+      body.innerHTML = '<div class="ytt-empty">Trending data is unavailable right now.</div>';
+      asof.textContent = '';
+    }
+  }
+
+  (async () => {
+    try {
+      const countries = await get('youtube_active_users?select=country_code,country_name&order=country_name');
+      if (!countries.length) throw new Error('no countries');
+      const codes = countries.map((c) => c.country_code);
+      select.innerHTML = countries.map((c) => `<option value="${esc(c.country_code)}">${esc(c.country_name)}</option>`).join('');
+      select.value = defaultCountry(codes);
+      select.addEventListener('change', () => show(select.value));
+      await show(select.value);
+    } catch (err) {
+      console.error('Trending widget:', err);
+      mount.hidden = true;
+    }
+  })();
+})();
