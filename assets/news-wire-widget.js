@@ -241,6 +241,7 @@
     if (!id) return;
     const cur = card.querySelector('.nw-player');
     if (cur) {
+      if (card.nwParked) { clearTimeout(card.nwKill); card.nwParked = false; ytCmd(cur, 'playVideo'); }
       if (!muted && card.classList.contains('nw-preview')) {
         ytCmd(cur, 'unMute');
         ytCmd(cur, 'playVideo');
@@ -255,16 +256,29 @@
     f.title = card.dataset.title || 'YouTube';
     f.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
     f.allowFullscreen = true;
-    f.addEventListener('load', () => f.classList.add('nw-ready'), { once: true });
+    f.addEventListener('load', () => { f.classList.add('nw-ready'); card.classList.add('nw-live'); }, { once: true });
     card.appendChild(f);
     card.classList.add('nw-playing');
     card.classList.toggle('nw-preview', !!muted);
   }
-  function stopShort(card) {
+  // Leaving a Short pauses its player and frees it a few seconds later, so scrolling
+  // straight back resumes it without reloading.
+  function parkShort(card) {
     clearTimeout(card.nwAuto);
     const f = card.querySelector('.nw-player');
+    if (!f || card.nwParked) return;
+    ytCmd(f, 'pauseVideo');
+    card.nwParked = true;
+    card.nwKill = setTimeout(() => stopShort(card), 8000);
+  }
+
+  function stopShort(card) {
+    clearTimeout(card.nwAuto);
+    clearTimeout(card.nwKill);
+    card.nwParked = false;
+    const f = card.querySelector('.nw-player');
     if (f) f.remove();
-    card.classList.remove('nw-playing', 'nw-preview');
+    card.classList.remove('nw-playing', 'nw-preview', 'nw-live');
   }
 
   // Pan-and-zoom runs only while a card is on screen.
@@ -273,7 +287,7 @@
       const c = e.target;
       c.classList.toggle('nw-on', e.isIntersecting);
       if (!c.classList.contains('nw-yt')) return;
-      if (!e.isIntersecting) { stopShort(c); return; }
+      if (!e.isIntersecting) { parkShort(c); return; }
       clearTimeout(c.nwAuto);
       if (!calm.matches) c.nwAuto = setTimeout(() => { if (c.classList.contains('nw-on')) playShort(c, true); }, 250);
     }), { threshold: 0.6 })
