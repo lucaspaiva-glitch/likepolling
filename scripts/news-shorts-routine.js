@@ -1,30 +1,30 @@
 #!/usr/bin/env node
-// Creator News Shorts pipeline. Run on a schedule (every 8 hours):
+// Trending Shorts pipeline. Run on a schedule (hourly):
 //   node scripts/news-shorts-routine.js
-// For each site language it searches YouTube for recent creator-economy Shorts
-// (search.list, 100 quota units), checks them with videos.list (1 unit: length,
-// embeddable, not live) and replaces that language's rows in public.news_shorts.
-// About 910 quota units per run. Env: YOUTUBE_API_KEY, SUPABASE_URL, SUPABASE_KEY
-// (secret key). Node >= 20, no deps.
+// For each site language's country it reads YouTube's own trending chart
+// (videos.list, chart=mostPopular, up to 200 videos, 1 quota unit per 50) and keeps
+// the Shorts (3 minutes or less, embeddable, public, not live) in chart order,
+// replacing that language's rows in public.news_shorts. About 36 quota units per run.
+// Env: YOUTUBE_API_KEY, SUPABASE_URL, SUPABASE_KEY (secret key). Node >= 20, no deps.
 'use strict';
 
 const { fetchJson, QuotaError } = require('./trending-routine');
 
 const YT = 'https://www.googleapis.com/youtube/v3';
 const MAX_SECONDS = 180;
-const MAX_AGE_DAYS = 7;
-const PER_LANG = 15;
+const PER_LANG = 30;
+const MAX_PAGES = 4;
 
 const SEARCHES = [
-  { lang: 'en', region: 'US', hl: 'en', q: 'youtuber news|creator economy|content creators news' },
-  { lang: 'pt', region: 'BR', hl: 'pt', q: 'youtuber notícias|criadores de conteúdo|economia dos criadores' },
-  { lang: 'pt-PT', region: 'PT', hl: 'pt', q: 'youtuber notícias|criadores de conteúdos|criadores de conteúdo' },
-  { lang: 'es', region: 'MX', hl: 'es', q: 'youtuber noticias|creadores de contenido|economía de creadores' },
-  { lang: 'de', region: 'DE', hl: 'de', q: 'YouTuber Nachrichten|Content Creator News|Creator Economy' },
-  { lang: 'ru', region: 'RU', hl: 'ru', q: 'ютубер новости|блогер новости' },
-  { lang: 'uk', region: 'UA', hl: 'uk', q: 'ютубер новини|блогер новини' },
-  { lang: 'ko', region: 'KR', hl: 'ko', q: '유튜버 뉴스|크리에이터 뉴스' },
-  { lang: 'ja', region: 'JP', hl: 'ja', q: 'ユーチューバー ニュース|YouTuber ニュース' },
+  { lang: 'en', region: 'US' },
+  { lang: 'pt', region: 'BR' },
+  { lang: 'pt-PT', region: 'PT' },
+  { lang: 'es', region: 'MX' },
+  { lang: 'de', region: 'DE' },
+  { lang: 'ru', region: 'RU' },
+  { lang: 'uk', region: 'UA' },
+  { lang: 'ko', region: 'KR' },
+  { lang: 'ja', region: 'JP' },
 ];
 
 function seconds(iso) {
@@ -35,7 +35,7 @@ function seconds(iso) {
 
 const qs = (params) => new URLSearchParams(params).toString();
 
-// Keeps search order; drops anything too long, live, not embeddable or not public.
+// Keeps chart order; drops anything too long, live, not embeddable or not public.
 function toRows(lang, ids, items) {
   const byId = new Map((items || []).map((it) => [it.id, it]));
   const rows = [];
@@ -63,12 +63,17 @@ function toRows(lang, ids, items) {
 }
 
 async function fetchLang(s, env, deps) {
-  const after = new Date(deps.now() - MAX_AGE_DAYS * 86400000).toISOString();
-  const found = await fetchJson(`${YT}/search?${qs({ part: 'snippet', type: 'video', videoDuration: 'short', videoEmbeddable: 'true', safeSearch: 'strict', order: 'relevance', maxResults: '50', q: s.q, regionCode: s.region, relevanceLanguage: s.hl, publishedAfter: after, key: env.YOUTUBE_API_KEY })}`, {}, deps);
-  const ids = [...new Set((found.items || []).map((it) => it.id?.videoId).filter(Boolean))];
-  if (!ids.length) return [];
-  const details = await fetchJson(`${YT}/videos?${qs({ part: 'snippet,contentDetails,statistics,status', id: ids.join(','), maxResults: '50', key: env.YOUTUBE_API_KEY })}`, {}, deps);
-  return toRows(s.lang, ids, details.items);
+  const items = [];
+  let pageToken = '';
+  for (let page = 0; page < MAX_PAGES; page++) {
+    const params = { part: 'snippet,contentDetails,statistics,status', chart: 'mostPopular', regionCode: s.region, maxResults: '50', key: env.YOUTUBE_API_KEY };
+    if (pageToken) params.pageToken = pageToken;
+    const body = await fetchJson(`${YT}/videos?${qs(params)}`, {}, deps);
+    items.push(...(body.items || []));
+    pageToken = body.nextPageToken;
+    if (!pageToken) break;
+  }
+  return toRows(s.lang, items.map((it) => it.id), items);
 }
 
 async function run(env = process.env, deps = {}) {
@@ -89,13 +94,13 @@ async function run(env = process.env, deps = {}) {
       failed.push({ lang: s.lang, error: err.message });
     }
   }
-  if (!rows.length) throw new Error(`No Shorts fetched (${failed.map((f) => `${f.lang}: ${f.error}`).join('; ') || 'no results'})`);
+  if (!rows.length && failed.length) throw new Error(`No Shorts fetched (${failed.map((f) => `${f.lang}: ${f.error}`).join('; ') || 'no results'})`);
   const written = await fetchJson(`${env.SUPABASE_URL}/rest/v1/rpc/replace_news_shorts`, {
     method: 'POST',
     headers: { apikey: env.SUPABASE_KEY, Authorization: `Bearer ${env.SUPABASE_KEY}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ payload: rows }),
   }, deps);
-  const summary = { rows: written, langs, failed, quotaHit };
+  const summary = { rows: written,  langs, failed, quotaHit };
   deps.log(JSON.stringify(summary));
   return summary;
 }

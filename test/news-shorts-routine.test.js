@@ -30,27 +30,28 @@ test('keeps search order and drops long, live, unembeddable and private videos',
   assert.equal(rows[0].channel_title, 'C bbbbbbbbbbb');
 });
 
-test('searches every language and replaces rows in one RPC; quota stops further searches', async () => {
+test('reads every country chart (paged), keeps Shorts in chart order, one RPC; quota stops further countries', async () => {
   let rpc;
-  let searches = 0;
+  const regions = [];
   const f = async (url, init = {}) => {
-    const u = String(url);
-    if (u.includes('/search?')) {
-      searches++;
-      if (searches === 3) return json(403, { error: { message: 'quota', errors: [{ reason: 'quotaExceeded' }] } });
-      const lang = new URL(u).searchParams.get('relevanceLanguage');
-      assert.equal(new URL(u).searchParams.get('videoDuration'), 'short');
-      return json(200, { items: [{ id: { videoId: `${lang}aaaaaaaaaa`.slice(0, 11) } }] });
+    const u = new URL(String(url));
+    if (u.pathname.endsWith('/videos')) {
+      assert.equal(u.searchParams.get('chart'), 'mostPopular');
+      const r = u.searchParams.get('regionCode');
+      regions.push(r + (u.searchParams.get('pageToken') || ''));
+      if (r === 'PT') return json(403, { error: { message: 'quota', errors: [{ reason: 'quotaExceeded' }] } });
+      if (r === 'US' && !u.searchParams.get('pageToken')) return json(200, { nextPageToken: 'p2', items: [vid('aaaaaaaaaaa', 'PT20M'), vid('bbbbbbbbbbb', 'PT45S')] });
+      if (r === 'US') return json(200, { items: [vid('ccccccccccc', 'PT1M')] });
+      return json(200, { items: [vid('ddddddddddd', 'PT30S')] });
     }
-    if (u.includes('/videos?')) return json(200, { items: [vid(new URL(u).searchParams.get('id'), 'PT40S')] });
-    if (u.includes('/rpc/replace_news_shorts')) { rpc = JSON.parse(init.body); return json(200, rpc.payload.length); }
+    if (u.pathname.endsWith('/rpc/replace_news_shorts')) { rpc = JSON.parse(init.body); return json(200, rpc.payload.length); }
     throw new Error(`unexpected ${u}`);
   };
-  const s = await run(env, { fetch: f, sleep: async () => {}, log: () => {}, now: () => Date.parse('2026-10-16T00:00:00Z') });
-  assert.equal(searches, 3);
+  const s = await run(env, { fetch: f, sleep: async () => {}, log: () => {} });
+  assert.deepEqual(regions, ['US', 'USp2', 'BR', 'PT']);
   assert.equal(s.quotaHit, true);
-  assert.deepEqual(Object.keys(s.langs), ['en', 'pt']);
+  assert.deepEqual(s.langs, { en: 2, pt: 1 });
   assert.equal(s.failed.length, SEARCHES.length - 2);
-  assert.equal(rpc.payload.length, 2);
-  assert.equal(s.rows, 2);
+  assert.deepEqual(rpc.payload.filter((r) => r.lang === 'en').map((r) => [r.video_id, r.rank]), [['bbbbbbbbbbb', 1], ['ccccccccccc', 2]]);
+  assert.equal(s.rows, 3);
 });

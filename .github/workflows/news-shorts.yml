@@ -1,8 +1,8 @@
-name: Creator News Shorts
+name: Trending Shorts
 
 on:
   schedule:
-    - cron: '7 1,9,17 * * *' # every 8 hours; each run uses about 910 YouTube quota units
+    - cron: '27 * * * *' # hourly; each run uses about 36 YouTube quota units
   workflow_dispatch:
 
 concurrency:
