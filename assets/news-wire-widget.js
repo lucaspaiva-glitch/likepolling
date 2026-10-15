@@ -157,7 +157,7 @@
         <span class="nw-pick-l" data-no-i18n>Country</span>
         <img class="nw-pick-flag" src="" alt="" width="20" height="15">
         <select class="nw-select" data-no-i18n></select>
-        <span class="nw-keys" data-no-i18n><span class="nw-kbd-pair" aria-hidden="true"><kbd data-k="ArrowUp">↑</kbd><kbd data-k="ArrowDown">↓</kbd></span><span class="nw-keys-l">Use your arrow keys to browse</span></span>
+        <span class="nw-keys" data-no-i18n><span class="nw-kbd-pair" aria-hidden="true"><kbd data-k="ArrowUp">${ICON.up}</kbd><kbd data-k="ArrowDown">${ICON.down}</kbd></span><span class="nw-keys-l">Use your arrow keys to browse</span></span>
         <span class="nw-swipe" data-no-i18n><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17V5M7.5 9.5 12 5l4.5 4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="19.5" r="2" fill="currentColor"/></svg><span class="nw-swipe-l">Swipe up for the next Short</span></span>
       </div>
       <p class="nw-empty" data-no-i18n hidden></p>

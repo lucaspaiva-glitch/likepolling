@@ -205,3 +205,4 @@
 }
 @media (max-width: 560px) { .nw-keys, .nw-swipe { flex-basis: 100%; margin-left: 0; } }
 @media (prefers-reduced-motion: reduce) { .nw-swipe svg { animation: none; } }
+.nw-keys kbd svg { width: 14px; height: 14px; }
