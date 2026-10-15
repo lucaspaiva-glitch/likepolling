@@ -43,6 +43,16 @@
     return shortsCache[lang];
   }
   const SHORT_EVERY = 3;
+  // Country whose Shorts are shown (each country is searched in its own language).
+  // Defaults to the site language's country; a choice in the dropdown is kept.
+  const SHORT_CC = { en: 'US', pt: 'BR', 'pt-PT': 'PT', es: 'MX', de: 'DE', ru: 'RU', uk: 'UA', ko: 'KR', ja: 'JP' };
+  const PICK = 'lp-shorts-lang';
+  let shortsPick = null;
+  try { const v = localStorage.getItem(PICK); if (LANGS.includes(v)) shortsPick = v; } catch (e) { /* no storage */ }
+  const shortsCounts = fetch(`${base}/rest/v1/news_shorts?select=lang`, { headers })
+    .then((r) => (r.ok ? r.json() : []))
+    .then((rows) => rows.reduce((m, r) => { m[r.lang] = (m[r.lang] || 0) + 1; return m; }, {}))
+    .catch(() => ({}));
 
   async function load(lang) {
     if (!cache[lang]) {
@@ -103,6 +113,11 @@
       <p class="nw-rank-note">Channels that appear in the most countries' YouTube Trending top 10 right now, out of all the countries we track. Brands and studios are included alongside creators. Ties go to the higher average chart position. Refreshed hourly.</p>
     </div>
     <h3 class="nw-sub">Creator economy</h3>
+    <div class="nw-pick" hidden>
+      <span class="nw-pick-l">Popular Shorts from</span>
+      <img class="nw-pick-flag" src="" alt="" width="20" height="15">
+      <select class="nw-select" data-no-i18n></select>
+    </div>
     <div class="nw-feed-wrap" hidden>
       <div class="nw-feed" data-no-i18n tabindex="0"><div class="nw-sentinel" aria-hidden="true"></div></div>
       <div class="nw-nav" data-no-i18n>
@@ -110,7 +125,7 @@
         <button type="button" class="nw-next">${ICON.down}</button>
       </div>
     </div>
-    <div class="nw-foot">Latest creator-economy headlines from Google News, in the selected language first, then other languages. Photos are each article's own preview image. Refreshed hourly.<span class="nw-foot-yt" hidden> <span>Videos are the most viewed Shorts of the last 2 days in the selected language, found by YouTube search, and play in YouTube's player. Refreshed every 12 hours.</span></span></div>`;
+    <div class="nw-foot">Latest creator-economy headlines from Google News, in the selected language first, then other languages. Photos are each article's own preview image. Refreshed hourly.<span class="nw-foot-yt" hidden> <span>Videos are the most viewed Shorts of the last 2 days in the language of the country chosen above, found by YouTube search, and play in YouTube's player. Refreshed every 12 hours.</span></span></div>`;
   const empty = document.createElement('p');
   empty.className = 'nw-empty';
   mount.querySelector('.nw-sub').after(empty);
@@ -122,6 +137,26 @@
   const footYt = mount.querySelector('.nw-foot-yt');
   const prevBtn = mount.querySelector('.nw-prev');
   const nextBtn = mount.querySelector('.nw-next');
+  const pickBar = mount.querySelector('.nw-pick');
+  const pickSel = mount.querySelector('.nw-select');
+  const pickFlag = mount.querySelector('.nw-pick-flag');
+  pickSel.addEventListener('change', () => {
+    shortsPick = pickSel.value;
+    try { localStorage.setItem(PICK, shortsPick); } catch (e) { /* no storage */ }
+    render();
+  });
+  // Countries without Shorts right now stay listed but can't be chosen.
+  function renderPicker(ui, counts, cur) {
+    let names = null;
+    try { names = new Intl.DisplayNames([ui === 'pt' ? 'pt-BR' : ui], { type: 'region' }); } catch (e) { /* codes only */ }
+    const opts = LANGS.map((l) => ({ l, name: names ? names.of(SHORT_CC[l]) : SHORT_CC[l] }))
+      .sort((a, b) => a.name.localeCompare(b.name, ui));
+    pickSel.innerHTML = opts.map((o) => `<option value="${esc(o.l)}"${counts[o.l] || o.l === cur ? '' : ' disabled'}>${esc(o.name)}</option>`).join('');
+    pickSel.value = cur;
+    pickSel.setAttribute('aria-label', tr('Country'));
+    pickFlag.src = `/assets/flags/${SHORT_CC[cur].toLowerCase()}.svg`;
+    pickBar.hidden = !Object.values(counts).some(Boolean);
+  }
   let view = null;
 
   const langName = (l, ui) => {
@@ -184,6 +219,7 @@
           <span class="nw-badge">${esc(tr('Popular Short'))}</span>
           ${v.published_at ? `<span class="nw-age">${esc(ago(v.published_at, lang))}</span>` : ''}
           ${v.view_count != null ? `<span class="nw-age">${esc(compact(v.view_count, lang))} ${esc(tr('views'))}</span>` : ''}
+          ${SHORT_CC[v.lang] ? `<img class="nw-flag" src="/assets/flags/${SHORT_CC[v.lang].toLowerCase()}.svg" alt="" width="18" height="13">` : ''}
         </div>
         <button type="button" class="nw-play" aria-label="${esc(`${play}: ${v.title}`)}" title="${esc(play)}">${ICON.big}</button>
         <div class="nw-low">
@@ -377,14 +413,17 @@
     const mine = ++token;
     const lang = siteLang();
     try {
-      const shortsP = loadShorts(lang);
+      const shortsLang = shortsPick || lang;
+      const shortsP = loadShorts(shortsLang);
       let rows = await load(lang);
       if (!rows.length && lang !== 'en') rows = await load('en');
       channels = await known;
       const shorts = (await shortsP).filter((v, i, a) => a.findIndex((x) => x.video_id === v.video_id) === i);
+      const counts = await shortsCounts;
       if (mine !== token) return;
       if (!rows.length) throw new Error('no data');
       mount.hidden = false;
+      renderPicker(lang, counts, shortsLang);
       view = { items: rows, lang };
       empty.hidden = true;
       feed.querySelectorAll(':scope > :not(.nw-sentinel)').forEach((n) => n.remove());
@@ -416,6 +455,7 @@
       if (err.message !== 'no data') console.error('News wire widget:', err);
       view = null;
       feedState = null;
+      pickBar.hidden = true;
       if (!Object.values(cache).some((r) => r.length)) { mount.hidden = true; return; }
       empty.textContent = tr('News is unavailable right now.');
       empty.hidden = false;
