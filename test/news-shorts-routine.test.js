@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { run, toRows, seconds, shortKind, SEARCHES } = require('../scripts/news-shorts-routine');
+const { run, toRows, seconds, shortKind, langMatch, SEARCHES } = require('../scripts/news-shorts-routine');
 
 const env = { YOUTUBE_API_KEY: 'yt', SUPABASE_URL: 'https://db.test', SUPABASE_KEY: 'secret' };
 const json = (status, body) => ({ ok: status >= 200 && status < 300, status, json: async () => body });
@@ -40,10 +40,32 @@ test('tells real Shorts from regular videos; anything else is unknown', async ()
   assert.equal(await shortKind('aaaaaaaaaaa', at(new Error('net'))), 'unknown');
 });
 
-test('searches most viewed recent shorts per country, keeps only real Shorts, one RPC; quota stops further countries', async () => {
+test('keeps only Shorts in the language: tag first, then script or common words', () => {
+  const v = (title, tag) => ({ snippet: { title, defaultAudioLanguage: tag } });
+  assert.equal(langMatch('ko', v('결혼하면 부부 유튜버로 뜬다?')), true);
+  assert.equal(langMatch('ko', v('NEVER WALK STRAIGHT! 😦')), false);
+  assert.equal(langMatch('ko', v('NEVER WALK STRAIGHT!', 'ko')), true);
+  assert.equal(langMatch('ja', v('映画『Michael／マイケル』吹替版予告')), true);
+  assert.equal(langMatch('ru', v('Люди добрые')), true);
+  assert.equal(langMatch('uk', v('Люди добрые')), false);
+  assert.equal(langMatch('uk', v('Розпустила коси, їду')), true);
+  assert.equal(langMatch('en', v('Why You Get Carsick While Reading 🤢')), true);
+  assert.equal(langMatch('en', v('$10 Crepe Machine', 'en-US')), true);
+  assert.equal(langMatch('en', v('$10 Crepe Machine')), false);
+  assert.equal(langMatch('pt', v('essa ESCOLA tentou TRANCAR OS CELULARES e os alunos')), true);
+  assert.equal(langMatch('pt-PT', v('Qualquer coisa', 'pt-BR')), true);
+  assert.equal(langMatch('es', v('OLVIDE A DANI EN LA ESCUELA 😭@DannyPlay7')), false);
+  assert.equal(langMatch('es', v('Ronaldo le mostró a Haaland quién es el mejor y por qué')), true);
+  assert.equal(langMatch('de', v('Warum die Katze nicht schläft')), true);
+  assert.equal(langMatch('en', v('पति उठा लाया 10 किलो मूली! the best')), false);
+  assert.equal(langMatch('en', v('Ye kele Puja ke liye hai', 'hi')), false);
+});
+
+test('searches 2 pages of most viewed recent shorts per country, keeps real Shorts in the language, one RPC; quota stops further countries', async () => {
   let rpc;
-  const regions = [];
+  const calls = [];
   const notShort = new Set(['bbbbbbbbbbb']);
+  const audio = { aaaaaaaaaaa: 'en', bbbbbbbbbbb: 'en', ccccccccccc: 'en', ddddddddddd: 'en', ggggggggggg: 'hi', eeeeeeeeeee: 'pt-BR' };
   const f = async (url, init = {}) => {
     const u = new URL(String(url));
     if (u.hostname === 'www.youtube.com') {
@@ -52,27 +74,33 @@ test('searches most viewed recent shorts per country, keeps only real Shorts, on
     }
     if (u.pathname.endsWith('/search')) {
       const r = u.searchParams.get('regionCode');
-      regions.push(r);
+      const tok = u.searchParams.get('pageToken');
+      calls.push(r + (tok ? `:${tok}` : ''));
       assert.equal(u.searchParams.get('order'), 'viewCount');
       assert.equal(u.searchParams.get('videoDuration'), 'short');
       assert.equal(u.searchParams.get('q'), null);
       assert.equal(u.searchParams.get('publishedAfter'), '2026-10-13T12:00:00.000Z');
       if (r === 'PT') return json(403, { error: { message: 'quota', errors: [{ reason: 'quotaExceeded' }] } });
-      const ids = r === 'US' ? ['aaaaaaaaaaa', 'bbbbbbbbbbb', 'ccccccccccc', 'ddddddddddd'] : ['eeeeeeeeeee'];
+      if (r === 'US' && !tok) return json(200, { nextPageToken: 'p2', items: ['aaaaaaaaaaa', 'bbbbbbbbbbb', 'ggggggggggg'].map((videoId) => ({ id: { videoId } })) });
+      const ids = r === 'US' ? ['ccccccccccc', 'ddddddddddd', 'aaaaaaaaaaa'] : ['eeeeeeeeeee'];
       return json(200, { items: ids.map((videoId) => ({ id: { videoId } })) });
     }
     if (u.pathname.endsWith('/videos')) {
       const ids = u.searchParams.get('id').split(',');
-      return json(200, { items: ids.map((id) => vid(id, id === 'ccccccccccc' ? 'PT20M' : 'PT40S')) });
+      return json(200, { items: ids.map((id) => {
+        const v = vid(id, id === 'ccccccccccc' ? 'PT20M' : 'PT40S');
+        v.snippet.defaultAudioLanguage = audio[id];
+        return v;
+      }) });
     }
     if (u.pathname.endsWith('/rpc/replace_news_shorts')) { rpc = JSON.parse(init.body); return json(200, rpc.payload.length); }
     throw new Error(`unexpected ${u}`);
   };
   const s = await run(env, { fetch: f, sleep: async () => {}, log: () => {}, now: () => Date.parse('2026-10-15T12:00:00Z') });
-  assert.deepEqual(regions, ['US', 'BR', 'PT']);
+  assert.deepEqual(calls, ['US', 'US:p2', 'BR', 'PT']);
   assert.equal(s.quotaHit, true);
   assert.deepEqual(s.langs, { en: 2, pt: 1 });
-  assert.deepEqual(s.check, { short: 3, video: 1, unknown: 0 });
+  assert.deepEqual(s.check, { otherLanguage: 1, short: 3, video: 1, unknown: 0 });
   assert.equal(s.failed.length, SEARCHES.length - 2);
   assert.deepEqual(rpc.payload.filter((r) => r.lang === 'en').map((r) => [r.video_id, r.rank]), [['aaaaaaaaaaa', 1], ['ddddddddddd', 2]]);
   assert.equal(s.rows, 3);

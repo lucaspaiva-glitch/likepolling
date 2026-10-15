@@ -1,12 +1,13 @@
 #!/usr/bin/env node
-// Popular Shorts pipeline. Run on a schedule (every 8 hours):
+// Popular Shorts pipeline. Run on a schedule (every 12 hours):
 //   node scripts/news-shorts-routine.js
 // For each site language's country it asks YouTube search for the most viewed short
-// videos of the last 2 days (search.list order=viewCount, no topic: 100 quota units),
-// reads their details (videos.list: 1 unit), keeps the embeddable, public, non-live
-// ones of 3 minutes or less, and keeps only real Shorts (youtube.com/shorts/<id> opens
-// instead of redirecting to /watch). Replaces that language's rows in
-// public.news_shorts. About 910 quota units per run.
+// videos of the last 2 days (search.list order=viewCount, no topic, 2 pages: 200 quota
+// units), reads their details (videos.list: 1 unit per 50), keeps the embeddable,
+// public, non-live ones of 3 minutes or less that are in that language (langMatch), and
+// keeps only real Shorts (youtube.com/shorts/<id> opens instead of redirecting to
+// /watch). Replaces that language's rows in public.news_shorts. About 1,830 quota
+// units per run.
 // Env: YOUTUBE_API_KEY, SUPABASE_URL, SUPABASE_KEY (secret key). Node >= 20, no deps.
 'use strict';
 
@@ -16,6 +17,7 @@ const YT = 'https://www.googleapis.com/youtube/v3';
 const MAX_SECONDS = 180;
 const MAX_AGE_DAYS = 2;
 const PER_LANG = 20;
+const SEARCH_PAGES = 2;
 
 const SEARCHES = [
   { lang: 'en', region: 'US', hl: 'en' },
@@ -64,6 +66,38 @@ function toRows(lang, ids, items, limit = Infinity) {
   return rows;
 }
 
+// Language check. YouTube's audio/metadata language tag decides when set; otherwise the
+// title must be in the language: Hangul (ko), kana (ja), Cyrillic with/without
+// Ukrainian letters (uk/ru), or for Latin-script languages more of its own common words
+// than any other's. Titles with scripts foreign to the language never pass.
+const WORDS = {
+  en: 'the and you your my is are to of with this that how what why when for it me can dont don\'t be like i',
+  pt: 'não você uma com meu minha isso do da os é ao pra quando mais na eu ele ela sua seu foi',
+  es: 'el los las con una mi y por qué más muy cuando pero del al yo su fue esto',
+  de: 'der die das und ist nicht mit ein eine ich du mein wie auf für zu im wenn nur auch',
+};
+const WORD_SETS = Object.fromEntries(Object.entries(WORDS).map(([k, v]) => [k, new Set(v.split(' '))]));
+const UK_LETTERS = /[іїєґІЇЄҐ]/;
+const ALWAYS_FOREIGN = /[\u0590-\u06ff\u0900-\u0eff\u1000-\u109f]/;
+const NON_LATIN = /[\u0400-\u04ff\u3040-\u30ff\u3400-\u9fff\uac00-\ud7a3]/;
+
+function langMatch(lang, it) {
+  const base = lang.slice(0, 2);
+  const tag = String(it.snippet?.defaultAudioLanguage || it.snippet?.defaultLanguage || '').toLowerCase().slice(0, 2);
+  const title = it.snippet?.title || '';
+  if (ALWAYS_FOREIGN.test(title)) return false;
+  if (tag && tag !== 'zx' && tag !== 'un') return tag === base;
+  if (base === 'ko') return /[\uac00-\ud7a3]/.test(title);
+  if (base === 'ja') return /[\u3040-\u30ff]/.test(title);
+  if (base === 'uk') return UK_LETTERS.test(title);
+  if (base === 'ru') return /[\u0400-\u04ff]/.test(title) && !UK_LETTERS.test(title);
+  if (NON_LATIN.test(title)) return false;
+  const words = title.toLowerCase().replace(/#\S+|@\S+/g, ' ').match(/\p{L}+(?:'\p{L}+)?/gu) || [];
+  const score = (k) => words.filter((w) => WORD_SETS[k].has(w)).length;
+  const own = score(base);
+  return own > 0 && Object.keys(WORD_SETS).every((k) => k === base || score(k) < own);
+}
+
 // 'short' when youtube.com/shorts/<id> serves the Short, 'video' when it redirects to
 // /watch (a regular video), otherwise 'unknown' (blocked, consent page, network error).
 async function shortKind(id, deps) {
@@ -79,11 +113,25 @@ async function shortKind(id, deps) {
 
 async function fetchLang(s, env, deps, check) {
   const after = new Date(deps.now() - MAX_AGE_DAYS * 86400e3).toISOString();
-  const found = await fetchJson(`${YT}/search?${qs({ part: 'id', type: 'video', videoDuration: 'short', videoEmbeddable: 'true', safeSearch: 'strict', order: 'viewCount', maxResults: '50', regionCode: s.region, relevanceLanguage: s.hl, publishedAfter: after, key: env.YOUTUBE_API_KEY })}`, {}, deps);
-  const ids = [...new Set((found.items || []).map((it) => it.id?.videoId).filter(Boolean))];
+  const ids = [];
+  let pageToken = '';
+  for (let page = 0; page < SEARCH_PAGES; page++) {
+    const params = { part: 'id', type: 'video', videoDuration: 'short', videoEmbeddable: 'true', safeSearch: 'strict', order: 'viewCount', maxResults: '50', regionCode: s.region, relevanceLanguage: s.hl, publishedAfter: after, key: env.YOUTUBE_API_KEY };
+    if (pageToken) params.pageToken = pageToken;
+    const found = await fetchJson(`${YT}/search?${qs(params)}`, {}, deps);
+    for (const it of found.items || []) if (it.id?.videoId && !ids.includes(it.id.videoId)) ids.push(it.id.videoId);
+    pageToken = found.nextPageToken;
+    if (!pageToken) break;
+  }
   if (!ids.length) return [];
-  const details = await fetchJson(`${YT}/videos?${qs({ part: 'snippet,contentDetails,statistics,status', id: ids.join(','), maxResults: '50', key: env.YOUTUBE_API_KEY })}`, {}, deps);
-  const cands = toRows(s.lang, ids, details.items);
+  const items = [];
+  for (let i = 0; i < ids.length; i += 50) {
+    const details = await fetchJson(`${YT}/videos?${qs({ part: 'snippet,contentDetails,statistics,status', id: ids.slice(i, i + 50).join(','), maxResults: '50', key: env.YOUTUBE_API_KEY })}`, {}, deps);
+    items.push(...(details.items || []));
+  }
+  const inLang = new Set(items.filter((it) => langMatch(s.lang, it)).map((it) => it.id));
+  check.otherLanguage += items.length - inLang.size;
+  const cands = toRows(s.lang, ids.filter((id) => inLang.has(id)), items);
   const kinds = [];
   for (let i = 0; i < cands.length && kinds.filter((k) => k === 'short').length < PER_LANG; i += 6) {
     kinds.push(...await Promise.all(cands.slice(i, i + 6).map((r) => shortKind(r.video_id, deps))));
@@ -99,7 +147,7 @@ async function run(env = process.env, deps = {}) {
   const failed = [];
   const langs = {};
   let quotaHit = false;
-  const check = { short: 0, video: 0, unknown: 0 };
+  const check = { otherLanguage: 0, short: 0, video: 0, unknown: 0 };
   for (const s of SEARCHES) {
     if (quotaHit) { failed.push({ lang: s.lang, error: 'skipped: quota exceeded' }); continue; }
     try {
@@ -122,7 +170,7 @@ async function run(env = process.env, deps = {}) {
   return summary;
 }
 
-module.exports = { run, toRows, seconds, shortKind, SEARCHES };
+module.exports = { run, toRows, seconds, shortKind, langMatch, SEARCHES };
 
 if (require.main === module) {
   run().catch((err) => {

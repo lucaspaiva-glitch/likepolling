@@ -2,7 +2,7 @@ name: Popular Shorts
 
 on:
   schedule:
-    - cron: '7 1,9,17 * * *' # every 8 hours; each run uses about 910 YouTube quota units
+    - cron: '7 1,13 * * *' # every 12 hours; each run uses about 1,830 YouTube quota units
   workflow_dispatch:
 
 concurrency:
