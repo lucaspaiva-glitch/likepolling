@@ -1,10 +1,10 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { run, toRows, seconds, SEARCHES } = require('../scripts/news-shorts-routine');
+const { run, toRows, seconds, onTopic, SEARCHES } = require('../scripts/news-shorts-routine');
 
 const env = { YOUTUBE_API_KEY: 'yt', SUPABASE_URL: 'https://db.test', SUPABASE_KEY: 'secret' };
 const json = (status, body) => ({ ok: status >= 200 && status < 300, status, json: async () => body });
-const vid = (id, dur, extra = {}) => ({ id, snippet: { title: `T ${id}`, channelId: `UC${id}`, channelTitle: `C ${id}`, publishedAt: '2026-10-15T10:00:00Z', liveBroadcastContent: 'none' }, contentDetails: { duration: dur }, statistics: { viewCount: '1200' }, status: { embeddable: true, privacyStatus: 'public' }, ...extra });
+const vid = (id, dur, extra = {}) => ({ id, snippet: { title: `YouTuber story ${id}`, channelId: `UC${id}`, channelTitle: `C ${id}`, publishedAt: '2026-10-15T10:00:00Z', liveBroadcastContent: 'none' }, contentDetails: { duration: dur }, statistics: { viewCount: '1200' }, status: { embeddable: true, privacyStatus: 'public' }, ...extra });
 
 test('parses ISO 8601 durations', () => {
   assert.equal(seconds('PT45S'), 45);
@@ -20,7 +20,7 @@ test('keeps search order and drops long, live, unembeddable and private videos',
     vid('bbbbbbbbbbb', 'PT59S'),
     vid('aaaaaaaaaaa', 'PT10M'),
     vid('ccccccccccc', 'PT30S', { status: { embeddable: false, privacyStatus: 'public' } }),
-    vid('ddddddddddd', 'PT30S', { snippet: { title: 'L', channelId: 'UCd', channelTitle: 'D', publishedAt: '2026-10-15T10:00:00Z', liveBroadcastContent: 'live' } }),
+    vid('ddddddddddd', 'PT30S', { snippet: { title: 'YouTuber live', channelId: 'UCd', channelTitle: 'D', publishedAt: '2026-10-15T10:00:00Z', liveBroadcastContent: 'live' } }),
     vid('eeeeeeeeeee', 'PT30S', { status: { embeddable: true, privacyStatus: 'unlisted' } }),
     vid('fffffffffff', 'PT2M'),
   ];
@@ -28,6 +28,22 @@ test('keeps search order and drops long, live, unembeddable and private videos',
   assert.deepEqual(rows.map((r) => [r.video_id, r.rank, r.duration_s]), [['bbbbbbbbbbb', 1, 59], ['fffffffffff', 2, 120]]);
   assert.equal(rows[0].view_count, 1200);
   assert.equal(rows[0].channel_title, 'C bbbbbbbbbbb');
+});
+
+test('keeps only on-topic titles in the language, above the view floor, without repeats', () => {
+  const t = (title, extra = {}) => ({ snippet: { title, ...extra } });
+  assert.equal(onTopic('en', t('YouTuber arrested over defamation video')), true);
+  assert.equal(onTopic('en', t('Breaking news: election results')), false);
+  assert.equal(onTopic('en', t('YouTube का नया Update! Shorts Creators सावधान')), false);
+  assert.equal(onTopic('en', t('Creators react', { defaultAudioLanguage: 'hi' })), false);
+  assert.equal(onTopic('en', t('Creators react', { defaultAudioLanguage: 'en-IN' })), true);
+  assert.equal(onTopic('pt-PT', t('Influenciador é preso em Lisboa', { defaultAudioLanguage: 'pt-BR' })), true);
+  assert.equal(onTopic('ko', t('유튜버 엄태웅 석방')), true);
+  assert.equal(onTopic('ru', t('Новости дня')), false);
+  const low = vid('ggggggggggg', 'PT30S', { statistics: { viewCount: '999' } });
+  const dup = vid('hhhhhhhhhhh', 'PT30S', { snippet: { title: 'YouTuber story bbbbbbbbbbb #shorts', channelId: 'UCbbbbbbbbbbb', channelTitle: 'C', publishedAt: '2026-10-15T10:00:00Z', liveBroadcastContent: 'none' } });
+  const rows = toRows('en', ['bbbbbbbbbbb', 'ggggggggggg', 'hhhhhhhhhhh'], [vid('bbbbbbbbbbb', 'PT30S'), low, dup]);
+  assert.deepEqual(rows.map((r) => r.video_id), ['bbbbbbbbbbb']);
 });
 
 test('searches every language and replaces rows in one RPC; quota stops further searches', async () => {
