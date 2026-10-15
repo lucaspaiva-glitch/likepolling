@@ -1,0 +1,26 @@
+name: Creator News Shorts
+
+on:
+  schedule:
+    - cron: '7 1,9,17 * * *' # every 8 hours; each run uses about 910 YouTube quota units
+  workflow_dispatch:
+
+concurrency:
+  group: news-shorts
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+      - name: Refresh news_shorts
+        env:
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: node scripts/news-shorts-routine.js
