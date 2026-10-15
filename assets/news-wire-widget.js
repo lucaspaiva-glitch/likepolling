@@ -130,15 +130,15 @@
   const asof = mount.querySelector('.nw-asof');
   const prevBtn = mount.querySelector('.nw-prev');
   const nextBtn = mount.querySelector('.nw-next');
-  // Creator economy sits on the front page, right under the search; Popular Shorts
+  // Creator economy opens the page, above the search; Popular Shorts
   // close the page as endless "ending credits".
   const front = document.createElement('section');
   front.className = 'nw nw-front';
   front.hidden = true;
   front.setAttribute('aria-label', 'Creator economy news');
   front.append(mount.querySelector('.nw-head'), mount.querySelector('.nw-sub'), empty, feedWrap, mount.querySelector('.nw-foot'));
-  const anchor = document.getElementById('results');
-  if (anchor) anchor.after(front); else mount.before(front);
+  const anchor = document.querySelector('.hero') || document.getElementById('results');
+  if (anchor) anchor.before(front); else mount.before(front);
   feedWrap.insertAdjacentHTML('afterbegin', '<div class="nw-lead" data-no-i18n></div>');
   const lead = feedWrap.querySelector('.nw-lead');
   const credits = document.createElement('section');
