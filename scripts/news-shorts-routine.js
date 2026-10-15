@@ -77,6 +77,7 @@ const WORDS = {
   de: 'der die das und ist nicht mit ein eine ich du mein wie auf für zu im wenn nur auch',
 };
 const WORD_SETS = Object.fromEntries(Object.entries(WORDS).map(([k, v]) => [k, new Set(v.split(' '))]));
+const LETTERS = { de: /[äöüß]/i, pt: /[ãõç]/i, es: /[ñ¿¡]/i };
 const UK_LETTERS = /[іїєґІЇЄҐ]/;
 const ALWAYS_FOREIGN = /[\u0590-\u06ff\u0900-\u0eff\u1000-\u109f]/;
 const NON_LATIN = /[\u0400-\u04ff\u3040-\u30ff\u3400-\u9fff\uac00-\ud7a3]/;
@@ -93,7 +94,7 @@ function langMatch(lang, it) {
   if (base === 'ru') return /[\u0400-\u04ff]/.test(title) && !UK_LETTERS.test(title);
   if (NON_LATIN.test(title)) return false;
   const words = title.toLowerCase().replace(/#\S+|@\S+/g, ' ').match(/\p{L}+(?:'\p{L}+)?/gu) || [];
-  const score = (k) => words.filter((w) => WORD_SETS[k].has(w)).length;
+  const score = (k) => words.filter((w) => WORD_SETS[k].has(w)).length + (LETTERS[k]?.test(title) ? 1 : 0);
   const own = score(base);
   return own > 0 && Object.keys(WORD_SETS).every((k) => k === base || score(k) < own);
 }
@@ -159,13 +160,21 @@ async function run(env = process.env, deps = {}) {
       failed.push({ lang: s.lang, error: err.message });
     }
   }
+  const empty = SEARCHES.filter((s) => langs[s.lang] === 0).map((s) => s.lang);
+  if (empty.length) {
+    // Languages searched successfully with no match: clear their old rows rather than keep stale ones.
+    await fetchJson(`${env.SUPABASE_URL}/rest/v1/news_shorts?lang=in.(${empty.map((l) => `"${l}"`).join(',')})`, {
+      method: 'DELETE',
+      headers: { apikey: env.SUPABASE_KEY, Authorization: `Bearer ${env.SUPABASE_KEY}`, Prefer: 'return=minimal' },
+    }, deps);
+  }
   if (!rows.length && failed.length) throw new Error(`No Shorts fetched (${failed.map((f) => `${f.lang}: ${f.error}`).join('; ') || 'no results'})`);
-  const written = await fetchJson(`${env.SUPABASE_URL}/rest/v1/rpc/replace_news_shorts`, {
+  const written = !rows.length ? 0 : await fetchJson(`${env.SUPABASE_URL}/rest/v1/rpc/replace_news_shorts`, {
     method: 'POST',
     headers: { apikey: env.SUPABASE_KEY, Authorization: `Bearer ${env.SUPABASE_KEY}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ payload: rows }),
   }, deps);
-  const summary = { rows: written, langs, check, failed, quotaHit };
+  const summary = { rows: written, langs, cleared: empty, check, failed, quotaHit };
   deps.log(JSON.stringify(summary));
   return summary;
 }

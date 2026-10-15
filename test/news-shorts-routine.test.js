@@ -57,6 +57,8 @@ test('keeps only Shorts in the language: tag first, then script or common words'
   assert.equal(langMatch('es', v('OLVIDE A DANI EN LA ESCUELA 😭@DannyPlay7')), false);
   assert.equal(langMatch('es', v('Ronaldo le mostró a Haaland quién es el mejor y por qué')), true);
   assert.equal(langMatch('de', v('Warum die Katze nicht schläft')), true);
+  assert.equal(langMatch('de', v('Größter Döner Deutschlands')), true);
+  assert.equal(langMatch('de', v('BEHIND THE SCENES 🥹😭')), false);
   assert.equal(langMatch('en', v('पति उठा लाया 10 किलो मूली! the best')), false);
   assert.equal(langMatch('en', v('Ye kele Puja ke liye hai', 'hi')), false);
 });
@@ -82,7 +84,7 @@ test('searches 2 pages of most viewed recent shorts per country, keeps real Shor
       assert.equal(u.searchParams.get('publishedAfter'), '2026-10-13T12:00:00.000Z');
       if (r === 'PT') return json(403, { error: { message: 'quota', errors: [{ reason: 'quotaExceeded' }] } });
       if (r === 'US' && !tok) return json(200, { nextPageToken: 'p2', items: ['aaaaaaaaaaa', 'bbbbbbbbbbb', 'ggggggggggg'].map((videoId) => ({ id: { videoId } })) });
-      const ids = r === 'US' ? ['ccccccccccc', 'ddddddddddd', 'aaaaaaaaaaa'] : ['eeeeeeeeeee'];
+      const ids = r === 'US' ? ['ccccccccccc', 'ddddddddddd', 'aaaaaaaaaaa'] : ['ggggggggggg'];
       return json(200, { items: ids.map((videoId) => ({ id: { videoId } })) });
     }
     if (u.pathname.endsWith('/videos')) {
@@ -94,14 +96,18 @@ test('searches 2 pages of most viewed recent shorts per country, keeps real Shor
       }) });
     }
     if (u.pathname.endsWith('/rpc/replace_news_shorts')) { rpc = JSON.parse(init.body); return json(200, rpc.payload.length); }
+    if (u.pathname.endsWith('/rest/v1/news_shorts') && init.method === 'DELETE') { cleared = u.searchParams.get('lang'); return { ok: true, status: 204, json: async () => { throw new Error('empty'); } }; }
     throw new Error(`unexpected ${u}`);
   };
+  let cleared;
   const s = await run(env, { fetch: f, sleep: async () => {}, log: () => {}, now: () => Date.parse('2026-10-15T12:00:00Z') });
   assert.deepEqual(calls, ['US', 'US:p2', 'BR', 'PT']);
+  assert.equal(cleared, 'in.("pt")');
+  assert.deepEqual(s.cleared, ['pt']);
   assert.equal(s.quotaHit, true);
-  assert.deepEqual(s.langs, { en: 2, pt: 1 });
-  assert.deepEqual(s.check, { otherLanguage: 1, short: 3, video: 1, unknown: 0 });
+  assert.deepEqual(s.langs, { en: 2, pt: 0 });
+  assert.deepEqual(s.check, { otherLanguage: 2, short: 2, video: 1, unknown: 0 });
   assert.equal(s.failed.length, SEARCHES.length - 2);
-  assert.deepEqual(rpc.payload.filter((r) => r.lang === 'en').map((r) => [r.video_id, r.rank]), [['aaaaaaaaaaa', 1], ['ddddddddddd', 2]]);
-  assert.equal(s.rows, 3);
+  assert.deepEqual(rpc.payload.map((r) => [r.lang, r.video_id, r.rank]), [['en', 'aaaaaaaaaaa', 1], ['en', 'ddddddddddd', 2]]);
+  assert.equal(s.rows, 2);
 });
