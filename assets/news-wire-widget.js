@@ -3,8 +3,8 @@
 //   <script src="/assets/news-wire-widget.js" defer></script>
 // Reads public.news_wire (filled hourly by scripts/news-wire-routine.js) with the
 // publishable key, in the site language from assets/i18n.js (English without it),
-// and shows the creator-economy headlines as a bento grid of vertical story cards
-// (top story + 4) and an endless vertical feed for the rest. Each card shows the article's
+// and shows the creator-economy headlines as an endless vertical feed of full-size
+// story cards that snaps to one story at a time, like Shorts. Each card shows the article's
 // own preview image with a slow pan-and-zoom while on screen, or an animated red
 // card when the article has none. Falls back to English headlines for a language
 // with none yet, and hides itself if no data loads.
@@ -21,8 +21,7 @@
   css.href = '/assets/news-wire-widget.css';
   document.head.appendChild(css);
 
-  const BENTO = 5;
-  const FEED_PAGE = 12;
+  const FEED_PAGE = 8;
   const LANGS = ['en', 'pt', 'pt-PT', 'es', 'de', 'ru', 'uk', 'ko', 'ja'];
   const FLAG = { en: 'us', pt: 'br', 'pt-PT': 'pt', es: 'es', de: 'de', ru: 'ru', uk: 'ua', ko: 'kr', ja: 'jp' };
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -72,6 +71,8 @@
     pause: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/></svg>',
     play: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M8 5.5v13l10.5-6.5z"/></svg>',
     search: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="m15 15 5 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>',
+    up: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 15 6-6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    down: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
     open: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h9v9M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   };
 
@@ -90,24 +91,30 @@
       <p class="nw-rank-note">Channels that appear in the most countries' YouTube Trending top 10 right now, out of all the countries we track. Brands and studios are included alongside creators. Ties go to the higher average chart position. Refreshed hourly.</p>
     </div>
     <h3 class="nw-sub">Creator economy</h3>
-    <div class="nw-bento" data-no-i18n></div>
     <div class="nw-feed-wrap" hidden>
-      <h3 class="nw-rank-title nw-feed-title">More stories</h3>
-      <div class="nw-feed" data-no-i18n></div>
-      <div class="nw-sentinel" aria-hidden="true"></div>
+      <div class="nw-feed" data-no-i18n tabindex="0"><div class="nw-sentinel" aria-hidden="true"></div></div>
+      <div class="nw-nav" data-no-i18n>
+        <button type="button" class="nw-prev">${ICON.up}</button>
+        <button type="button" class="nw-next">${ICON.down}</button>
+      </div>
     </div>
     <div class="nw-foot">Latest creator-economy headlines from Google News, in the selected language first, then other languages. Photos are each article's own preview image. Refreshed hourly.</div>`;
-  const bento = mount.querySelector('.nw-bento');
+  const empty = document.createElement('p');
+  empty.className = 'nw-empty';
+  mount.querySelector('.nw-sub').after(empty);
+  empty.hidden = true;
   const feedWrap = mount.querySelector('.nw-feed-wrap');
   const feed = mount.querySelector('.nw-feed');
   const sentinel = mount.querySelector('.nw-sentinel');
   const asof = mount.querySelector('.nw-asof');
+  const prevBtn = mount.querySelector('.nw-prev');
+  const nextBtn = mount.querySelector('.nw-next');
   let view = null;
 
   const langName = (l, ui) => {
     try { return new Intl.DisplayNames([ui], { type: 'language' }).of(l === 'pt' ? 'pt-BR' : l); } catch { return l; }
   };
-  function cardHtml(r, lang, i, kind) {
+  function cardHtml(r, lang, i, kind, note) {
     const foreign = r.lang && r.lang !== lang;
     const link = /^https:\/\//.test(r.link) ? esc(r.link) : '#';
     const img = /^https:\/\//.test(r.image_url || '') ? esc(r.image_url) : '';
@@ -115,7 +122,7 @@
     const initial = esc(([...src][0] || 'N').toUpperCase());
     const ch = channelIn(r.title);
     return `
-      <article class="nw-card nw-${kind} nw-in${img ? '' : ' nw-noimg'}"${foreign ? ` lang="${esc(r.lang)}"` : ''} style="animation-delay:${(i % FEED_PAGE) * 45}ms">
+      <article class="nw-card nw-short nw-${kind} nw-in${img ? '' : ' nw-noimg'}"${foreign ? ` lang="${esc(r.lang)}"` : ''} style="animation-delay:${(i % FEED_PAGE) * 45}ms">
         <div class="nw-media" aria-hidden="true">
           ${img ? `<img class="nw-img nw-kb${i % 4}" src="${img}" alt="" loading="${kind === 'more' ? 'lazy' : 'eager'}" decoding="async" referrerpolicy="no-referrer">` : ''}
           <div class="nw-art"><span>${initial}</span></div>
@@ -123,6 +130,7 @@
         <div class="nw-shade" aria-hidden="true"></div>
         <div class="nw-top">
           <span class="nw-badge">${esc(tr(kind === 'hero' ? 'Top story' : 'Creator wire'))}</span>
+          ${note ? `<span class="nw-badge nw-badge-alt">${esc(note)}</span>` : ''}
           <span class="nw-age">${esc(ago(r.published_at, lang))}</span>
           ${foreign && FLAG[r.lang] ? `<img class="nw-flag" src="/assets/flags/${FLAG[r.lang]}.svg" alt="${esc(langName(r.lang, lang))}" title="${esc(langName(r.lang, lang))}" width="18" height="13">` : ''}
         </div>
@@ -143,7 +151,7 @@
 
   // Pan-and-zoom runs only while a card is on screen.
   const motion = 'IntersectionObserver' in window
-    ? new IntersectionObserver((entries) => entries.forEach((e) => e.target.classList.toggle('nw-on', e.isIntersecting)), { threshold: 0.25 })
+    ? new IntersectionObserver((entries) => entries.forEach((e) => e.target.classList.toggle('nw-on', e.isIntersecting)), { threshold: 0.6 })
     : null;
   const watch = (root) => root.querySelectorAll('.nw-card:not([data-w])').forEach((c) => {
     c.dataset.w = '1';
@@ -151,8 +159,10 @@
   });
 
   // Endless vertical feed: the selected language first, then every other
-  // language's stories (flagged), each story once, then a "caught up" note.
+  // language's stories (flagged; the first one says so), each story once,
+  // then a "caught up" card. Cards load a few screens ahead of the reader.
   let feedState = null;
+  const nearEnd = () => sentinel.offsetTop - feed.scrollTop < feed.clientHeight * 3;
   async function moreFeed() {
     const st = feedState;
     if (!st || st.busy || st.done) return;
@@ -160,35 +170,66 @@
     try {
       while (st.shown >= st.items.length && st.queue.length) {
         const l = st.queue.shift();
-        const extra = (await load(l)).filter((r) => !st.seen.has(r.link));
+        const extra = (await load(l).catch(() => [])).filter((r) => !st.seen.has(r.link));
         if (st !== feedState) return;
         if (!extra.length) continue;
         extra.forEach((r) => st.seen.add(r.link));
-        if (!st.others) {
-          st.others = true;
-          feed.insertAdjacentHTML('beforeend', `<p class="nw-feed-sep">${esc(tr('From other languages'))}</p>`);
-        }
+        if (st.others == null) st.others = st.items.length;
         st.items.push(...extra);
       }
       if (st.shown >= st.items.length) {
         st.done = true;
-        feed.insertAdjacentHTML('beforeend', `<p class="nw-feed-end">${esc(tr("You're all caught up"))}</p>`);
+        sentinel.insertAdjacentHTML('beforebegin', `<p class="nw-feed-end">${esc(tr("You're all caught up"))}</p>`);
         return;
       }
       const from = st.shown;
       st.shown = Math.min(st.items.length, st.shown + FEED_PAGE);
-      feed.insertAdjacentHTML('beforeend', st.items.slice(from, st.shown).map((r, i) => cardHtml(r, st.lang, from + i, 'more')).join(''));
+      sentinel.insertAdjacentHTML('beforebegin', st.items.slice(from, st.shown).map((r, i) => {
+        const n = from + i;
+        return cardHtml(r, st.lang, n, n ? 'more' : 'hero', n === st.others ? tr('From other languages') : '');
+      }).join(''));
       watch(feed);
     } finally {
       st.busy = false;
     }
     requestAnimationFrame(() => {
-      if (st === feedState && sentinel.getBoundingClientRect().top < innerHeight + 1200) moreFeed();
+      if (st === feedState && nearEnd()) moreFeed();
     });
   }
   if ('IntersectionObserver' in window) {
-    new IntersectionObserver((entries) => { if (entries[0].isIntersecting) moreFeed(); }, { rootMargin: '0px 0px 1200px 0px' }).observe(sentinel);
+    new IntersectionObserver((entries) => { if (entries[0].isIntersecting) moreFeed(); }, { root: feed, rootMargin: '0px 0px 300% 0px' }).observe(sentinel);
   }
+  const step = (dir) => feed.scrollBy({ top: dir * (feed.clientHeight + 16), behavior: 'smooth' });
+  prevBtn.addEventListener('click', () => step(-1));
+  nextBtn.addEventListener('click', () => step(1));
+  const syncNav = () => {
+    prevBtn.disabled = feed.scrollTop < 8;
+    nextBtn.disabled = feedState != null && feedState.done && feed.scrollTop + feed.clientHeight >= feed.scrollHeight - 40;
+  };
+  feed.addEventListener('scroll', () => { syncNav(); if (nearEnd()) moreFeed(); }, { passive: true });
+  // Mouse wheel / trackpad: the page scrolls until the feed fills the screen,
+  // then one gesture moves exactly one story; at either end the page scrolls on.
+  let wheelLock = 0;
+  feed.addEventListener('wheel', (ev) => {
+    if (ev.ctrlKey || Math.abs(ev.deltaY) <= Math.abs(ev.deltaX)) return;
+    const dir = Math.sign(ev.deltaY);
+    const top = feed.getBoundingClientRect().top;
+    const dock = 34 + (innerWidth <= 560 ? 12 : 16);
+    const dy = ev.deltaY * (ev.deltaMode === 1 ? 16 : 1);
+    if ((dir > 0 && top > dock + 4) || (dir < 0 && top < dock - 4)) {
+      ev.preventDefault();
+      window.scrollBy(0, dir > 0 ? Math.min(dy, top - dock) : Math.max(dy, top - dock));
+      return;
+    }
+    if ((dir < 0 && prevBtn.disabled) || (dir > 0 && nextBtn.disabled)) return;
+    ev.preventDefault();
+    const now = performance.now();
+    const busy = now < wheelLock;
+    wheelLock = Math.max(wheelLock, now + 250);
+    if (busy) return;
+    wheelLock = now + 600;
+    step(dir);
+  }, { passive: false });
 
   function setPaused(card, paused) {
     card.classList.toggle('nw-paused', paused);
@@ -238,23 +279,27 @@
       if (!rows.length) throw new Error('no data');
       mount.hidden = false;
       view = { items: rows, lang };
-      bento.innerHTML = rows.slice(0, BENTO).map((r, i) => cardHtml(r, lang, i, i ? 'tile' : 'hero')).join('');
-      bento.dataset.n = String(Math.min(rows.length, BENTO));
-      feed.innerHTML = '';
+      empty.hidden = true;
+      feed.querySelectorAll(':scope > :not(.nw-sentinel)').forEach((n) => n.remove());
+      feed.scrollTop = 0;
+      feed.setAttribute('aria-label', tr('Creator economy'));
+      prevBtn.setAttribute('aria-label', tr('Previous story'));
+      prevBtn.title = tr('Previous story');
+      nextBtn.setAttribute('aria-label', tr('Next story'));
+      nextBtn.title = tr('Next story');
       const own = rows[0].lang || lang;
       feedState = {
         lang,
         items: rows.slice(),
-        shown: BENTO,
+        shown: 0,
         seen: new Set(rows.map((r) => r.link)),
         queue: ['en', ...LANGS].filter((l, i, a) => l !== own && a.indexOf(l) === i),
-        others: false,
+        others: null,
         busy: false,
         done: false
       };
       feedWrap.hidden = false;
-      moreFeed();
-      watch(bento);
+      moreFeed().then(syncNav);
       asof.textContent = `As of ${new Date(rows[0].fetched_at).toISOString().slice(11, 16)} UTC`;
     } catch (err) {
       if (mine !== token) return;
@@ -262,7 +307,8 @@
       view = null;
       feedState = null;
       if (!Object.values(cache).some((r) => r.length)) { mount.hidden = true; return; }
-      bento.innerHTML = `<p class="nw-empty">${esc(tr('News is unavailable right now.'))}</p>`;
+      empty.textContent = tr('News is unavailable right now.');
+      empty.hidden = false;
       feedWrap.hidden = true;
     }
   }

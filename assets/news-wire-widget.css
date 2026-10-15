@@ -32,16 +32,7 @@
 .nw-rcount span { display: block; font-family: inherit; font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase; }
 .nw-rbar { position: absolute; left: 34px; bottom: -1px; height: 2px; border-radius: 2px; background: var(--red, #b0000e); max-width: calc(100% - 34px); }
 .nw-rank-note { margin: 10px 0 10px; font-size: 11px; line-height: 1.5; color: #8a8a8a; }
-/* Creator economy: bento grid (top story + 4) and an endless vertical feed of story cards. */
-.nw-bento { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; padding: 16px 18px 18px; }
-.nw-bento > .nw-empty { grid-column: 1 / -1; margin: 0; border: 0; }
-.nw-hero { grid-column: 1 / -1; aspect-ratio: 3 / 4; }
-.nw-tile, .nw-more { aspect-ratio: 9 / 16; }
-@media (min-width: 760px) {
-  .nw-bento { grid-template-columns: 45fr 27.5fr 27.5fr; max-width: 1040px; margin: 0 auto; }
-  .nw-hero { grid-column: 1; grid-row: 1 / span 2; aspect-ratio: auto; min-height: 480px; }
-  .nw-bento[data-n="1"] .nw-hero, .nw-bento[data-n="2"] .nw-hero, .nw-bento[data-n="3"] .nw-hero { aspect-ratio: 9 / 16; grid-row: auto; }
-}
+/* Creator economy: an endless vertical feed of full-size story cards, one per screen (Shorts-style snap). */
 .nw-card { position: relative; min-width: 0; border-radius: 12px; overflow: hidden; isolation: isolate; background: #1a0306; color: #fff; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,.06), 0 12px 28px -14px rgba(0,0,0,.4); transition: transform .4s cubic-bezier(.2,.7,.2,1), box-shadow .4s; }
 .nw-card:hover { transform: translateY(-4px); box-shadow: 0 2px 4px rgba(0,0,0,.08), 0 24px 44px -18px rgba(127,0,10,.5); }
 .nw-media, .nw-shade { position: absolute; inset: 0; }
@@ -68,7 +59,7 @@
 .nw-mono { flex: none; display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: #fff; color: var(--red, #b0000e); font-size: 10.5px; font-weight: 800; }
 .nw-pub .nw-src { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .nw-card .nw-hl { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 5; overflow: hidden; color: #fff; text-decoration: none; font-size: 13.5px; font-weight: 800; line-height: 1.2; letter-spacing: .01em; text-transform: uppercase; overflow-wrap: anywhere; text-shadow: 0 1px 14px rgba(0,0,0,.45); }
-.nw-hero .nw-hl { font-size: clamp(19px, 2.3vw, 27px); line-height: 1.12; letter-spacing: -.005em; -webkit-line-clamp: 6; }
+.nw-card .nw-hl { font-size: clamp(19px, 2.3vw, 27px); line-height: 1.12; letter-spacing: -.005em; -webkit-line-clamp: 6; }
 .nw-card .nw-hl:hover { text-decoration: underline; text-decoration-color: var(--red, #b0000e); text-decoration-thickness: 3px; text-underline-offset: 4px; }
 .nw-read { display: inline-flex; margin-top: 10px; padding: 6px 11px; border: 1px solid rgba(255,255,255,.25); border-radius: 999px; background: rgba(255,255,255,.12); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); color: #fff; font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; text-decoration: none; white-space: nowrap; transition: background .2s, border-color .2s; }
 .nw-read:hover { background: var(--red, #b0000e); border-color: var(--red, #b0000e); }
@@ -79,30 +70,28 @@
 .nw-act svg { width: 16px; height: 16px; }
 .nw-act-l { max-width: 64px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 9.5px; font-weight: 600; text-shadow: 0 1px 6px rgba(0,0,0,.6); }
 .nw-card a:focus-visible, .nw-card button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
-.nw-tile .nw-read, .nw-more .nw-read { display: none; }
-.nw-feed-wrap { padding: 4px 18px 18px; }
+.nw-feed-wrap { --nw-h: min(860px, calc(100svh - 34px - 40px)); position: relative; padding: 16px 18px 18px; }
 .nw-feed-wrap[hidden] { display: none; }
-.nw-feed-title { max-width: 1040px; margin: 4px auto 10px; }
-.nw-feed { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 14px; max-width: 1040px; margin: 0 auto; }
-.nw-feed-sep, .nw-feed-end { grid-column: 1 / -1; margin: 10px 0 0; padding-top: 12px; border-top: 1px solid var(--line, #ebebeb); font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted, #737373); }
-.nw-feed-end { text-align: center; padding: 16px 0 4px; }
-.nw-sentinel { height: 1px; }
+.nw-feed { position: relative; display: flex; flex-direction: column; align-items: center; gap: 16px; height: var(--nw-h); min-height: 420px; overflow-y: auto; overscroll-behavior-y: auto; scroll-snap-type: y mandatory; scrollbar-width: none; outline: none; }
+.nw-feed::-webkit-scrollbar { display: none; }
+.nw-short, .nw-feed-end { flex: none; height: 100%; aspect-ratio: 9 / 16; max-width: 100%; scroll-snap-align: start; scroll-snap-stop: always; }
+.nw-short:hover { transform: none; }
+.nw-feed-end { display: grid; place-items: center; box-sizing: border-box; margin: 0; padding: 24px; border: 1px dashed var(--line, #ebebeb); border-radius: 12px; text-align: center; font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted, #737373); }
+.nw-sentinel { flex: none; width: 1px; height: 1px; }
+.nw-badge-alt { background: rgba(255,255,255,.92); color: var(--red, #b0000e); box-shadow: none; }
 .nw-flag { width: 18px; height: 13px; border-radius: 2px; box-shadow: 0 0 0 1px rgba(255,255,255,.5); flex: none; }
-.nw-more .nw-hl { font-size: 12.5px; }
+.nw-nav { position: absolute; top: 50%; left: calc(50% + var(--nw-h) * 9 / 32 + 24px); display: flex; flex-direction: column; gap: 10px; transform: translateY(-50%); }
+.nw-nav button { display: grid; place-items: center; width: 42px; height: 42px; padding: 0; border: 1px solid var(--line, #ebebeb); border-radius: 50%; background: #fff; color: var(--ink, #0a0a0a); cursor: pointer; box-shadow: 0 6px 18px -10px rgba(0,0,0,.35); transition: background .2s, border-color .2s, color .2s; }
+.nw-nav button:hover { background: var(--red, #b0000e); border-color: var(--red, #b0000e); color: #fff; }
+.nw-nav button:disabled { opacity: .35; pointer-events: none; }
+.nw-nav button:focus-visible { outline: 2px solid var(--red, #b0000e); outline-offset: 2px; }
+.nw-nav svg { width: 18px; height: 18px; }
+@media (max-width: 760px) { .nw-nav { display: none; } }
 @media (max-width: 560px) {
-  .nw-bento { gap: 10px; padding: 12px 14px 14px; }
-  .nw-tile .nw-hl { font-size: 11.5px; -webkit-line-clamp: 6; }
-  .nw-tile .nw-low, .nw-more .nw-low { padding: 10px; }
-  .nw-tile .nw-low, .nw-more .nw-low { flex-direction: column; align-items: stretch; gap: 8px; }
-  .nw-tile .nw-rail, .nw-more .nw-rail { flex-direction: row; gap: 6px; }
-  .nw-tile .nw-act, .nw-more .nw-act { width: 28px; height: 28px; }
-  .nw-tile .nw-act svg, .nw-more .nw-act svg { width: 13px; height: 13px; }
-  .nw-tile .nw-actw, .nw-more .nw-actw { flex-direction: row; gap: 5px; min-width: 0; }
-  .nw-tile .nw-act-l, .nw-more .nw-act-l { max-width: 70px; }
-  .nw-tile .nw-top, .nw-more .nw-top { left: 10px; right: 10px; top: 10px; }
-  .nw-tile .nw-pub, .nw-more .nw-pub { font-size: 10.5px; margin-bottom: 6px; }
-  .nw-feed-wrap { padding: 4px 14px 14px; }
-  .nw-feed { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .nw-feed-wrap { --nw-h: calc(100svh - 34px - 24px); padding: 12px 14px 14px; }
+  .nw-feed { gap: 12px; }
+  .nw-short { width: 100%; }
+  .nw-card .nw-hl { font-size: clamp(18px, 5.6vw, 24px); }
 }
 @media (prefers-reduced-motion: reduce) {
   .nw-img, .nw-art { animation: none !important; }
