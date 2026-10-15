@@ -162,8 +162,10 @@
       </article>`;
   }
 
-  // A real YouTube Short: thumbnail + play button until tapped, then YouTube's own
-  // player, uncovered. The player is removed again when the card leaves the screen.
+  // A real YouTube Short: YouTube's own player, uncovered. It starts muted with
+  // captions when the card fills the screen (thumbnail + play button until then, or
+  // until tapped when the visitor prefers reduced motion); a tap turns the sound on
+  // and hands the player its own controls. Leaving the card removes the player.
   const compact = (n, lang) => { try { return new Intl.NumberFormat(lang === 'pt' ? 'pt-BR' : lang, { notation: 'compact', maximumFractionDigits: 1 }).format(n); } catch { return String(n); } };
   function shortHtml(v, lang) {
     const id = /^[A-Za-z0-9_-]{11}$/.test(v.video_id) ? v.video_id : '';
@@ -172,7 +174,7 @@
     const initial = esc(([...ch][0] || 'Y').toUpperCase());
     const play = tr('Play video');
     return `
-      <article class="nw-card nw-short nw-yt nw-in" data-vid="${id}" data-title="${esc(v.title)}">
+      <article class="nw-card nw-short nw-yt nw-in" data-vid="${id}" data-lang="${esc(lang)}" data-title="${esc(v.title)}">
         <div class="nw-media" aria-hidden="true">
           <img class="nw-img nw-still" src="https://i.ytimg.com/vi/${id}/hqdefault.jpg" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">
           <div class="nw-art"><span>${initial}</span></div>
@@ -195,28 +197,49 @@
         </div>
       </article>`;
   }
-  function playShort(card) {
-    if (card.classList.contains('nw-playing') || !card.dataset.vid) return;
+  const calm = matchMedia('(prefers-reduced-motion: reduce)');
+  const YT_ORIGIN = 'https://www.youtube-nocookie.com';
+  const ytCmd = (f, func) => { if (f.contentWindow) f.contentWindow.postMessage(JSON.stringify({ event: 'command', func, args: [] }), YT_ORIGIN); };
+  function playShort(card, muted) {
+    const id = card.dataset.vid;
+    if (!id) return;
+    const cur = card.querySelector('.nw-player');
+    if (cur) {
+      if (!muted && card.classList.contains('nw-preview')) {
+        ytCmd(cur, 'unMute');
+        ytCmd(cur, 'playVideo');
+        card.classList.remove('nw-preview');
+      }
+      return;
+    }
+    const hl = card.dataset.lang || siteLang();
     const f = document.createElement('iframe');
     f.className = 'nw-player';
-    f.src = `https://www.youtube-nocookie.com/embed/${card.dataset.vid}?autoplay=1&playsinline=1&rel=0`;
+    f.src = `${YT_ORIGIN}/embed/${id}?${new URLSearchParams({ autoplay: '1', mute: muted ? '1' : '0', playsinline: '1', rel: '0', loop: '1', playlist: id, cc_load_policy: '1', cc_lang_pref: hl, hl, enablejsapi: '1', origin: location.origin })}`;
     f.title = card.dataset.title || 'YouTube';
     f.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
     f.allowFullscreen = true;
+    f.addEventListener('load', () => f.classList.add('nw-ready'), { once: true });
     card.appendChild(f);
     card.classList.add('nw-playing');
+    card.classList.toggle('nw-preview', !!muted);
   }
   function stopShort(card) {
+    clearTimeout(card.nwAuto);
     const f = card.querySelector('.nw-player');
     if (f) f.remove();
-    card.classList.remove('nw-playing');
+    card.classList.remove('nw-playing', 'nw-preview');
   }
 
   // Pan-and-zoom runs only while a card is on screen.
   const motion = 'IntersectionObserver' in window
     ? new IntersectionObserver((entries) => entries.forEach((e) => {
-      e.target.classList.toggle('nw-on', e.isIntersecting);
-      if (!e.isIntersecting && e.target.classList.contains('nw-playing')) stopShort(e.target);
+      const c = e.target;
+      c.classList.toggle('nw-on', e.isIntersecting);
+      if (!c.classList.contains('nw-yt')) return;
+      if (!e.isIntersecting) { stopShort(c); return; }
+      clearTimeout(c.nwAuto);
+      if (!calm.matches) c.nwAuto = setTimeout(() => { if (c.classList.contains('nw-on')) playShort(c, true); }, 250);
     }), { threshold: 0.6 })
     : null;
   const watch = (root) => root.querySelectorAll('.nw-card:not([data-w])').forEach((c) => {
@@ -268,7 +291,16 @@
   if ('IntersectionObserver' in window) {
     new IntersectionObserver((entries) => { if (entries[0].isIntersecting) moreFeed(); }, { root: feed, rootMargin: '0px 0px 300% 0px' }).observe(sentinel);
   }
-  const step = (dir) => feed.scrollBy({ top: dir * (feed.clientHeight + 16), behavior: 'smooth' });
+  // Moves to the neighbouring card's own position, so the gap size never adds up.
+  const step = (dir) => {
+    const cards = [...feed.children].filter((c) => c.matches('.nw-card, .nw-feed-end'));
+    if (!cards.length) return;
+    const pos = (c) => c.offsetTop - cards[0].offsetTop;
+    let i = 0;
+    cards.forEach((c, k) => { if (Math.abs(pos(c) - feed.scrollTop) < Math.abs(pos(cards[i]) - feed.scrollTop)) i = k; });
+    const t = cards[Math.max(0, Math.min(cards.length - 1, i + dir))];
+    feed.scrollTo({ top: pos(t), behavior: 'smooth' });
+  };
   prevBtn.addEventListener('click', () => step(-1));
   nextBtn.addEventListener('click', () => step(1));
   const syncNav = () => {
@@ -326,7 +358,7 @@
     const card = ev.target.closest('.nw-card');
     if (!card) return;
     if (card.classList.contains('nw-yt')) {
-      if (!ev.target.closest('a')) playShort(card);
+      if (!ev.target.closest('a')) playShort(card, false);
       return;
     }
     const find = ev.target.closest('.nw-find');
