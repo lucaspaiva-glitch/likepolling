@@ -113,11 +113,6 @@
       <p class="nw-rank-note">Channels that appear in the most countries' YouTube Trending top 10 right now, out of all the countries we track. Brands and studios are included alongside creators. Ties go to the higher average chart position. Refreshed hourly.</p>
     </div>
     <h3 class="nw-sub">Creator economy</h3>
-    <div class="nw-pick" hidden>
-      <span class="nw-pick-l">Popular Shorts from</span>
-      <img class="nw-pick-flag" src="" alt="" width="20" height="15">
-      <select class="nw-select" data-no-i18n></select>
-    </div>
     <div class="nw-feed-wrap" hidden>
       <div class="nw-feed" data-no-i18n tabindex="0"><div class="nw-sentinel" aria-hidden="true"></div></div>
       <div class="nw-nav" data-no-i18n>
@@ -125,7 +120,7 @@
         <button type="button" class="nw-next">${ICON.down}</button>
       </div>
     </div>
-    <div class="nw-foot">Latest creator-economy headlines from Google News, in the selected language first, then other languages. Photos are each article's own preview image. Refreshed hourly.<span class="nw-foot-yt" hidden> <span>Videos are the most viewed Shorts of the last 2 days in the language of the country chosen above, found by YouTube search, and play in YouTube's player. Refreshed every 12 hours.</span></span></div>`;
+    <div class="nw-foot">Latest creator-economy headlines from Google News, in the selected language first, then other languages. Photos are each article's own preview image. Refreshed hourly.</div>`;
   const empty = document.createElement('p');
   empty.className = 'nw-empty';
   mount.querySelector('.nw-sub').after(empty);
@@ -134,16 +129,42 @@
   const feed = mount.querySelector('.nw-feed');
   const sentinel = mount.querySelector('.nw-sentinel');
   const asof = mount.querySelector('.nw-asof');
-  const footYt = mount.querySelector('.nw-foot-yt');
   const prevBtn = mount.querySelector('.nw-prev');
   const nextBtn = mount.querySelector('.nw-next');
+  // Popular Shorts get their own feed above the creator-economy articles.
+  const S_TITLE = 'Popular Shorts by country';
+  const S_FOOT = "Videos are the most viewed Shorts of the last 2 days in the language of the country chosen above, found by YouTube search, and play in YouTube's player. Refreshed every 12 hours.";
+  const S_NONE = 'No Popular Shorts for this country right now.';
+  const S_END = "You've seen all Popular Shorts for this country.";
+  mount.querySelector('.nw-rank').insertAdjacentHTML('afterend', `
+    <div class="nw-shorts" hidden>
+      <h3 class="nw-sub" data-no-i18n>${S_TITLE}</h3>
+      <div class="nw-pick">
+        <span class="nw-pick-l" data-no-i18n>Country</span>
+        <img class="nw-pick-flag" src="" alt="" width="20" height="15">
+        <select class="nw-select" data-no-i18n></select>
+      </div>
+      <p class="nw-empty" data-no-i18n hidden></p>
+      <div class="nw-feed-wrap">
+        <div class="nw-feed" data-no-i18n tabindex="0"></div>
+        <div class="nw-nav" data-no-i18n>
+          <button type="button" class="nw-prev">${ICON.up}</button>
+          <button type="button" class="nw-next">${ICON.down}</button>
+        </div>
+      </div>
+      <div class="nw-foot" data-no-i18n>${S_FOOT}</div>
+    </div>`);
+  const sBox = mount.querySelector('.nw-shorts');
+  const sFeed = sBox.querySelector('.nw-feed');
+  const sPrev = sBox.querySelector('.nw-prev');
+  const sNext = sBox.querySelector('.nw-next');
   const pickBar = mount.querySelector('.nw-pick');
   const pickSel = mount.querySelector('.nw-select');
   const pickFlag = mount.querySelector('.nw-pick-flag');
   pickSel.addEventListener('change', () => {
     shortsPick = pickSel.value;
     try { localStorage.setItem(PICK, shortsPick); } catch (e) { /* no storage */ }
-    render();
+    renderShorts();
   });
   // Countries without Shorts right now stay listed but can't be chosen.
   function renderPicker(ui, counts, cur) {
@@ -267,6 +288,7 @@
     clearTimeout(card.nwAuto);
     const f = card.querySelector('.nw-player');
     if (!f || card.nwParked) return;
+    document.querySelectorAll('.nw-yt').forEach((o) => { if (o !== card && o.nwParked) stopShort(o); });
     ytCmd(f, 'pauseVideo');
     card.nwParked = true;
     card.nwKill = setTimeout(() => stopShort(card), 8000);
@@ -341,46 +363,52 @@
   if ('IntersectionObserver' in window) {
     new IntersectionObserver((entries) => { if (entries[0].isIntersecting) moreFeed(); }, { root: feed, rootMargin: '0px 0px 300% 0px' }).observe(sentinel);
   }
-  // Moves to the neighbouring card's own position, so the gap size never adds up.
-  const step = (dir) => {
-    const cards = [...feed.children].filter((c) => c.matches('.nw-card, .nw-feed-end'));
-    if (!cards.length) return;
-    const pos = (c) => c.offsetTop - cards[0].offsetTop;
-    let i = 0;
-    cards.forEach((c, k) => { if (Math.abs(pos(c) - feed.scrollTop) < Math.abs(pos(cards[i]) - feed.scrollTop)) i = k; });
-    const t = cards[Math.max(0, Math.min(cards.length - 1, i + dir))];
-    feed.scrollTo({ top: pos(t), behavior: 'smooth' });
-  };
-  prevBtn.addEventListener('click', () => step(-1));
-  nextBtn.addEventListener('click', () => step(1));
-  const syncNav = () => {
-    prevBtn.disabled = feed.scrollTop < 8;
-    nextBtn.disabled = feedState != null && feedState.done && feed.scrollTop + feed.clientHeight >= feed.scrollHeight - 40;
-  };
-  feed.addEventListener('scroll', () => { syncNav(); if (nearEnd()) moreFeed(); }, { passive: true });
-  // Mouse wheel / trackpad: the page scrolls until the feed fills the screen,
-  // then one gesture moves exactly one story; at either end the page scrolls on.
-  let wheelLock = 0;
-  feed.addEventListener('wheel', (ev) => {
-    if (ev.ctrlKey || Math.abs(ev.deltaY) <= Math.abs(ev.deltaX)) return;
-    const dir = Math.sign(ev.deltaY);
-    const top = feed.getBoundingClientRect().top;
-    const dock = 34 + (innerWidth <= 560 ? 12 : 16);
-    const dy = ev.deltaY * (ev.deltaMode === 1 ? 16 : 1);
-    if ((dir > 0 && top > dock + 4) || (dir < 0 && top < dock - 4)) {
+  // Shared by both feeds: arrows, keyboard-free wheel stepping and end detection.
+  function feedNav(feed, prevBtn, nextBtn, isDone, onScroll) {
+    // Moves to the neighbouring card's own position, so the gap size never adds up.
+    const step = (dir) => {
+      const cards = [...feed.children].filter((c) => c.matches('.nw-card, .nw-feed-end'));
+      if (!cards.length) return;
+      const pos = (c) => c.offsetTop - cards[0].offsetTop;
+      let i = 0;
+      cards.forEach((c, k) => { if (Math.abs(pos(c) - feed.scrollTop) < Math.abs(pos(cards[i]) - feed.scrollTop)) i = k; });
+      const t = cards[Math.max(0, Math.min(cards.length - 1, i + dir))];
+      feed.scrollTo({ top: pos(t), behavior: 'smooth' });
+    };
+    prevBtn.addEventListener('click', () => step(-1));
+    nextBtn.addEventListener('click', () => step(1));
+    const syncNav = () => {
+      prevBtn.disabled = feed.scrollTop < 8;
+      nextBtn.disabled = isDone() && feed.scrollTop + feed.clientHeight >= feed.scrollHeight - 40;
+    };
+    feed.addEventListener('scroll', () => { syncNav(); if (onScroll) onScroll(); }, { passive: true });
+    // Mouse wheel / trackpad: the page scrolls until the feed fills the screen,
+    // then one gesture moves exactly one story; at either end the page scrolls on.
+    let wheelLock = 0;
+    feed.addEventListener('wheel', (ev) => {
+      if (ev.ctrlKey || Math.abs(ev.deltaY) <= Math.abs(ev.deltaX)) return;
+      const dir = Math.sign(ev.deltaY);
+      const top = feed.getBoundingClientRect().top;
+      const dock = 34 + (innerWidth <= 560 ? 12 : 16);
+      const dy = ev.deltaY * (ev.deltaMode === 1 ? 16 : 1);
+      if ((dir > 0 && top > dock + 4) || (dir < 0 && top < dock - 4)) {
+        ev.preventDefault();
+        window.scrollBy(0, dir > 0 ? Math.min(dy, top - dock) : Math.max(dy, top - dock));
+        return;
+      }
+      if ((dir < 0 && prevBtn.disabled) || (dir > 0 && nextBtn.disabled)) return;
       ev.preventDefault();
-      window.scrollBy(0, dir > 0 ? Math.min(dy, top - dock) : Math.max(dy, top - dock));
-      return;
-    }
-    if ((dir < 0 && prevBtn.disabled) || (dir > 0 && nextBtn.disabled)) return;
-    ev.preventDefault();
-    const now = performance.now();
-    const busy = now < wheelLock;
-    wheelLock = Math.max(wheelLock, now + 250);
-    if (busy) return;
-    wheelLock = now + 600;
-    step(dir);
-  }, { passive: false });
+      const now = performance.now();
+      const busy = now < wheelLock;
+      wheelLock = Math.max(wheelLock, now + 250);
+      if (busy) return;
+      wheelLock = now + 600;
+      step(dir);
+    }, { passive: false });
+    return syncNav;
+  }
+  const syncNav = feedNav(feed, prevBtn, nextBtn, () => feedState != null && feedState.done, () => { if (nearEnd()) moreFeed(); });
+  const syncShorts = feedNav(sFeed, sPrev, sNext, () => true);
 
   function setPaused(card, paused) {
     card.classList.toggle('nw-paused', paused);
@@ -427,17 +455,12 @@
     const mine = ++token;
     const lang = siteLang();
     try {
-      const shortsLang = shortsPick || lang;
-      const shortsP = loadShorts(shortsLang);
       let rows = await load(lang);
       if (!rows.length && lang !== 'en') rows = await load('en');
       channels = await known;
-      const shorts = (await shortsP).filter((v, i, a) => a.findIndex((x) => x.video_id === v.video_id) === i);
-      const counts = await shortsCounts;
       if (mine !== token) return;
       if (!rows.length) throw new Error('no data');
       mount.hidden = false;
-      renderPicker(lang, counts, shortsLang);
       view = { items: rows, lang };
       empty.hidden = true;
       feed.querySelectorAll(':scope > :not(.nw-sentinel)').forEach((n) => n.remove());
@@ -455,13 +478,12 @@
         seen: new Set(rows.map((r) => r.link)),
         queue: ['en', ...LANGS].filter((l, i, a) => l !== own && a.indexOf(l) === i),
         others: null,
-        shorts,
+        shorts: [],
         si: 0,
         busy: false,
         done: false
       };
       feedWrap.hidden = false;
-      footYt.hidden = !shorts.length;
       moreFeed().then(syncNav);
       asof.textContent = `As of ${new Date(rows[0].fetched_at).toISOString().slice(11, 16)} UTC`;
     } catch (err) {
@@ -469,12 +491,40 @@
       if (err.message !== 'no data') console.error('News wire widget:', err);
       view = null;
       feedState = null;
-      pickBar.hidden = true;
       if (!Object.values(cache).some((r) => r.length)) { mount.hidden = true; return; }
       empty.textContent = tr('News is unavailable right now.');
       empty.hidden = false;
       feedWrap.hidden = true;
     }
+  }
+
+  let sToken = 0;
+  async function renderShorts() {
+    const mine = ++sToken;
+    const ui = siteLang();
+    const sl = shortsPick || ui;
+    const [rows, counts] = await Promise.all([loadShorts(sl), shortsCounts]);
+    if (mine !== sToken) return;
+    sFeed.querySelectorAll('.nw-card').forEach((c) => { stopShort(c); if (motion) motion.unobserve(c); });
+    const vids = rows.filter((v, i, a) => a.findIndex((x) => x.video_id === v.video_id) === i);
+    sFeed.innerHTML = vids.length ? vids.map((v) => shortHtml(v, ui)).join('') + `<p class="nw-feed-end">${esc(tr(S_END))}</p>` : '';
+    sBox.querySelector('.nw-feed-wrap').hidden = !vids.length;
+    const none = sBox.querySelector('.nw-empty');
+    none.textContent = tr(S_NONE);
+    none.hidden = !!vids.length;
+    sFeed.scrollTop = 0;
+    renderPicker(ui, counts, sl);
+    sBox.querySelector('.nw-sub').textContent = tr(S_TITLE);
+    sBox.querySelector('.nw-pick-l').textContent = tr('Country');
+    sBox.querySelector('.nw-foot').textContent = tr(S_FOOT);
+    sFeed.setAttribute('aria-label', tr(S_TITLE));
+    sPrev.setAttribute('aria-label', tr('Previous story'));
+    sPrev.title = tr('Previous story');
+    sNext.setAttribute('aria-label', tr('Next story'));
+    sNext.title = tr('Next story');
+    sBox.hidden = !Object.values(counts).some(Boolean);
+    watch(sFeed);
+    syncShorts();
   }
 
   // "Trending in the most countries": channels counted by how many countries'
@@ -530,7 +580,9 @@
     shortsPick = null;
     try { localStorage.removeItem(PICK); } catch (e) { /* no storage */ }
     render();
+    renderShorts();
     renderRanking();
   });
   render();
+  renderShorts();
 })();
