@@ -88,7 +88,7 @@
       asof.textContent = `As of ${new Date(rows[0].fetched_at).toISOString().slice(11, 16)} UTC`;
     } catch (err) {
       if (mine !== token) return;
-      console.error('News wire widget:', err);
+      if (err.message !== 'no data') console.error('News wire widget:', err);
       if (!Object.keys(cache).length || lang === 'en') { mount.hidden = true; return; }
       list.innerHTML = '';
       list.insertAdjacentHTML('beforeend', `<li class="nw-empty">${esc(window.LP_I18N ? window.LP_I18N.t('News is unavailable right now.') : 'News is unavailable right now.')}</li>`);
