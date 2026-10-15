@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Creator News Wire pipeline, run hourly by .github/workflows/news-wire.yml:
 //   node scripts/news-wire-routine.js
-// Reads Google News RSS search feeds (free, no key) for YouTube and creator
+// Reads Google News RSS search feeds (free, no key) for creator-economy
 // news in each site language and replaces public.news_wire in one RPC.
 // Env: SUPABASE_URL, SUPABASE_KEY (secret key). Node >= 20, no deps.
 'use strict';
@@ -22,25 +22,15 @@ const EDITIONS = {
   ko: 'hl=ko&gl=KR&ceid=KR:ko',
   ja: 'hl=ja&gl=JP&ceid=JP:ja',
 };
-const LIVE_SPAM = '-"ao vivo" -"en vivo" -"live stream" -assistir -"onde assistir" -"dónde ver" -gratis -grátis';
 const FEEDS = [
-  { lang: 'en', category: 'youtube', q: `intitle:YouTube ${LIVE_SPAM} when:2d` },
   { lang: 'en', category: 'creators', q: '(YouTuber OR YouTubers OR "creator economy" OR "content creators") when:2d' },
-  { lang: 'pt', category: 'youtube', q: `intitle:YouTube ${LIVE_SPAM} when:2d` },
   { lang: 'pt', category: 'creators', q: '(youtuber OR youtubers OR "criadores de conteúdo" OR "economia dos criadores") when:2d' },
-  { lang: 'pt-PT', category: 'youtube', q: `intitle:YouTube ${LIVE_SPAM} -"em direto" when:2d` },
   { lang: 'pt-PT', category: 'creators', q: '(youtuber OR youtubers OR "criadores de conteúdo" OR "criadores de conteúdos" OR "economia dos criadores") when:2d' },
-  { lang: 'es', category: 'youtube', q: `intitle:YouTube ${LIVE_SPAM} when:2d` },
   { lang: 'es', category: 'creators', q: '(youtuber OR youtubers OR "creadores de contenido" OR "economía de creadores") when:2d' },
-  { lang: 'de', category: 'youtube', q: `intitle:YouTube ${LIVE_SPAM} when:2d` },
   { lang: 'de', category: 'creators', q: '(YouTuber OR YouTuberin OR "Content Creator" OR "Creator Economy") when:2d' },
-  { lang: 'ru', category: 'youtube', q: `(intitle:YouTube OR intitle:Ютуб) ${LIVE_SPAM} when:2d` },
   { lang: 'ru', category: 'creators', q: '(intitle:ютубер OR intitle:ютуберы OR intitle:блогер OR intitle:блогерша) when:2d' },
-  { lang: 'uk', category: 'youtube', q: `(intitle:YouTube OR intitle:Ютуб) ${LIVE_SPAM} when:2d` },
   { lang: 'uk', category: 'creators', q: '(intitle:ютубер OR intitle:ютубери OR intitle:блогер OR intitle:блогерка) when:2d' },
-  { lang: 'ko', category: 'youtube', q: `(intitle:유튜브 OR intitle:YouTube) ${LIVE_SPAM} when:2d` },
   { lang: 'ko', category: 'creators', q: '(유튜버 OR 크리에이터) when:2d' },
-  { lang: 'ja', category: 'youtube', q: `(intitle:YouTube OR intitle:ユーチューブ) ${LIVE_SPAM} when:2d` },
   { lang: 'ja', category: 'creators', q: '(ユーチューバー OR YouTuber OR 動画クリエイター) when:2d' },
 ];
 

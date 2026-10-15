@@ -24,7 +24,8 @@
   const headers = { apikey: key, Authorization: `Bearer ${key}` };
   const siteLang = () => (window.LP_I18N && window.LP_I18N.lang) || 'en';
   const cache = {};
-  let filter = 'all';
+  const rankUrl = `${base}/rest/v1/youtube_trending?select=country_code,rank,channel_id,channel_title`;
+  let ranking = null;
   let shown = PAGE;
   let token = 0;
 
@@ -54,11 +55,12 @@
       <span class="nw-spacer"></span>
       <span class="nw-asof"></span>
     </div>
-    <div class="nw-filters" role="group" aria-label="News filter">
-      <button type="button" data-f="all" aria-pressed="true">All news</button>
-      <button type="button" data-f="youtube" aria-pressed="false">YouTube updates</button>
-      <button type="button" data-f="creators" aria-pressed="false">Creator economy</button>
+    <div class="nw-rank" hidden>
+      <h3 class="nw-rank-title">Trending in the most countries</h3>
+      <ol class="nw-rank-list" data-no-i18n></ol>
+      <p class="nw-rank-note">Channels that appear in the most countries' YouTube Trending top 10 right now, out of all the countries we track. Brands and studios are included alongside creators. Ties go to the higher average chart position. Refreshed hourly.</p>
     </div>
+    <h3 class="nw-sub">Creator economy</h3>
     <ol class="nw-list" data-no-i18n></ol>
     <div class="nw-sentinel" aria-hidden="true"></div>
     <div class="nw-foot">Latest headlines from Google News in the selected language. Refreshed hourly.</div>`;
@@ -76,7 +78,7 @@
             <span class="nw-time">${esc(ago(r.published_at, lang))}</span>
             <span class="nw-text">
               <span class="nw-hl">${esc(r.title)}</span>
-              <span class="nw-meta"><span class="nw-src">${esc(r.source || 'Google News')}</span><span class="nw-cat">${esc(tr(r.category === 'youtube' ? 'YouTube' : 'Creators'))}</span></span>
+              <span class="nw-meta"><span class="nw-src">${esc(r.source || 'Google News')}</span></span>
             </span>
           </a>
         </li>`;
@@ -100,12 +102,13 @@
     const mine = ++token;
     const lang = siteLang();
     try {
-      let rows = await load(lang);
-      if (!rows.length && lang !== 'en') rows = await load('en');
+      const creators = (rs) => rs.filter((r) => r.category === 'creators');
+      let rows = creators(await load(lang));
+      if (!rows.length && lang !== 'en') rows = creators(await load('en'));
       if (mine !== token) return;
       if (!rows.length) throw new Error('no data');
       mount.hidden = false;
-      const items = filter === 'all' ? rows : rows.filter((r) => r.category === filter);
+      const items = rows;
       view = { items, lang };
       list.innerHTML = items.length ? items.slice(0, shown).map((r, i) => rowHtml(r, lang, i)).join('') : `<li class="nw-empty">${esc(tr('No headlines in this filter yet.'))}</li>`;
       asof.textContent = `As of ${new Date(rows[0].fetched_at).toISOString().slice(11, 16)} UTC`;
@@ -119,14 +122,54 @@
     }
   }
 
-  mount.querySelector('.nw-filters').addEventListener('click', (ev) => {
-    const b = ev.target.closest('button[data-f]');
-    if (!b) return;
-    filter = b.dataset.f;
-    shown = PAGE;
-    mount.querySelectorAll('.nw-filters button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
-    render();
-  });
-  document.addEventListener('lp:lang', () => { shown = PAGE; render(); });
+  // "Trending in the most countries": channels counted by how many countries'
+  // YouTube Trending top 10 (public.youtube_trending) they appear in right now.
+  // Ties: better average chart position, then name.
+  const rankBox = mount.querySelector('.nw-rank');
+  const rankList = mount.querySelector('.nw-rank-list');
+  const flagImg = (code, names) => `<img src="/assets/flags/${code.toLowerCase()}.svg" alt="" width="16" height="12" loading="lazy" title="${esc(names ? names.of(code) : code)}">`;
+
+  async function loadRanking() {
+    const res = await fetch(rankUrl, { headers });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const rows = await res.json();
+    const total = new Set(rows.map((r) => r.country_code)).size;
+    const byChannel = new Map();
+    for (const r of rows) {
+      if (!/^[A-Z]{2}$/.test(r.country_code)) continue;
+      const c = byChannel.get(r.channel_id) || { id: r.channel_id, name: r.channel_title, best: new Map() };
+      const prev = c.best.get(r.country_code);
+      if (prev == null || r.rank < prev) c.best.set(r.country_code, r.rank);
+      byChannel.set(r.channel_id, c);
+    }
+    const list = [...byChannel.values()]
+      .map((c) => ({ ...c, n: c.best.size, avg: [...c.best.values()].reduce((a, b) => a + b, 0) / c.best.size, codes: [...c.best.entries()].sort((a, b) => a[1] - b[1]).map(([k]) => k) }))
+      .filter((c) => c.n >= 2)
+      .sort((a, b) => b.n - a.n || a.avg - b.avg || a.name.localeCompare(b.name))
+      .slice(0, 10);
+    return { total, list };
+  }
+
+  function renderRanking() {
+    if (!ranking || !ranking.list.length) { rankBox.hidden = true; return; }
+    const lang = siteLang();
+    let names = null;
+    try { names = new Intl.DisplayNames([lang === 'pt' ? 'pt-BR' : lang], { type: 'region' }); } catch (e) { /* codes only */ }
+    const MAXF = 6;
+    rankList.innerHTML = ranking.list.map((c, i) => `
+        <li><a href="https://www.youtube.com/channel/${encodeURIComponent(c.id)}" target="_blank" rel="noopener">
+          <span class="nw-rk">${String(i + 1).padStart(2, '0')}</span>
+          <span class="nw-rbody">
+            <span class="nw-rname">${esc(c.name)}</span>
+            <span class="nw-rflags">${c.codes.slice(0, MAXF).map((k) => flagImg(k, names)).join('')}${c.n > MAXF ? `<span class="nw-rmore">+${c.n - MAXF}</span>` : ''}</span>
+          </span>
+          <span class="nw-rcount"><b>${c.n}</b>/${ranking.total} <span>${esc(tr('countries'))}</span></span>
+          <span class="nw-rbar" style="width:${(100 * c.n / ranking.total).toFixed(1)}%"></span>
+        </a></li>`).join('');
+    rankBox.hidden = false;
+  }
+
+  loadRanking().then((r) => { ranking = r; renderRanking(); }).catch((err) => console.error('News wire ranking:', err));
+  document.addEventListener('lp:lang', () => { shown = PAGE; render(); renderRanking(); });
   render();
 })();

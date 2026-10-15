@@ -43,9 +43,9 @@ test('fetches every feed, filters spam, dedupes and writes one RPC', async () =>
   });
   const s = await run(env, deps(f));
   assert.equal(f.calls.filter((c) => c.url.startsWith('https://news.google.com/rss/search')).length, FEEDS.length);
-  assert.deepEqual(s.langs, { en: 3, pt: 3, 'pt-PT': 3, es: 3, de: 3, ru: 3, uk: 3, ko: 3, ja: 3 });
+  assert.deepEqual(s.langs, { en: 2, pt: 2, 'pt-PT': 2, es: 2, de: 2, ru: 2, uk: 2, ko: 2, ja: 2 });
   const en = payload.filter((r) => r.lang === 'en').map((r) => `${r.category}:${r.title}`).sort();
-  assert.deepEqual(en, ['creators:Creator raises fund', 'youtube:Shared story', 'youtube:YouTube adds GIFs']);
+  assert.deepEqual(en, ['creators:Creator raises fund', 'creators:Shared story']);
   assert.equal(f.calls.at(-1).init.headers.apikey, 'secret');
 });
 
@@ -53,7 +53,7 @@ test('keeps going when a feed fails', async () => {
   let payload;
   const f = mockFetch((url, init) => {
     if (url.includes('/rpc/')) { payload = JSON.parse(init.body).payload; return text(200, '1'); }
-    if (url.includes('hl=en-US') && url.includes('intitle')) return text(200, rss(item('YouTube news', 'Verge', 'https://n.test/1')));
+    if (url.includes('hl=en-US')) return text(200, rss(item('YouTube news', 'Verge', 'https://n.test/1')));
     return text(404, '');
   });
   const s = await run(env, deps(f));

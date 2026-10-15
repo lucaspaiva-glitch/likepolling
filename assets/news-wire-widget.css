@@ -12,6 +12,26 @@
 .nw-filters button:hover { border-color: var(--red, #b0000e); color: var(--red, #b0000e); }
 .nw-filters button[aria-pressed="true"] { border-color: var(--red, #b0000e); color: var(--red, #b0000e); background: var(--red-soft, #fbf1f1); }
 .nw-filters button:focus-visible { outline: 2px solid var(--red, #b0000e); outline-offset: 2px; }
+.nw-rank { padding: 14px 18px 4px; border-bottom: 1px solid var(--line, #ebebeb); }
+.nw-rank[hidden] { display: none; }
+.nw-rank-title, .nw-sub { margin: 0 0 8px; font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted, #737373); }
+.nw-sub { margin: 0; padding: 14px 18px 10px; border-bottom: 1px solid var(--line, #ebebeb); }
+.nw-rank-list { list-style: none; margin: 0; padding: 0; display: grid; column-gap: 28px; }
+@media (min-width: 900px) { .nw-rank-list { grid-template-columns: 1fr 1fr; grid-template-rows: repeat(5, auto); grid-auto-flow: column; } }
+.nw-rank-list a { position: relative; display: flex; align-items: center; gap: 12px; padding: 9px 0 11px; border-bottom: 1px solid var(--line, #ebebeb); color: inherit; text-decoration: none; }
+.nw-rank-list a:hover .nw-rname { color: var(--red-dark, #7f000a); }
+.nw-rank-list a:focus-visible { outline: 2px solid var(--red, #b0000e); outline-offset: 2px; }
+.nw-rk { flex: none; width: 22px; font-family: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; font-weight: 600; color: var(--red, #b0000e); }
+.nw-rbody { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.nw-rname { font-size: 13.5px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; transition: color .15s; }
+.nw-rflags { display: flex; align-items: center; gap: 4px; }
+.nw-rflags img { width: 16px; height: 12px; border-radius: 2px; box-shadow: 0 0 0 1px rgba(0,0,0,.08); object-fit: cover; }
+.nw-rmore { font-size: 10.5px; color: var(--muted, #737373); margin-left: 2px; }
+.nw-rcount { flex: none; font-family: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace; font-variant-numeric: tabular-nums; font-size: 11px; color: var(--muted, #737373); text-align: right; }
+.nw-rcount b { font-size: 13px; color: var(--ink, #0a0a0a); }
+.nw-rcount span { display: block; font-family: inherit; font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase; }
+.nw-rbar { position: absolute; left: 34px; bottom: -1px; height: 2px; border-radius: 2px; background: var(--red, #b0000e); max-width: calc(100% - 34px); }
+.nw-rank-note { margin: 10px 0 10px; font-size: 11px; line-height: 1.5; color: #8a8a8a; }
 .nw-list { list-style: none; margin: 0; padding: 0; }
 .nw-item a { display: flex; gap: 16px; align-items: baseline; padding: 12px 18px; border-bottom: 1px solid var(--line, #ebebeb); color: inherit; text-decoration: none; transition: background .15s; }
 .nw-item a:hover { background: var(--red-soft, #fbf1f1); }
@@ -30,7 +50,8 @@
 @media (prefers-reduced-motion: reduce) { .nw-in { animation: none; } }
 .nw-foot { border-top: 1px solid var(--line, #ebebeb); margin-top: -1px;  padding: 10px 18px; font-size: 11px; color: #8a8a8a; }
 @media (max-width: 560px) {
-  .nw-head, .nw-filters { padding: 12px 14px; }
+  .nw-head, .nw-filters, .nw-sub { padding: 12px 14px; }
+  .nw-rank { padding: 12px 14px 2px; }
   .nw-item a { flex-direction: column; gap: 4px; padding: 12px 14px; }
   .nw-time { width: auto; }
   .nw-asof { width: 100%; order: 3; }
