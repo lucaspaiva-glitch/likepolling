@@ -83,6 +83,7 @@ test('adds article preview images and reuses stored ones', async () => {
       return text(200, ")]}'\n\n" + JSON.stringify([['wrb.fr', 'Fbv4je', JSON.stringify(['garturlres', 'https://pub.test/story', 1])]]));
     }
     if (url === 'https://pub.test/story') return text(200, '<head><meta content="/img/a.jpg?x=1&amp;y=2" property="og:image"></head>');
+    if (url === 'https://pub.test/img/a.jpg?x=1&y=2') return new Response('x', { status: 206, headers: { 'content-type': 'image/jpeg' } });
     if (url.includes('hl=en-US')) return text(200, rss(item('New story', 'Pub', 'https://news.google.com/rss/articles/NEW?oc=5'), item('Old story', 'Pub', 'https://news.google.com/rss/articles/OLD?oc=5')));
     return text(404, '');
   });
@@ -95,4 +96,27 @@ test('adds article preview images and reuses stored ones', async () => {
 test('ogImage only accepts https images', () => {
   assert.equal(ogImage('<meta property="og:image" content="http://x.test/a.jpg">', 'https://x.test/p'), null);
   assert.equal(ogImage('<meta name="twitter:image" content="https://x.test/b.jpg">', 'https://x.test/p'), 'https://x.test/b.jpg');
+});
+
+test('drops preview images that browsers would block', async () => {
+  let payload;
+  const f = mockFetch((url, init) => {
+    if (url.includes('/rpc/')) { payload = JSON.parse(init.body).payload; return text(200, String(payload.length)); }
+    if (url.includes('/rest/v1/news_wire')) return text(200, '[]');
+    const m = url.match(/rss\/articles\/(A|B|C)/);
+    if (m) return text(200, `<div data-n-a-sg="S" data-n-a-ts="1" data-id="${m[1]}"></div>`);
+    if (url.includes('batchexecute')) {
+      const id = JSON.parse(JSON.parse(decodeURIComponent(init.body.slice(6)))[0][0][1])[2];
+      return text(200, ")]}'\n\n" + JSON.stringify([['wrb.fr', 'Fbv4je', JSON.stringify(['garturlres', `https://pub.test/${id}`, 1])]]));
+    }
+    const p = url.match(/^https:\/\/pub\.test\/(A|B|C)$/);
+    if (p) return text(200, `<meta property="og:image" content="https://img.test/${p[1]}.jpg">`);
+    if (url === 'https://img.test/A.jpg') return new Response('x', { status: 200, headers: { 'content-type': 'image/jpeg', 'cross-origin-resource-policy': 'same-origin' } });
+    if (url === 'https://img.test/B.jpg') return text(404, '');
+    if (url === 'https://img.test/C.jpg') return new Response('x', { status: 200, headers: { 'content-type': 'image/webp', 'cross-origin-resource-policy': 'cross-origin' } });
+    if (url.includes('hl=en-US')) return text(200, rss(...['A', 'B', 'C'].map((id) => item(`Story ${id}`, 'Pub', `https://news.google.com/rss/articles/${id}?oc=5`))));
+    return text(404, '');
+  });
+  await run(env, deps(f));
+  assert.deepEqual(Object.fromEntries(payload.map((r) => [r.title, r.image_url])), { 'Story A': '', 'Story B': '', 'Story C': 'https://img.test/C.jpg' });
 });

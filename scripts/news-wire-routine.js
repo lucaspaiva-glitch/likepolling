@@ -7,7 +7,7 @@
 'use strict';
 
 const GOOGLE_NEWS = 'https://news.google.com/rss/search';
-const MAX_PER_FEED = 40;
+const MAX_PER_FEED = 100;
 const MAX_AGE_MS = 3 * 24 * 60 * 60 * 1000;
 const MAX_RETRIES = 3;
 
@@ -111,7 +111,7 @@ function dedupe(rows) {
 // article page carries a signature that its batchexecute endpoint exchanges for
 // the publisher's URL, whose og:image is stored. Images already stored are
 // reused, so only new articles are looked up (capped per run, newest first).
-const IMAGE_LOOKUPS_PER_RUN = 150;
+const IMAGE_LOOKUPS_PER_RUN = 300;
 const IMAGE_CONCURRENCY = 4;
 const IMAGE_TIMEOUT_MS = 8000;
 const BROWSER_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0 Safari/537.36';
@@ -160,8 +160,20 @@ async function imageFor(link, deps) {
   try {
     const res = await deps.fetch(url, { headers: { 'User-Agent': BROWSER_UA, Accept: 'text/html' }, redirect: 'follow', signal: AbortSignal.timeout(IMAGE_TIMEOUT_MS) });
     if (!res.ok) return '';
-    return ogImage((await res.text()).slice(0, 400000), res.url || url) || '';
+    const img = ogImage((await res.text()).slice(0, 400000), res.url || url);
+    return img && (await imageLoads(img, deps)) ? img : '';
   } catch { return ''; }
+}
+
+// Visitors' browsers must be able to show the image: it has to exist, be an
+// image, and not be locked to the publisher's own site (Cross-Origin-Resource-Policy).
+async function imageLoads(img, deps) {
+  try {
+    const res = await deps.fetch(img, { headers: { 'User-Agent': BROWSER_UA, Accept: 'image/*', Range: 'bytes=0-0' }, redirect: 'follow', signal: AbortSignal.timeout(IMAGE_TIMEOUT_MS) });
+    if (res.body && res.body.cancel) res.body.cancel().catch(() => {});
+    const corp = (res.headers.get('cross-origin-resource-policy') || '').toLowerCase();
+    return res.ok && /^image\//i.test(res.headers.get('content-type') || '') && corp !== 'same-origin' && corp !== 'same-site';
+  } catch { return false; }
 }
 
 async function addImages(rows, env, deps) {

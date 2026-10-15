@@ -4,7 +4,7 @@
 // Reads public.news_wire (filled hourly by scripts/news-wire-routine.js) with the
 // publishable key, in the site language from assets/i18n.js (English without it),
 // and shows the creator-economy headlines as a bento grid of vertical story cards
-// (top story + 4) and a swipeable reel for the rest. Each card shows the article's
+// (top story + 4) and an endless vertical feed for the rest. Each card shows the article's
 // own preview image with a slow pan-and-zoom while on screen, or an animated red
 // card when the article has none. Falls back to English headlines for a language
 // with none yet, and hides itself if no data loads.
@@ -22,7 +22,9 @@
   document.head.appendChild(css);
 
   const BENTO = 5;
-  const REEL_PAGE = 10;
+  const FEED_PAGE = 12;
+  const LANGS = ['en', 'pt', 'pt-PT', 'es', 'de', 'ru', 'uk', 'ko', 'ja'];
+  const FLAG = { en: 'us', pt: 'br', 'pt-PT': 'pt', es: 'es', de: 'de', ru: 'ru', uk: 'ua', ko: 'kr', ja: 'jp' };
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const headers = { apikey: key, Authorization: `Bearer ${key}` };
   const siteLang = () => (window.LP_I18N && window.LP_I18N.lang) || 'en';
@@ -89,39 +91,40 @@
     </div>
     <h3 class="nw-sub">Creator economy</h3>
     <div class="nw-bento" data-no-i18n></div>
-    <div class="nw-reel-wrap" hidden>
-      <div class="nw-reel-head">
-        <h3 class="nw-rank-title">More stories</h3>
-        <span class="nw-spacer"></span>
-        <button type="button" class="nw-nav" data-dir="-1" data-no-i18n>‹</button>
-        <button type="button" class="nw-nav" data-dir="1" data-no-i18n>›</button>
-      </div>
-      <div class="nw-reel" data-no-i18n></div>
+    <div class="nw-feed-wrap" hidden>
+      <h3 class="nw-rank-title nw-feed-title">More stories</h3>
+      <div class="nw-feed" data-no-i18n></div>
+      <div class="nw-sentinel" aria-hidden="true"></div>
     </div>
-    <div class="nw-foot">Latest creator-economy headlines from Google News in the selected language. Photos are each article's own preview image. Refreshed hourly.</div>`;
+    <div class="nw-foot">Latest creator-economy headlines from Google News, in the selected language first, then other languages. Photos are each article's own preview image. Refreshed hourly.</div>`;
   const bento = mount.querySelector('.nw-bento');
-  const reelWrap = mount.querySelector('.nw-reel-wrap');
-  const reel = mount.querySelector('.nw-reel');
+  const feedWrap = mount.querySelector('.nw-feed-wrap');
+  const feed = mount.querySelector('.nw-feed');
+  const sentinel = mount.querySelector('.nw-sentinel');
   const asof = mount.querySelector('.nw-asof');
   let view = null;
-  let reelShown = 0;
 
+  const langName = (l, ui) => {
+    try { return new Intl.DisplayNames([ui], { type: 'language' }).of(l === 'pt' ? 'pt-BR' : l); } catch { return l; }
+  };
   function cardHtml(r, lang, i, kind) {
+    const foreign = r.lang && r.lang !== lang;
     const link = /^https:\/\//.test(r.link) ? esc(r.link) : '#';
     const img = /^https:\/\//.test(r.image_url || '') ? esc(r.image_url) : '';
     const src = String(r.source || 'Google News').trim();
     const initial = esc(([...src][0] || 'N').toUpperCase());
     const ch = channelIn(r.title);
     return `
-      <article class="nw-card nw-${kind} nw-in${img ? '' : ' nw-noimg'}" style="animation-delay:${(i % REEL_PAGE) * 45}ms">
+      <article class="nw-card nw-${kind} nw-in${img ? '' : ' nw-noimg'}"${foreign ? ` lang="${esc(r.lang)}"` : ''} style="animation-delay:${(i % FEED_PAGE) * 45}ms">
         <div class="nw-media" aria-hidden="true">
-          ${img ? `<img class="nw-img nw-kb${i % 4}" src="${img}" alt="" loading="${kind === 'reel' ? 'lazy' : 'eager'}" decoding="async" referrerpolicy="no-referrer">` : ''}
+          ${img ? `<img class="nw-img nw-kb${i % 4}" src="${img}" alt="" loading="${kind === 'more' ? 'lazy' : 'eager'}" decoding="async" referrerpolicy="no-referrer">` : ''}
           <div class="nw-art"><span>${initial}</span></div>
         </div>
         <div class="nw-shade" aria-hidden="true"></div>
         <div class="nw-top">
           <span class="nw-badge">${esc(tr(kind === 'hero' ? 'Top story' : 'Creator wire'))}</span>
           <span class="nw-age">${esc(ago(r.published_at, lang))}</span>
+          ${foreign && FLAG[r.lang] ? `<img class="nw-flag" src="/assets/flags/${FLAG[r.lang]}.svg" alt="${esc(langName(r.lang, lang))}" title="${esc(langName(r.lang, lang))}" width="18" height="13">` : ''}
         </div>
         <div class="nw-low">
           <div class="nw-bottom">
@@ -147,19 +150,45 @@
     if (motion) motion.observe(c); else c.classList.add('nw-on');
   });
 
-  function moreReel() {
-    if (!view || reelShown >= view.items.length) return;
-    const from = reelShown;
-    reelShown = Math.min(view.items.length, reelShown + REEL_PAGE);
-    reel.insertAdjacentHTML('beforeend', view.items.slice(from, reelShown).map((r, i) => cardHtml(r, view.lang, from + i, 'reel')).join(''));
-    watch(reel);
+  // Endless vertical feed: the selected language first, then every other
+  // language's stories (flagged), each story once, then a "caught up" note.
+  let feedState = null;
+  async function moreFeed() {
+    const st = feedState;
+    if (!st || st.busy || st.done) return;
+    st.busy = true;
+    try {
+      while (st.shown >= st.items.length && st.queue.length) {
+        const l = st.queue.shift();
+        const extra = (await load(l)).filter((r) => !st.seen.has(r.link));
+        if (st !== feedState) return;
+        if (!extra.length) continue;
+        extra.forEach((r) => st.seen.add(r.link));
+        if (!st.others) {
+          st.others = true;
+          feed.insertAdjacentHTML('beforeend', `<p class="nw-feed-sep">${esc(tr('From other languages'))}</p>`);
+        }
+        st.items.push(...extra);
+      }
+      if (st.shown >= st.items.length) {
+        st.done = true;
+        feed.insertAdjacentHTML('beforeend', `<p class="nw-feed-end">${esc(tr("You're all caught up"))}</p>`);
+        return;
+      }
+      const from = st.shown;
+      st.shown = Math.min(st.items.length, st.shown + FEED_PAGE);
+      feed.insertAdjacentHTML('beforeend', st.items.slice(from, st.shown).map((r, i) => cardHtml(r, st.lang, from + i, 'more')).join(''));
+      watch(feed);
+    } finally {
+      st.busy = false;
+    }
+    requestAnimationFrame(() => {
+      if (st === feedState && sentinel.getBoundingClientRect().top < innerHeight + 1200) moreFeed();
+    });
   }
-  reel.addEventListener('scroll', () => {
-    if (reel.scrollLeft + reel.clientWidth > reel.scrollWidth - 600) moreReel();
-  }, { passive: true });
-  mount.querySelectorAll('.nw-nav').forEach((b) => b.addEventListener('click', () => {
-    reel.scrollBy({ left: Number(b.dataset.dir) * reel.clientWidth * 0.8, behavior: 'smooth' });
-  }));
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver((entries) => { if (entries[0].isIntersecting) moreFeed(); }, { rootMargin: '0px 0px 1200px 0px' }).observe(sentinel);
+  }
 
   function setPaused(card, paused) {
     card.classList.toggle('nw-paused', paused);
@@ -211,21 +240,30 @@
       view = { items: rows, lang };
       bento.innerHTML = rows.slice(0, BENTO).map((r, i) => cardHtml(r, lang, i, i ? 'tile' : 'hero')).join('');
       bento.dataset.n = String(Math.min(rows.length, BENTO));
-      reel.innerHTML = '';
-      reel.scrollLeft = 0;
-      reelShown = BENTO;
-      reelWrap.hidden = rows.length <= BENTO;
-      mount.querySelectorAll('.nw-nav').forEach((b) => b.setAttribute('aria-label', tr(b.dataset.dir === '1' ? 'Next' : 'Previous')));
-      moreReel();
+      feed.innerHTML = '';
+      const own = rows[0].lang || lang;
+      feedState = {
+        lang,
+        items: rows.slice(),
+        shown: BENTO,
+        seen: new Set(rows.map((r) => r.link)),
+        queue: ['en', ...LANGS].filter((l, i, a) => l !== own && a.indexOf(l) === i),
+        others: false,
+        busy: false,
+        done: false
+      };
+      feedWrap.hidden = false;
+      moreFeed();
       watch(bento);
       asof.textContent = `As of ${new Date(rows[0].fetched_at).toISOString().slice(11, 16)} UTC`;
     } catch (err) {
       if (mine !== token) return;
       if (err.message !== 'no data') console.error('News wire widget:', err);
       view = null;
+      feedState = null;
       if (!Object.values(cache).some((r) => r.length)) { mount.hidden = true; return; }
       bento.innerHTML = `<p class="nw-empty">${esc(tr('News is unavailable right now.'))}</p>`;
-      reelWrap.hidden = true;
+      feedWrap.hidden = true;
     }
   }
 
