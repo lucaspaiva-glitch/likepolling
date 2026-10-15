@@ -44,7 +44,7 @@
   }
   const SHORT_EVERY = 3;
   // Country whose Shorts are shown (each country is searched in its own language).
-  // Defaults to the site language's country; a choice in the dropdown is kept.
+  // Defaults to the site language's country; a dropdown choice is kept until the site language changes.
   const SHORT_CC = { en: 'US', pt: 'BR', 'pt-PT': 'PT', es: 'MX', de: 'DE', ru: 'RU', uk: 'UA', ko: 'KR', ja: 'JP' };
   const PICK = 'lp-shorts-lang';
   let shortsPick = null;
@@ -525,6 +525,12 @@
   }
 
   loadRanking().then((r) => { ranking = r; renderRanking(); }).catch((err) => console.error('News wire ranking:', err));
-  document.addEventListener('lp:lang', () => { render(); renderRanking(); });
+  // A new site language brings back that language's country for Shorts.
+  document.addEventListener('lp:lang', () => {
+    shortsPick = null;
+    try { localStorage.removeItem(PICK); } catch (e) { /* no storage */ }
+    render();
+    renderRanking();
+  });
   render();
 })();
