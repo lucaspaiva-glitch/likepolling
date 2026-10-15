@@ -32,6 +32,15 @@
     .yt-ticker[hidden] { display: none; }
     .yt-ticker-label { flex: none; display: flex; align-items: center; gap: 8px; padding: 0 16px; background: rgba(0,0,0,.22); font-size: 10.5px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; cursor: help; }
     .yt-ticker-label .pulse { width: 6px; height: 6px; border-radius: 50%; background: #fff; animation: yt-pulse 2s ease-out infinite; }
+    button.yt-ticker-label { border: 0; color: inherit; font-family: inherit; cursor: pointer; }
+    button.yt-ticker-label:focus-visible { outline: 2px solid #fff; outline-offset: -4px; }
+    .yt-info { display: inline-grid; place-items: center; width: 13px; height: 13px; border: 1px solid rgba(255,255,255,.6); border-radius: 50%; font: italic 700 9px/1 Georgia, serif; letter-spacing: 0; text-transform: none; opacity: .85; }
+    .yt-note { position: fixed; top: 42px; left: 12px; z-index: 60; width: min(440px, calc(100vw - 24px)); background: #fff; color: var(--ink); border: 1px solid var(--line); border-top: 3px solid var(--red); border-radius: 12px; box-shadow: 0 14px 36px rgba(0,0,0,.14); padding: 16px 40px 16px 18px; font-size: 13px; line-height: 1.55; }
+    .yt-note[hidden] { display: none; }
+    .yt-note h2 { margin: 0 0 6px; font-size: 13.5px; font-weight: 700; letter-spacing: -.005em; }
+    .yt-note p { margin: 8px 0 0; color: var(--muted); }
+    .yt-note-x { position: absolute; top: 8px; right: 8px; width: 28px; height: 28px; border: 0; border-radius: 8px; background: none; color: var(--muted); font-size: 20px; line-height: 1; cursor: pointer; }
+    .yt-note-x:hover { background: var(--red-soft); color: var(--red); }
     @keyframes yt-pulse { 0% { box-shadow: 0 0 0 0 rgba(255,255,255,.55); } 70%, 100% { box-shadow: 0 0 0 6px rgba(255,255,255,0); } }
     .yt-ticker-viewport { flex: 1; min-width: 0; display: flex; align-items: center; overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 28px, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(90deg, transparent, #000 28px, #000 calc(100% - 28px), transparent); }
     .yt-ticker-rail { display: flex; width: max-content; animation: yt-marquee var(--yt-duration, 120s) linear infinite; will-change: transform; }
@@ -140,9 +149,16 @@
 </head>
 <body>
   <div class="yt-ticker" id="yt-ticker" role="region" aria-label="Estimated number of people watching YouTube right now, by country">
-    <div class="yt-ticker-label" title="Estimated number of people watching YouTube at the same moment in each country (not monthly users). Modelled from approximate YouTube users per country and the typical share watching at that local time of day, not measured. User counts per country: Google's YouTube ad-reach figures, late 2025 (via DataReportal). Recalculated at 03:00 and 15:00 UTC, the two daily peaks in viewing across these countries."><span class="pulse" aria-hidden="true"></span><span>Est. watching<span class="long"> YouTube</span></span></div>
+    <button type="button" class="yt-ticker-label" id="yt-info-btn" aria-expanded="false" aria-controls="yt-note" title="What these numbers mean"><span class="pulse" aria-hidden="true"></span><span>Est. watching<span class="long"> YouTube</span></span><span class="yt-info" aria-hidden="true">i</span></button>
     <div class="yt-ticker-viewport"><div class="yt-ticker-rail" id="yt-rail"></div></div>
     <div class="yt-ticker-meta" id="yt-updated"></div>
+  </div>
+  <div class="yt-note" id="yt-note" role="dialog" aria-labelledby="yt-note-h" hidden>
+    <button type="button" class="yt-note-x" aria-label="Close">&times;</button>
+    <h2 id="yt-note-h">What these numbers mean</h2>
+    <p>An estimate of how many people are watching YouTube at the same moment in each country, on any screen: phones, computers, tablets and TVs. It counts people, not devices or monthly users.</p>
+    <p>Modelled, not measured: YouTube does not publish live viewer counts. Each figure is YouTube users in that country (Google's ad-reach figures, late 2025, via DataReportal) × about 80 minutes of viewing per person per day, spread over the day by a typical hourly viewing pattern.</p>
+    <p>Recalculated at 03:00 and 15:00 UTC, the two daily viewing peaks across these countries. Read the figures as an order of magnitude, not an exact count.</p>
   </div>
   <div class="wrap">
     <header class="top">
@@ -221,6 +237,13 @@
         $('yt-ticker').hidden = true;
       }
     }
+
+    const ytNote = $('yt-note'), ytInfo = $('yt-info-btn');
+    const setNote = (open) => { ytNote.hidden = !open; ytInfo.setAttribute('aria-expanded', String(open)); };
+    ytInfo.addEventListener('click', (e) => { e.stopPropagation(); setNote(ytNote.hidden); });
+    ytNote.querySelector('.yt-note-x').addEventListener('click', () => setNote(false));
+    document.addEventListener('click', (e) => { if (!ytNote.hidden && !ytNote.contains(e.target)) setNote(false); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !ytNote.hidden) { setNote(false); ytInfo.focus(); } });
 
     // ---------- Suggestions ----------
     async function loadChips() {
