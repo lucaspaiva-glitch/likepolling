@@ -110,7 +110,7 @@
         <button type="button" class="nw-next">${ICON.down}</button>
       </div>
     </div>
-    <div class="nw-foot">Latest creator-economy headlines from Google News, in the selected language first, then other languages. Photos are each article's own preview image. Refreshed hourly.<span class="nw-foot-yt" hidden> <span>Videos are YouTube Shorts found by YouTube search and play in YouTube's player. Refreshed every 8 hours.</span></span></div>`;
+    <div class="nw-foot">Latest creator-economy headlines from Google News, in the selected language first, then other languages. Photos are each article's own preview image. Refreshed hourly.<span class="nw-foot-yt" hidden> <span>Videos are Shorts from YouTube's trending chart in the selected language's country (3 minutes or shorter) and play in YouTube's player. Refreshed hourly.</span></span></div>`;
   const empty = document.createElement('p');
   empty.className = 'nw-empty';
   mount.querySelector('.nw-sub').after(empty);
@@ -179,7 +179,7 @@
         </div>
         <div class="nw-shade" aria-hidden="true"></div>
         <div class="nw-top">
-          <span class="nw-badge">${esc(tr('YouTube Short'))}</span>
+          <span class="nw-badge">${esc(tr('Trending Short'))}</span>
           ${v.published_at ? `<span class="nw-age">${esc(ago(v.published_at, lang))}</span>` : ''}
           ${v.view_count != null ? `<span class="nw-age">${esc(compact(v.view_count, lang))} ${esc(tr('views'))}</span>` : ''}
         </div>
