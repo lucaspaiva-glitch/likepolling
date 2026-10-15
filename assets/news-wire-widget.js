@@ -110,7 +110,7 @@
         <button type="button" class="nw-next">${ICON.down}</button>
       </div>
     </div>
-    <div class="nw-foot">Latest creator-economy headlines from Google News, in the selected language first, then other languages. Photos are each article's own preview image. Refreshed hourly.<span class="nw-foot-yt" hidden> <span>Videos are the most viewed Shorts of the last 2 days in the selected language's country, found by YouTube search, and play in YouTube's player. Refreshed every 8 hours.</span></span></div>`;
+    <div class="nw-foot">Latest creator-economy headlines from Google News, in the selected language first, then other languages. Photos are each article's own preview image. Refreshed hourly.<span class="nw-foot-yt" hidden> <span>Videos are the most viewed Shorts of the last 2 days in the selected language, found by YouTube search, and play in YouTube's player. Refreshed every 12 hours.</span></span></div>`;
   const empty = document.createElement('p');
   empty.className = 'nw-empty';
   mount.querySelector('.nw-sub').after(empty);
