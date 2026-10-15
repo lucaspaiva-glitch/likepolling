@@ -157,6 +157,8 @@
         <span class="nw-pick-l" data-no-i18n>Country</span>
         <img class="nw-pick-flag" src="" alt="" width="20" height="15">
         <select class="nw-select" data-no-i18n></select>
+        <span class="nw-keys" data-no-i18n><span class="nw-kbd-pair" aria-hidden="true"><kbd data-k="ArrowUp">↑</kbd><kbd data-k="ArrowDown">↓</kbd></span><span class="nw-keys-l">Use your arrow keys to browse</span></span>
+        <span class="nw-swipe" data-no-i18n><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17V5M7.5 9.5 12 5l4.5 4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="19.5" r="2" fill="currentColor"/></svg><span class="nw-swipe-l">Swipe up for the next Short</span></span>
       </div>
       <p class="nw-empty" data-no-i18n hidden></p>
       <div class="nw-feed-wrap">
@@ -446,6 +448,7 @@
       wheelLock = now + 600;
       step(dir);
     }, { passive: false });
+    feed.nwStep = step;
     return syncNav;
   }
   feed.addEventListener('scroll', () => { if (nearEnd()) moreFeed(); }, { passive: true });
@@ -546,6 +549,27 @@
     }
   }
 
+  // Keyboard ↑ ↓ step through the Shorts while their feed is on screen (not while typing).
+  let keyLock = 0;
+  document.addEventListener('keydown', (ev) => {
+    if ((ev.key !== 'ArrowDown' && ev.key !== 'ArrowUp') || ev.defaultPrevented || ev.altKey || ev.ctrlKey || ev.metaKey || ev.shiftKey) return;
+    if (ev.target.closest && ev.target.closest('input, textarea, select, [contenteditable]')) return;
+    if (credits.hidden || sBox.querySelector('.nw-feed-wrap').hidden) return;
+    const r = sFeed.getBoundingClientRect();
+    if (Math.min(r.bottom, innerHeight) - Math.max(r.top, 0) < r.height * 0.6) return;
+    const dir = ev.key === 'ArrowDown' ? 1 : -1;
+    if (dir < 0 && sFeed.scrollTop < 8) return;
+    ev.preventDefault();
+    const cap = sBox.querySelector(`kbd[data-k="${ev.key}"]`);
+    if (cap) { cap.classList.add('nw-kbd-on'); setTimeout(() => cap.classList.remove('nw-kbd-on'), 180); }
+    const now = performance.now();
+    if (now < keyLock) return;
+    keyLock = now + 320;
+    const dock = 34 + (innerWidth <= 560 ? 12 : 16);
+    if (Math.abs(r.top - dock) > 4) window.scrollBy({ top: r.top - dock, behavior: 'smooth' });
+    sFeed.nwStep(dir);
+  });
+
   let sToken = 0;
   // The credits never end: near the last Short, the same list starts again.
   let sLoop = null;
@@ -574,6 +598,8 @@
     sBox.querySelector('.nw-sub').textContent = tr(S_TITLE);
     sBox.querySelector('.nw-pick-l').textContent = tr('Country');
     sBox.querySelector('.nw-foot').textContent = tr(S_FOOT);
+    sBox.querySelector('.nw-keys-l').textContent = tr('Use your arrow keys to browse');
+    sBox.querySelector('.nw-swipe-l').textContent = tr('Swipe up for the next Short');
     sFeed.setAttribute('aria-label', tr(S_TITLE));
     sPrev.setAttribute('aria-label', tr('Previous story'));
     sPrev.title = tr('Previous story');
