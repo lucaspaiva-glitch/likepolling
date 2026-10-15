@@ -39,7 +39,7 @@
 
   function ago(iso, lang) {
     const mins = Math.max(0, Math.round((Date.now() - Date.parse(iso)) / 60000));
-    const rtf = new Intl.RelativeTimeFormat(lang === 'pt' ? 'pt-BR' : lang, { numeric: 'always', style: 'narrow' });
+    const rtf = new Intl.RelativeTimeFormat(lang === 'pt' ? 'pt-BR' : lang, { numeric: 'always', style: lang === 'pt-PT' ? 'short' : 'narrow' });
     if (mins < 60) return rtf.format(-Math.max(1, mins), 'minute');
     if (mins < 48 * 60) return rtf.format(-Math.round(mins / 60), 'hour');
     return rtf.format(-Math.round(mins / 1440), 'day');

@@ -14,6 +14,7 @@ const MAX_RETRIES = 3;
 const EDITIONS = {
   en: 'hl=en-US&gl=US&ceid=US:en',
   pt: 'hl=pt-BR&gl=BR&ceid=BR:pt-419',
+  'pt-PT': 'hl=pt-PT&gl=PT&ceid=PT:pt-150',
   es: 'hl=es-419&gl=MX&ceid=MX:es-419',
   de: 'hl=de&gl=DE&ceid=DE:de',
   ru: 'hl=ru&gl=RU&ceid=RU:ru',
@@ -27,6 +28,8 @@ const FEEDS = [
   { lang: 'en', category: 'creators', q: '(YouTuber OR YouTubers OR "creator economy" OR "content creators") when:2d' },
   { lang: 'pt', category: 'youtube', q: `intitle:YouTube ${LIVE_SPAM} when:2d` },
   { lang: 'pt', category: 'creators', q: '(youtuber OR youtubers OR "criadores de conteúdo" OR "economia dos criadores") when:2d' },
+  { lang: 'pt-PT', category: 'youtube', q: `intitle:YouTube ${LIVE_SPAM} -"em direto" when:2d` },
+  { lang: 'pt-PT', category: 'creators', q: '(youtuber OR youtubers OR "criadores de conteúdo" OR "criadores de conteúdos" OR "economia dos criadores") when:2d' },
   { lang: 'es', category: 'youtube', q: `intitle:YouTube ${LIVE_SPAM} when:2d` },
   { lang: 'es', category: 'creators', q: '(youtuber OR youtubers OR "creadores de contenido" OR "economía de creadores") when:2d' },
   { lang: 'de', category: 'youtube', q: `intitle:YouTube ${LIVE_SPAM} when:2d` },

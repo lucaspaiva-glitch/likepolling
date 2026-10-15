@@ -1,4 +1,4 @@
-// Site language switcher (EN | PT | ES | DE | RU | UA | KO | JA). Load right after the page markup:
+// Site language switcher (EN | BR | PT | ES | DE | RU | UA | KO | JA). Load right after the page markup:
 //   <script src="/assets/i18n.js"></script>
 // Translates the page's English UI text in place, including text that scripts
 // and widgets render later (watched with a MutationObserver), so existing code
@@ -7,10 +7,12 @@
 // and announced with a "lp:lang" event ({ detail: { lang } }) on document.
 (function () {
   'use strict';
-  const LANGS = ['en', 'pt', 'es', 'de', 'ru', 'uk', 'ko', 'ja'];
+  const LANGS = ['en', 'pt', 'pt-PT', 'es', 'de', 'ru', 'uk', 'ko', 'ja'];
+  // Dictionary columns. European Portuguese ('pt-PT') uses the 'pt' column plus the PT_PT overrides below.
+  const COLS = ['pt', 'es', 'de', 'ru', 'uk', 'ko', 'ja'];
   // Button label, flag (assets/flags) and native name. Ukrainian shows "UA" so it isn't read as United Kingdom.
   const META = {
-    en: ['EN', 'us', 'English'], pt: ['PT', 'br', 'Português'], es: ['ES', 'es', 'Español'], de: ['DE', 'de', 'Deutsch'],
+    en: ['EN', 'us', 'English'], pt: ['BR', 'br', 'Português (Brasil)'], 'pt-PT': ['PT', 'pt', 'Português (Portugal)'], es: ['ES', 'es', 'Español'], de: ['DE', 'de', 'Deutsch'],
     ru: ['RU', 'ru', 'Русский'], uk: ['UA', 'ua', 'Українська'], ko: ['KO', 'kr', '한국어'], ja: ['JA', 'jp', '日本語'],
   };
   const STORE = 'lp-lang';
@@ -96,6 +98,32 @@
     [/^Database lookup failed: ([\s\S]*)$/, ['Falha na consulta ao banco de dados: $1', 'Falló la consulta a la base de datos: $1', 'Datenbankabfrage fehlgeschlagen: $1', 'Ошибка запроса к базе данных: $1', 'Помилка запиту до бази даних: $1', '데이터베이스 조회 실패: $1', 'データベースの検索に失敗しました：$1']],
     [/^Metrics lookup failed: ([\s\S]*)$/, ['Falha na consulta de métricas: $1', 'Falló la consulta de métricas: $1', 'Abruf der Kennzahlen fehlgeschlagen: $1', 'Ошибка получения метрик: $1', 'Помилка отримання метрик: $1', '지표 조회 실패: $1', '指標の取得に失敗しました：$1']],
   ];
+  // European Portuguese wording where it differs from the Brazilian 'pt' column (keyed by English text or pattern source).
+  const PT_PT = {
+    'Live data, 24/7': 'Dados em direto, 24/7',
+    "Monthly views, comment volume, estimated earnings, and an AI read on why it's trending.": 'Visualizações mensais, volume de comentários, ganhos estimados e uma análise de IA sobre o motivo de estar em tendência.',
+    'Tracked channels': 'Canais monitorizados',
+    'Est. watching': 'Est. a ver',
+    'Estimated number of people watching YouTube right now, by country': 'Número estimado de pessoas a ver YouTube neste momento, por país',
+    "Estimated number of people watching YouTube at the same moment in each country (not monthly users). Modelled from approximate YouTube users per country and the typical share watching at that local time of day, not measured. User counts per country: Google's YouTube ad-reach figures, late 2025 (via DataReportal). Recalculated at 03:00 and 15:00 UTC, the two daily peaks in viewing across these countries.": 'Número estimado de pessoas a ver YouTube ao mesmo tempo em cada país (não utilizadores mensais). Modelado a partir do número aproximado de utilizadores do YouTube por país e da parcela típica que vê àquela hora local, não medido. Utilizadores por país: alcance publicitário do YouTube indicado pela Google, final de 2025 (via DataReportal). Recalculado às 03:00 e às 15:00 UTC, os dois picos diários de audiência nestes países.',
+    'Searching database…': 'A pesquisar na base de dados…',
+    'Refreshing live metrics…': 'A atualizar métricas em direto…',
+    'Fetching live data from YouTube…': 'A obter dados em direto do YouTube…',
+    'Loading from database…': 'A carregar a partir da base de dados…',
+    'AI summary unavailable for this snapshot.': 'Resumo de IA indisponível para este registo.',
+    'Like Polling · Data via YouTube Data API · Summaries by Gemini · Earnings are estimates ($1–$4 per 1K views)': 'Like Polling · Dados via YouTube Data API · Resumos por Gemini · Os ganhos são estimativas (1–4 US$ por mil visualizações)',
+    'Likes': 'Gostos',
+    'YouTube trending videos by country': 'Vídeos em tendência no YouTube por país',
+    'YouTube trending music by country': 'Músicas em tendência no YouTube por país',
+    "YouTube's own Trending chart for each country, via the YouTube Data API. Refreshed hourly.": 'Tabela oficial de Tendências do YouTube em cada país, via YouTube Data API. Atualizada de hora a hora.',
+    "YouTube's own Trending chart for Music in each country, via the YouTube Data API. Refreshed hourly.": 'Tabela oficial de Tendências de Música do YouTube em cada país, via YouTube Data API. Atualizada de hora a hora.',
+    'Trending data is unavailable right now.': 'Os dados de tendências estão indisponíveis de momento.',
+    'No headlines in this filter yet.': 'Ainda não há títulos neste filtro.',
+    'News is unavailable right now.': 'As notícias estão indisponíveis de momento.',
+    'Latest headlines from Google News in the selected language. Refreshed hourly.': 'Últimos títulos do Google News no idioma selecionado. Atualizado de hora a hora.',
+    [/^Showing cached data — live refresh failed \(([\s\S]*)\)\.$/.source]: 'A mostrar dados em cache — a atualização em direto falhou ($1).',
+    [/^Database lookup failed: ([\s\S]*)$/.source]: 'Falha na consulta à base de dados: $1',
+  };
   // Narrower wording inside a container: [selector, { English: [pt, es, de, ru, uk, ko, ja] }]
   const CONTEXT = [
     ['.ytt', { 'Views': ['Visualiz.', 'Vistas', 'Aufrufe', 'Просм.', 'Перегл.', '조회수', '再生数'] }],
@@ -104,7 +132,8 @@
     'Like Polling | YouTube Channel Intelligence': ['Like Polling | Inteligência de canais do YouTube', 'Like Polling | Inteligencia de canales de YouTube', 'Like Polling | YouTube-Kanalanalyse', 'Like Polling | Аналитика YouTube-каналов', 'Like Polling | Аналітика YouTube-каналів', 'Like Polling | YouTube 채널 인텔리전스', 'Like Polling | YouTubeチャンネル分析'],
   };
   const ATTRS = ['placeholder', 'aria-label', 'title'];
-  const idx = (l) => LANGS.indexOf(l) - 1;
+  const idx = (l) => COLS.indexOf(l === 'pt-PT' ? 'pt' : l);
+  const col = (row, key, l) => (l === 'pt-PT' && PT_PT[key] != null ? PT_PT[key] : row[idx(l)]);
   const locale = (l) => (l === 'pt' ? 'pt-BR' : l);
   function localDate(s, lang) {
     const d = Date.parse(s);
@@ -131,15 +160,15 @@
 
   function translate(en, lang, el) {
     if (lang === 'en' || !en) return null;
-    if (el) for (const [sel, map] of CONTEXT) if (map[en.trim()] && el.closest(sel)) return en.replace(en.trim(), map[en.trim()][idx(lang)]);
-    if (RAW[en]) return RAW[en][idx(lang)];
+    if (el) for (const [sel, map] of CONTEXT) if (map[en.trim()] && el.closest(sel)) return en.replace(en.trim(), col(map[en.trim()], en.trim(), lang));
+    if (RAW[en]) return col(RAW[en], en, lang);
     const core = en.trim();
     if (!core) return null;
     const lead = en.slice(0, en.indexOf(core)), trail = en.slice(en.indexOf(core) + core.length);
-    let out = DICT[core] ? DICT[core][idx(lang)] : null;
+    let out = DICT[core] ? col(DICT[core], core, lang) : null;
     if (out == null) for (const [re, t, fn] of PATTERNS) {
       const m = core.match(re);
-      if (m) { out = t[idx(lang)].replace('$1', () => (fn ? fn(m[1], lang) : m[1])); break; }
+      if (m) { out = col(t, re.source, lang).replace('$1', () => (fn ? fn(m[1], lang) : m[1])); break; }
     }
     if (out == null) { const m = core.match(/^(.+?)(:?)$/); const c = m && country(m[1], lang); if (c) out = c + m[2]; }
     return out == null ? null : lead + out + trail;
@@ -148,7 +177,8 @@
 
   let stored = null;
   try { stored = localStorage.getItem(STORE); } catch (e) { /* storage blocked */ }
-  const browser = (navigator.language || '').slice(0, 2).toLowerCase();
+  const nav = (navigator.language || '').toLowerCase();
+  const browser = nav === 'pt-pt' ? 'pt-PT' : nav.slice(0, 2);
   let lang = LANGS.includes(stored) ? stored : LANGS.includes(browser) ? browser : 'en';
 
   const textEn = new WeakMap(), textOut = new WeakMap();
@@ -189,7 +219,7 @@
   function apply() {
     observer.disconnect();
     walk(document.body);
-    document.title = (TITLES[titleEn] && lang !== 'en') ? TITLES[titleEn][idx(lang)] : titleEn;
+    document.title = (TITLES[titleEn] && lang !== 'en') ? col(TITLES[titleEn], titleEn, lang) : titleEn;
     document.documentElement.lang = locale(lang);
     switcher.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.lang === lang)));
     observe();
