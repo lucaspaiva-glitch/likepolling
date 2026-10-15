@@ -31,7 +31,7 @@ test('fetches every feed, filters spam, dedupes and writes one RPC', async () =>
     if (url.includes('/rpc/replace_news_wire')) { payload = JSON.parse(init.body).payload; return text(200, String(payload.length)); }
     const q = decodeURIComponent(new URL(url).searchParams.get('q'));
     const lang = new URL(url).searchParams.get('hl').slice(0, 2);
-    if (q.startsWith('intitle:YouTube')) return text(200, rss(
+    if (q.includes('intitle:YouTube')) return text(200, rss(
       item('YouTube adds GIFs', 'Verge', `https://n.test/${lang}/1`),
       item('Shared story', 'WSJ', `https://n.test/${lang}/shared`),
       item('Jogo ao vivo no YouTube', 'Spam', `https://n.test/${lang}/spam`),
@@ -42,7 +42,7 @@ test('fetches every feed, filters spam, dedupes and writes one RPC', async () =>
   });
   const s = await run(env, deps(f));
   assert.equal(f.calls.filter((c) => c.url.startsWith('https://news.google.com/rss/search')).length, FEEDS.length);
-  assert.deepEqual(s.langs, { en: 3, pt: 3, es: 3 });
+  assert.deepEqual(s.langs, { en: 3, pt: 3, es: 3, de: 3, ru: 3, uk: 3, ko: 3, ja: 3 });
   const en = payload.filter((r) => r.lang === 'en').map((r) => `${r.category}:${r.title}`).sort();
   assert.deepEqual(en, ['creators:Creator raises fund', 'youtube:Shared story', 'youtube:YouTube adds GIFs']);
   assert.equal(f.calls.at(-1).init.headers.apikey, 'secret');

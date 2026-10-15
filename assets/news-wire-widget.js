@@ -3,7 +3,9 @@
 //   <script src="/assets/news-wire-widget.js" defer></script>
 // Reads public.news_wire (filled hourly by scripts/news-wire-routine.js) with the
 // publishable key, in the site language from assets/i18n.js (English without it).
-// UI text is English; i18n.js translates it. Hides itself if no data loads.
+// UI text is English; i18n.js translates it. More headlines appear as the visitor
+// scrolls (no button). Falls back to English headlines for a language with none yet,
+// and hides itself if no data loads.
 (function () {
   'use strict';
   const mount = document.getElementById('news-wire');
@@ -58,41 +60,62 @@
       <button type="button" data-f="creators" aria-pressed="false">Creator economy</button>
     </div>
     <ol class="nw-list" data-no-i18n></ol>
-    <div class="nw-more-wrap"><button type="button" class="nw-more">Load more</button></div>
+    <div class="nw-sentinel" aria-hidden="true"></div>
     <div class="nw-foot">Latest headlines from Google News in the selected language. Refreshed hourly.</div>`;
   const list = mount.querySelector('.nw-list');
-  const more = mount.querySelector('.nw-more');
+  const sentinel = mount.querySelector('.nw-sentinel');
   const asof = mount.querySelector('.nw-asof');
+  const tr = (s) => (window.LP_I18N ? window.LP_I18N.t(s) : s);
+  let view = null;
+
+  function rowHtml(r, lang, i) {
+    const link = /^https:\/\//.test(r.link) ? esc(r.link) : '#';
+    return `
+        <li class="nw-item nw-in" style="animation-delay:${Math.min(i, 11) * 35}ms">
+          <a href="${link}" target="_blank" rel="noopener">
+            <span class="nw-time">${esc(ago(r.published_at, lang))}</span>
+            <span class="nw-text">
+              <span class="nw-hl">${esc(r.title)}</span>
+              <span class="nw-meta"><span class="nw-src">${esc(r.source || 'Google News')}</span><span class="nw-cat">${esc(tr(r.category === 'youtube' ? 'YouTube' : 'Creators'))}</span></span>
+            </span>
+          </a>
+        </li>`;
+  }
+
+  // Reveals the next page when the sentinel nears the viewport; repeats while it stays in view.
+  function showMore() {
+    if (!view || shown >= view.items.length) return;
+    const from = shown;
+    shown += PAGE;
+    list.insertAdjacentHTML('beforeend', view.items.slice(from, shown).map((r, i) => rowHtml(r, view.lang, i)).join(''));
+    requestAnimationFrame(() => { if (sentinel.getBoundingClientRect().top < innerHeight + 400) showMore(); });
+  }
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver((entries) => { if (entries.some((e) => e.isIntersecting)) showMore(); }, { rootMargin: '0px 0px 400px 0px' }).observe(sentinel);
+  } else {
+    shown = Infinity;
+  }
 
   async function render() {
     const mine = ++token;
     const lang = siteLang();
     try {
-      const rows = await load(lang);
+      let rows = await load(lang);
+      if (!rows.length && lang !== 'en') rows = await load('en');
       if (mine !== token) return;
       if (!rows.length) throw new Error('no data');
       mount.hidden = false;
       const items = filter === 'all' ? rows : rows.filter((r) => r.category === filter);
-      list.innerHTML = items.length ? items.slice(0, shown).map((r) => `
-        <li class="nw-item">
-          <a href="${/^https:\/\//.test(r.link) ? esc(r.link) : '#'}" target="_blank" rel="noopener">
-            <span class="nw-time">${esc(ago(r.published_at, lang))}</span>
-            <span class="nw-text">
-              <span class="nw-hl">${esc(r.title)}</span>
-              <span class="nw-meta"><span class="nw-src">${esc(r.source || 'Google News')}</span><span class="nw-cat">${r.category === 'youtube' ? 'YouTube' : 'Creators'}</span></span>
-            </span>
-          </a>
-        </li>`).join('') : '<li class="nw-empty">No headlines in this filter yet.</li>';
-      list.querySelectorAll('.nw-cat, .nw-empty').forEach((el) => { el.textContent = window.LP_I18N ? window.LP_I18N.t(el.textContent) : el.textContent; });
-      more.parentElement.hidden = items.length <= shown;
+      view = { items, lang };
+      list.innerHTML = items.length ? items.slice(0, shown).map((r, i) => rowHtml(r, lang, i)).join('') : `<li class="nw-empty">${esc(tr('No headlines in this filter yet.'))}</li>`;
       asof.textContent = `As of ${new Date(rows[0].fetched_at).toISOString().slice(11, 16)} UTC`;
+      requestAnimationFrame(() => { if (sentinel.getBoundingClientRect().top < innerHeight + 400) showMore(); });
     } catch (err) {
       if (mine !== token) return;
       if (err.message !== 'no data') console.error('News wire widget:', err);
-      if (!Object.keys(cache).length || lang === 'en') { mount.hidden = true; return; }
-      list.innerHTML = '';
-      list.insertAdjacentHTML('beforeend', `<li class="nw-empty">${esc(window.LP_I18N ? window.LP_I18N.t('News is unavailable right now.') : 'News is unavailable right now.')}</li>`);
-      more.parentElement.hidden = true;
+      view = null;
+      if (!Object.values(cache).some((r) => r.length)) { mount.hidden = true; return; }
+      list.innerHTML = `<li class="nw-empty">${esc(tr('News is unavailable right now.'))}</li>`;
     }
   }
 
@@ -104,7 +127,6 @@
     mount.querySelectorAll('.nw-filters button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
     render();
   });
-  more.addEventListener('click', () => { shown += PAGE; render(); });
   document.addEventListener('lp:lang', () => { shown = PAGE; render(); });
   render();
 })();

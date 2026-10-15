@@ -15,6 +15,11 @@ const EDITIONS = {
   en: 'hl=en-US&gl=US&ceid=US:en',
   pt: 'hl=pt-BR&gl=BR&ceid=BR:pt-419',
   es: 'hl=es-419&gl=MX&ceid=MX:es-419',
+  de: 'hl=de&gl=DE&ceid=DE:de',
+  ru: 'hl=ru&gl=RU&ceid=RU:ru',
+  uk: 'hl=uk&gl=UA&ceid=UA:uk',
+  ko: 'hl=ko&gl=KR&ceid=KR:ko',
+  ja: 'hl=ja&gl=JP&ceid=JP:ja',
 };
 const LIVE_SPAM = '-"ao vivo" -"en vivo" -"live stream" -assistir -"onde assistir" -"dónde ver" -gratis -grátis';
 const FEEDS = [
@@ -24,12 +29,22 @@ const FEEDS = [
   { lang: 'pt', category: 'creators', q: '(youtuber OR youtubers OR "criadores de conteúdo" OR "economia dos criadores") when:2d' },
   { lang: 'es', category: 'youtube', q: `intitle:YouTube ${LIVE_SPAM} when:2d` },
   { lang: 'es', category: 'creators', q: '(youtuber OR youtubers OR "creadores de contenido" OR "economía de creadores") when:2d' },
+  { lang: 'de', category: 'youtube', q: `intitle:YouTube ${LIVE_SPAM} when:2d` },
+  { lang: 'de', category: 'creators', q: '(YouTuber OR YouTuberin OR "Content Creator" OR "Creator Economy") when:2d' },
+  { lang: 'ru', category: 'youtube', q: `(intitle:YouTube OR intitle:Ютуб) ${LIVE_SPAM} when:2d` },
+  { lang: 'ru', category: 'creators', q: '(intitle:ютубер OR intitle:ютуберы OR intitle:блогер OR intitle:блогерша) when:2d' },
+  { lang: 'uk', category: 'youtube', q: `(intitle:YouTube OR intitle:Ютуб) ${LIVE_SPAM} when:2d` },
+  { lang: 'uk', category: 'creators', q: '(intitle:ютубер OR intitle:ютубери OR intitle:блогер OR intitle:блогерка) when:2d' },
+  { lang: 'ko', category: 'youtube', q: `(intitle:유튜브 OR intitle:YouTube) ${LIVE_SPAM} when:2d` },
+  { lang: 'ko', category: 'creators', q: '(유튜버 OR 크리에이터) when:2d' },
+  { lang: 'ja', category: 'youtube', q: `(intitle:YouTube OR intitle:ユーチューブ) ${LIVE_SPAM} when:2d` },
+  { lang: 'ja', category: 'creators', q: '(ユーチューバー OR YouTuber OR 動画クリエイター) when:2d' },
 ];
 
 // Social posts and video pages are not news articles.
 // Also drops sites that post fake "watch the game live on YouTube" pages.
 const BLOCKED_SOURCES = /^(instagram|facebook|tiktok|youtube|x|twitter|reddit|threads|linkedin|howl\.link)$|universidad de c[oó]rdoba/i;
-const SPAM_TITLE = /\b(ao vivo|en vivo|live stream|livestream|assistir|ver gratis|grátis|gratis)\b|\blive on youtube\b|\byoutube live\b/i;
+const SPAM_TITLE = /\b(ao vivo|en vivo|live stream|livestream|assistir|ver gratis|grátis|gratis)\b|\blive on youtube\b|\byoutube live\b|прямая трансляция|смотреть онлайн|пряма трансляція|дивитися онлайн/i;
 
 const defaultSleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
