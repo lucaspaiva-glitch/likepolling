@@ -42,7 +42,6 @@
     }
     return shortsCache[lang];
   }
-  const SHORT_EVERY = 3;
   // Country whose Shorts are shown (each country is searched in its own language).
   // Defaults to the site language's country; a dropdown choice is kept until the site language changes.
   const SHORT_CC = { en: 'US', pt: 'BR', 'pt-PT': 'PT', es: 'MX', de: 'DE', ru: 'RU', uk: 'UA', ko: 'KR', ja: 'JP' };
@@ -131,11 +130,26 @@
   const asof = mount.querySelector('.nw-asof');
   const prevBtn = mount.querySelector('.nw-prev');
   const nextBtn = mount.querySelector('.nw-next');
+  // Creator economy sits on the front page, right under the search; Popular Shorts
+  // close the page as endless "ending credits".
+  const front = document.createElement('section');
+  front.className = 'nw nw-front';
+  front.hidden = true;
+  front.setAttribute('aria-label', 'Creator economy news');
+  front.append(mount.querySelector('.nw-head'), mount.querySelector('.nw-sub'), empty, feedWrap, mount.querySelector('.nw-foot'));
+  const anchor = document.getElementById('results');
+  if (anchor) anchor.after(front); else mount.before(front);
+  feedWrap.insertAdjacentHTML('afterbegin', '<div class="nw-lead" data-no-i18n></div>');
+  const lead = feedWrap.querySelector('.nw-lead');
+  const credits = document.createElement('section');
+  credits.className = 'nw nw-credits';
+  credits.hidden = true;
+  credits.setAttribute('aria-label', 'Popular Shorts by country');
+  mount.after(credits);
   // Popular Shorts get their own feed above the creator-economy articles.
   const S_TITLE = 'Popular Shorts by country';
   const S_FOOT = "Videos are the most viewed Shorts of the last 2 days in the language of the country chosen above, found by YouTube search, and play in YouTube's player. Refreshed every 12 hours.";
   const S_NONE = 'No Popular Shorts for this country right now.';
-  const S_END = "You've seen all Popular Shorts for this country.";
   mount.querySelector('.nw-rank').insertAdjacentHTML('afterend', `
     <div class="nw-shorts" hidden>
       <h3 class="nw-sub" data-no-i18n>${S_TITLE}</h3>
@@ -161,6 +175,7 @@
   const pickBar = mount.querySelector('.nw-pick');
   const pickSel = mount.querySelector('.nw-select');
   const pickFlag = mount.querySelector('.nw-pick-flag');
+  credits.append(sBox);
   pickSel.addEventListener('change', () => {
     shortsPick = pickSel.value;
     try { localStorage.setItem(PICK, shortsPick); } catch (e) { /* no storage */ }
@@ -214,6 +229,31 @@
             ${ch ? `<span class="nw-actw"><button type="button" class="nw-act nw-find" data-q="${esc(ch)}" aria-label="${esc(`${tr('Search channel')}: ${ch}`)}" title="${esc(`${tr('Search channel')}: ${ch}`)}">${ICON.search}</button><span class="nw-act-l">${esc(ch)}</span></span>` : ''}
             <a class="nw-act" href="${link}" target="_blank" rel="noopener" aria-label="${esc(tr('Open source'))}" title="${esc(tr('Open source'))}">${ICON.open}</a>
           </div>
+        </div>
+      </article>`;
+  }
+
+  // Front-page headline row: the article's own photo, animated like a GIF, beside the headline.
+  function rowHtml(r, lang, i, note) {
+    const foreign = r.lang && r.lang !== lang;
+    const link = /^https:\/\//.test(r.link) ? esc(r.link) : '#';
+    const img = /^https:\/\//.test(r.image_url || '') ? esc(r.image_url) : '';
+    const src = String(r.source || 'Google News').trim();
+    const initial = esc(([...src][0] || 'N').toUpperCase());
+    return `
+      <article class="nw-card nw-row nw-in${img ? '' : ' nw-noimg'}"${foreign ? ` lang="${esc(r.lang)}"` : ''} style="animation-delay:${(i % FEED_PAGE) * 45}ms">
+        <a class="nw-row-media" href="${link}" target="_blank" rel="noopener" tabindex="-1" aria-hidden="true">
+          ${img ? `<img class="nw-img nw-kb${i % 4}" src="${img}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">` : ''}
+          <div class="nw-art"><span>${initial}</span></div>
+        </a>
+        <div class="nw-row-body">
+          <div class="nw-row-meta">
+            ${note ? `<span class="nw-row-note">${esc(note)}</span>` : ''}
+            <span class="nw-src">${esc(src)}</span>
+            <span class="nw-row-age">${esc(ago(r.published_at, lang))}</span>
+            ${foreign && FLAG[r.lang] ? `<img class="nw-flag" src="/assets/flags/${FLAG[r.lang]}.svg" alt="${esc(langName(r.lang, lang))}" title="${esc(langName(r.lang, lang))}" width="18" height="13">` : ''}
+          </div>
+          <a class="nw-hl" href="${link}" target="_blank" rel="noopener">${esc(r.title)}</a>
         </div>
       </article>`;
   }
@@ -347,12 +387,13 @@
       st.shown = Math.min(st.items.length, st.shown + FEED_PAGE);
       sentinel.insertAdjacentHTML('beforebegin', st.items.slice(from, st.shown).map((r, i) => {
         const n = from + i;
-        const card = cardHtml(r, st.lang, n, n ? 'more' : 'hero', n === st.others ? tr('From other languages') : '');
-        const v = (n + 1) % SHORT_EVERY === 0 && st.shorts[st.si];
-        if (v) st.si++;
-        return v ? card + shortHtml(v, st.lang) : card;
+        const note = n === st.others ? tr('From other languages') : '';
+        if (n) return rowHtml(r, st.lang, n, note);
+        lead.innerHTML = cardHtml(r, st.lang, 0, 'hero', note);
+        return '';
       }).join(''));
       watch(feed);
+      watch(lead);
     } finally {
       st.busy = false;
     }
@@ -407,8 +448,9 @@
     }, { passive: false });
     return syncNav;
   }
-  const syncNav = feedNav(feed, prevBtn, nextBtn, () => feedState != null && feedState.done, () => { if (nearEnd()) moreFeed(); });
-  const syncShorts = feedNav(sFeed, sPrev, sNext, () => true);
+  feed.addEventListener('scroll', () => { if (nearEnd()) moreFeed(); }, { passive: true });
+  const syncNav = () => {};
+  const syncShorts = feedNav(sFeed, sPrev, sNext, () => false, () => moreShorts());
 
   function setPaused(card, paused) {
     card.classList.toggle('nw-paused', paused);
@@ -432,7 +474,7 @@
     if (form && form.requestSubmit && (!other || !other.offsetParent || other.value.trim())) form.requestSubmit();
   }
 
-  mount.addEventListener('click', (ev) => {
+  const onClick = (ev) => {
     const card = ev.target.closest('.nw-card');
     if (!card) return;
     if (card.classList.contains('nw-yt')) {
@@ -441,15 +483,19 @@
     }
     const find = ev.target.closest('.nw-find');
     if (find) { searchChannel(find.dataset.q); return; }
-    if (ev.target.closest('a')) return;
+    if (ev.target.closest('a') || card.classList.contains('nw-row')) return;
     setPaused(card, !card.classList.contains('nw-paused'));
-  });
-  mount.addEventListener('error', (ev) => {
+  };
+  const onImgError = (ev) => {
     const img = ev.target;
     if (!img.classList || !img.classList.contains('nw-img')) return;
     img.closest('.nw-card').classList.add('nw-noimg');
     img.remove();
-  }, true);
+  };
+  [mount, front, credits].forEach((el) => {
+    el.addEventListener('click', onClick);
+    el.addEventListener('error', onImgError, true);
+  });
 
   async function render() {
     const mine = ++token;
@@ -461,9 +507,11 @@
       if (mine !== token) return;
       if (!rows.length) throw new Error('no data');
       mount.hidden = false;
+      front.hidden = false;
       view = { items: rows, lang };
       empty.hidden = true;
       feed.querySelectorAll(':scope > :not(.nw-sentinel)').forEach((n) => n.remove());
+      lead.innerHTML = '';
       feed.scrollTop = 0;
       feed.setAttribute('aria-label', tr('Creator economy'));
       prevBtn.setAttribute('aria-label', tr('Previous story'));
@@ -491,7 +539,7 @@
       if (err.message !== 'no data') console.error('News wire widget:', err);
       view = null;
       feedState = null;
-      if (!Object.values(cache).some((r) => r.length)) { mount.hidden = true; return; }
+      if (!Object.values(cache).some((r) => r.length)) { mount.hidden = true; front.hidden = true; return; }
       empty.textContent = tr('News is unavailable right now.');
       empty.hidden = false;
       feedWrap.hidden = true;
@@ -499,6 +547,14 @@
   }
 
   let sToken = 0;
+  // The credits never end: near the last Short, the same list starts again.
+  let sLoop = null;
+  function moreShorts() {
+    if (!sLoop || !sLoop.vids.length) return;
+    if (sFeed.scrollHeight - sFeed.scrollTop - sFeed.clientHeight > sFeed.clientHeight * 3) return;
+    sFeed.insertAdjacentHTML('beforeend', sLoop.vids.map((v) => shortHtml(v, sLoop.ui)).join(''));
+    watch(sFeed);
+  }
   async function renderShorts() {
     const mine = ++sToken;
     const ui = siteLang();
@@ -507,7 +563,8 @@
     if (mine !== sToken) return;
     sFeed.querySelectorAll('.nw-card').forEach((c) => { stopShort(c); if (motion) motion.unobserve(c); });
     const vids = rows.filter((v, i, a) => a.findIndex((x) => x.video_id === v.video_id) === i);
-    sFeed.innerHTML = vids.length ? vids.map((v) => shortHtml(v, ui)).join('') + `<p class="nw-feed-end">${esc(tr(S_END))}</p>` : '';
+    sFeed.innerHTML = vids.map((v) => shortHtml(v, ui)).join('');
+    sLoop = { vids, ui };
     sBox.querySelector('.nw-feed-wrap').hidden = !vids.length;
     const none = sBox.querySelector('.nw-empty');
     none.textContent = tr(S_NONE);
@@ -523,6 +580,7 @@
     sNext.setAttribute('aria-label', tr('Next story'));
     sNext.title = tr('Next story');
     sBox.hidden = !Object.values(counts).some(Boolean);
+    credits.hidden = sBox.hidden;
     watch(sFeed);
     syncShorts();
   }
