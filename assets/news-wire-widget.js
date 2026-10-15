@@ -33,6 +33,17 @@
   let ranking = null;
   let token = 0;
 
+  const shortsCache = {};
+  function loadShorts(lang) {
+    if (!shortsCache[lang]) {
+      shortsCache[lang] = fetch(`${base}/rest/v1/news_shorts?select=*&lang=eq.${encodeURIComponent(lang)}&order=rank.asc&limit=30`, { headers })
+        .then((r) => (r.ok ? r.json() : []))
+        .catch(() => []);
+    }
+    return shortsCache[lang];
+  }
+  const SHORT_EVERY = 3;
+
   async function load(lang) {
     if (!cache[lang]) {
       const res = await fetch(`${base}/rest/v1/news_wire?select=*&lang=eq.${encodeURIComponent(lang)}&category=eq.creators&order=published_at.desc&limit=200`, { headers });
@@ -73,6 +84,7 @@
     search: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="m15 15 5 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>',
     up: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 15 6-6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
     down: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    big: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M8 5.5v13l10.5-6.5z"/></svg>',
     open: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h9v9M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   };
 
@@ -98,7 +110,7 @@
         <button type="button" class="nw-next">${ICON.down}</button>
       </div>
     </div>
-    <div class="nw-foot">Latest creator-economy headlines from Google News, in the selected language first, then other languages. Photos are each article's own preview image. Refreshed hourly.</div>`;
+    <div class="nw-foot">Latest creator-economy headlines from Google News, in the selected language first, then other languages. Photos are each article's own preview image. Refreshed hourly.<span class="nw-foot-yt" hidden> <span>Videos are YouTube Shorts found by YouTube search and play in YouTube's player. Refreshed every 8 hours.</span></span></div>`;
   const empty = document.createElement('p');
   empty.className = 'nw-empty';
   mount.querySelector('.nw-sub').after(empty);
@@ -107,6 +119,7 @@
   const feed = mount.querySelector('.nw-feed');
   const sentinel = mount.querySelector('.nw-sentinel');
   const asof = mount.querySelector('.nw-asof');
+  const footYt = mount.querySelector('.nw-foot-yt');
   const prevBtn = mount.querySelector('.nw-prev');
   const nextBtn = mount.querySelector('.nw-next');
   let view = null;
@@ -149,9 +162,62 @@
       </article>`;
   }
 
+  // A real YouTube Short: thumbnail + play button until tapped, then YouTube's own
+  // player, uncovered. The player is removed again when the card leaves the screen.
+  const compact = (n, lang) => { try { return new Intl.NumberFormat(lang === 'pt' ? 'pt-BR' : lang, { notation: 'compact', maximumFractionDigits: 1 }).format(n); } catch { return String(n); } };
+  function shortHtml(v, lang) {
+    const id = /^[A-Za-z0-9_-]{11}$/.test(v.video_id) ? v.video_id : '';
+    const url = `https://www.youtube.com/shorts/${id}`;
+    const ch = String(v.channel_title || 'YouTube').trim();
+    const initial = esc(([...ch][0] || 'Y').toUpperCase());
+    const play = tr('Play video');
+    return `
+      <article class="nw-card nw-short nw-yt nw-in" data-vid="${id}" data-title="${esc(v.title)}">
+        <div class="nw-media" aria-hidden="true">
+          <img class="nw-img nw-still" src="https://i.ytimg.com/vi/${id}/hqdefault.jpg" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+          <div class="nw-art"><span>${initial}</span></div>
+        </div>
+        <div class="nw-shade" aria-hidden="true"></div>
+        <div class="nw-top">
+          <span class="nw-badge">${esc(tr('YouTube Short'))}</span>
+          ${v.published_at ? `<span class="nw-age">${esc(ago(v.published_at, lang))}</span>` : ''}
+          ${v.view_count != null ? `<span class="nw-age">${esc(compact(v.view_count, lang))} ${esc(tr('views'))}</span>` : ''}
+        </div>
+        <button type="button" class="nw-play" aria-label="${esc(`${play}: ${v.title}`)}" title="${esc(play)}">${ICON.big}</button>
+        <div class="nw-low">
+          <div class="nw-bottom">
+            <div class="nw-pub"><span class="nw-mono" aria-hidden="true">${initial}</span><span class="nw-src">${esc(ch)}</span></div>
+            <a class="nw-hl" href="${url}" target="_blank" rel="noopener">${esc(v.title)}</a>
+          </div>
+          <div class="nw-rail">
+            <a class="nw-act" href="${url}" target="_blank" rel="noopener" aria-label="${esc(tr('Open on YouTube'))}" title="${esc(tr('Open on YouTube'))}">${ICON.open}</a>
+          </div>
+        </div>
+      </article>`;
+  }
+  function playShort(card) {
+    if (card.classList.contains('nw-playing') || !card.dataset.vid) return;
+    const f = document.createElement('iframe');
+    f.className = 'nw-player';
+    f.src = `https://www.youtube-nocookie.com/embed/${card.dataset.vid}?autoplay=1&playsinline=1&rel=0`;
+    f.title = card.dataset.title || 'YouTube';
+    f.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
+    f.allowFullscreen = true;
+    card.appendChild(f);
+    card.classList.add('nw-playing');
+  }
+  function stopShort(card) {
+    const f = card.querySelector('.nw-player');
+    if (f) f.remove();
+    card.classList.remove('nw-playing');
+  }
+
   // Pan-and-zoom runs only while a card is on screen.
   const motion = 'IntersectionObserver' in window
-    ? new IntersectionObserver((entries) => entries.forEach((e) => e.target.classList.toggle('nw-on', e.isIntersecting)), { threshold: 0.6 })
+    ? new IntersectionObserver((entries) => entries.forEach((e) => {
+      e.target.classList.toggle('nw-on', e.isIntersecting);
+      if (!e.isIntersecting && e.target.classList.contains('nw-playing')) stopShort(e.target);
+    }), { threshold: 0.6 })
     : null;
   const watch = (root) => root.querySelectorAll('.nw-card:not([data-w])').forEach((c) => {
     c.dataset.w = '1';
@@ -186,7 +252,10 @@
       st.shown = Math.min(st.items.length, st.shown + FEED_PAGE);
       sentinel.insertAdjacentHTML('beforebegin', st.items.slice(from, st.shown).map((r, i) => {
         const n = from + i;
-        return cardHtml(r, st.lang, n, n ? 'more' : 'hero', n === st.others ? tr('From other languages') : '');
+        const card = cardHtml(r, st.lang, n, n ? 'more' : 'hero', n === st.others ? tr('From other languages') : '');
+        const v = (n + 1) % SHORT_EVERY === 0 && st.shorts[st.si];
+        if (v) st.si++;
+        return v ? card + shortHtml(v, st.lang) : card;
       }).join(''));
       watch(feed);
     } finally {
@@ -256,6 +325,10 @@
   mount.addEventListener('click', (ev) => {
     const card = ev.target.closest('.nw-card');
     if (!card) return;
+    if (card.classList.contains('nw-yt')) {
+      if (!ev.target.closest('a')) playShort(card);
+      return;
+    }
     const find = ev.target.closest('.nw-find');
     if (find) { searchChannel(find.dataset.q); return; }
     if (ev.target.closest('a')) return;
@@ -272,9 +345,11 @@
     const mine = ++token;
     const lang = siteLang();
     try {
+      const shortsP = loadShorts(lang);
       let rows = await load(lang);
       if (!rows.length && lang !== 'en') rows = await load('en');
       channels = await known;
+      const shorts = (await shortsP).filter((v, i, a) => a.findIndex((x) => x.video_id === v.video_id) === i);
       if (mine !== token) return;
       if (!rows.length) throw new Error('no data');
       mount.hidden = false;
@@ -295,10 +370,13 @@
         seen: new Set(rows.map((r) => r.link)),
         queue: ['en', ...LANGS].filter((l, i, a) => l !== own && a.indexOf(l) === i),
         others: null,
+        shorts,
+        si: 0,
         busy: false,
         done: false
       };
       feedWrap.hidden = false;
+      footYt.hidden = !shorts.length;
       moreFeed().then(syncNav);
       asof.textContent = `As of ${new Date(rows[0].fetched_at).toISOString().slice(11, 16)} UTC`;
     } catch (err) {
