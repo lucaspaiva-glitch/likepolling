@@ -1,9 +1,10 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { run, toRows, seconds, SEARCHES } = require('../scripts/news-shorts-routine');
+const { run, toRows, seconds, shortKind, SEARCHES } = require('../scripts/news-shorts-routine');
 
 const env = { YOUTUBE_API_KEY: 'yt', SUPABASE_URL: 'https://db.test', SUPABASE_KEY: 'secret' };
 const json = (status, body) => ({ ok: status >= 200 && status < 300, status, json: async () => body });
+const page = (status, location) => ({ status, headers: { get: (h) => (h === 'location' ? location : null) } });
 const vid = (id, dur, extra = {}) => ({ id, snippet: { title: `T ${id}`, channelId: `UC${id}`, channelTitle: `C ${id}`, publishedAt: '2026-10-15T10:00:00Z', liveBroadcastContent: 'none' }, contentDetails: { duration: dur }, statistics: { viewCount: '1200' }, status: { embeddable: true, privacyStatus: 'public' }, ...extra });
 
 test('parses ISO 8601 durations', () => {
@@ -30,28 +31,49 @@ test('keeps search order and drops long, live, unembeddable and private videos',
   assert.equal(rows[0].channel_title, 'C bbbbbbbbbbb');
 });
 
-test('reads every country chart (paged), keeps Shorts in chart order, one RPC; quota stops further countries', async () => {
+test('tells real Shorts from regular videos; anything else is unknown', async () => {
+  const at = (res) => ({ fetch: async () => (res instanceof Error ? Promise.reject(res) : res) });
+  assert.equal(await shortKind('aaaaaaaaaaa', at(page(200))), 'short');
+  assert.equal(await shortKind('aaaaaaaaaaa', at(page(303, 'https://www.youtube.com/watch?v=aaaaaaaaaaa'))), 'video');
+  assert.equal(await shortKind('aaaaaaaaaaa', at(page(302, 'https://consent.youtube.com/m?continue=x'))), 'unknown');
+  assert.equal(await shortKind('aaaaaaaaaaa', at(page(429))), 'unknown');
+  assert.equal(await shortKind('aaaaaaaaaaa', at(new Error('net'))), 'unknown');
+});
+
+test('searches most viewed recent shorts per country, keeps only real Shorts, one RPC; quota stops further countries', async () => {
   let rpc;
   const regions = [];
+  const notShort = new Set(['bbbbbbbbbbb']);
   const f = async (url, init = {}) => {
     const u = new URL(String(url));
-    if (u.pathname.endsWith('/videos')) {
-      assert.equal(u.searchParams.get('chart'), 'mostPopular');
+    if (u.hostname === 'www.youtube.com') {
+      const id = u.pathname.split('/').pop();
+      return notShort.has(id) ? page(303, `https://www.youtube.com/watch?v=${id}`) : page(200);
+    }
+    if (u.pathname.endsWith('/search')) {
       const r = u.searchParams.get('regionCode');
-      regions.push(r + (u.searchParams.get('pageToken') || ''));
+      regions.push(r);
+      assert.equal(u.searchParams.get('order'), 'viewCount');
+      assert.equal(u.searchParams.get('videoDuration'), 'short');
+      assert.equal(u.searchParams.get('q'), null);
+      assert.equal(u.searchParams.get('publishedAfter'), '2026-10-13T12:00:00.000Z');
       if (r === 'PT') return json(403, { error: { message: 'quota', errors: [{ reason: 'quotaExceeded' }] } });
-      if (r === 'US' && !u.searchParams.get('pageToken')) return json(200, { nextPageToken: 'p2', items: [vid('aaaaaaaaaaa', 'PT20M'), vid('bbbbbbbbbbb', 'PT45S')] });
-      if (r === 'US') return json(200, { items: [vid('ccccccccccc', 'PT1M')] });
-      return json(200, { items: [vid('ddddddddddd', 'PT30S')] });
+      const ids = r === 'US' ? ['aaaaaaaaaaa', 'bbbbbbbbbbb', 'ccccccccccc', 'ddddddddddd'] : ['eeeeeeeeeee'];
+      return json(200, { items: ids.map((videoId) => ({ id: { videoId } })) });
+    }
+    if (u.pathname.endsWith('/videos')) {
+      const ids = u.searchParams.get('id').split(',');
+      return json(200, { items: ids.map((id) => vid(id, id === 'ccccccccccc' ? 'PT20M' : 'PT40S')) });
     }
     if (u.pathname.endsWith('/rpc/replace_news_shorts')) { rpc = JSON.parse(init.body); return json(200, rpc.payload.length); }
     throw new Error(`unexpected ${u}`);
   };
-  const s = await run(env, { fetch: f, sleep: async () => {}, log: () => {} });
-  assert.deepEqual(regions, ['US', 'USp2', 'BR', 'PT']);
+  const s = await run(env, { fetch: f, sleep: async () => {}, log: () => {}, now: () => Date.parse('2026-10-15T12:00:00Z') });
+  assert.deepEqual(regions, ['US', 'BR', 'PT']);
   assert.equal(s.quotaHit, true);
   assert.deepEqual(s.langs, { en: 2, pt: 1 });
+  assert.deepEqual(s.check, { short: 3, video: 1, unknown: 0 });
   assert.equal(s.failed.length, SEARCHES.length - 2);
-  assert.deepEqual(rpc.payload.filter((r) => r.lang === 'en').map((r) => [r.video_id, r.rank]), [['bbbbbbbbbbb', 1], ['ccccccccccc', 2]]);
+  assert.deepEqual(rpc.payload.filter((r) => r.lang === 'en').map((r) => [r.video_id, r.rank]), [['aaaaaaaaaaa', 1], ['ddddddddddd', 2]]);
   assert.equal(s.rows, 3);
 });
