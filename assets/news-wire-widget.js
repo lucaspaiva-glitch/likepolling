@@ -2,10 +2,12 @@
 //   <section id="news-wire" data-supabase-url="…" data-supabase-key="sb_publishable_…"></section>
 //   <script src="/assets/news-wire-widget.js" defer></script>
 // Reads public.news_wire (filled hourly by scripts/news-wire-routine.js) with the
-// publishable key, in the site language from assets/i18n.js (English without it).
-// UI text is English; i18n.js translates it. More headlines appear as the visitor
-// scrolls (no button). Falls back to English headlines for a language with none yet,
-// and hides itself if no data loads.
+// publishable key, in the site language from assets/i18n.js (English without it),
+// and shows the creator-economy headlines as a bento grid of vertical story cards
+// (top story + 4) and a swipeable reel for the rest. Each card shows the article's
+// own preview image with a slow pan-and-zoom while on screen, or an animated red
+// card when the article has none. Falls back to English headlines for a language
+// with none yet, and hides itself if no data loads.
 (function () {
   'use strict';
   const mount = document.getElementById('news-wire');
@@ -19,19 +21,20 @@
   css.href = '/assets/news-wire-widget.css';
   document.head.appendChild(css);
 
-  const PAGE = 12;
+  const BENTO = 5;
+  const REEL_PAGE = 10;
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const headers = { apikey: key, Authorization: `Bearer ${key}` };
   const siteLang = () => (window.LP_I18N && window.LP_I18N.lang) || 'en';
+  const tr = (s) => (window.LP_I18N ? window.LP_I18N.t(s) : s);
   const cache = {};
   const rankUrl = `${base}/rest/v1/youtube_trending?select=country_code,rank,channel_id,channel_title`;
   let ranking = null;
-  let shown = PAGE;
   let token = 0;
 
   async function load(lang) {
     if (!cache[lang]) {
-      const res = await fetch(`${base}/rest/v1/news_wire?select=category,title,source,link,published_at,fetched_at&lang=eq.${encodeURIComponent(lang)}&order=published_at.desc&limit=200`, { headers });
+      const res = await fetch(`${base}/rest/v1/news_wire?select=*&lang=eq.${encodeURIComponent(lang)}&category=eq.creators&order=published_at.desc&limit=200`, { headers });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       cache[lang] = await res.json();
     }
@@ -46,8 +49,32 @@
     return rtf.format(-Math.round(mins / 1440), 'day');
   }
 
+  // Channel names we already chart (Trending + Music Index). "Search channel"
+  // only appears when a headline names one of them as a whole word.
+  const reEsc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const known = Promise.all(['youtube_trending', 'youtube_music_chart'].map((t) =>
+    fetch(`${base}/rest/v1/${t}?select=channel_title`, { headers }).then((r) => (r.ok ? r.json() : [])).catch(() => [])))
+    .then((lists) => {
+      const names = new Set();
+      for (const r of lists.flat()) {
+        const n = String(r.channel_title || '').replace(/\s*-\s*Topic$/i, '').replace(/VEVO$/, '').trim();
+        if ([...n].length >= 4 && !/^youtube/i.test(n)) names.add(n);
+      }
+      return [...names].map((name) => ({ name, re: new RegExp(`(?<![\\p{L}\\p{N}])${reEsc(name)}(?![\\p{L}\\p{N}])`, 'iu') }));
+    })
+    .catch(() => []);
+  let channels = [];
+  const channelIn = (title) => channels.reduce((best, c) => (c.name.length > (best ? best.length : 0) && c.re.test(title) ? c.name : best), null);
+
+  const ICON = {
+    pause: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/></svg>',
+    play: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M8 5.5v13l10.5-6.5z"/></svg>',
+    search: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="m15 15 5 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>',
+    open: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h9v9M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  };
+
   mount.className = 'nw';
-  mount.setAttribute('aria-label', 'YouTube and creator news');
+  mount.setAttribute('aria-label', 'Creator economy news');
   mount.innerHTML = `
     <div class="nw-head">
       <h2 class="nw-title">Creator News Wire</h2>
@@ -61,64 +88,144 @@
       <p class="nw-rank-note">Channels that appear in the most countries' YouTube Trending top 10 right now, out of all the countries we track. Brands and studios are included alongside creators. Ties go to the higher average chart position. Refreshed hourly.</p>
     </div>
     <h3 class="nw-sub">Creator economy</h3>
-    <ol class="nw-list" data-no-i18n></ol>
-    <div class="nw-sentinel" aria-hidden="true"></div>
-    <div class="nw-foot">Latest headlines from Google News in the selected language. Refreshed hourly.</div>`;
-  const list = mount.querySelector('.nw-list');
-  const sentinel = mount.querySelector('.nw-sentinel');
+    <div class="nw-bento" data-no-i18n></div>
+    <div class="nw-reel-wrap" hidden>
+      <div class="nw-reel-head">
+        <h3 class="nw-rank-title">More stories</h3>
+        <span class="nw-spacer"></span>
+        <button type="button" class="nw-nav" data-dir="-1" data-no-i18n>‹</button>
+        <button type="button" class="nw-nav" data-dir="1" data-no-i18n>›</button>
+      </div>
+      <div class="nw-reel" data-no-i18n></div>
+    </div>
+    <div class="nw-foot">Latest creator-economy headlines from Google News in the selected language. Photos are each article's own preview image. Refreshed hourly.</div>`;
+  const bento = mount.querySelector('.nw-bento');
+  const reelWrap = mount.querySelector('.nw-reel-wrap');
+  const reel = mount.querySelector('.nw-reel');
   const asof = mount.querySelector('.nw-asof');
-  const tr = (s) => (window.LP_I18N ? window.LP_I18N.t(s) : s);
   let view = null;
+  let reelShown = 0;
 
-  function rowHtml(r, lang, i) {
+  function cardHtml(r, lang, i, kind) {
     const link = /^https:\/\//.test(r.link) ? esc(r.link) : '#';
+    const img = /^https:\/\//.test(r.image_url || '') ? esc(r.image_url) : '';
+    const src = String(r.source || 'Google News').trim();
+    const initial = esc(([...src][0] || 'N').toUpperCase());
+    const ch = channelIn(r.title);
     return `
-        <li class="nw-item nw-in" style="animation-delay:${Math.min(i, 11) * 35}ms">
-          <a href="${link}" target="_blank" rel="noopener">
-            <span class="nw-time">${esc(ago(r.published_at, lang))}</span>
-            <span class="nw-text">
-              <span class="nw-hl">${esc(r.title)}</span>
-              <span class="nw-meta"><span class="nw-src">${esc(r.source || 'Google News')}</span></span>
-            </span>
-          </a>
-        </li>`;
+      <article class="nw-card nw-${kind} nw-in${img ? '' : ' nw-noimg'}" style="animation-delay:${(i % REEL_PAGE) * 45}ms">
+        <div class="nw-media" aria-hidden="true">
+          ${img ? `<img class="nw-img nw-kb${i % 4}" src="${img}" alt="" loading="${kind === 'reel' ? 'lazy' : 'eager'}" decoding="async" referrerpolicy="no-referrer">` : ''}
+          <div class="nw-art"><span>${initial}</span></div>
+        </div>
+        <div class="nw-shade" aria-hidden="true"></div>
+        <div class="nw-top">
+          <span class="nw-badge">${esc(tr(kind === 'hero' ? 'Top story' : 'Creator wire'))}</span>
+          <span class="nw-age">${esc(ago(r.published_at, lang))}</span>
+        </div>
+        <div class="nw-low">
+          <div class="nw-bottom">
+            <div class="nw-pub"><span class="nw-mono" aria-hidden="true">${initial}</span><span class="nw-src">${esc(src)}</span></div>
+            <a class="nw-hl" href="${link}" target="_blank" rel="noopener">${esc(r.title)}</a>
+            <a class="nw-read" href="${link}" target="_blank" rel="noopener" tabindex="-1">${esc(tr('Read story'))} ↗</a>
+          </div>
+          <div class="nw-rail">
+            <button type="button" class="nw-act nw-pp" aria-pressed="false" aria-label="${esc(tr('Pause motion'))}" title="${esc(tr('Pause motion'))}">${ICON.pause}</button>
+            ${ch ? `<span class="nw-actw"><button type="button" class="nw-act nw-find" data-q="${esc(ch)}" aria-label="${esc(`${tr('Search channel')}: ${ch}`)}" title="${esc(`${tr('Search channel')}: ${ch}`)}">${ICON.search}</button><span class="nw-act-l">${esc(ch)}</span></span>` : ''}
+            <a class="nw-act" href="${link}" target="_blank" rel="noopener" aria-label="${esc(tr('Open source'))}" title="${esc(tr('Open source'))}">${ICON.open}</a>
+          </div>
+        </div>
+      </article>`;
   }
 
-  // Reveals the next page when the sentinel nears the viewport; repeats while it stays in view.
-  function showMore() {
-    if (!view || shown >= view.items.length) return;
-    const from = shown;
-    shown += PAGE;
-    list.insertAdjacentHTML('beforeend', view.items.slice(from, shown).map((r, i) => rowHtml(r, view.lang, i)).join(''));
-    requestAnimationFrame(() => { if (sentinel.getBoundingClientRect().top < innerHeight + 400) showMore(); });
+  // Pan-and-zoom runs only while a card is on screen.
+  const motion = 'IntersectionObserver' in window
+    ? new IntersectionObserver((entries) => entries.forEach((e) => e.target.classList.toggle('nw-on', e.isIntersecting)), { threshold: 0.25 })
+    : null;
+  const watch = (root) => root.querySelectorAll('.nw-card:not([data-w])').forEach((c) => {
+    c.dataset.w = '1';
+    if (motion) motion.observe(c); else c.classList.add('nw-on');
+  });
+
+  function moreReel() {
+    if (!view || reelShown >= view.items.length) return;
+    const from = reelShown;
+    reelShown = Math.min(view.items.length, reelShown + REEL_PAGE);
+    reel.insertAdjacentHTML('beforeend', view.items.slice(from, reelShown).map((r, i) => cardHtml(r, view.lang, from + i, 'reel')).join(''));
+    watch(reel);
   }
-  if ('IntersectionObserver' in window) {
-    new IntersectionObserver((entries) => { if (entries.some((e) => e.isIntersecting)) showMore(); }, { rootMargin: '0px 0px 400px 0px' }).observe(sentinel);
-  } else {
-    shown = Infinity;
+  reel.addEventListener('scroll', () => {
+    if (reel.scrollLeft + reel.clientWidth > reel.scrollWidth - 600) moreReel();
+  }, { passive: true });
+  mount.querySelectorAll('.nw-nav').forEach((b) => b.addEventListener('click', () => {
+    reel.scrollBy({ left: Number(b.dataset.dir) * reel.clientWidth * 0.8, behavior: 'smooth' });
+  }));
+
+  function setPaused(card, paused) {
+    card.classList.toggle('nw-paused', paused);
+    const b = card.querySelector('.nw-pp');
+    const label = tr(paused ? 'Play motion' : 'Pause motion');
+    b.setAttribute('aria-pressed', String(paused));
+    b.setAttribute('aria-label', label);
+    b.title = label;
+    b.innerHTML = paused ? ICON.play : ICON.pause;
   }
+
+  function searchChannel(name) {
+    const input = document.getElementById('input-a');
+    if (!input) return;
+    const form = document.getElementById('search-form');
+    const other = document.getElementById('input-b');
+    input.value = name;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    input.focus({ preventScroll: true });
+    if (form && form.requestSubmit && (!other || !other.offsetParent || other.value.trim())) form.requestSubmit();
+  }
+
+  mount.addEventListener('click', (ev) => {
+    const card = ev.target.closest('.nw-card');
+    if (!card) return;
+    const find = ev.target.closest('.nw-find');
+    if (find) { searchChannel(find.dataset.q); return; }
+    if (ev.target.closest('a')) return;
+    setPaused(card, !card.classList.contains('nw-paused'));
+  });
+  mount.addEventListener('error', (ev) => {
+    const img = ev.target;
+    if (!img.classList || !img.classList.contains('nw-img')) return;
+    img.closest('.nw-card').classList.add('nw-noimg');
+    img.remove();
+  }, true);
 
   async function render() {
     const mine = ++token;
     const lang = siteLang();
     try {
-      const creators = (rs) => rs.filter((r) => r.category === 'creators');
-      let rows = creators(await load(lang));
-      if (!rows.length && lang !== 'en') rows = creators(await load('en'));
+      let rows = await load(lang);
+      if (!rows.length && lang !== 'en') rows = await load('en');
+      channels = await known;
       if (mine !== token) return;
       if (!rows.length) throw new Error('no data');
       mount.hidden = false;
-      const items = rows;
-      view = { items, lang };
-      list.innerHTML = items.length ? items.slice(0, shown).map((r, i) => rowHtml(r, lang, i)).join('') : `<li class="nw-empty">${esc(tr('No headlines in this filter yet.'))}</li>`;
+      view = { items: rows, lang };
+      bento.innerHTML = rows.slice(0, BENTO).map((r, i) => cardHtml(r, lang, i, i ? 'tile' : 'hero')).join('');
+      bento.dataset.n = String(Math.min(rows.length, BENTO));
+      reel.innerHTML = '';
+      reel.scrollLeft = 0;
+      reelShown = BENTO;
+      reelWrap.hidden = rows.length <= BENTO;
+      mount.querySelectorAll('.nw-nav').forEach((b) => b.setAttribute('aria-label', tr(b.dataset.dir === '1' ? 'Next' : 'Previous')));
+      moreReel();
+      watch(bento);
       asof.textContent = `As of ${new Date(rows[0].fetched_at).toISOString().slice(11, 16)} UTC`;
-      requestAnimationFrame(() => { if (sentinel.getBoundingClientRect().top < innerHeight + 400) showMore(); });
     } catch (err) {
       if (mine !== token) return;
       if (err.message !== 'no data') console.error('News wire widget:', err);
       view = null;
       if (!Object.values(cache).some((r) => r.length)) { mount.hidden = true; return; }
-      list.innerHTML = `<li class="nw-empty">${esc(tr('News is unavailable right now.'))}</li>`;
+      bento.innerHTML = `<p class="nw-empty">${esc(tr('News is unavailable right now.'))}</p>`;
+      reelWrap.hidden = true;
     }
   }
 
@@ -170,6 +277,6 @@
   }
 
   loadRanking().then((r) => { ranking = r; renderRanking(); }).catch((err) => console.error('News wire ranking:', err));
-  document.addEventListener('lp:lang', () => { shown = PAGE; render(); renderRanking(); });
+  document.addEventListener('lp:lang', () => { render(); renderRanking(); });
   render();
 })();

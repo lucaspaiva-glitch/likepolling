@@ -19,6 +19,17 @@
 
   // English UI string -> [pt, es, de, ru, uk, ko, ja]
   const DICT = {
+    "Top story": ["Destaque", "Destacado", "Top-Story", "Главное", "Головне", "톱 뉴스", "トップ記事"],
+    "Creator wire": ["Notícia de criadores", "Noticia de creadores", "Creator-News", "Новости авторов", "Новини авторів", "크리에이터 소식", "クリエイター速報"],
+    "Read story": ["Ler matéria", "Leer noticia", "Artikel lesen", "Читать", "Читати", "기사 읽기", "記事を読む"],
+    "Open source": ["Abrir fonte", "Abrir fuente", "Quelle öffnen", "Открыть источник", "Відкрити джерело", "출처 열기", "元記事を開く"],
+    "Search channel": ["Buscar canal", "Buscar canal", "Kanal suchen", "Найти канал", "Знайти канал", "채널 검색", "チャンネルを検索"],
+    "Pause motion": ["Pausar animação", "Pausar animación", "Animation pausieren", "Остановить анимацию", "Зупинити анімацію", "애니메이션 일시정지", "アニメーションを一時停止"],
+    "Play motion": ["Retomar animação", "Reanudar animación", "Animation fortsetzen", "Возобновить анимацию", "Відновити анімацію", "애니메이션 재생", "アニメーションを再開"],
+    "More stories": ["Mais notícias", "Más noticias", "Weitere Meldungen", "Ещё новости", "Більше новин", "더 많은 소식", "その他の記事"],
+    "Previous": ["Anterior", "Anterior", "Zurück", "Назад", "Назад", "이전", "前へ"],
+    "Next": ["Próximo", "Siguiente", "Weiter", "Далее", "Далі", "다음", "次へ"],
+    "Latest creator-economy headlines from Google News in the selected language. Photos are each article's own preview image. Refreshed hourly.": ["Últimas manchetes da economia dos criadores no Google News, no idioma selecionado. As fotos são a imagem de prévia de cada matéria. Atualizado a cada hora.", "Últimos titulares de la economía de creadores en Google News, en el idioma seleccionado. Las fotos son la imagen de vista previa de cada artículo. Se actualiza cada hora.", "Neueste Creator-Economy-Schlagzeilen aus Google News in der gewählten Sprache. Die Fotos sind das Vorschaubild des jeweiligen Artikels. Stündlich aktualisiert.", "Свежие заголовки об экономике авторов из Google News на выбранном языке. Фото — превью-изображения самих статей. Обновляется каждый час.", "Свіжі заголовки про економіку авторів із Google News вибраною мовою. Фото — прев’ю-зображення самих статей. Оновлюється щогодини.", "선택한 언어의 Google News 크리에이터 경제 최신 헤드라인입니다. 사진은 각 기사의 미리보기 이미지입니다. 매시간 업데이트됩니다.", "選択した言語のGoogleニュースから、クリエイター経済の最新見出しを表示します。写真は各記事のプレビュー画像です。1時間ごとに更新。"],
     "Trending in the most countries": ["Em alta em mais países", "En tendencia en más países", "In den meisten Ländern im Trend", "В трендах в наибольшем числе стран", "У трендах у найбільшій кількості країн", "가장 많은 국가에서 인기 급상승", "最も多くの国で急上昇中"],
     "countries": ["países", "países", "Länder", "стран", "країн", "개국", "か国"],
     "Channels that appear in the most countries' YouTube Trending top 10 right now, out of all the countries we track. Brands and studios are included alongside creators. Ties go to the higher average chart position. Refreshed hourly.": ["Canais que aparecem no top 10 de Em alta do YouTube no maior número de países agora, entre todos os países que acompanhamos. Marcas e estúdios aparecem junto com criadores. Em caso de empate, vence a melhor posição média. Atualizado a cada hora.", "Canales que aparecen en el top 10 de Tendencias de YouTube en más países ahora mismo, entre todos los países que seguimos. Incluye marcas y estudios además de creadores. En caso de empate, gana la mejor posición media. Se actualiza cada hora.", "Kanäle, die gerade in den meisten Ländern in den YouTube-Trends-Top-10 stehen, von allen Ländern, die wir verfolgen. Marken und Studios sind neben Creators enthalten. Bei Gleichstand zählt die bessere durchschnittliche Platzierung. Stündlich aktualisiert.", "Каналы, которые сейчас входят в топ-10 трендов YouTube в наибольшем числе стран из всех, что мы отслеживаем. Наряду с авторами учитываются бренды и студии. При равенстве выше канал с лучшей средней позицией. Обновляется каждый час.", "Канали, які зараз входять до топ-10 трендів YouTube у найбільшій кількості країн з усіх, що ми відстежуємо. Разом з авторами враховуються бренди й студії. За рівності вище канал із кращою середньою позицією. Оновлюється щогодини.", "현재 추적 중인 모든 국가 중 가장 많은 국가의 YouTube 인기 급상승 상위 10위에 오른 채널입니다. 크리에이터뿐 아니라 브랜드와 스튜디오도 포함됩니다. 동점이면 평균 순위가 더 높은 채널이 앞에 옵니다. 매시간 업데이트됩니다.", "追跡しているすべての国のうち、現在最も多くの国でYouTube急上昇トップ10に入っているチャンネルです。クリエイターに加え、ブランドやスタジオも含まれます。同数の場合は平均順位が高い方が上位です。1時間ごとに更新。"],
@@ -108,6 +119,10 @@
   ];
   // European Portuguese wording where it differs from the Brazilian 'pt' column (keyed by English text or pattern source).
   const PT_PT = {
+    "Read story": "Ler notícia",
+    "Search channel": "Pesquisar canal",
+    "Next": "Seguinte",
+    "Latest creator-economy headlines from Google News in the selected language. Photos are each article's own preview image. Refreshed hourly.": "Últimas notícias da economia dos criadores no Google News, no idioma selecionado. As fotos são a imagem de pré-visualização de cada notícia. Atualizado de hora a hora.",
     "Trending in the most countries": "Em tendência em mais países",
     "Channels that appear in the most countries' YouTube Trending top 10 right now, out of all the countries we track. Brands and studios are included alongside creators. Ties go to the higher average chart position. Refreshed hourly.": "Canais que aparecem no top 10 de Tendências do YouTube no maior número de países neste momento, entre todos os países que acompanhamos. Marcas e estúdios aparecem juntamente com criadores. Em caso de empate, ganha a melhor posição média. Atualizado de hora a hora.",
     "What these numbers mean": "O que significam estes números",

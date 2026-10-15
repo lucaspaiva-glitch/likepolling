@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { run, parseItems, FEEDS } = require('../scripts/news-wire-routine');
+const { run, parseItems, ogImage, FEEDS } = require('../scripts/news-wire-routine');
 
 const env = { SUPABASE_URL: 'https://db.test', SUPABASE_KEY: 'secret' };
 const NOW = Date.parse('2026-10-15T00:00:00Z');
@@ -69,4 +69,30 @@ test('fails without writing when no feed returns articles', async () => {
 
 test('requires env vars', async () => {
   await assert.rejects(run({}, deps(async () => text(200, ''))), /Missing env vars: SUPABASE_URL, SUPABASE_KEY/);
+});
+
+test('adds article preview images and reuses stored ones', async () => {
+  let payload;
+  const f = mockFetch((url, init) => {
+    if (url.includes('/rpc/')) { payload = JSON.parse(init.body).payload; return text(200, String(payload.length)); }
+    if (url.includes('/rest/v1/news_wire')) return text(200, JSON.stringify([{ link: 'https://news.google.com/rss/articles/OLD?oc=5', image_url: 'https://img.test/old.jpg' }]));
+    if (url.startsWith('https://news.google.com/rss/articles/NEW')) return text(200, '<c-wiz><div data-n-a-sg="SIG" data-n-a-ts="123"></div>');
+    if (url.includes('batchexecute')) {
+      const inner = JSON.parse(JSON.parse(decodeURIComponent(init.body.slice(6)))[0][0][1]);
+      assert.deepEqual(inner.slice(2), ['NEW', 123, 'SIG']);
+      return text(200, ")]}'\n\n" + JSON.stringify([['wrb.fr', 'Fbv4je', JSON.stringify(['garturlres', 'https://pub.test/story', 1])]]));
+    }
+    if (url === 'https://pub.test/story') return text(200, '<head><meta content="/img/a.jpg?x=1&amp;y=2" property="og:image"></head>');
+    if (url.includes('hl=en-US')) return text(200, rss(item('New story', 'Pub', 'https://news.google.com/rss/articles/NEW?oc=5'), item('Old story', 'Pub', 'https://news.google.com/rss/articles/OLD?oc=5')));
+    return text(404, '');
+  });
+  const s = await run(env, deps(f));
+  assert.deepEqual(Object.fromEntries(payload.map((r) => [r.title, r.image_url])), { 'New story': 'https://pub.test/img/a.jpg?x=1&y=2', 'Old story': 'https://img.test/old.jpg' });
+  assert.equal(f.calls.filter((c) => c.url.includes('/articles/OLD')).length, 0);
+  assert.deepEqual(s.images, { looked: 1, with_image: 2 });
+});
+
+test('ogImage only accepts https images', () => {
+  assert.equal(ogImage('<meta property="og:image" content="http://x.test/a.jpg">', 'https://x.test/p'), null);
+  assert.equal(ogImage('<meta name="twitter:image" content="https://x.test/b.jpg">', 'https://x.test/p'), 'https://x.test/b.jpg');
 });

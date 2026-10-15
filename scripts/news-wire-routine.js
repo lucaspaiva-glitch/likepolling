@@ -107,6 +107,82 @@ function dedupe(rows) {
   return out;
 }
 
+// Article preview images. Google News RSS links point to news.google.com; its
+// article page carries a signature that its batchexecute endpoint exchanges for
+// the publisher's URL, whose og:image is stored. Images already stored are
+// reused, so only new articles are looked up (capped per run, newest first).
+const IMAGE_LOOKUPS_PER_RUN = 150;
+const IMAGE_CONCURRENCY = 4;
+const IMAGE_TIMEOUT_MS = 8000;
+const BROWSER_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0 Safari/537.36';
+
+async function articleUrl(link, deps) {
+  const id = new URL(link).pathname.split('/').pop();
+  if (!/^[\w-]+$/.test(id)) return null;
+  const page = await deps.fetch(`https://news.google.com/rss/articles/${id}`, { headers: { 'User-Agent': BROWSER_UA }, signal: AbortSignal.timeout(IMAGE_TIMEOUT_MS) });
+  if (!page.ok) return null;
+  const html = await page.text();
+  const sg = html.match(/data-n-a-sg="([^"]+)"/)?.[1];
+  const ts = html.match(/data-n-a-ts="([^"]+)"/)?.[1];
+  if (!sg || !ts) return null;
+  const inner = JSON.stringify(['garturlreq', [['X', 'X', ['X', 'X'], null, null, 1, 1, 'US:en', null, 1, null, null, null, null, null, 0, 1], 'X', 'X', 1, [1, 1, 1], 1, 1, null, 0, 0, null, 0], id, Number(ts), sg]);
+  const res = await deps.fetch('https://news.google.com/_/DotsSplashUi/data/batchexecute', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8', 'User-Agent': BROWSER_UA },
+    body: `f.req=${encodeURIComponent(JSON.stringify([[['Fbv4je', inner]]]))}`,
+    signal: AbortSignal.timeout(IMAGE_TIMEOUT_MS),
+  });
+  if (!res.ok) return null;
+  const url = JSON.parse(JSON.parse((await res.text()).split('\n\n')[1])[0][2])[1];
+  return /^https?:\/\//.test(url) ? url : null;
+}
+
+function ogImage(html, pageUrl) {
+  const metas = html.match(/<meta\b[^>]*>/gi) || [];
+  for (const want of ['og:image:secure_url', 'og:image', 'twitter:image', 'twitter:image:src']) {
+    for (const m of metas) {
+      if (m.match(/\b(?:property|name)\s*=\s*["']([^"']+)["']/i)?.[1]?.toLowerCase() !== want) continue;
+      const c = m.match(/\bcontent\s*=\s*["']([^"']+)["']/i)?.[1];
+      try {
+        const u = c && new URL(decode(c.trim()), pageUrl);
+        if (u && u.protocol === 'https:' && u.href.length <= 1000) return u.href;
+      } catch { /* next tag */ }
+    }
+  }
+  return null;
+}
+
+// null: lookup failed, try again next run; '': article reached, no usable image.
+async function imageFor(link, deps) {
+  let url;
+  try { url = await articleUrl(link, deps); } catch { return null; }
+  if (!url) return null;
+  try {
+    const res = await deps.fetch(url, { headers: { 'User-Agent': BROWSER_UA, Accept: 'text/html' }, redirect: 'follow', signal: AbortSignal.timeout(IMAGE_TIMEOUT_MS) });
+    if (!res.ok) return '';
+    return ogImage((await res.text()).slice(0, 400000), res.url || url) || '';
+  } catch { return ''; }
+}
+
+async function addImages(rows, env, deps) {
+  const stored = new Map();
+  try {
+    const res = await deps.fetch(`${env.SUPABASE_URL}/rest/v1/news_wire?select=link,image_url&image_url=not.is.null&limit=10000`, { headers: { apikey: env.SUPABASE_KEY, Authorization: `Bearer ${env.SUPABASE_KEY}` } });
+    if (res.ok) for (const r of await res.json()) stored.set(r.link, r.image_url);
+  } catch { /* no stored images yet */ }
+  const todo = [];
+  for (const r of rows) {
+    if (stored.has(r.link)) r.image_url = stored.get(r.link);
+    else { r.image_url = null; todo.push(r); }
+  }
+  const queue = todo.sort((a, b) => b.published_at.localeCompare(a.published_at)).slice(0, IMAGE_LOOKUPS_PER_RUN);
+  const looked = queue.length;
+  await Promise.all(Array.from({ length: IMAGE_CONCURRENCY }, async () => {
+    while (queue.length) { const r = queue.shift(); r.image_url = await imageFor(r.link, deps); }
+  }));
+  return { looked, with_image: rows.filter((r) => r.image_url).length };
+}
+
 async function run(env = process.env, deps = {}) {
   deps = { fetch: deps.fetch || fetch, sleep: deps.sleep || defaultSleep, log: deps.log || console.log, now: deps.now || Date.now };
   const missing = ['SUPABASE_URL', 'SUPABASE_KEY'].filter((k) => !env[k]);
@@ -123,6 +199,8 @@ async function run(env = process.env, deps = {}) {
   const rows = dedupe(fetched);
   if (!rows.length) throw new Error(`No news fetched (${failed.map((f) => `${f.feed}: ${f.error}`).join('; ')})`);
 
+  const images = await addImages(rows, env, deps);
+
   const res = await deps.fetch(`${env.SUPABASE_URL}/rest/v1/rpc/replace_news_wire`, {
     method: 'POST',
     headers: { apikey: env.SUPABASE_KEY, Authorization: `Bearer ${env.SUPABASE_KEY}`, 'Content-Type': 'application/json' },
@@ -133,12 +211,12 @@ async function run(env = process.env, deps = {}) {
 
   const langs = {};
   for (const r of rows) langs[r.lang] = (langs[r.lang] || 0) + 1;
-  const summary = { feeds: FEEDS.length, rows: written, langs, failed };
+  const summary = { feeds: FEEDS.length, rows: written, langs, images, failed };
   deps.log(JSON.stringify(summary));
   return summary;
 }
 
-module.exports = { run, parseItems, FEEDS };
+module.exports = { run, parseItems, ogImage, FEEDS };
 
 if (require.main === module) {
   run().catch((err) => {
