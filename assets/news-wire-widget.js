@@ -67,7 +67,7 @@
     }
     return worldCache[cc];
   }
-  const worldCounts = fetch(`${base}/rest/v1/news_world?select=country_code`, { headers })
+  const worldCounts = fetch(`${base}/rest/v1/news_world?select=country_code&rank=eq.1`, { headers })
     .then((r) => (r.ok ? r.json() : []))
     .then((rows) => rows.reduce((m, r) => { m[r.country_code] = (m[r.country_code] || 0) + 1; return m; }, {}))
     .catch(() => ({}));
