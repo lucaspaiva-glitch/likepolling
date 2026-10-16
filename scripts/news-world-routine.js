@@ -127,7 +127,10 @@ async function addTranslations(rows, env, deps) {
 }
 
 async function run(env = process.env, deps = {}) {
-  deps = { fetch: deps.fetch || fetch, sleep: deps.sleep || defaultSleep, log: deps.log || console.log, translate: deps.translate || (env.GEMINI_API_KEY ? geminiTranslator(env.GEMINI_API_KEY) : null) };
+  deps = { fetch: deps.fetch || fetch, sleep: deps.sleep || defaultSleep, log: deps.log || console.log, translate: deps.translate || null };
+  if (!deps.translate && env.GEMINI_API_KEY) {
+    try { deps.translate = geminiTranslator(env.GEMINI_API_KEY); } catch (err) { deps.log(`Translations skipped: ${err.message.split('\n')[0]}`); }
+  }
   const missing = ['SUPABASE_URL', 'SUPABASE_KEY'].filter((k) => !env[k]);
   if (missing.length) throw new Error(`Missing env vars: ${missing.join(', ')}`);
 
