@@ -189,7 +189,6 @@
   credits.className = 'nw nw-credits';
   credits.hidden = true;
   credits.setAttribute('aria-label', 'Popular Shorts by country');
-  credits.classList.toggle('nw-flow', touch);
   mount.after(credits);
   // Popular Shorts get their own feed above the creator-economy articles.
   const S_TITLE = 'Popular Shorts by country';
@@ -202,8 +201,7 @@
         <span class="nw-pick-l" data-no-i18n>Country</span>
         <img class="nw-pick-flag" src="" alt="" width="20" height="15">
         <select class="nw-select" data-no-i18n></select>
-        <span class="nw-keys" data-no-i18n><span class="nw-kbd-pair" aria-hidden="true"><kbd data-k="ArrowUp">${ICON.up}</kbd><kbd data-k="ArrowDown">${ICON.down}</kbd></span><span class="nw-keys-l">Use your arrow keys to browse</span></span>
-        <span class="nw-swipe" data-no-i18n><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17V5M7.5 9.5 12 5l4.5 4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="19.5" r="2" fill="currentColor"/></svg><span class="nw-swipe-l">Swipe up for the next Short</span></span>
+        <span class="nw-ghint" data-no-i18n></span>
       </div>
       <p class="nw-empty" data-no-i18n hidden></p>
       <div class="nw-feed-wrap">
@@ -498,7 +496,6 @@
   }
   feed.addEventListener('scroll', () => { if (nearEnd()) moreFeed(); }, { passive: true });
   const syncNav = () => {};
-  const syncShorts = feedNav(sFeed, sPrev, sNext, () => false, () => moreShorts());
 
   function setPaused(card, paused) {
     card.classList.toggle('nw-paused', paused);
@@ -628,47 +625,136 @@
     }
   }
 
-  // Keyboard ↑ ↓ step through the Shorts while their feed is on screen (not while typing).
-  let keyLock = 0;
-  document.addEventListener('keydown', (ev) => {
-    if ((ev.key !== 'ArrowDown' && ev.key !== 'ArrowUp') || ev.defaultPrevented || ev.altKey || ev.ctrlKey || ev.metaKey || ev.shiftKey) return;
-    if (ev.target.closest && ev.target.closest('input, textarea, select, [contenteditable]')) return;
-    if (touch || credits.hidden || sBox.querySelector('.nw-feed-wrap').hidden) return;
-    const r = sFeed.getBoundingClientRect();
-    if (Math.min(r.bottom, innerHeight) - Math.max(r.top, 0) < r.height * 0.6) return;
-    const dir = ev.key === 'ArrowDown' ? 1 : -1;
-    if (dir < 0 && sFeed.scrollTop < 8) return;
-    ev.preventDefault();
-    const cap = sBox.querySelector(`kbd[data-k="${ev.key}"]`);
-    if (cap) { cap.classList.add('nw-kbd-on'); setTimeout(() => cap.classList.remove('nw-kbd-on'), 180); }
-    const now = performance.now();
-    if (now < keyLock) return;
-    keyLock = now + 320;
-    const dock = 34 + (innerWidth <= 560 ? 12 : 16);
-    if (Math.abs(r.top - dock) > 4) window.scrollBy({ top: r.top - dock, behavior: 'smooth' });
-    sFeed.nwStep(dir);
+  // Popular Shorts grid: every Short of the country as a small tile. Hovering (or a first
+  // tap on touch screens) plays one muted inside its tile; clicking opens it big with sound.
+  // Only one YouTube player exists at a time.
+  let sToken = 0;
+  function tileHtml(v, ui) {
+    const id = /^[A-Za-z0-9_-]{11}$/.test(v.video_id) ? v.video_id : '';
+    const ch = String(v.channel_title || 'YouTube').trim();
+    return `
+      <article class="nw-tile" tabindex="0" role="button" data-vid="${id}" data-title="${esc(v.title)}" aria-label="${esc(`${tr('Play video')}: ${v.title}`)}">
+        <div class="nw-tile-media">
+          <img src="https://i.ytimg.com/vi/${id}/hqdefault.jpg" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+          ${v.view_count != null ? `<span class="nw-tile-views">${esc(compact(v.view_count, ui))} ${esc(tr('views'))}</span>` : ''}
+          <span class="nw-tile-play" aria-hidden="true">${ICON.big}</span>
+        </div>
+        <div class="nw-tile-body">
+          <p class="nw-tile-title">${esc(v.title)}</p>
+          <p class="nw-tile-ch">${esc(ch)}${v.published_at ? ` · ${esc(ago(v.published_at, ui))}` : ''}</p>
+        </div>
+      </article>`;
+  }
+  const embed = (id, muted) => `${YT_ORIGIN}/embed/${id}?${new URLSearchParams({ autoplay: '1', mute: muted ? '1' : '0', controls: muted ? '0' : '1', playsinline: '1', rel: '0', loop: '1', playlist: id, cc_load_policy: '1', cc_lang_pref: siteLang(), hl: siteLang() })}`;
+  let pv = null;
+  let pvTimer = 0;
+  function stopPreview() {
+    clearTimeout(pvTimer);
+    if (!pv) return;
+    const f = pv.querySelector('.nw-tpv');
+    if (f) f.remove();
+    pv.classList.remove('nw-pv', 'nw-pvlive');
+    pv = null;
+  }
+  function startPreview(t) {
+    if (pv === t || !t.dataset.vid) return;
+    stopPreview();
+    pv = t;
+    t.classList.add('nw-pv');
+    const f = document.createElement('iframe');
+    f.className = 'nw-tpv';
+    f.src = embed(t.dataset.vid, true);
+    f.title = t.dataset.title || 'YouTube';
+    f.tabIndex = -1;
+    f.allow = 'autoplay; encrypted-media';
+    f.addEventListener('load', () => { f.classList.add('nw-ready'); t.classList.add('nw-pvlive'); }, { once: true });
+    t.querySelector('.nw-tile-media').appendChild(f);
+  }
+  sFeed.addEventListener('mouseover', (ev) => {
+    if (touch) return;
+    const t = ev.target.closest('.nw-tile');
+    clearTimeout(pvTimer);
+    if (!t) { stopPreview(); return; }
+    if (t !== pv) pvTimer = setTimeout(() => startPreview(t), 220);
+  });
+  sFeed.addEventListener('mouseleave', stopPreview);
+  sFeed.addEventListener('click', (ev) => {
+    const t = ev.target.closest('.nw-tile');
+    if (!t) return;
+    if (touch && pv !== t) { startPreview(t); return; }
+    openShort(t);
+  });
+  sFeed.addEventListener('keydown', (ev) => {
+    const t = ev.target.closest('.nw-tile');
+    if (t && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); openShort(t); }
   });
 
-  if (touch) addEventListener('scroll', () => moreShorts(), { passive: true });
-  let sToken = 0;
-  // The credits never end: near the last Short, the same list starts again.
-  let sLoop = null;
-  function moreShorts() {
-    if (!sLoop || !sLoop.vids.length || credits.hidden) return;
-    if (touch ? sFeed.getBoundingClientRect().bottom - innerHeight > innerHeight * 3 : sFeed.scrollHeight - sFeed.scrollTop - sFeed.clientHeight > sFeed.clientHeight * 3) return;
-    sFeed.insertAdjacentHTML('beforeend', sLoop.vids.map((v) => shortHtml(v, sLoop.ui)).join(''));
-    watch(sFeed);
+  const modal = document.createElement('div');
+  modal.className = 'nw-modal';
+  modal.hidden = true;
+  modal.setAttribute('role', 'dialog');
+  modal.setAttribute('aria-modal', 'true');
+  modal.setAttribute('data-no-i18n', '');
+  modal.innerHTML = `<div class="nw-modal-box"><div class="nw-modal-frame"></div>
+    <button type="button" class="nw-modal-x"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button>
+    <button type="button" class="nw-modal-prev">${ICON.up}</button><button type="button" class="nw-modal-next">${ICON.down}</button></div>`;
+  document.body.appendChild(modal);
+  const mFrame = modal.querySelector('.nw-modal-frame');
+  const mClose = modal.querySelector('.nw-modal-x');
+  let mTile = null;
+  function openShort(t) {
+    if (!t.dataset.vid) return;
+    stopPreview();
+    mTile = t;
+    mFrame.innerHTML = `<iframe src="${embed(t.dataset.vid, false)}" title="${esc(t.dataset.title || 'YouTube')}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>`;
+    modal.setAttribute('aria-label', t.dataset.title || 'YouTube');
+    [['.nw-modal-x', 'Close'], ['.nw-modal-prev', 'Previous video'], ['.nw-modal-next', 'Next video']].forEach(([sel, l]) => {
+      const b = modal.querySelector(sel); b.setAttribute('aria-label', tr(l)); b.title = tr(l);
+    });
+    if (modal.hidden) {
+      modal.hidden = false;
+      document.documentElement.classList.add('nw-lock');
+      mClose.focus({ preventScroll: true });
+    }
   }
+  function closeShort() {
+    if (modal.hidden) return;
+    modal.hidden = true;
+    mFrame.innerHTML = '';
+    document.documentElement.classList.remove('nw-lock');
+    if (mTile) mTile.focus({ preventScroll: true });
+    mTile = null;
+  }
+  function stepShort(d) {
+    const tiles = [...sFeed.querySelectorAll('.nw-tile')];
+    const n = tiles[(tiles.indexOf(mTile) + d + tiles.length) % tiles.length];
+    if (n) openShort(n);
+  }
+  modal.addEventListener('click', (ev) => {
+    if (ev.target === modal || ev.target.closest('.nw-modal-x')) closeShort();
+    else if (ev.target.closest('.nw-modal-prev')) stepShort(-1);
+    else if (ev.target.closest('.nw-modal-next')) stepShort(1);
+  });
+  document.addEventListener('keydown', (ev) => {
+    if (modal.hidden) return;
+    if (ev.key === 'Escape') closeShort();
+    else if (ev.key === 'ArrowDown' || ev.key === 'ArrowRight') stepShort(1);
+    else if (ev.key === 'ArrowUp' || ev.key === 'ArrowLeft') stepShort(-1);
+    else return;
+    ev.preventDefault();
+  });
+
   async function renderShorts() {
     const mine = ++sToken;
     const ui = siteLang();
     const sl = shortsPick || ui;
     const [rows, counts] = await Promise.all([loadShorts(sl), shortsCounts]);
     if (mine !== sToken) return;
-    sFeed.querySelectorAll('.nw-card').forEach((c) => { stopShort(c); if (motion) motion.unobserve(c); });
+    stopPreview();
+    closeShort();
     const vids = rows.filter((v, i, a) => a.findIndex((x) => x.video_id === v.video_id) === i);
-    sFeed.innerHTML = vids.map((v) => shortHtml(v, ui)).join('');
-    sLoop = { vids, ui };
+    sFeed.classList.add('nw-grid');
+    sFeed.innerHTML = vids.map((v) => tileHtml(v, ui)).join('');
     sBox.querySelector('.nw-feed-wrap').hidden = !vids.length;
     const none = sBox.querySelector('.nw-empty');
     none.textContent = tr(S_NONE);
@@ -678,8 +764,7 @@
     sBox.querySelector('.nw-sub').textContent = tr(S_TITLE);
     sBox.querySelector('.nw-pick-l').textContent = tr('Country');
     sBox.querySelector('.nw-foot').textContent = tr(S_FOOT);
-    sBox.querySelector('.nw-keys-l').textContent = tr('Use your arrow keys to browse');
-    sBox.querySelector('.nw-swipe-l').textContent = tr('Swipe up for the next Short');
+    sBox.querySelector('.nw-ghint').textContent = tr(touch ? 'Tap to preview · tap again to watch with sound' : 'Hover to preview · click to watch with sound');
     sFeed.setAttribute('aria-label', tr(S_TITLE));
     sPrev.setAttribute('aria-label', tr('Previous story'));
     sPrev.title = tr('Previous story');
@@ -687,8 +772,6 @@
     sNext.title = tr('Next story');
     sBox.hidden = !Object.values(counts).some(Boolean);
     credits.hidden = sBox.hidden;
-    watch(sFeed);
-    syncShorts();
   }
 
   // "Trending in the most countries": channels counted by how many countries'
