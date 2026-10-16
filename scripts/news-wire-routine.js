@@ -228,7 +228,7 @@ async function run(env = process.env, deps = {}) {
   return summary;
 }
 
-module.exports = { run, parseItems, ogImage, FEEDS };
+module.exports = { run, parseItems, ogImage, FEEDS, fetchText, imageFor };
 
 if (require.main === module) {
   run().catch((err) => {

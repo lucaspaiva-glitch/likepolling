@@ -19,7 +19,7 @@
   const css = document.createElement('link');
   css.rel = 'stylesheet';
   css.href = '/assets/news-wire-widget.css';
-  document.head.appendChild(css);
+  if (!document.querySelector('link[href="/assets/news-wire-widget.css"]')) document.head.appendChild(css);
 
   const FEED_PAGE = 8;
   const LANGS = ['en', 'pt', 'pt-PT', 'es', 'de', 'ru', 'uk', 'ko', 'ja'];
@@ -51,6 +51,25 @@
   const shortsCounts = fetch(`${base}/rest/v1/news_shorts?select=lang`, { headers })
     .then((r) => (r.ok ? r.json() : []))
     .then((rows) => rows.reduce((m, r) => { m[r.lang] = (m[r.lang] || 0) + 1; return m; }, {}))
+    .catch(() => ({}));
+
+  // World News Wire: Google News top stories per Trending Index country (public.news_world).
+  const WORLD_CC = ['AR', 'AU', 'BD', 'BE', 'BR', 'CA', 'CL', 'CO', 'DE', 'DZ', 'EC', 'EG', 'ES', 'FR', 'GB', 'ID', 'IN', 'IQ', 'IT', 'JP', 'KE', 'KR', 'MA', 'MX', 'MY', 'NG', 'NL', 'PE', 'PH', 'PK', 'PL', 'PT', 'RO', 'SA', 'TH', 'TR', 'TW', 'UA', 'US', 'VN', 'ZA'];
+  const WPICK = 'lp-world-cc';
+  let worldPick = null;
+  try { const v = localStorage.getItem(WPICK); if (WORLD_CC.includes(v)) worldPick = v; } catch (e) { /* no storage */ }
+  const worldCache = {};
+  function loadWorld(cc) {
+    if (!worldCache[cc]) {
+      worldCache[cc] = fetch(`${base}/rest/v1/news_world?select=*&country_code=eq.${encodeURIComponent(cc)}&order=rank.asc&limit=40`, { headers })
+        .then((r) => (r.ok ? r.json() : []))
+        .catch(() => []);
+    }
+    return worldCache[cc];
+  }
+  const worldCounts = fetch(`${base}/rest/v1/news_world?select=country_code`, { headers })
+    .then((r) => (r.ok ? r.json() : []))
+    .then((rows) => rows.reduce((m, r) => { m[r.country_code] = (m[r.country_code] || 0) + 1; return m; }, {}))
     .catch(() => ({}));
 
   async function load(lang) {
@@ -132,19 +151,41 @@
   const nextBtn = mount.querySelector('.nw-next');
   // Creator economy opens the page, above the search; Popular Shorts
   // close the page as endless "ending credits".
-  const front = document.createElement('section');
+  // index.html reserves this frame (#news-front) so the page never shows the search first.
+  const front = document.getElementById('news-front') || document.createElement('section');
   front.className = 'nw nw-front';
-  front.hidden = true;
-  front.setAttribute('aria-label', 'Creator economy news');
+  front.setAttribute('aria-label', 'World news');
   front.append(mount.querySelector('.nw-head'), mount.querySelector('.nw-sub'), empty, feedWrap, mount.querySelector('.nw-foot'));
-  const anchor = document.querySelector('.hero') || document.getElementById('results');
-  if (anchor) anchor.before(front); else mount.before(front);
+  if (!front.isConnected) {
+    const anchor = document.querySelector('.hero') || document.getElementById('results');
+    if (anchor) anchor.before(front); else mount.before(front);
+  }
+  // Labels switch between World News Wire and the Creator News Wire fallback.
+  const fLabel = {};
+  for (const k of ['title', 'sym', 'sub', 'foot']) {
+    const el = front.querySelector(`.nw-${k}`);
+    el.setAttribute('data-no-i18n', '');
+    fLabel[k] = { el, creators: el.textContent };
+  }
+  front.querySelector('.nw-asof').insertAdjacentHTML('beforebegin', '<span class="nw-wpick" hidden><img class="nw-pick-flag" src="" alt="" width="20" height="15"><select class="nw-select" data-no-i18n></select></span>');
+  const wPick = front.querySelector('.nw-wpick');
+  const wSel = wPick.querySelector('select');
+  const wFlag = wPick.querySelector('img');
+  wSel.addEventListener('change', () => {
+    worldPick = wSel.value;
+    try { localStorage.setItem(WPICK, worldPick); } catch (e) { /* no storage */ }
+    render();
+  });
+  // Touch screens scroll the Shorts with the page instead of inside a box (iPhone Safari
+  // could get stuck on the first Short when the box and YouTube's player competed for the swipe).
+  const touch = matchMedia('(hover: none) and (pointer: coarse)').matches;
   feedWrap.insertAdjacentHTML('afterbegin', '<div class="nw-lead" data-no-i18n></div>');
   const lead = feedWrap.querySelector('.nw-lead');
   const credits = document.createElement('section');
   credits.className = 'nw nw-credits';
   credits.hidden = true;
   credits.setAttribute('aria-label', 'Popular Shorts by country');
+  credits.classList.toggle('nw-flow', touch);
   mount.after(credits);
   // Popular Shorts get their own feed above the creator-economy articles.
   const S_TITLE = 'Popular Shorts by country';
@@ -500,14 +541,48 @@
     el.addEventListener('error', onImgError, true);
   });
 
+  const W_NONE = 'No top stories for this country right now.';
+  const W_FOOT = "Top stories from Google News for the chosen country, in Google News' order and the country's language. Algeria, Ecuador and Iraq have no Google News edition, so they show Google News search results for the country's name. Photos are each article's own preview image. Refreshed hourly.";
+  function setFrontLabels(world, cc, ui, counts) {
+    let names = null;
+    try { names = new Intl.DisplayNames([ui === 'pt' ? 'pt-BR' : ui], { type: 'region' }); } catch (e) { /* codes only */ }
+    const name = (c) => (names ? names.of(c) : c);
+    fLabel.title.el.textContent = world ? tr('World News Wire') : tr(fLabel.title.creators);
+    fLabel.sym.el.textContent = world ? 'WORLD·WIRE' : fLabel.sym.creators;
+    fLabel.sub.el.textContent = world ? `${tr('Top stories')} · ${name(cc)}` : tr(fLabel.sub.creators);
+    fLabel.foot.el.textContent = world ? tr(W_FOOT) : tr(fLabel.foot.creators);
+    wPick.hidden = !world;
+    if (!world) return;
+    wSel.innerHTML = WORLD_CC.map((c) => ({ c, n: name(c) })).sort((a, b) => a.n.localeCompare(b.n, ui))
+      .map((o) => `<option value="${o.c}"${counts[o.c] || o.c === cc ? '' : ' disabled'}>${esc(o.n)}</option>`).join('');
+    wSel.value = cc;
+    wSel.setAttribute('aria-label', tr('Country'));
+    wFlag.src = `/assets/flags/${cc.toLowerCase()}.svg`;
+  }
+
   async function render() {
     const mine = ++token;
     const lang = siteLang();
     try {
-      let rows = await load(lang);
-      if (!rows.length && lang !== 'en') rows = await load('en');
-      channels = await known;
+      const counts = await worldCounts;
+      const world = Object.values(counts).some(Boolean);
+      const cc = worldPick || ({ en: 'US', pt: 'BR', 'pt-PT': 'PT', es: 'MX', de: 'DE', ru: 'RU', uk: 'UA', ko: 'KR', ja: 'JP' })[lang] || 'US';
+      let rows;
+      if (world) rows = await loadWorld(cc);
+      else {
+        rows = await load(lang);
+        if (!rows.length && lang !== 'en') rows = await load('en');
+      }
+      channels = world ? [] : await known;
       if (mine !== token) return;
+      setFrontLabels(world, cc, lang, counts);
+      if (world && !rows.length) {
+        front.hidden = false;
+        feedWrap.hidden = true;
+        empty.textContent = tr(W_NONE);
+        empty.hidden = false;
+        return;
+      }
       if (!rows.length) throw new Error('no data');
       mount.hidden = false;
       front.hidden = false;
@@ -527,7 +602,7 @@
         items: rows.slice(),
         shown: 0,
         seen: new Set(rows.map((r) => r.link)),
-        queue: ['en', ...LANGS].filter((l, i, a) => l !== own && a.indexOf(l) === i),
+        queue: world ? [] : ['en', ...LANGS].filter((l, i, a) => l !== own && a.indexOf(l) === i),
         others: null,
         shorts: [],
         si: 0,
@@ -542,7 +617,7 @@
       if (err.message !== 'no data') console.error('News wire widget:', err);
       view = null;
       feedState = null;
-      if (!Object.values(cache).some((r) => r.length)) { mount.hidden = true; front.hidden = true; return; }
+      if (!Object.values(cache).some((r) => r.length) && !Object.values(worldCache).length) { mount.hidden = true; front.hidden = true; return; }
       empty.textContent = tr('News is unavailable right now.');
       empty.hidden = false;
       feedWrap.hidden = true;
@@ -554,7 +629,7 @@
   document.addEventListener('keydown', (ev) => {
     if ((ev.key !== 'ArrowDown' && ev.key !== 'ArrowUp') || ev.defaultPrevented || ev.altKey || ev.ctrlKey || ev.metaKey || ev.shiftKey) return;
     if (ev.target.closest && ev.target.closest('input, textarea, select, [contenteditable]')) return;
-    if (credits.hidden || sBox.querySelector('.nw-feed-wrap').hidden) return;
+    if (touch || credits.hidden || sBox.querySelector('.nw-feed-wrap').hidden) return;
     const r = sFeed.getBoundingClientRect();
     if (Math.min(r.bottom, innerHeight) - Math.max(r.top, 0) < r.height * 0.6) return;
     const dir = ev.key === 'ArrowDown' ? 1 : -1;
@@ -570,12 +645,13 @@
     sFeed.nwStep(dir);
   });
 
+  if (touch) addEventListener('scroll', () => moreShorts(), { passive: true });
   let sToken = 0;
   // The credits never end: near the last Short, the same list starts again.
   let sLoop = null;
   function moreShorts() {
-    if (!sLoop || !sLoop.vids.length) return;
-    if (sFeed.scrollHeight - sFeed.scrollTop - sFeed.clientHeight > sFeed.clientHeight * 3) return;
+    if (!sLoop || !sLoop.vids.length || credits.hidden) return;
+    if (touch ? sFeed.getBoundingClientRect().bottom - innerHeight > innerHeight * 3 : sFeed.scrollHeight - sFeed.scrollTop - sFeed.clientHeight > sFeed.clientHeight * 3) return;
     sFeed.insertAdjacentHTML('beforeend', sLoop.vids.map((v) => shortHtml(v, sLoop.ui)).join(''));
     watch(sFeed);
   }
@@ -661,6 +737,8 @@
   loadRanking().then((r) => { ranking = r; renderRanking(); }).catch((err) => console.error('News wire ranking:', err));
   // A new site language brings back that language's country for Shorts.
   document.addEventListener('lp:lang', () => {
+    worldPick = null;
+    try { localStorage.removeItem(WPICK); } catch (e) { /* no storage */ }
     shortsPick = null;
     try { localStorage.removeItem(PICK); } catch (e) { /* no storage */ }
     render();

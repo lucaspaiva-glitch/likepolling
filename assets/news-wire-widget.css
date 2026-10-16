@@ -206,3 +206,15 @@
 @media (max-width: 560px) { .nw-keys, .nw-swipe { flex-basis: 100%; margin-left: 0; } }
 @media (prefers-reduced-motion: reduce) { .nw-swipe svg { animation: none; } }
 .nw-keys kbd svg { width: 14px; height: 14px; }
+/* World News Wire: country picker in the header; reserved frame + shimmer until stories load. */
+.nw-wpick { display: inline-flex; align-items: center; gap: 8px; }
+.nw-wpick[hidden] { display: none; }
+.nw-front:empty { min-height: 692px; }
+@keyframes nw-shim { from { background-position: 100% 0; } to { background-position: 0 0; } }
+.nw-front .nw-lead:empty, .nw-front .nw-feed:not(:has(.nw-card, .nw-feed-end)) { background: linear-gradient(100deg, #f2f2f2 40%, #fafafa 50%, #f2f2f2 60%) 0 0 / 300% 100%; border-radius: 16px; animation: nw-shim 1.3s linear infinite; }
+@media (max-width: 760px) { .nw-front:empty { min-height: 1160px; } }
+@media (prefers-reduced-motion: reduce) { .nw-front .nw-lead:empty, .nw-front .nw-feed:not(:has(.nw-card, .nw-feed-end)) { animation: none; } }
+/* Touch screens: the Shorts scroll with the page (no inner scroll box). */
+.nw-flow .nw-feed { height: auto; min-height: 0; overflow: visible; scroll-snap-type: none; }
+.nw-flow .nw-short { height: auto; width: min(100%, calc((100svh - 96px) * 9 / 16)); aspect-ratio: 9 / 16; scroll-snap-align: none; }
+.nw-flow .nw-nav { display: none; }
