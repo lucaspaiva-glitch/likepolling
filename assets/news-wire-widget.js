@@ -266,7 +266,7 @@
         <div class="nw-low">
           <div class="nw-bottom">
             <div class="nw-pub"><span class="nw-mono" aria-hidden="true">${initial}</span><span class="nw-src">${esc(src)}</span></div>
-            <a class="nw-hl" href="${link}" target="_blank" rel="noopener">${esc(r.title)}</a>
+            <a class="nw-hl" href="${link}" target="_blank" rel="noopener"${r.title_orig ? ` title="${esc(r.title_orig)}"` : ''}>${esc(r.title)}</a>
             <a class="nw-read" href="${link}" target="_blank" rel="noopener" tabindex="-1">${esc(tr('Read story'))} ↗</a>
           </div>
           <div class="nw-rail">
@@ -298,7 +298,7 @@
             <span class="nw-row-age">${esc(ago(r.published_at, lang))}</span>
             ${foreign && FLAG[r.lang] ? `<img class="nw-flag" src="/assets/flags/${FLAG[r.lang]}.svg" alt="${esc(langName(r.lang, lang))}" title="${esc(langName(r.lang, lang))}" width="18" height="13">` : ''}
           </div>
-          <a class="nw-hl" href="${link}" target="_blank" rel="noopener">${esc(r.title)}</a>
+          <a class="nw-hl" href="${link}" target="_blank" rel="noopener"${r.title_orig ? ` title="${esc(r.title_orig)}"` : ''}>${esc(r.title)}</a>
         </div>
       </article>`;
   }
@@ -543,6 +543,7 @@
   });
 
   const W_NONE = 'No top stories for this country right now.';
+  const W_TR = 'Headlines are translated into the site language by AI (Gemini); hover over a headline to see the original.';
   const W_FOOT = "Top stories from Google News for the chosen country, in Google News' order and the country's language. Algeria, Ecuador and Iraq have no Google News edition, so they show Google News search results for the country's name. Photos are each article's own preview image. Refreshed hourly.";
   function setFrontLabels(world, cc, ui, counts) {
     let names = null;
@@ -551,7 +552,7 @@
     fLabel.title.el.textContent = world ? tr('World News Wire') : tr(fLabel.title.creators);
     fLabel.sym.el.textContent = world ? 'WORLD·WIRE' : fLabel.sym.creators;
     fLabel.sub.el.textContent = world ? `${tr('Top stories')} · ${name(cc)}` : tr(fLabel.sub.creators);
-    fLabel.foot.el.textContent = world ? tr(W_FOOT) : tr(fLabel.foot.creators);
+    fLabel.foot.el.textContent = world ? `${tr(W_FOOT)} ${tr(W_TR)}` : tr(fLabel.foot.creators);
     wPick.hidden = !world;
     if (!world) return;
     wSel.innerHTML = WORLD_CC.map((c) => ({ c, n: name(c) })).sort((a, b) => a.n.localeCompare(b.n, ui))
@@ -569,7 +570,7 @@
       const world = Object.values(counts).some(Boolean);
       const cc = worldPick || ({ en: 'US', pt: 'BR', 'pt-PT': 'PT', es: 'MX', de: 'DE', ru: 'RU', uk: 'UA', ko: 'KR', ja: 'JP' })[lang] || 'US';
       let rows;
-      if (world) rows = await loadWorld(cc);
+      if (world) rows = (await loadWorld(cc)).map((r) => (r.title_tr && r.title_tr[lang] && r.title_tr[lang] !== r.title ? { ...r, title: r.title_tr[lang], title_orig: r.title } : r));
       else {
         rows = await load(lang);
         if (!rows.length && lang !== 'en') rows = await load('en');

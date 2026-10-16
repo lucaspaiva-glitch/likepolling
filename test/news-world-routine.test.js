@@ -54,3 +54,21 @@ test('keeps going when a country fails, and fails when none load', async () => {
   await assert.rejects(run(env, deps(async () => text(403, 'no'))), /No stories fetched/);
   await assert.rejects(run({}, deps(async () => text(200, ''))), /Missing env vars/);
 });
+
+test('translates new headlines once and reuses stored translations', async () => {
+  let payload;
+  const tr = (t) => Object.fromEntries(['en', 'pt', 'pt-PT', 'es', 'de', 'ru', 'uk', 'ko', 'ja'].map((l) => [l, `${l}:${t}`]));
+  const asked = [];
+  const f = async (url, init = {}) => {
+    if (url.includes('/rpc/')) { payload = JSON.parse(init.body).payload; return text(200, String(payload.length)); }
+    if (url.includes('title_tr=not.is.null')) return text(200, JSON.stringify([{ link: 'https://news.google.com/rss/articles/US-1', title: 'First story', title_tr: tr('stored') }]));
+    if (url.includes('/rest/v1/') || url.includes('/rss/articles/')) return text(404, '');
+    const cc = new URL(url).searchParams.get('gl');
+    return text(200, rss(item('First story', 'Wire', `https://news.google.com/rss/articles/${cc}-1`)));
+  };
+  const s = await run(env, { ...deps(f), translate: async (titles) => { asked.push(...titles); return titles.map(tr); } });
+  assert.equal(s.translations.translated, 40);
+  assert.equal(asked.length, 40);
+  assert.equal(payload.find((r) => r.country_code === 'US').title_tr.ja, 'ja:stored');
+  assert.equal(payload.find((r) => r.country_code === 'JP').title_tr.pt, 'pt:First story');
+});

@@ -8,6 +8,11 @@ const TOP_N = 30;
 const FEED_CONCURRENCY = 6;
 const IMAGE_LOOKUPS_PER_RUN = 400;
 const IMAGE_CONCURRENCY = 6;
+// Headlines are translated once into every site language and reused afterwards.
+const SITE_LANGS = ['en', 'pt', 'pt-PT', 'es', 'de', 'ru', 'uk', 'ko', 'ja'];
+const GEMINI_MODEL = 'gemini-3.5-flash';
+const TRANSLATE_BATCH = 40;
+const TRANSLATIONS_PER_RUN = 800;
 
 // Google News edition per country: [hl, ceid].
 const EDITIONS = {
@@ -77,8 +82,52 @@ async function addImages(rows, env, deps) {
   return { looked, with_image: rows.filter((r) => r.image_url).length };
 }
 
+function geminiTranslator(apiKey) {
+  const { GoogleGenAI } = require('@google/genai');
+  const ai = new GoogleGenAI({ apiKey: apiKey.trim() });
+  return async (titles) => {
+    const prompt = `Translate each news headline below into these languages: en (English), pt (Brazilian Portuguese), pt-PT (European Portuguese), es (Spanish), de (German), ru (Russian), uk (Ukrainian), ko (Korean), ja (Japanese). Keep names, numbers and meaning exact; do not add or drop information. Reply with only a JSON array with one object per headline, in the same order, each with exactly the keys ${SITE_LANGS.map((l) => `"${l}"`).join(', ')}.\n\n${JSON.stringify(titles)}`;
+    const res = await ai.models.generateContent({ model: GEMINI_MODEL, contents: prompt, config: { responseMimeType: 'application/json' } });
+    const out = JSON.parse(res.text);
+    if (!Array.isArray(out) || out.length !== titles.length) throw new Error('translation count mismatch');
+    return out;
+  };
+}
+
+// Stored translations are reused; new headlines are translated in batches (top stories first).
+async function addTranslations(rows, env, deps) {
+  const stored = new Map();
+  try {
+    const res = await deps.fetch(`${env.SUPABASE_URL}/rest/v1/news_world?select=link,title,title_tr&title_tr=not.is.null&limit=20000`, { headers: { apikey: env.SUPABASE_KEY, Authorization: `Bearer ${env.SUPABASE_KEY}` } });
+    if (res.ok) for (const r of await res.json()) stored.set(`${r.link}|${r.title}`, r.title_tr);
+  } catch { /* nothing stored yet */ }
+  const todo = [];
+  for (const r of [...rows].sort((a, b) => a.rank - b.rank)) {
+    r.title_tr = stored.get(`${r.link}|${r.title}`) || null;
+    if (!r.title_tr) todo.push(r);
+  }
+  if (!deps.translate) return { translated: 0, pending: todo.length };
+  const queue = todo.slice(0, TRANSLATIONS_PER_RUN);
+  let translated = 0;
+  const errors = [];
+  for (let i = 0; i < queue.length; i += TRANSLATE_BATCH) {
+    const batch = queue.slice(i, i + TRANSLATE_BATCH);
+    try {
+      const out = await deps.translate(batch.map((r) => r.title));
+      batch.forEach((r, k) => {
+        const t = out[k] || {};
+        if (SITE_LANGS.every((l) => typeof t[l] === 'string' && t[l].trim())) {
+          r.title_tr = Object.fromEntries(SITE_LANGS.map((l) => [l, t[l].trim().slice(0, 500)]));
+          translated++;
+        }
+      });
+    } catch (err) { errors.push(err.message); }
+  }
+  return { translated, pending: todo.length - translated, errors: errors.slice(0, 3) };
+}
+
 async function run(env = process.env, deps = {}) {
-  deps = { fetch: deps.fetch || fetch, sleep: deps.sleep || defaultSleep, log: deps.log || console.log };
+  deps = { fetch: deps.fetch || fetch, sleep: deps.sleep || defaultSleep, log: deps.log || console.log, translate: deps.translate || (env.GEMINI_API_KEY ? geminiTranslator(env.GEMINI_API_KEY) : null) };
   const missing = ['SUPABASE_URL', 'SUPABASE_KEY'].filter((k) => !env[k]);
   if (missing.length) throw new Error(`Missing env vars: ${missing.join(', ')}`);
 
@@ -98,6 +147,7 @@ async function run(env = process.env, deps = {}) {
   if (!rows.length) throw new Error(`No stories fetched (${failed.map((f) => `${f.country}: ${f.error}`).join('; ')})`);
 
   const images = await addImages(rows, env, deps);
+  const translations = await addTranslations(rows, env, deps);
 
   const res = await deps.fetch(`${env.SUPABASE_URL}/rest/v1/rpc/replace_news_world`, {
     method: 'POST',
@@ -109,7 +159,7 @@ async function run(env = process.env, deps = {}) {
 
   const perCountry = {};
   for (const r of rows) perCountry[r.country_code] = (perCountry[r.country_code] || 0) + 1;
-  const summary = { countries: countries.length, rows: written, perCountry, images, failed };
+  const summary = { countries: countries.length, rows: written, perCountry, images, translations, failed };
   deps.log(JSON.stringify(summary));
   return summary;
 }
