@@ -110,8 +110,10 @@ async function addTranslations(rows, env, deps) {
   const queue = todo.slice(0, TRANSLATIONS_PER_RUN);
   let translated = 0;
   const errors = [];
-  for (let i = 0; i < queue.length; i += TRANSLATE_BATCH) {
-    const batch = queue.slice(i, i + TRANSLATE_BATCH);
+  const batches = [];
+  for (let i = 0; i < queue.length; i += TRANSLATE_BATCH) batches.push(queue.slice(i, i + TRANSLATE_BATCH));
+  await Promise.all(Array.from({ length: 4 }, async () => { while (batches.length) {
+    const batch = batches.shift();
     try {
       const out = await deps.translate(batch.map((r) => r.title));
       batch.forEach((r, k) => {
@@ -122,7 +124,7 @@ async function addTranslations(rows, env, deps) {
         }
       });
     } catch (err) { errors.push(err.message); }
-  }
+  } }));
   return { translated, pending: todo.length - translated, errors: errors.slice(0, 3) };
 }
 
