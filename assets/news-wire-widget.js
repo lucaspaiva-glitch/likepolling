@@ -167,6 +167,10 @@
     el.setAttribute('data-no-i18n', '');
     fLabel[k] = { el, creators: el.textContent };
   }
+  fLabel.title.el.textContent = tr('World News Wire');
+  fLabel.sym.el.textContent = 'WORLD·WIRE';
+  fLabel.sub.el.textContent = tr('Top stories');
+  fLabel.foot.el.textContent = '';
   front.querySelector('.nw-asof').insertAdjacentHTML('beforebegin', '<span class="nw-wpick" hidden><img class="nw-pick-flag" src="" alt="" width="20" height="15"><select class="nw-select" data-no-i18n></select></span>');
   const wPick = front.querySelector('.nw-wpick');
   const wSel = wPick.querySelector('select');
