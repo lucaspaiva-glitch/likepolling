@@ -534,7 +534,10 @@
   const onImgError = (ev) => {
     const img = ev.target;
     if (!img.classList || !img.classList.contains('nw-img')) return;
-    img.closest('.nw-card').classList.add('nw-noimg');
+    const card = img.closest('.nw-card');
+    // World News shows only stories with a photo: a headline whose photo the browser can't load is dropped.
+    if (!wPick.hidden && card.classList.contains('nw-row') && front.contains(card)) { card.remove(); if (nearEnd()) moreFeed(); return; }
+    card.classList.add('nw-noimg');
     img.remove();
   };
   [mount, front, credits].forEach((el) => {
