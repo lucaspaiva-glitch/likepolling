@@ -279,6 +279,16 @@
     #ad-tab::after { content: ''; position: absolute; inset: 0; z-index: 4; pointer-events: none; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 1.4 -.45'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); background-size: 90px 90px; opacity: .16; mix-blend-mode: screen; animation: mpe-static .35s steps(1) infinite; }
     @keyframes mpe-jitter { 0%, 100% { transform: rotate(180deg); } 91% { transform: rotate(180deg) translateX(.8px); opacity: .75; } 93% { transform: rotate(180deg) translate(-.8px, 1px); opacity: 1; } 95% { transform: rotate(180deg); opacity: .85; } 96% { transform: rotate(180deg); opacity: 1; } }
     .mpe-pop { left: 28px; }
+    /* Tron-style straight edges; search tab inverted to white with bright red lettering */
+    .lp-tab, .lp-tab:hover, .lp-tab:focus-visible, .lp-tab[aria-expanded="true"] { border-radius: 0; }
+    .lp-tab::before { top: 0; bottom: 0; border-radius: 0; }
+    #search-tab, #search-tab:hover, #search-tab:focus-visible, #search-tab[aria-expanded="true"] { background: #fff; color: #e3162f; border: 1px solid #e3162f; border-left: 0; box-shadow: inset 0 0 0 2px #fff, inset 0 0 0 3px rgba(227,22,47,.22), 0 0 10px -3px rgba(227,22,47,.55); filter: none; }
+    #search-tab:hover, #search-tab:focus-visible, #search-tab[aria-expanded="true"] { background: #fff4f5; box-shadow: inset 0 0 0 2px #fff4f5, inset 0 0 0 3px rgba(227,22,47,.35), 0 0 14px -2px rgba(227,22,47,.7); }
+    #search-tab::before { background: #e3162f; opacity: 1; box-shadow: 0 0 5px rgba(227,22,47,.8); }
+    #search-tab > svg { color: #e3162f; }
+    #search-tab .lp-mq, #search-tab .lp-mq span, #search-tab .lp-mq i { color: #e3162f; }
+    #ad-tab { box-shadow: inset 0 0 0 2px #2c0006, inset 0 0 0 3px rgba(255,42,60,.4), inset 0 0 8px rgba(255,42,60,.35), 0 0 14px -2px rgba(255,42,60,.75); }
+    #ad-tab:hover, #ad-tab:focus-visible, #ad-tab[aria-expanded="true"] { box-shadow: inset 0 0 0 2px #3a0009, inset 0 0 0 3px rgba(255,42,60,.55), inset 0 0 10px rgba(255,42,60,.45), 0 0 18px -1px rgba(255,42,60,.9); }
     @media (max-width: 560px) {
       .lp-tab { width: 18px; padding: 8px 0 7px; gap: 5px; }
       .lp-tab:hover, .lp-tab:focus-visible, .lp-tab[aria-expanded="true"] { width: 20px; }
