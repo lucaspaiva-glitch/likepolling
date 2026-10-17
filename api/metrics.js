@@ -7,6 +7,7 @@ const { createClient } = require('@supabase/supabase-js');
 const YT_API = 'https://www.googleapis.com/youtube/v3';
 const WINDOW_DAYS = 30;
 const MAX_PLAYLIST_PAGES = 4;
+const MAX_DETAIL_VIDEOS = 120;
 const ENTITY_CATEGORY = 'creators';
 // Estimated creator revenue per 1,000 views (USD). Mirrored in index.html.
 const RPM_LOW = 1;
@@ -26,7 +27,8 @@ function parseChannelQuery(raw) {
   if (idMatch) return { type: 'id', value: idMatch[1] };
   const handleMatch = input.match(/(?:youtube\.com\/)?@([\w.-]{3,30})/i);
   if (handleMatch) return { type: 'handle', value: handleMatch[1] };
-  const bare = input.replace(/\s+/g, '');
+  // Names are tried as a handle first (1 quota unit) before the 100-unit search: "Mark Rober" -> @MarkRober.
+  const bare = input.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '');
   if (/^[\w.-]{3,30}$/.test(bare)) return { type: 'handle', value: bare, fallbackSearch: input };
   return { type: 'search', value: input };
 }
@@ -44,7 +46,7 @@ async function ytGet(path, params, apiKey, fetchImpl) {
 }
 
 async function resolveChannel(query, apiKey, fetchImpl) {
-  const parts = 'snippet,statistics,contentDetails';
+  const parts = 'snippet,statistics,contentDetails,brandingSettings';
   let channel = null;
   if (query.type === 'id') {
     channel = (await ytGet('channels', { part: parts, id: query.value }, apiKey, fetchImpl)).items?.[0];
@@ -80,7 +82,7 @@ async function fetchRecentVideos(uploadsPlaylistId, apiKey, fetchImpl, now = Dat
 
   const videos = [];
   for (let i = 0; i < ids.length; i += 50) {
-    const data = await ytGet('videos', { part: 'snippet,statistics', id: ids.slice(i, i + 50).join(',') }, apiKey, fetchImpl);
+    const data = await ytGet('videos', { part: 'snippet,statistics,contentDetails', id: ids.slice(i, i + 50).join(',') }, apiKey, fetchImpl);
     videos.push(...(data.items || []));
   }
   return videos;
@@ -103,6 +105,42 @@ function aggregate(videos) {
     videoCount: videos.length,
     topVideos: top,
     estimatedEarnings: { low: Math.round((views / 1000) * RPM_LOW), high: Math.round((views / 1000) * RPM_HIGH), currency: 'USD' },
+  };
+}
+
+function durationSeconds(iso) {
+  const m = /^P(?:(\d+)D)?T?(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/.exec(String(iso || ''));
+  return m ? ((+m[1] || 0) * 86400) + ((+m[2] || 0) * 3600) + ((+m[3] || 0) * 60) + (+m[4] || 0) : null;
+}
+
+// YouTube's own figures only (no derived scores), kept with the latest metric row for <=30 days.
+function channelDetails(channel, videos) {
+  const st = channel.statistics || {};
+  const banner = channel.brandingSettings?.image?.bannerExternalUrl;
+  const list = videos
+    .map((v) => ({
+      id: v.id,
+      t: v.snippet?.title || '',
+      p: v.snippet?.publishedAt || null,
+      v: Number(v.statistics?.viewCount || 0),
+      l: v.statistics?.likeCount == null ? null : Number(v.statistics.likeCount),
+      c: v.statistics?.commentCount == null ? null : Number(v.statistics.commentCount),
+      d: durationSeconds(v.contentDetails?.duration),
+    }))
+    .filter((v) => v.id && v.p)
+    .sort((a, b) => Date.parse(a.p) - Date.parse(b.p))
+    .slice(-MAX_DETAIL_VIDEOS);
+  return {
+    profile: {
+      country: channel.snippet?.country || null,
+      created: channel.snippet?.publishedAt || null,
+      description: String(channel.snippet?.description || '').slice(0, 400),
+      videoCount: st.videoCount == null ? null : Number(st.videoCount),
+      subscribers: st.hiddenSubscriberCount ? null : Number(st.subscriberCount || 0),
+      views: Number(st.viewCount || 0),
+      banner: /^https:\/\//.test(banner || '') ? banner : null,
+    },
+    videos: list,
   };
 }
 
@@ -134,16 +172,22 @@ async function upsertEntity(db, channel) {
   return row;
 }
 
-async function insertMetric(db, entityId, stats, now = new Date()) {
-  const row = {
+async function insertMetric(db, entityId, stats, details = null, now = new Date()) {
+  const base = {
     entity_id: entityId,
     platform: 'youtube',
     metric_date: now.toISOString().slice(0, 10),
     primary_volume: stats.monthlyViews,
     comment_volume: stats.commentVolume,
   };
-  const { data, error } = await db.from('entity_metrics').insert(row).select().single();
+  let { data, error } = await db.from('entity_metrics').insert(details ? { ...base, details } : base).select().single();
+  // Until the entity_metrics.details migration has run, keep saving the core metrics.
+  if (error && details && /details/.test(error.message || '')) ({ data, error } = await db.from('entity_metrics').insert(base).select().single());
   if (error) throw new HttpError(502, `Supabase entity_metrics write failed: ${error.message}`);
+  if (details && data && 'details' in data) {
+    const { error: clearErr } = await db.from('entity_metrics').update({ details: null }).eq('entity_id', entityId).neq('id', data.id);
+    if (clearErr) console.error('[metrics] clearing older details failed:', clearErr.message);
+  }
   return data;
 }
 
@@ -171,9 +215,10 @@ function createHandler(deps = {}) {
       const uploads = channel.contentDetails?.relatedPlaylists?.uploads;
       const videos = uploads ? await fetchRecentVideos(uploads, env.YOUTUBE_API_KEY, fetchImpl) : [];
       const stats = aggregate(videos);
+      const details = channelDetails(channel, videos);
 
       const entity = await upsertEntity(db, channel);
-      const metric = await insertMetric(db, entity.id, stats);
+      const metric = await insertMetric(db, entity.id, stats, details);
 
       res.setHeader('Cache-Control', 'no-store');
       return res.status(200).json({
@@ -187,6 +232,7 @@ function createHandler(deps = {}) {
           totalViews: Number(channel.statistics?.viewCount || 0),
         },
         ...stats,
+        details,
         updatedAt: new Date().toISOString(),
       });
     } catch (err) {
@@ -200,4 +246,6 @@ module.exports = createHandler();
 module.exports.createHandler = createHandler;
 module.exports.parseChannelQuery = parseChannelQuery;
 module.exports.aggregate = aggregate;
+module.exports.channelDetails = channelDetails;
+module.exports.durationSeconds = durationSeconds;
 module.exports.createSupabase = createSupabase;

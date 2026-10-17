@@ -35,8 +35,8 @@ function mockFetch() {
     if (path === 'videos') {
       assert.equal(u.searchParams.get('id'), 'v1,v2');
       return json({ items: [
-        { snippet: { title: 'A' }, statistics: { viewCount: '1000', commentCount: '10' } },
-        { snippet: { title: 'B' }, statistics: { viewCount: '3000', commentCount: '30' } },
+        { id: 'v1', snippet: { title: 'A', publishedAt: recent }, statistics: { viewCount: '1000', likeCount: '50', commentCount: '10' }, contentDetails: { duration: 'PT45S' } },
+        { id: 'v2', snippet: { title: 'B', publishedAt: recent }, statistics: { viewCount: '3000', commentCount: '30' }, contentDetails: { duration: 'PT1H2M3S' } },
       ] });
     }
     throw new Error('unexpected ' + url);
@@ -53,6 +53,7 @@ function mockDb({ insertError = null } = {}) {
         limit: async () => ({ data: [], error: null }),
         upsert: async (row) => { calls.upsert.push({ table, row }); return { error: null }; },
         insert(row) { calls.insert.push({ table, row }); return { select: () => ({ single: async () => ({ data: insertError ? null : { id: 1, ...row }, error: insertError }) }) }; },
+        update(row) { calls.update = (calls.update || []).concat({ table, row }); return { eq: () => ({ neq: async () => ({ error: null }) }) }; },
       };
       return q;
     },
@@ -134,4 +135,28 @@ test('malformed SUPABASE_URL returns a JSON error instead of crashing', async ()
     assert.equal(res.statusCode, 500);
     assert.match(res.body.error, /SUPABASE_URL is malformed/);
   }
+});
+
+test('parseChannelQuery tries accent-stripped names as a handle first', () => {
+  assert.deepEqual(parseChannelQuery('Felipe Netô'), { type: 'handle', value: 'FelipeNeto', fallbackSearch: 'Felipe Netô' });
+});
+
+test('durationSeconds parses ISO 8601 durations', () => {
+  const { durationSeconds } = require('../api/metrics.js');
+  assert.equal(durationSeconds('PT45S'), 45);
+  assert.equal(durationSeconds('PT1H2M3S'), 3723);
+  assert.equal(durationSeconds('P1DT1S'), 86401);
+  assert.equal(durationSeconds(''), null);
+});
+
+test('handler stores YouTube-provided per-video details and profile with the metric', async () => {
+  const db = mockDb();
+  const res = mockRes();
+  await createHandler({ env: ENV, fetch: mockFetch(), db })({ query: { channel: '@mrbeast' } }, res);
+  assert.equal(res.statusCode, 200);
+  const row = db.calls.insert.find((c) => c.table === 'entity_metrics').row;
+  assert.deepEqual(row.details.videos.map((v) => [v.id, v.v, v.l, v.c, v.d]), [['v1', 1000, 50, 10, 45], ['v2', 3000, null, 30, 3723]]);
+  assert.ok('country' in row.details.profile && 'created' in row.details.profile);
+  assert.equal(db.calls.update[0].row.details, null);
+  assert.ok(res.body.details);
 });

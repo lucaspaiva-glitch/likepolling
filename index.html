@@ -104,6 +104,48 @@
     .field input::placeholder { color: #a3a3a3; }
     .field input:focus { border-color: var(--red); box-shadow: 0 0 0 4px var(--red-ring); }
     .field svg { position: absolute; left: 17px; top: 50%; transform: translateY(-50%); color: #a3a3a3; }
+    .field .at { position: absolute; left: 42px; top: 50%; transform: translateY(-50%); font-size: 15px; font-weight: 600; color: var(--red); pointer-events: none; }
+    .field:not(.raw) input { padding-left: 60px; }
+    .field.raw .at { display: none; }
+    .ci { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; text-align: left; min-width: 0; }
+    .ci > * { min-width: 0; }
+    .ci-banner { display: block; width: 100%; aspect-ratio: 6.2 / 1; object-fit: cover; border-radius: 10px; margin-bottom: 12px; background: #f3f3f3; }
+    .ci-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 8px; }
+    .ci-stat { display: flex; flex-direction: column; gap: 5px; min-width: 0; padding: 9px 11px; border: 1px solid var(--line); border-radius: 10px; }
+    .ci-k { font: 600 10px/1.2 ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+    .ci-v { font: 700 13.5px/1.2 ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace; color: #0d0d0d; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
+    .ci-desc { margin: 10px 0 0; font-size: 13px; line-height: 1.45; color: var(--muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .ci-h { display: flex; align-items: center; gap: 9px; margin: 0; font-size: 14px; font-weight: 650; letter-spacing: -.01em; }
+    .ci-h::before { content: ''; width: 3px; height: 15px; border-radius: 2px; background: var(--red); }
+    .ci-sub { margin: 4px 0 10px 12px; font-size: 12px; color: var(--muted); }
+    .ci-chart { padding: 12px 12px 10px; border: 1px solid var(--line); border-radius: 10px; background: linear-gradient(#fff, #fffafa); }
+    .ci-max { display: flex; gap: 5px; margin-bottom: 6px; font: 600 10.5px/1 ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace; color: var(--muted); }
+    .ci-svg { display: block; width: 100%; height: 150px; cursor: crosshair; touch-action: manipulation; border-bottom: 1px solid #ddd; background: linear-gradient(to bottom, transparent calc(50% - .5px), #eee calc(50% - .5px), #eee calc(50% + .5px), transparent calc(50% + .5px)); }
+    .ci-svg rect { fill: var(--red); transition: fill .12s; }
+    .ci-svg rect.s { fill: #ff8a94; }
+    .ci-svg rect:hover, .ci-svg rect.on { fill: #7f000a; }
+    .ci-axis { display: flex; justify-content: space-between; margin-top: 6px; font: 600 10px/1 ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+    .ci-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 10px; font-size: 11.5px; color: var(--muted); }
+    .ci-legend i { display: inline-block; width: 10px; height: 10px; margin-right: 6px; border-radius: 2px; vertical-align: -1px; background: var(--red); }
+    .ci-legend i.s { background: #ff8a94; }
+    .ci-pick { display: flex; align-items: center; min-height: 66px; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line); }
+    .ci-hint { font-size: 12px; color: #a3a3a3; }
+    .ci-pv { display: flex; align-items: center; gap: 12px; width: 100%; min-width: 0; color: inherit; text-decoration: none; }
+    .ci-pv img { flex: none; width: 112px; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 8px; background: #eee; }
+    .ci-pv > span { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+    .ci-pt, .ci-tt { font-weight: 600; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .ci-pt { font-size: 13.5px; }
+    .ci-pm, .ci-pn, .ci-tn { font-size: 11.5px; color: var(--muted); }
+    .ci-pn b, .ci-tn b { font-family: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace; color: #0d0d0d; }
+    .ci-pv:hover .ci-pt, .ci-tv:hover .ci-tt { color: var(--red); }
+    .ci-top { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(150px, 1fr); gap: 12px; overflow-x: auto; padding-bottom: 4px; scroll-snap-type: x mandatory; }
+    .ci-tv { display: flex; flex-direction: column; gap: 6px; min-width: 0; color: inherit; text-decoration: none; scroll-snap-align: start; }
+    .ci-th { position: relative; display: block; }
+    .ci-th img { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 8px; background: #eee; }
+    .ci-rk { position: absolute; left: 6px; top: 6px; padding: 4px 5px; border: 1px solid rgba(255,42,60,.6); border-radius: 4px; background: #7f000a; color: #fff; font: 700 11px/1 ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace; }
+    .ci-th i { position: absolute; right: 6px; bottom: 6px; padding: 3px 4px; border-radius: 3px; background: rgba(0,0,0,.72); color: #fff; font: 700 9.5px/1 ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace; font-style: normal; letter-spacing: .06em; }
+    .ci-tt { font-size: 12.5px; line-height: 1.3; }
+    .ci-empty { margin: 0; font-size: 13px; color: var(--muted); }
     .vs-badge { display: none; align-self: center; font-weight: 700; color: var(--red); font-size: 12px; letter-spacing: .14em; }
     .versus .vs-badge, .versus #field-b { display: flex; }
     #field-b { display: none; }
@@ -386,12 +428,12 @@ ENERGY</div>
 
         <form class="search" id="search-form" autocomplete="off">
           <label class="field" id="field-a">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-            <input id="input-a" type="search" placeholder="MrBeast, @handle, or channel URL" aria-label="Channel" required>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span class="at" aria-hidden="true">@</span>
+            <input id="input-a" type="search" placeholder="MrBeast or channel URL" aria-label="Channel" required>
           </label>
           <span class="vs-badge">VS</span>
           <label class="field" id="field-b">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span class="at" aria-hidden="true">@</span>
             <input id="input-b" type="search" placeholder="Second channel" aria-label="Second channel">
           </label>
           <button type="submit" id="submit-btn">Search</button>
@@ -495,11 +537,13 @@ ENERGY</div>
       onStatus('Searching database…');
       let entity = await findEntity(q);
       let metric = entity ? await latestMetric(entity.id) : null;
-      if (metric && Date.now() - Date.parse(metric.created_at) < STALE_MS) return { entity, metric };
+      const needsDetails = metric && 'details' in metric && metric.details == null;
+      if (metric && !needsDetails && Date.now() - Date.parse(metric.created_at) < STALE_MS) return { entity, metric };
 
       onStatus(metric ? 'Refreshing live metrics…' : 'Fetching live data from YouTube…');
       try {
-        const res = await fetch('/api/metrics?channel=' + encodeURIComponent(q.text));
+        const known = entity?.handles?.youtube_channel_id;
+        const res = await fetch('/api/metrics?channel=' + encodeURIComponent(known || q.text));
         const body = await res.json().catch(() => ({ error: `Metrics service responded ${res.status}` }));
         if (!res.ok) throw new Error(body.error || `Metrics service responded ${res.status}`);
         onStatus('Loading from database…');
@@ -547,10 +591,81 @@ ENERGY</div>
           <div class="metric ${leads.comments ? 'lead' : ''}"><div class="label">Comments ${tag('comments')}</div><div class="value">${fmt(metric?.comment_volume)}</div><div class="hint">Last 30 days</div></div>
           <div class="metric ${leads.views ? 'lead' : ''}"><div class="label">Est. earnings ${tag('views')}</div><div class="value">$${fmt(e.low)}–${fmt(e.high)}</div><div class="hint">Per month, USD</div></div>
         </div>
+        ${intel(entity, metric?.details)}
         ${warning ? `<div class="notice">${esc(warning)}</div>` : ''}
         <div class="card-foot">Updated ${esc(updated)}</div>
       </article>`;
     }
+
+    // ---------- Channel Intelligence (YouTube's own per-video figures) ----------
+    const SHORT_MAX = 180;
+    const intelData = new Map();
+    const uiLang = () => document.documentElement.lang || undefined;
+    const dfmt = (iso, o) => { try { return new Date(iso).toLocaleDateString(uiLang(), o); } catch (e) { return ''; } };
+    const watch = (id) => `https://www.youtube.com/watch?v=${encodeURIComponent(id)}`;
+    const thumb = (id) => `https://i.ytimg.com/vi/${encodeURIComponent(id)}/mqdefault.jpg`;
+    const isShort = (v) => v.d != null && v.d <= SHORT_MAX;
+
+    function intel(entity, d) {
+      if (!d || !d.profile) return '';
+      const p = d.profile, vids = Array.isArray(d.videos) ? d.videos : [];
+      intelData.set(entity.id, vids);
+      let country = p.country;
+      try { if (country) country = new Intl.DisplayNames([uiLang() || 'en'], { type: 'region' }).of(country); } catch (e) { /* code only */ }
+      const stat = (k, v) => (v == null || v === '' ? '' : `<div class="ci-stat"><span class="ci-k">${esc(k)}</span><span class="ci-v" data-no-i18n>${esc(v)}</span></div>`);
+      const profile = `<div>
+          ${p.banner ? `<img class="ci-banner" src="${esc(p.banner)}=w1060" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : ''}
+          <div class="ci-stats">${stat('Country', country)}${stat('Joined', p.created ? dfmt(p.created, { month: 'short', year: 'numeric' }) : null)}${stat('Videos', p.videoCount == null ? null : fmt(p.videoCount))}${stat('Subscribers', p.subscribers == null ? null : fmt(p.subscribers))}${stat('Total views', fmt(p.views))}</div>
+          ${p.description ? `<p class="ci-desc" data-no-i18n>${esc(p.description)}</p>` : ''}
+        </div>`;
+      if (!vids.length) return `<section class="ci">${profile}<p class="ci-empty">No uploads in the last 30 days.</p></section>`;
+      const max = Math.max(1, ...vids.map((v) => v.v));
+      const W = Math.max(vids.length, 12) * 10;
+      const bars = vids.map((v, i) => { const h = Math.max(1.5, (v.v / max) * 100); return `<rect data-i="${i}"${isShort(v) ? ' class="s"' : ''} x="${i * 10 + 1.5}" y="${(100 - h).toFixed(2)}" width="7" height="${h.toFixed(2)}"></rect>`; }).join('');
+      const top = [...vids].sort((a, b) => b.v - a.v).slice(0, 5);
+      return `<section class="ci">
+        ${profile}
+        <div>
+          <h3 class="ci-h"><span>Views per video</span></h3>
+          <p class="ci-sub">Uploads in the last 30 days, oldest to newest</p>
+          <div class="ci-chart">
+            <div class="ci-max"><b data-no-i18n>${fmt(max)}</b><span>views</span></div>
+            <svg class="ci-svg" data-key="${esc(entity.id)}" data-w="${W}" viewBox="0 0 ${W} 100" preserveAspectRatio="none" role="img" aria-label="Views per video">${bars}</svg>
+            <div class="ci-axis" data-no-i18n><span>${esc(dfmt(vids[0].p, { day: 'numeric', month: 'short' }))}</span><span>${esc(dfmt(vids[vids.length - 1].p, { day: 'numeric', month: 'short' }))}</span></div>
+            <div class="ci-legend"><span><i></i><span>Long-form</span></span><span><i class="s"></i><span>Shorts-length (≤3 min)</span></span></div>
+            <div class="ci-pick" aria-live="polite"><span class="ci-hint">Tap a bar to see the video</span></div>
+          </div>
+        </div>
+        <div>
+          <h3 class="ci-h"><span>Top 5 · last 30 days</span></h3>
+          <div class="ci-top" style="margin-top:10px">${top.map((v, i) => `<a class="ci-tv" href="${watch(v.id)}" target="_blank" rel="noopener">
+            <span class="ci-th"><img src="${thumb(v.id)}" alt="" loading="lazy"><b class="ci-rk" data-no-i18n>0${i + 1}</b>${isShort(v) ? '<i data-no-i18n>≤3 MIN</i>' : ''}</span>
+            <span class="ci-tt" data-no-i18n>${esc(v.t)}</span>
+            <span class="ci-tn"><b data-no-i18n>${fmt(v.v)}</b> <span>views</span></span></a>`).join('')}</div>
+        </div>
+      </section>`;
+    }
+
+    function pickVideo(svg, e) {
+      const vids = intelData.get(svg.dataset.key);
+      if (!vids || !vids.length) return;
+      const r = svg.getBoundingClientRect();
+      const i = Math.floor(((e.clientX - r.left) / r.width) * Number(svg.dataset.w) / 10);
+      const v = vids[i];
+      if (!v || svg.dataset.on === String(i)) return;
+      svg.dataset.on = String(i);
+      svg.querySelectorAll('rect.on').forEach((x) => x.classList.remove('on'));
+      const bar = svg.querySelector(`rect[data-i="${i}"]`);
+      if (bar) bar.classList.add('on');
+      svg.closest('.ci-chart').querySelector('.ci-pick').innerHTML = `<a class="ci-pv" href="${watch(v.id)}" target="_blank" rel="noopener"><img src="${thumb(v.id)}" alt="" loading="lazy">
+        <span><b class="ci-pt" data-no-i18n>${esc(v.t)}</b><span class="ci-pm" data-no-i18n>${esc(dfmt(v.p, { day: 'numeric', month: 'short', year: 'numeric' }))}${isShort(v) ? ' · ≤3 MIN' : ''}</span>
+        <span class="ci-pn"><b data-no-i18n>${fmt(v.v)}</b> <span>views</span> · <b data-no-i18n>${fmt(v.l)}</b> <span>likes</span> · <b data-no-i18n>${fmt(v.c)}</b> <span>comments</span></span></span></a>`;
+    }
+    $('results').addEventListener('click', (e) => { const svg = e.target.closest('.ci-svg'); if (svg) pickVideo(svg, e); });
+    $('results').addEventListener('pointermove', (e) => { if (e.pointerType !== 'mouse') return; const svg = e.target.closest('.ci-svg'); if (svg) pickVideo(svg, e); });
+
+    const syncAt = () => ['input-a', 'input-b'].forEach((id) => { const v = $(id).value.trim(); $(id).parentElement.classList.toggle('raw', /^@|\/|^UC[\w-]{22}$/.test(v)); });
+    ['input-a', 'input-b'].forEach((id) => $(id).addEventListener('input', syncAt));
 
     function computeLeads(a, b) {
       const va = Number(a.metric?.primary_volume || 0), vb = Number(b.metric?.primary_volume || 0);
@@ -560,6 +675,7 @@ ENERGY</div>
 
     // ---------- Search flow ----------
     async function runSearch() {
+      syncAt();
       const queries = [$('input-a').value.trim()];
       if (versus) queries.push($('input-b').value.trim());
       if (queries.some((q) => !q)) return;
