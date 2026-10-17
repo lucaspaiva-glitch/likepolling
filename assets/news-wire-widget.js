@@ -61,7 +61,7 @@
   const worldCache = {};
   function loadWorld(cc) {
     if (!worldCache[cc]) {
-      worldCache[cc] = fetch(`${base}/rest/v1/news_world?select=*&country_code=eq.${encodeURIComponent(cc)}&order=rank.asc&limit=40`, { headers })
+      worldCache[cc] = fetch(`${base}/rest/v1/news_world?select=*&country_code=eq.${encodeURIComponent(cc)}&image_url=like.https%3A%2F%2F*&order=rank.asc&limit=40`, { headers })
         .then((r) => (r.ok ? r.json() : []))
         .catch(() => []);
     }
@@ -544,7 +544,7 @@
 
   const W_NONE = 'No top stories for this country right now.';
   const W_TR = 'Headlines are translated into the site language by AI (Gemini); hover over a headline to see the original.';
-  const W_FOOT = "Top stories from Google News for the chosen country, in Google News' order and the country's language. Algeria, Ecuador and Iraq have no Google News edition, so they show Google News search results for the country's name. Photos are each article's own preview image. Refreshed hourly.";
+  const W_FOOT = "Top stories from Google News for the chosen country, in the country's language. Only stories with the article's own photo are shown; when a country has fewer than 20, its most recent stories from other Google News sections follow the top stories. Algeria, Ecuador and Iraq have no Google News edition, so they show Google News search results for the country's name. Refreshed hourly.";
   function setFrontLabels(world, cc, ui, counts) {
     let names = null;
     try { names = new Intl.DisplayNames([ui === 'pt' ? 'pt-BR' : ui], { type: 'region' }); } catch (e) { /* codes only */ }

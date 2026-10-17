@@ -8,6 +8,13 @@ const TOP_N = 30;
 const FEED_CONCURRENCY = 6;
 const IMAGE_LOOKUPS_PER_RUN = 400;
 const IMAGE_CONCURRENCY = 6;
+// The site shows only stories with their own photo. Countries with fewer than
+// PHOTO_TARGET top stories with a photo are topped up with recent stories from
+// the country's other Google News sections (or more search results).
+const PHOTO_TARGET = 20;
+const SECTIONS = ['NATION', 'WORLD', 'BUSINESS', 'ENTERTAINMENT', 'SPORTS', 'TECHNOLOGY'];
+const SECTION_DEPTH = 15;
+const TOPUP_LOOKUPS_PER_RUN = 400;
 // Headlines are translated once into every site language and reused afterwards.
 const SITE_LANGS = ['en', 'pt', 'pt-PT', 'es', 'de', 'ru', 'uk', 'ko', 'ja'];
 const GEMINI_MODEL = 'gemini-3.5-flash';
@@ -35,29 +42,49 @@ const BLOCKED_SOURCES = /^(instagram|facebook|tiktok|youtube|x|twitter|reddit|th
 
 const defaultSleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-function feedUrl(cc) {
+function feedUrl(cc, days = 1) {
   const [hl, ceid] = EDITIONS[cc];
   const edition = `hl=${hl}&gl=${cc}&ceid=${ceid}`;
   return SEARCH[cc]
-    ? `https://news.google.com/rss/search?q=${encodeURIComponent(`${SEARCH[cc]} when:1d`)}&${edition}`
+    ? `https://news.google.com/rss/search?q=${encodeURIComponent(`${SEARCH[cc]} when:${days}d`)}&${edition}`
     : `https://news.google.com/rss?${edition}`;
 }
 
-async function fetchCountry(cc, deps) {
-  const seen = new Set();
-  const items = parseItems(await fetchText(feedUrl(cc), deps)).filter((it) => {
+function sectionUrl(cc, topic) {
+  const [hl, ceid] = EDITIONS[cc];
+  return `https://news.google.com/rss/headlines/section/topic/${topic}?hl=${hl}&gl=${cc}&ceid=${ceid}`;
+}
+
+function uniqueItems(items, seen) {
+  return items.filter((it) => {
     if (!it.title || !/^https:\/\//.test(it.link) || BLOCKED_SOURCES.test(it.source)) return false;
     const k = it.title.toLowerCase();
     if (seen.has(it.link) || seen.has(k)) return false;
     seen.add(it.link); seen.add(k);
     return true;
   });
-  return items.slice(0, TOP_N).map((it, i) => ({ country_code: cc, rank: i + 1, ...it }));
 }
 
-// Images already stored (here or in the Creator News Wire) are reused; new
-// articles are looked up top stories first, each link once, capped per run.
-async function addImages(rows, env, deps) {
+async function fetchCountry(cc, deps) {
+  const seen = new Set();
+  const items = uniqueItems(parseItems(await fetchText(feedUrl(cc), deps)), seen);
+  return { top: items.slice(0, TOP_N).map((it, i) => ({ country_code: cc, rank: i + 1, ...it })), more: items.slice(TOP_N), seen };
+}
+
+// Top-up candidates, most recent first: the rest of the search results for
+// search countries (plus a 3-day search), otherwise the leading stories of each section feed.
+async function topUpCandidates(cc, more, seen, deps) {
+  const lists = [more];
+  if (SEARCH[cc]) lists.push(await fetchText(feedUrl(cc, 3), deps).then(parseItems).catch(() => []));
+  else {
+    lists.push(...await Promise.all(SECTIONS.map((t) => fetchText(sectionUrl(cc, t), deps)
+      .then((xml) => parseItems(xml).slice(0, SECTION_DEPTH)).catch(() => []))));
+  }
+  const ts = (it) => Date.parse(it.published_at) || 0;
+  return uniqueItems(lists.flat(), seen).sort((a, b) => ts(b) - ts(a));
+}
+
+async function loadStoredImages(env, deps) {
   const stored = new Map();
   for (const table of ['news_world', 'news_wire']) {
     try {
@@ -65,6 +92,40 @@ async function addImages(rows, env, deps) {
       if (res.ok) for (const r of await res.json()) if (!stored.has(r.link)) stored.set(r.link, r.image_url);
     } catch { /* nothing stored yet */ }
   }
+  return stored;
+}
+
+// Adds top-up stories after each short country's top stories until it has
+// PHOTO_TARGET with a photo. Looked-up stories without a photo are kept (with
+// image_url '') so they aren't looked up again next run; the site hides them.
+async function topUp(rows, extras, stored, deps) {
+  let budget = TOPUP_LOOKUPS_PER_RUN;
+  let added = 0;
+  const queue = Object.keys(extras);
+  await Promise.all(Array.from({ length: IMAGE_CONCURRENCY }, async () => {
+    while (queue.length) {
+      const cc = queue.shift();
+      const own = rows.filter((r) => r.country_code === cc);
+      let have = own.filter((r) => r.image_url).length;
+      let rank = own.length;
+      for (const it of extras[cc]) {
+        if (have >= PHOTO_TARGET) break;
+        let img;
+        if (stored.has(it.link)) img = stored.get(it.link);
+        else if (budget > 0) { budget--; img = await imageFor(it.link, deps); }
+        else break;
+        if (img == null) continue;
+        rows.push({ country_code: cc, rank: ++rank, ...it, image_url: img });
+        if (img) { have++; added++; }
+      }
+    }
+  }));
+  return { added, looked: TOPUP_LOOKUPS_PER_RUN - budget };
+}
+
+// Images already stored (here or in the Creator News Wire) are reused; new
+// articles are looked up top stories first, each link once, capped per run.
+async function addImages(rows, stored, deps) {
   const todo = new Map();
   for (const r of [...rows].sort((a, b) => a.rank - b.rank)) {
     if (stored.has(r.link)) r.image_url = stored.get(r.link);
@@ -94,7 +155,8 @@ function geminiTranslator(apiKey) {
   };
 }
 
-// Stored translations are reused; new headlines are translated in batches (top stories first).
+// Stored translations are reused; new headlines shown on the site (those with a
+// photo) are translated in batches, top stories first.
 async function addTranslations(rows, env, deps) {
   const stored = new Map();
   try {
@@ -104,7 +166,7 @@ async function addTranslations(rows, env, deps) {
   const todo = [];
   for (const r of [...rows].sort((a, b) => a.rank - b.rank)) {
     r.title_tr = stored.get(`${r.link}|${r.title}`) || null;
-    if (!r.title_tr) todo.push(r);
+    if (!r.title_tr && r.image_url) todo.push(r);
   }
   if (!deps.translate) return { translated: 0, pending: todo.length };
   const queue = todo.slice(0, TRANSLATIONS_PER_RUN);
@@ -139,19 +201,30 @@ async function run(env = process.env, deps = {}) {
   const countries = Object.keys(EDITIONS);
   const queue = [...countries];
   const rows = [];
+  const pending = {};
   const failed = [];
   await Promise.all(Array.from({ length: FEED_CONCURRENCY }, async () => {
     while (queue.length) {
       const cc = queue.shift();
       try {
         const got = await fetchCountry(cc, deps);
-        if (got.length) rows.push(...got); else failed.push({ country: cc, error: 'no stories' });
+        if (got.top.length) { rows.push(...got.top); pending[cc] = got; } else failed.push({ country: cc, error: 'no stories' });
       } catch (err) { failed.push({ country: cc, error: err.message }); }
     }
   }));
   if (!rows.length) throw new Error(`No stories fetched (${failed.map((f) => `${f.country}: ${f.error}`).join('; ')})`);
 
-  const images = await addImages(rows, env, deps);
+  const stored = await loadStoredImages(env, deps);
+  const images = await addImages(rows, stored, deps);
+  const extras = {};
+  const short = Object.keys(pending).filter((cc) => rows.filter((r) => r.country_code === cc && r.image_url).length < PHOTO_TARGET);
+  await Promise.all(Array.from({ length: FEED_CONCURRENCY }, async () => {
+    while (short.length) {
+      const cc = short.shift();
+      extras[cc] = await topUpCandidates(cc, pending[cc].more, pending[cc].seen, deps);
+    }
+  }));
+  images.topped_up = await topUp(rows, extras, stored, deps);
   const translations = await addTranslations(rows, env, deps);
 
   const res = await deps.fetch(`${env.SUPABASE_URL}/rest/v1/rpc/replace_news_world`, {
@@ -163,13 +236,13 @@ async function run(env = process.env, deps = {}) {
   if (!res.ok) throw new Error(`Supabase write failed: ${written?.message || `HTTP ${res.status}`}`);
 
   const perCountry = {};
-  for (const r of rows) perCountry[r.country_code] = (perCountry[r.country_code] || 0) + 1;
+  for (const r of rows) if (r.image_url) perCountry[r.country_code] = (perCountry[r.country_code] || 0) + 1;
   const summary = { countries: countries.length, rows: written, perCountry, images, translations, failed };
   deps.log(JSON.stringify(summary));
   return summary;
 }
 
-module.exports = { run, feedUrl, EDITIONS, SEARCH };
+module.exports = { run, feedUrl, sectionUrl, EDITIONS, SEARCH, PHOTO_TARGET };
 
 if (require.main === module) {
   run().catch((err) => {

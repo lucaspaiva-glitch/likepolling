@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { run, feedUrl, EDITIONS, SEARCH } = require('../scripts/news-world-routine');
+const { run, feedUrl, sectionUrl, EDITIONS, SEARCH, PHOTO_TARGET } = require('../scripts/news-world-routine');
 
 const env = { SUPABASE_URL: 'https://db.test', SUPABASE_KEY: 'secret' };
 const item = (title, source, link) =>
@@ -62,6 +62,7 @@ test('translates new headlines once and reuses stored translations', async () =>
   const f = async (url, init = {}) => {
     if (url.includes('/rpc/')) { payload = JSON.parse(init.body).payload; return text(200, String(payload.length)); }
     if (url.includes('title_tr=not.is.null')) return text(200, JSON.stringify([{ link: 'https://news.google.com/rss/articles/US-1', title: 'First story', title_tr: tr('stored') }]));
+    if (url.includes('/rest/v1/news_world?select=link,image_url')) return text(200, JSON.stringify(Object.keys(EDITIONS).map((cc) => ({ link: `https://news.google.com/rss/articles/${cc}-1`, image_url: 'https://img.test/a.jpg' }))));
     if (url.includes('/rest/v1/') || url.includes('/rss/articles/')) return text(404, '');
     const cc = new URL(url).searchParams.get('gl');
     return text(200, rss(item('First story', 'Wire', `https://news.google.com/rss/articles/${cc}-1`)));
@@ -71,4 +72,36 @@ test('translates new headlines once and reuses stored translations', async () =>
   assert.equal(asked.length, 40);
   assert.equal(payload.find((r) => r.country_code === 'US').title_tr.ja, 'ja:stored');
   assert.equal(payload.find((r) => r.country_code === 'JP').title_tr.pt, 'pt:First story');
+});
+
+test('tops up countries short of photo stories from section feeds, newest first', async () => {
+  let payload;
+  const looked = [];
+  const f = async (url, init = {}) => {
+    if (url.includes('/rpc/')) { payload = JSON.parse(init.body).payload; return text(200, String(payload.length)); }
+    if (url.includes('/rest/v1/news_world?select=link,image_url')) return text(200, JSON.stringify([
+      { link: 'https://news.google.com/rss/articles/US-top', image_url: 'https://img.test/top.jpg' },
+      { link: 'https://news.google.com/rss/articles/US-old', image_url: '' },
+      ...Array.from({ length: 40 }, (_, i) => ({ link: `https://news.google.com/rss/articles/US-s${i}`, image_url: i % 2 ? '' : `https://img.test/s${i}.jpg` })),
+    ]));
+    if (url.includes('/rest/v1/') || url.includes('/rss/articles/')) { looked.push(url); return text(404, ''); }
+    const cc = new URL(url).searchParams.get('gl');
+    if (cc !== 'US') return text(200, rss(item('Top', 'Wire', `https://news.google.com/rss/articles/${cc}-top`)));
+    if (url.includes('/section/topic/')) {
+      const topic = url.split('/topic/')[1].split('?')[0];
+      if (topic !== 'NATION') return text(200, rss(item('Top', 'Wire', 'https://news.google.com/rss/articles/US-top')));
+      return text(200, rss(...Array.from({ length: 15 }, (_, i) => item(`S${i}`, 'Paper', `https://news.google.com/rss/articles/US-s${i}`).replace('22:06', `${String(10 + i).padStart(2, '0')}:00`))));
+    }
+    return text(200, rss(item('Top', 'Wire', 'https://news.google.com/rss/articles/US-top'), item('Old', 'Wire', 'https://news.google.com/rss/articles/US-old')));
+  };
+  const s = await run(env, deps(f));
+  assert.equal(sectionUrl('US', 'WORLD'), 'https://news.google.com/rss/headlines/section/topic/WORLD?hl=en-US&gl=US&ceid=US:en');
+  const us = payload.filter((r) => r.country_code === 'US');
+  assert.deepEqual(us.slice(0, 2).map((r) => r.title), ['Top', 'Old']);
+  // Newest section stories first (S14 at 24:00 ... ), photo-less ones kept as '' but not counted.
+  assert.deepEqual(us.slice(2).map((r) => r.title), ['S14', 'S13', 'S12', 'S11', 'S10', 'S9', 'S8', 'S7', 'S6', 'S5', 'S4', 'S3', 'S2', 'S1', 'S0']);
+  assert.ok(us.every((r, i) => r.rank === i + 1));
+  assert.equal(s.perCountry.US, 1 + 8);
+  assert.ok(PHOTO_TARGET > s.perCountry.US);
+  assert.equal(s.images.topped_up.looked, 0);
 });
