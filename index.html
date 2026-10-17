@@ -150,14 +150,14 @@
     .lp-tab::before { content: ''; position: absolute; inset: 0 0 0 auto; width: 1.5px; z-index: 2; pointer-events: none; background: currentColor; opacity: .5; }
     .lp-tab::after { content: ''; position: absolute; left: 3px; right: 4px; top: 100%; height: 44px; z-index: 1; pointer-events: none; background: repeating-linear-gradient(0deg, currentColor 0 5px, transparent 5px 7px); opacity: .28; -webkit-mask-image: linear-gradient(0deg, transparent, #000 35%, #000 65%, transparent); mask-image: linear-gradient(0deg, transparent, #000 35%, #000 65%, transparent); animation: lp-load 4.5s cubic-bezier(.45,.05,.55,.95) infinite; }
     .lp-tab > * { position: relative; z-index: 3; }
-    #search-tab { background: linear-gradient(90deg, rgba(255,214,219,.95), rgba(255,233,235,.93)); }
+    #search-tab { background: repeating-linear-gradient(0deg, rgba(255,255,255,.95) 0 14px, rgba(255,214,219,.95) 14px 28px); }
     @keyframes lp-load { 0% { top: 100%; } 45%, 100% { top: -44px; } }
     .lp-tab > * { position: relative; z-index: 3; flex: none; }
     .lp-tab span { writing-mode: vertical-rl; transform: rotate(180deg); font: 600 9.5px/1 ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: .2em; text-transform: uppercase; white-space: nowrap; text-shadow: 0 0 4px rgba(255,30,50,.22); }
     .lp-tab:hover, .lp-tab:focus-visible, .lp-tab[aria-expanded="true"] { width: 30px; border-color: currentColor; box-shadow: 0 2px 10px -3px rgba(0,0,0,.14), 0 0 10px -5px currentColor; outline: none; }
     .lp-tab:focus-visible { box-shadow: 0 0 0 2px rgba(208,0,24,.18), 0 0 10px -5px currentColor; }
     .lp-rail.moving .lp-tab { box-shadow: 0 2px 10px -3px rgba(0,0,0,.14), 0 0 12px -5px currentColor; }
-    .lp-ad-tab { gap: 7px; padding-top: 6px; color: #f2b000; border-color: rgba(242,176,0,.35); background: linear-gradient(90deg, rgba(255,236,150,.95), rgba(255,245,196,.93)); }
+    .lp-ad-tab { gap: 7px; padding-top: 6px; color: #f2b000; border-color: rgba(242,176,0,.35); background: repeating-linear-gradient(0deg, rgba(255,255,255,.95) 0 14px, rgba(255,236,150,.95) 14px 28px); }
     .lp-ad-tab::after { opacity: .4; animation-delay: 2.2s; }
     .lp-ad-tab span { text-shadow: 0 0 .4px #c98a00, 0 0 5px rgba(255,196,0,.4); }
     .lp-ad-tab span { font-weight: 700; letter-spacing: .16em; }
