@@ -145,22 +145,22 @@
     footer { border-top: 1px solid var(--line); padding: 22px 0 34px; font-size: 11.5px; color: #8a8a8a; text-align: center; letter-spacing: .01em; }
 
     /* Search tab: rides the left edge with the scroll position and opens the search drawer. */
-    .lp-rail { position: fixed; left: 0; top: 0; z-index: 60; display: grid; grid-auto-rows: 1fr; gap: 8px; transform: translateY(var(--tab-y, 120px)); transition: opacity .25s; will-change: transform; }
-    .lp-tab { position: relative; isolation: isolate; overflow: hidden; display: flex; flex-direction: column; align-items: center; gap: 10px; width: 32px; padding: 12px 0; border: 1px solid rgba(208,0,24,.28); border-left: 0; border-radius: 0 6px 6px 0; background: rgba(255,255,255,.94); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); color: #e8001c; cursor: pointer; box-shadow: 0 2px 10px -2px rgba(0,0,0,.12), 0 0 0 1px rgba(255,255,255,.6) inset; transition: width .2s, box-shadow .3s, border-color .2s; }
-    .lp-tab::before { content: ''; position: absolute; inset: 0 0 0 auto; width: 2px; z-index: 2; pointer-events: none; background: currentColor; opacity: .55; }
+    .lp-rail { position: fixed; left: 0; top: 0; z-index: 60; display: grid; grid-auto-rows: 1fr; gap: 6px; transform: translateY(var(--tab-y, 120px)); transition: opacity .25s; will-change: transform; }
+    .lp-tab { position: relative; isolation: isolate; overflow: hidden; display: flex; flex-direction: column; align-items: center; gap: 9px; width: 26px; padding: 11px 0; border: 1px solid rgba(208,0,24,.18); border-left: 0; border-radius: 0 4px 4px 0; background: rgba(255,255,255,.9); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); color: #e8001c; cursor: pointer; box-shadow: 0 1px 6px -1px rgba(0,0,0,.08); transition: width .2s, box-shadow .3s, border-color .2s; }
+    .lp-tab::before { content: ''; position: absolute; inset: 0 0 0 auto; width: 1.5px; z-index: 2; pointer-events: none; background: currentColor; opacity: .5; }
     .lp-tab::after { content: none; }
     .lp-tab > * { position: relative; z-index: 3; flex: none; }
-    .lp-tab span { writing-mode: vertical-rl; transform: rotate(180deg); font: 700 11px/1 ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: .14em; text-transform: uppercase; white-space: nowrap; text-shadow: 0 0 6px rgba(255,30,50,.35); }
-    .lp-tab:hover, .lp-tab:focus-visible, .lp-tab[aria-expanded="true"] { width: 38px; border-color: currentColor; box-shadow: 0 4px 16px -4px rgba(0,0,0,.18), 0 0 14px -4px currentColor; outline: none; }
-    .lp-tab:focus-visible { box-shadow: 0 0 0 3px rgba(208,0,24,.18), 0 0 14px -4px currentColor; }
-    .lp-rail.moving .lp-tab { box-shadow: 0 4px 16px -4px rgba(0,0,0,.18), 0 0 16px -4px currentColor; }
-    .lp-ad-tab { gap: 8px; padding-top: 6px; color: #f7b500; border-color: rgba(247,181,0,.45); }
-    .lp-ad-tab span { text-shadow: 0 0 .5px #c98a00, 0 0 7px rgba(255,196,0,.55); }
-    .lp-ad-tab span { font-weight: 800; letter-spacing: .1em; }
+    .lp-tab span { writing-mode: vertical-rl; transform: rotate(180deg); font: 600 9.5px/1 ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: .2em; text-transform: uppercase; white-space: nowrap; text-shadow: 0 0 4px rgba(255,30,50,.22); }
+    .lp-tab:hover, .lp-tab:focus-visible, .lp-tab[aria-expanded="true"] { width: 30px; border-color: currentColor; box-shadow: 0 2px 10px -3px rgba(0,0,0,.14), 0 0 10px -5px currentColor; outline: none; }
+    .lp-tab:focus-visible { box-shadow: 0 0 0 2px rgba(208,0,24,.18), 0 0 10px -5px currentColor; }
+    .lp-rail.moving .lp-tab { box-shadow: 0 2px 10px -3px rgba(0,0,0,.14), 0 0 12px -5px currentColor; }
+    .lp-ad-tab { gap: 7px; padding-top: 6px; color: #f2b000; border-color: rgba(242,176,0,.35); }
+    .lp-ad-tab span { text-shadow: 0 0 .4px #c98a00, 0 0 5px rgba(255,196,0,.4); }
+    .lp-ad-tab span { font-weight: 700; letter-spacing: .16em; }
     .lp-ad-tab .mpe-glitch::before, .lp-ad-tab .mpe-glitch::after { display: none; }
     .lp-ad-tab .mpe-glitch { animation: mpe-tab-glitch 3.4s steps(1) infinite, mpe-flicker 7s infinite; }
     @keyframes mpe-tab-glitch { 0%, 86%, 100% { transform: rotate(180deg); } 88% { transform: rotate(180deg) translateX(-1.5px); } 91% { transform: rotate(180deg) translateX(1.5px); } 94% { transform: rotate(180deg); } }
-    .lp-ad-tab small { margin-top: auto; padding: 1px 3px; border: 1px solid currentColor; border-radius: 2px; font: 800 8px/1.2 ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: .1em; }
+    .lp-ad-tab small { margin-top: auto; padding: 0 2px; border: 1px solid currentColor; border-radius: 2px; font: 700 6.5px/1.4 ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: .1em; }
     .mpe-can { overflow: visible; filter: drop-shadow(0 1px 1.5px rgba(0,0,0,.25)); }
     .mpe-can-shake { transform-box: fill-box; transform-origin: 50% 100%; animation: mpe-can-shake 5s ease-in-out infinite; }
     .mpe-can-pull { transform-box: fill-box; transform-origin: 0% 50%; animation: mpe-can-pull 5s ease-in-out infinite; }
@@ -174,7 +174,7 @@
     .mpe-glitch::before, .mpe-glitch::after { content: attr(data-text); position: absolute; inset: 0; white-space: inherit; text-shadow: none; pointer-events: none; }
     .mpe-glitch::before { color: rgba(0,235,255,.6); animation: mpe-glitch-a 3.4s steps(1) infinite; }
     .mpe-glitch::after { color: rgba(255,0,70,.95); animation: mpe-glitch-b 2.9s steps(1) infinite; }
-    .mpe-pop { position: fixed; left: 46px; top: var(--pop-y, 120px); z-index: 61; width: 200px; }
+    .mpe-pop { position: fixed; left: 36px; top: var(--pop-y, 120px); z-index: 61; width: 196px; }
     .mpe-pop[hidden] { display: none; }
     body.lp-drawer-open { overflow: hidden; }
     body.lp-drawer-open .lp-rail, body.lp-drawer-open .mpe-pop { opacity: 0; pointer-events: none; }
@@ -189,13 +189,13 @@
     .lp-drawer #results { margin: 28px 0 32px; }
     .lp-drawer #results.two .metrics { grid-template-columns: 1fr; }
     @media (max-width: 560px) {
-      .lp-tab { width: 26px; padding: 10px 0; gap: 7px; }
-      .lp-tab span { font-size: 9px; letter-spacing: .1em; }
-      .lp-tab > svg:not(.mpe-can) { width: 13px; height: 13px; }
+      .lp-tab { width: 22px; padding: 9px 0; gap: 7px; }
+      .lp-tab span { font-size: 8.5px; letter-spacing: .14em; }
+      .lp-tab > svg:not(.mpe-can) { width: 11px; height: 11px; }
       .lp-ad-tab { padding-top: 5px; }
-      .mpe-can { width: 15px; height: 29px; }
-      .lp-ad-tab small { font-size: 7px; padding: 1px 2px; }
-      .mpe-pop { left: 34px; }
+      .mpe-can { width: 12px; height: 23px; }
+      .lp-ad-tab small { font-size: 6px; padding: 0 1.5px; }
+      .mpe-pop { left: 30px; }
       .lp-drawer { padding: 0 18px 24px; }
     }
 
@@ -250,7 +250,7 @@
 
   <div class="lp-rail" id="lp-rail">
     <button type="button" class="lp-tab" id="search-tab" aria-controls="search-drawer" aria-expanded="false"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span>Search any YouTube Channel</span></button>
-    <button type="button" class="lp-tab lp-ad-tab" id="ad-tab" aria-controls="ad-pop" aria-expanded="false" aria-label="Sponsored: Machu Picchu Energy"><svg class="mpe-can" viewBox="0 -7 20 39" width="18" height="35" aria-hidden="true"><defs><linearGradient id="mpe-can-body" x1="0" x2="1"><stop offset="0" stop-color="#b87800"/><stop offset=".3" stop-color="#ffd84a"/><stop offset=".55" stop-color="#f5b400"/><stop offset="1" stop-color="#9a6200"/></linearGradient><linearGradient id="mpe-can-band" x1="0" x2="1"><stop offset="0" stop-color="#8f0f18"/><stop offset=".32" stop-color="#ff4a55"/><stop offset=".55" stop-color="#e0232f"/><stop offset="1" stop-color="#7a0a12"/></linearGradient><linearGradient id="mpe-can-metal" x1="0" x2="1"><stop offset="0" stop-color="#7a7a7a"/><stop offset=".42" stop-color="#f4f4f4"/><stop offset="1" stop-color="#6a6a6a"/></linearGradient></defs><g class="mpe-can-shake"><path d="M4.2 6 5.3 3.4h9.4L15.8 6Z" fill="url(#mpe-can-metal)"/><rect x="3" y="6" width="14" height="22.5" rx="2" fill="url(#mpe-can-body)"/><rect x="3" y="6" width="14" height="4" fill="url(#mpe-can-band)"/><path d="M5 11.6h10M5 13.2h10" stroke="#1d1d1b" stroke-width=".9"/><circle cx="10" cy="19.4" r="3.6" fill="none" stroke="#1d1d1b" stroke-width=".7"/><path d="M7.2 21 9.4 17.4l1 1.4.9-1 1.6 3.2Z" fill="#1d1d1b"/><rect x="3.4" y="27.6" width="13.2" height="2.4" rx="1.2" fill="url(#mpe-can-metal)"/><g class="mpe-can-pull"><path d="M8.2 3.5h3.6" stroke="#d9d9d9" stroke-width="1.1" stroke-linecap="round"/><circle cx="12.2" cy="3.5" r=".9" fill="none" stroke="#bdbdbd" stroke-width=".6"/></g><g class="mpe-can-fizz" fill="#f7b500"><circle cx="9" cy="1.5" r=".9"/><circle cx="11.6" cy=".5" r=".65"/><circle cx="10.2" cy="-1" r=".55"/></g></g></svg><span class="mpe-glitch" data-no-i18n data-text="Machu Picchu Energy">Machu Picchu Energy</span><small data-no-i18n>AD</small></button>
+    <button type="button" class="lp-tab lp-ad-tab" id="ad-tab" aria-controls="ad-pop" aria-expanded="false" aria-label="Sponsored: Machu Picchu Energy"><svg class="mpe-can" viewBox="0 -7 20 39" width="14" height="27" aria-hidden="true"><defs><linearGradient id="mpe-can-body" x1="0" x2="1"><stop offset="0" stop-color="#b87800"/><stop offset=".3" stop-color="#ffd84a"/><stop offset=".55" stop-color="#f5b400"/><stop offset="1" stop-color="#9a6200"/></linearGradient><linearGradient id="mpe-can-band" x1="0" x2="1"><stop offset="0" stop-color="#8f0f18"/><stop offset=".32" stop-color="#ff4a55"/><stop offset=".55" stop-color="#e0232f"/><stop offset="1" stop-color="#7a0a12"/></linearGradient><linearGradient id="mpe-can-metal" x1="0" x2="1"><stop offset="0" stop-color="#7a7a7a"/><stop offset=".42" stop-color="#f4f4f4"/><stop offset="1" stop-color="#6a6a6a"/></linearGradient></defs><g class="mpe-can-shake"><path d="M4.2 6 5.3 3.4h9.4L15.8 6Z" fill="url(#mpe-can-metal)"/><rect x="3" y="6" width="14" height="22.5" rx="2" fill="url(#mpe-can-body)"/><rect x="3" y="6" width="14" height="4" fill="url(#mpe-can-band)"/><path d="M5 11.6h10M5 13.2h10" stroke="#1d1d1b" stroke-width=".9"/><circle cx="10" cy="19.4" r="3.6" fill="none" stroke="#1d1d1b" stroke-width=".7"/><path d="M7.2 21 9.4 17.4l1 1.4.9-1 1.6 3.2Z" fill="#1d1d1b"/><rect x="3.4" y="27.6" width="13.2" height="2.4" rx="1.2" fill="url(#mpe-can-metal)"/><g class="mpe-can-pull"><path d="M8.2 3.5h3.6" stroke="#d9d9d9" stroke-width="1.1" stroke-linecap="round"/><circle cx="12.2" cy="3.5" r=".9" fill="none" stroke="#bdbdbd" stroke-width=".6"/></g><g class="mpe-can-fizz" fill="#f7b500"><circle cx="9" cy="1.5" r=".9"/><circle cx="11.6" cy=".5" r=".65"/><circle cx="10.2" cy="-1" r=".55"/></g></g></svg><span class="mpe-glitch" data-no-i18n data-text="Machu Picchu Energy">Machu Picchu Energy</span><small data-no-i18n>AD</small></button>
   </div>
   <div class="mpe-pop" id="ad-pop" hidden>
     <div class="mpe-ad" role="complementary" aria-label="Sponsored: Machu Picchu Energy">
