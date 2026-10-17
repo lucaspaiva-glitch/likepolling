@@ -43,3 +43,12 @@
   src: url(/assets/fonts/kanit-black-italic-latin.woff2) format('woff2');
   unicode-range: U+0000-024F, U+0259, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+1E00-1EFF, U+2000-206F, U+20AC, U+2122, U+2190-2193, U+2212;
 }
+/* Kanit SemiBold latin + latin-ext (left rail tabs) — SIL Open Font License 1.1 */
+@font-face {
+  font-family: 'Kanit';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(/assets/fonts/kanit-semibold-latin.woff2) format('woff2');
+  unicode-range: U+0000-024F, U+0259, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+1E00-1EFF, U+2000-206F, U+20AC, U+2122, U+2190-2193, U+2212;
+}
