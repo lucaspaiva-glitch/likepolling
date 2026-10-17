@@ -220,13 +220,14 @@
     .mpe-bar { position: relative; height: 3px; margin: 12px 14px; overflow: hidden; border-radius: 2px; background: #f3ead2; }
     .mpe-bar::after { content: ''; position: absolute; top: 0; bottom: 0; left: -30%; width: 30%; border-radius: 2px; background: #a87600; animation: mpe-scan 2.4s linear infinite; }
     /* Dark-red neon rail tabs (both tabs share one red) */
-    .lp-tab, .lp-ad-tab { --c: #ff2a3c; --soft: #6a000c; background: linear-gradient(90deg, #4a0007, #5a0008 60%, #64000b); color: #fff; border: 1px solid #2e0004; border-left: 0; box-shadow: inset 0 1px 0 rgba(255,120,130,.28), inset -1px 0 0 rgba(255,60,75,.45), 0 0 0 1px rgba(255,42,60,.18), 0 0 12px -2px rgba(255,30,50,.55), 0 6px 16px -10px rgba(0,0,0,.35); }
-    .lp-tab::before { background: var(--c); opacity: .95; box-shadow: 0 0 6px 1px rgba(255,42,60,.85); }
-    .lp-tab span { color: #fff; text-shadow: 0 0 6px rgba(255,90,105,.55); }
-    .lp-tab > svg:not(.mpe-can) { color: #fff; filter: drop-shadow(0 0 3px rgba(255,90,105,.7)); }
-    .lp-tab:hover, .lp-tab:focus-visible, .lp-tab[aria-expanded="true"] { background: linear-gradient(90deg, #560008, #6a000c 60%, #74000e); box-shadow: inset 0 1px 0 rgba(255,140,150,.35), inset -1px 0 0 rgba(255,70,85,.6), 0 0 0 1px rgba(255,42,60,.3), 0 0 16px -1px rgba(255,30,50,.7), 0 8px 20px -10px rgba(0,0,0,.4); }
-    .lp-tab:focus-visible { outline-color: #ff2a3c; }
-    .lp-ad-tab small { background: rgba(255,255,255,.14); color: #fff; }
+    .lp-tab, .lp-ad-tab { --c: #ff2a3c; --soft: #ff3d4e; background: linear-gradient(90deg, #ef1f30, #ff2a3c 55%, #ff3446); color: #fff; border: 1px solid #8a0010; border-left: 0; box-shadow: inset 0 1px 0 rgba(255,190,195,.55), inset 0 -1px 0 rgba(120,0,12,.35), 0 0 0 1px rgba(255,42,60,.22), 0 0 12px -2px rgba(255,30,50,.6), 0 6px 16px -10px rgba(0,0,0,.35); }
+    .lp-tab::before { background: #fff; opacity: .55; box-shadow: 0 0 5px 1px rgba(255,220,225,.7); }
+    .lp-tab span { color: #fff; text-shadow: 0 1px 1px rgba(110,0,10,.45); }
+    .lp-tab > svg:not(.mpe-can) { color: #fff; filter: drop-shadow(0 1px 1px rgba(110,0,10,.45)); }
+    .lp-tab:hover, .lp-tab:focus-visible, .lp-tab[aria-expanded="true"] { background: linear-gradient(90deg, #f72636, #ff3446 55%, #ff4656); box-shadow: inset 0 1px 0 rgba(255,200,205,.65), inset 0 -1px 0 rgba(120,0,12,.35), 0 0 0 1px rgba(255,42,60,.35), 0 0 18px -1px rgba(255,30,50,.8), 0 8px 20px -10px rgba(0,0,0,.4); }
+    .lp-tab[aria-expanded="true"]::before { opacity: .9; }
+    .lp-tab:focus-visible { outline-color: #8a0010; }
+    .lp-ad-tab small { background: rgba(255,255,255,.22); color: #fff; }
     .mpe-ad { color: #7a000b; }
     .mpe-ad:hover, .mpe-ad:focus-visible { border-color: rgba(176,0,14,.4); }
     .mpe-ad:focus-visible { outline-color: #b0000e; }
