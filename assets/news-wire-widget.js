@@ -581,10 +581,17 @@
     try {
       const counts = await worldCounts;
       const world = Object.values(counts).some(Boolean);
-      const cc = worldPick || ({ en: 'US', pt: 'BR', 'pt-PT': 'PT', es: 'MX', de: 'DE', ru: 'RU', uk: 'UA', ko: 'KR', ja: 'JP' })[lang] || 'US';
+      let cc = worldPick || ({ en: 'US', pt: 'BR', 'pt-PT': 'PT', es: 'MX', de: 'DE', ru: 'RU', uk: 'UA', ko: 'KR', ja: 'JP' })[lang] || 'US';
+      const inLang = (rs) => rs.map((r) => (r.title_tr && r.title_tr[lang] && r.title_tr[lang] !== r.title ? { ...r, title: r.title_tr[lang], title_orig: r.title } : r));
       let rows;
-      if (world) rows = (await loadWorld(cc)).map((r) => (r.title_tr && r.title_tr[lang] && r.title_tr[lang] !== r.title ? { ...r, title: r.title_tr[lang], title_orig: r.title } : r));
-      else {
+      if (world) {
+        rows = inLang(await loadWorld(cc));
+        // The language's home country may have no stories yet; open on one that does instead of an empty panel.
+        if (!rows.length && !worldPick) {
+          const alt = counts.US ? 'US' : Object.keys(counts).find((k) => counts[k]);
+          if (alt && alt !== cc) { cc = alt; rows = inLang(await loadWorld(cc)); }
+        }
+      } else {
         rows = await load(lang);
         if (!rows.length && lang !== 'en') rows = await load('en');
       }
@@ -594,6 +601,8 @@
       if (world && !rows.length) {
         front.hidden = false;
         feedWrap.hidden = true;
+        lead.innerHTML = '';
+        feed.querySelectorAll(':scope > :not(.nw-sentinel)').forEach((n) => n.remove());
         empty.textContent = tr(W_NONE);
         empty.hidden = false;
         return;
@@ -603,6 +612,7 @@
       front.hidden = false;
       view = { items: rows, lang };
       empty.hidden = true;
+      feedWrap.hidden = false;
       feed.querySelectorAll(':scope > :not(.nw-sentinel)').forEach((n) => n.remove());
       lead.innerHTML = '';
       feed.scrollTop = 0;
