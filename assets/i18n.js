@@ -70,6 +70,8 @@
     'Single': ['Individual', 'Individual', 'Einzeln', 'Один', 'Один', '단일', '単体'],
     'Versus': ['Versus', 'Versus', 'Versus', 'Сравнение', 'Порівняння', '비교', '比較'],
     'Search': ['Pesquisar', 'Buscar', 'Suchen', 'Найти', 'Знайти', '검색', '検索'],
+    'Search any YouTube Channel': ['Pesquise qualquer canal do YouTube', 'Busca cualquier canal de YouTube', 'Jeden YouTube-Kanal durchsuchen', 'Найти любой канал YouTube', 'Знайти будь-який канал YouTube', '모든 YouTube 채널 검색', 'YouTubeチャンネルを検索'],
+    'Sponsored': ['Patrocinado', 'Patrocinado', 'Gesponsert', 'Реклама', 'Реклама', '스폰서', 'スポンサー'],
     'Compare': ['Comparar', 'Comparar', 'Vergleichen', 'Сравнить', 'Порівняти', '비교하기', '比較する'],
     'MrBeast, @handle, or channel URL': ['MrBeast, @handle ou URL do canal', 'MrBeast, @handle o URL del canal', 'MrBeast, @Handle oder Kanal-URL', 'MrBeast, @handle или ссылка на канал', 'MrBeast, @handle або посилання на канал', 'MrBeast, @핸들 또는 채널 URL', 'MrBeast、@ハンドル、またはチャンネルURL'],
     'Second channel': ['Segundo canal', 'Segundo canal', 'Zweiter Kanal', 'Второй канал', 'Другий канал', '두 번째 채널', '2つ目のチャンネル'],

@@ -143,6 +143,58 @@
     .card.error p { margin: 0; color: var(--muted); font-size: 14px; }
 
     footer { border-top: 1px solid var(--line); padding: 22px 0 34px; font-size: 11.5px; color: #8a8a8a; text-align: center; letter-spacing: .01em; }
+
+    /* Search tab: rides the left edge with the scroll position and opens the search drawer. */
+    .lp-tab { position: fixed; left: 0; top: 0; z-index: 60; display: flex; flex-direction: column; align-items: center; gap: 10px; width: 32px; padding: 14px 0; border: 1px solid rgba(255,255,255,.12); border-left: 0; border-radius: 0 8px 8px 0; background: linear-gradient(180deg, #8a000c 0%, #4a0007 100%); color: #fff; cursor: pointer; box-shadow: 0 8px 24px -10px rgba(60,0,6,.7), inset 0 1px 0 rgba(255,255,255,.14); transform: translateY(var(--tab-y, 120px)); transition: width .2s, background .2s, box-shadow .3s, opacity .25s; will-change: transform; }
+    .lp-tab span { writing-mode: vertical-rl; transform: rotate(180deg); font: 600 11px/1 ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: .14em; text-transform: uppercase; white-space: nowrap; }
+    .lp-tab svg { flex: none; }
+    .lp-tab:hover, .lp-tab:focus-visible { width: 38px; background: linear-gradient(180deg, #a3000f 0%, #5a0008 100%); outline: none; }
+    .lp-tab:focus-visible { box-shadow: 0 0 0 3px var(--red-ring), 0 8px 24px -10px rgba(60,0,6,.7); }
+    .lp-tab.moving { box-shadow: 0 0 18px -2px rgba(194,24,36,.55), 0 8px 24px -10px rgba(60,0,6,.7), inset 0 1px 0 rgba(255,255,255,.14); }
+    body.lp-drawer-open { overflow: hidden; }
+    body.lp-drawer-open .lp-tab { opacity: 0; pointer-events: none; }
+    .lp-scrim { position: fixed; inset: 0; z-index: 70; background: rgba(20,0,4,.42); -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px); opacity: 0; pointer-events: none; transition: opacity .25s; }
+    .lp-scrim.on { opacity: 1; pointer-events: auto; }
+    .lp-drawer { position: fixed; top: 0; bottom: 0; left: 0; z-index: 80; width: min(820px, calc(100vw - 36px)); box-sizing: border-box; padding: 0 32px 32px; overflow-y: auto; overscroll-behavior: contain; background: #fff; border-right: 3px solid var(--red-dark); box-shadow: 24px 0 60px -20px rgba(60,0,6,.45); transform: translateX(-105%); visibility: hidden; transition: transform .32s cubic-bezier(.2,.8,.2,1), visibility 0s .32s; }
+    .lp-drawer.open { transform: none; visibility: visible; transition: transform .32s cubic-bezier(.2,.8,.2,1); }
+    .lp-drawer-x { position: sticky; top: 14px; z-index: 2; float: right; margin: 14px -14px 0 0; width: 36px; height: 36px; border: 1px solid var(--line); border-radius: 50%; background: #fff; color: #525252; font-size: 22px; line-height: 1; cursor: pointer; }
+    .lp-drawer-x:hover { color: var(--red); border-color: var(--red); }
+    .lp-drawer .hero { padding: 56px 0 8px; }
+    .lp-drawer .hero h1 { font-size: clamp(28px, 4.2vw, 42px); }
+    .lp-drawer #results { margin: 28px 0 32px; }
+    .lp-drawer #results.two .metrics { grid-template-columns: 1fr; }
+    .lp-drawer > .mpe-ad { max-width: 340px; margin: 8px auto 0; }
+    @media (max-width: 560px) {
+      .lp-tab { width: 24px; padding: 10px 0; gap: 8px; }
+      .lp-tab span { font-size: 9.5px; }
+      .lp-tab svg { width: 13px; height: 13px; }
+      .lp-drawer { padding: 0 18px 24px; }
+    }
+
+    /* Machu Picchu Energy (sponsored): neon red, static and scan lines. */
+    .mpe-ad { position: relative; isolation: isolate; overflow: hidden; box-sizing: border-box; padding: 14px 14px 16px; border: 1px solid rgba(255,40,60,.3); border-radius: 6px; background: radial-gradient(120% 80% at 50% 0%, #2a0308 0%, #0b0507 55%, #050304 100%); box-shadow: 0 0 0 1px rgba(0,0,0,.6), 0 0 28px -6px rgba(255,20,40,.35), inset 0 0 40px rgba(255,0,30,.08); color: #ffd9dc; font-family: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace; text-align: left; }
+    .mpe-ad::before { content: ''; position: absolute; inset: 0; z-index: 2; pointer-events: none; background: repeating-linear-gradient(0deg, rgba(255,255,255,.04) 0 1px, transparent 1px 3px); }
+    .mpe-ad::after { content: ''; position: absolute; inset: -50%; z-index: 1; pointer-events: none; opacity: .13; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); animation: mpe-static .5s steps(4) infinite; }
+    @keyframes mpe-static { 0% { transform: translate(0,0); } 25% { transform: translate(-8%,4%); } 50% { transform: translate(6%,-6%); } 75% { transform: translate(-4%,8%); } 100% { transform: translate(0,0); } }
+    .mpe-top { position: relative; z-index: 3; display: flex; justify-content: space-between; align-items: center; font-size: 9.5px; letter-spacing: .16em; text-transform: uppercase; color: rgba(255,200,205,.6); }
+    .mpe-sym { padding: 2px 5px; border: 1px solid rgba(255,59,74,.55); border-radius: 2px; color: #ff3b4a; letter-spacing: .1em; }
+    .mpe-name { position: relative; z-index: 3; margin: 20px 0 8px; white-space: pre-line; font: 800 21px/1.04 system-ui, -apple-system, 'Segoe UI', sans-serif; letter-spacing: .05em; color: #ff2a3c; text-shadow: 0 0 6px rgba(255,30,50,.8), 0 0 18px rgba(255,0,30,.55), 0 0 42px rgba(255,0,30,.35); animation: mpe-flicker 7s infinite; }
+    .mpe-name::before, .mpe-name::after { content: attr(data-text); position: absolute; inset: 0; white-space: pre-line; text-shadow: none; pointer-events: none; }
+    .mpe-name::before { color: rgba(0,235,255,.6); animation: mpe-glitch-a 3.4s steps(1) infinite; }
+    .mpe-name::after { color: rgba(255,0,70,.95); animation: mpe-glitch-b 2.9s steps(1) infinite; }
+    @keyframes mpe-glitch-a { 0%, 86%, 100% { clip-path: inset(0 0 100% 0); transform: none; } 88% { clip-path: inset(8% 0 58% 0); transform: translate(-3px,-1px); } 91% { clip-path: inset(62% 0 12% 0); transform: translate(3px,1px); } 94% { clip-path: inset(34% 0 42% 0); transform: translate(-2px,0); } }
+    @keyframes mpe-glitch-b { 0%, 80%, 100% { clip-path: inset(100% 0 0 0); transform: none; } 82% { clip-path: inset(48% 0 30% 0); transform: translate(3px,0); } 85% { clip-path: inset(12% 0 70% 0); transform: translate(-3px,1px); } 88% { clip-path: inset(72% 0 6% 0); transform: translate(2px,-1px); } }
+    @keyframes mpe-flicker { 0%, 41%, 43%, 45%, 77%, 79%, 100% { opacity: 1; } 42%, 44%, 78% { opacity: .55; } }
+    .mpe-kana { position: relative; z-index: 3; font-size: 10px; letter-spacing: .2em; white-space: nowrap; color: rgba(255,120,130,.6); }
+    .mpe-bar { position: relative; z-index: 3; height: 2px; margin-top: 14px; overflow: hidden; background: rgba(255,42,60,.18); }
+    .mpe-bar::after { content: ''; position: absolute; top: 0; bottom: 0; left: -30%; width: 30%; background: linear-gradient(90deg, transparent, #ff2a3c, transparent); animation: mpe-scan 2.4s linear infinite; }
+    @keyframes mpe-scan { to { left: 100%; } }
+    .mpe-rail { position: fixed; top: 50%; left: 44px; z-index: 40; display: none; width: 168px; transform: translateY(-50%); }
+    @media (min-width: 1800px) { .mpe-rail { display: block; } }
+    @media (prefers-reduced-motion: reduce) {
+      .mpe-ad::after, .mpe-name, .mpe-name::before, .mpe-name::after, .mpe-bar::after { animation: none; }
+      .lp-drawer, .lp-drawer.open, .lp-scrim { transition: none; }
+    }
   </style>
 </head>
 <body>
@@ -165,36 +217,56 @@
     </header>
 
     <section class="nw nw-front" id="news-front" aria-label="World news"></section>
-    <section class="hero">
-      <h1>Search any <em>YouTube</em> channel.</h1>
-      <p>Monthly views, comment volume and estimated earnings.</p>
-
-      <div class="mode" role="group" aria-label="Mode">
-        <button type="button" id="mode-single" aria-pressed="true">Single</button>
-        <button type="button" id="mode-versus" aria-pressed="false">Versus</button>
-      </div>
-
-      <form class="search" id="search-form" autocomplete="off">
-        <label class="field" id="field-a">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-          <input id="input-a" type="search" placeholder="MrBeast, @handle, or channel URL" aria-label="Channel" required>
-        </label>
-        <span class="vs-badge">VS</span>
-        <label class="field" id="field-b">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-          <input id="input-b" type="search" placeholder="Second channel" aria-label="Second channel">
-        </label>
-        <button type="submit" id="submit-btn">Search</button>
-      </form>
-      <div class="chips" id="chips" aria-label="Tracked channels"></div>
-    </section>
-
-    <main id="results" aria-live="polite"></main>
     <section id="yt-trending" data-supabase-url="https://iyhaoagslsrwtkcrxylp.supabase.co" data-supabase-key="sb_publishable_ZnV9HrtfDqeKlBftnDxH2Q_YK6XWJTp"></section>
     <section id="yt-music" data-supabase-url="https://iyhaoagslsrwtkcrxylp.supabase.co" data-supabase-key="sb_publishable_ZnV9HrtfDqeKlBftnDxH2Q_YK6XWJTp"></section>
     <section id="news-wire" data-supabase-url="https://iyhaoagslsrwtkcrxylp.supabase.co" data-supabase-key="sb_publishable_ZnV9HrtfDqeKlBftnDxH2Q_YK6XWJTp"></section>
   </div>
 
+
+  <button type="button" class="lp-tab" id="search-tab" aria-controls="search-drawer" aria-expanded="false"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span>Search any YouTube Channel</span></button>
+  <div class="mpe-ad mpe-rail" role="complementary" aria-label="Sponsored: Machu Picchu Energy">
+      <div class="mpe-top"><span class="mpe-sym" data-no-i18n>MPE</span><span>Sponsored</span></div>
+      <div class="mpe-name" data-no-i18n data-text="MACHU PICCHU&#10;ENERGY">MACHU PICCHU
+ENERGY</div>
+      <div class="mpe-kana" data-no-i18n aria-hidden="true">マチュピチュ・エナジー</div>
+      <div class="mpe-bar" aria-hidden="true"></div>
+    </div>
+  <div class="lp-scrim" id="search-scrim"></div>
+  <aside class="lp-drawer" id="search-drawer" aria-label="Search any YouTube Channel" aria-hidden="true" inert>
+    <button type="button" class="lp-drawer-x" id="search-close" aria-label="Close">&times;</button>
+      <section class="hero">
+        <h1>Search any <em>YouTube</em> channel.</h1>
+        <p>Monthly views, comment volume and estimated earnings.</p>
+
+        <div class="mode" role="group" aria-label="Mode">
+          <button type="button" id="mode-single" aria-pressed="true">Single</button>
+          <button type="button" id="mode-versus" aria-pressed="false">Versus</button>
+        </div>
+
+        <form class="search" id="search-form" autocomplete="off">
+          <label class="field" id="field-a">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            <input id="input-a" type="search" placeholder="MrBeast, @handle, or channel URL" aria-label="Channel" required>
+          </label>
+          <span class="vs-badge">VS</span>
+          <label class="field" id="field-b">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            <input id="input-b" type="search" placeholder="Second channel" aria-label="Second channel">
+          </label>
+          <button type="submit" id="submit-btn">Search</button>
+        </form>
+        <div class="chips" id="chips" aria-label="Tracked channels"></div>
+      </section>
+
+      <main id="results" aria-live="polite"></main>
+    <div class="mpe-ad" role="complementary" aria-label="Sponsored: Machu Picchu Energy">
+      <div class="mpe-top"><span class="mpe-sym" data-no-i18n>MPE</span><span>Sponsored</span></div>
+      <div class="mpe-name" data-no-i18n data-text="MACHU PICCHU&#10;ENERGY">MACHU PICCHU
+ENERGY</div>
+      <div class="mpe-kana" data-no-i18n aria-hidden="true">マチュピチュ・エナジー</div>
+      <div class="mpe-bar" aria-hidden="true"></div>
+    </div>
+  </aside>
   <footer>Like Polling · Data via YouTube Data API · Earnings are estimates ($1–$4 per 1K views)</footer>
 
   <script src="/assets/i18n.js"></script>
@@ -404,6 +476,44 @@
       target.value = chip.dataset.q;
       if (!versus || ($('input-a').value.trim() && $('input-b').value.trim())) runSearch();
     });
+
+    // Search tab: follows the scroll position down the left edge, like a scroll indicator; opens the search drawer.
+    (() => {
+      const tab = $('search-tab'), drawer = $('search-drawer'), scrim = $('search-scrim');
+      let raf = 0, idle = 0;
+      function place() {
+        raf = 0;
+        const max = document.documentElement.scrollHeight - innerHeight;
+        const p = max > 0 ? Math.min(1, Math.max(0, scrollY / max)) : 0;
+        const top = 48, room = Math.max(0, innerHeight - tab.offsetHeight - top - 16);
+        tab.style.setProperty('--tab-y', Math.round(top + p * room) + 'px');
+      }
+      const queue = () => { if (!raf) raf = requestAnimationFrame(place); };
+      addEventListener('scroll', () => {
+        queue();
+        tab.classList.add('moving');
+        clearTimeout(idle);
+        idle = setTimeout(() => tab.classList.remove('moving'), 700);
+      }, { passive: true });
+      addEventListener('resize', queue);
+      new ResizeObserver(queue).observe(document.body);
+      place();
+      function setOpen(on) {
+        drawer.classList.toggle('open', on);
+        scrim.classList.toggle('on', on);
+        drawer.inert = !on;
+        drawer.setAttribute('aria-hidden', String(!on));
+        tab.setAttribute('aria-expanded', String(on));
+        document.body.classList.toggle('lp-drawer-open', on);
+        if (on) setTimeout(() => $('input-a').focus({ preventScroll: true }), 330);
+        else tab.focus({ preventScroll: true });
+      }
+      tab.addEventListener('click', () => setOpen(true));
+      $('search-close').addEventListener('click', () => setOpen(false));
+      scrim.addEventListener('click', () => setOpen(false));
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && drawer.classList.contains('open') && ytNote.hidden) setOpen(false); });
+      if (new URLSearchParams(location.search).get('q')) setOpen(true);
+    })();
 
     document.addEventListener('DOMContentLoaded', () => {
       loadActiveUsers();
