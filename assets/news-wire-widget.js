@@ -555,7 +555,7 @@
 
   const W_NONE = 'No top stories for this country right now.';
   const W_TR = 'Headlines are translated into the site language by AI (Gemini); hover over a headline to see the original.';
-  const W_FOOT = "The chosen country's 10 top stories from Google News, ranked 1–10 in Google News' order, in the country's language. Only stories with the article's own photo are shown; when a country has fewer than 10, its most recent stories from other Google News sections fill the remaining places. Algeria, Ecuador and Iraq have no Google News edition, so they show Google News search results for the country's name. Refreshed 4 times a day (00:00, 06:00, 12:00 and 18:00 UTC).";
+  const W_FOOT = "The chosen country's 10 top stories from Google News, ranked 1–10 in Google News' order, in the country's language. Only stories with the article's own photo are shown; when a country has fewer than 10, its most recent stories from other Google News sections fill the remaining places. Algeria, Ecuador and Iraq have no Google News edition, so they show Google News search results for the country's name. Refreshed twice a day (00:00 and 12:00 UTC).";
   const W_SHOWN = 10;
   function setFrontLabels(world, cc, ui, counts) {
     let names = null;

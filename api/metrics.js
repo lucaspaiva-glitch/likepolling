@@ -1,11 +1,9 @@
 // api/metrics.js
 // GET /api/metrics?channel=<handle | @handle | channel URL | channel ID | name>
-// Fetches a YouTube channel's trailing-30-day metrics, generates a one-sentence
-// Gemini executive summary, and writes the result to Supabase `entity_metrics`.
-const { GoogleGenAI } = require('@google/genai');
+// Fetches a YouTube channel's trailing-30-day metrics and writes the result to
+// Supabase `entity_metrics`.
 const { createClient } = require('@supabase/supabase-js');
 
-const GEMINI_MODEL = 'gemini-3.5-flash';
 const YT_API = 'https://www.googleapis.com/youtube/v3';
 const WINDOW_DAYS = 30;
 const MAX_PLAYLIST_PAGES = 4;
@@ -108,25 +106,6 @@ function aggregate(videos) {
   };
 }
 
-async function generateSummary(ai, channel, stats) {
-  if (stats.videoCount === 0) {
-    return `${channel.snippet.title} has not uploaded any videos in the last ${WINDOW_DAYS} days, so there is no recent trend to explain.`;
-  }
-  const topList = stats.topVideos.map((v) => `- "${v.title}" (${v.views.toLocaleString('en-US')} views)`).join('\n') || '- no uploads in the last 30 days';
-  const prompt = [
-    `You are a media analyst. In ONE crisp sentence (max 30 words), explain why the YouTube channel "${channel.snippet.title}" is trending right now.`,
-    `Subscribers: ${Number(channel.statistics?.subscriberCount || 0).toLocaleString('en-US')}.`,
-    `Views on videos uploaded in the last ${WINDOW_DAYS} days: ${stats.monthlyViews.toLocaleString('en-US')} across ${stats.videoCount} uploads; comments: ${stats.commentVolume.toLocaleString('en-US')}.`,
-    `Top recent uploads:\n${topList}`,
-    'Respond with the sentence only: no preamble, quotes, or markdown.',
-  ].join('\n');
-
-  const result = await ai.models.generateContent({ model: GEMINI_MODEL, contents: prompt });
-  const text = String(result.text || '').replace(/\s+/g, ' ').replace(/^["'*\s]+|["'*\s]+$/g, '').trim();
-  if (!text) throw new Error('Gemini returned an empty summary.');
-  return text.slice(0, 300);
-}
-
 function entityIdFor(channel) {
   const custom = String(channel.snippet?.customUrl || '').replace(/^@/, '').toLowerCase();
   return /^[\w.-]+$/.test(custom) ? custom : channel.id.toLowerCase();
@@ -155,14 +134,13 @@ async function upsertEntity(db, channel) {
   return row;
 }
 
-async function insertMetric(db, entityId, stats, summary, now = new Date()) {
+async function insertMetric(db, entityId, stats, now = new Date()) {
   const row = {
     entity_id: entityId,
     platform: 'youtube',
     metric_date: now.toISOString().slice(0, 10),
     primary_volume: stats.monthlyViews,
     comment_volume: stats.commentVolume,
-    intelligence_note: summary,
   };
   const { data, error } = await db.from('entity_metrics').insert(row).select().single();
   if (error) throw new HttpError(502, `Supabase entity_metrics write failed: ${error.message}`);
@@ -181,7 +159,7 @@ function createHandler(deps = {}) {
   return async function handler(req, res) {
     const env = deps.env || process.env;
     const fetchImpl = deps.fetch || fetch;
-    const missing = ['YOUTUBE_API_KEY', 'GEMINI_API_KEY', 'SUPABASE_URL', 'SUPABASE_KEY'].filter((k) => !env[k]);
+    const missing = ['YOUTUBE_API_KEY', 'SUPABASE_URL', 'SUPABASE_KEY'].filter((k) => !env[k]);
     if (missing.length) return res.status(500).json({ error: `Server is missing env vars: ${missing.join(', ')}` });
 
     const query = parseChannelQuery(req.query?.channel);
@@ -189,23 +167,13 @@ function createHandler(deps = {}) {
 
     try {
       const db = deps.db || createSupabase(env);
-      const ai = deps.ai || new GoogleGenAI({ apiKey: env.GEMINI_API_KEY.trim() });
       const channel = await resolveChannel(query, env.YOUTUBE_API_KEY, fetchImpl);
       const uploads = channel.contentDetails?.relatedPlaylists?.uploads;
       const videos = uploads ? await fetchRecentVideos(uploads, env.YOUTUBE_API_KEY, fetchImpl) : [];
       const stats = aggregate(videos);
 
-      let summary = null;
-      let summaryError = null;
-      try {
-        summary = await generateSummary(ai, channel, stats);
-      } catch (err) {
-        summaryError = `Gemini summary failed: ${err.message}`;
-        console.error('[metrics]', summaryError);
-      }
-
       const entity = await upsertEntity(db, channel);
-      const metric = await insertMetric(db, entity.id, stats, summary);
+      const metric = await insertMetric(db, entity.id, stats);
 
       res.setHeader('Cache-Control', 'no-store');
       return res.status(200).json({
@@ -219,9 +187,6 @@ function createHandler(deps = {}) {
           totalViews: Number(channel.statistics?.viewCount || 0),
         },
         ...stats,
-        summary,
-        summaryError,
-        model: GEMINI_MODEL,
         updatedAt: new Date().toISOString(),
       });
     } catch (err) {
@@ -235,5 +200,4 @@ module.exports = createHandler();
 module.exports.createHandler = createHandler;
 module.exports.parseChannelQuery = parseChannelQuery;
 module.exports.aggregate = aggregate;
-module.exports.GEMINI_MODEL = GEMINI_MODEL;
 module.exports.createSupabase = createSupabase;

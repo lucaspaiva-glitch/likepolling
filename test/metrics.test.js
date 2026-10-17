@@ -1,8 +1,8 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { createHandler, parseChannelQuery, aggregate, GEMINI_MODEL } = require('../api/metrics');
+const { createHandler, parseChannelQuery, aggregate } = require('../api/metrics');
 
-const ENV = { YOUTUBE_API_KEY: 'yt', GEMINI_API_KEY: 'gm', SUPABASE_URL: 'https://x.supabase.co', SUPABASE_KEY: 'sk' };
+const ENV = { YOUTUBE_API_KEY: 'yt', SUPABASE_URL: 'https://x.supabase.co', SUPABASE_KEY: 'sk' };
 const CHANNEL = {
   id: 'UCX6OQ3DkcsbYNE6H8uQQuVA',
   snippet: { title: 'MrBeast', customUrl: '@mrbeast', thumbnails: { medium: { url: 'https://img/a.jpg' } } },
@@ -60,10 +60,6 @@ function mockDb({ insertError = null } = {}) {
   return db;
 }
 
-const mockAi = (impl) => ({ models: { generateContent: impl } });
-
-test('uses gemini-3.5-flash', () => assert.equal(GEMINI_MODEL, 'gemini-3.5-flash'));
-
 test('parseChannelQuery handles names, handles, URLs and IDs', () => {
   assert.deepEqual(parseChannelQuery('@MrBeast'), { type: 'handle', value: 'MrBeast' });
   assert.deepEqual(parseChannelQuery('https://www.youtube.com/@ishowspeed/videos'), { type: 'handle', value: 'ishowspeed' });
@@ -79,26 +75,24 @@ test('aggregate sums views/comments and estimates earnings', () => {
   assert.deepEqual(s.estimatedEarnings, { low: 3, high: 12, currency: 'USD' });
 });
 
-test('handler writes entity + metric row with Gemini summary', async () => {
+test('handler writes entity + metric row, with no AI summary', async () => {
   const db = mockDb();
-  let usedModel;
-  const handler = createHandler({ env: ENV, fetch: mockFetch(), db, ai: mockAi(async ({ model }) => { usedModel = model; return { text: ' "MrBeast is trending because of huge stunts." ' }; }) });
+  const handler = createHandler({ env: ENV, fetch: mockFetch(), db });
   const res = mockRes();
   await handler({ query: { channel: 'MrBeast' } }, res);
   assert.equal(res.statusCode, 200, JSON.stringify(res.body));
-  assert.equal(usedModel, 'gemini-3.5-flash');
   const metric = db.calls.insert[0];
   assert.equal(metric.table, 'entity_metrics');
   assert.equal(metric.row.entity_id, 'mrbeast');
   assert.equal(metric.row.platform, 'youtube');
   assert.equal(metric.row.primary_volume, 4000);
   assert.equal(metric.row.comment_volume, 40);
-  assert.equal(metric.row.intelligence_note, 'MrBeast is trending because of huge stunts.');
+  assert.equal('intelligence_note' in metric.row, false);
   assert.equal(db.calls.upsert[0].row.category, 'creators');
-  assert.equal(res.body.summaryError, null);
+  assert.equal('summary' in res.body, false);
 });
 
-test('channels with no recent uploads get a factual note without calling Gemini', async () => {
+test('channels with no recent uploads record zero views', async () => {
   const db = mockDb();
   const old = new Date(Date.now() - 60 * 864e5).toISOString();
   const fetchImpl = async (url) => {
@@ -108,28 +102,15 @@ test('channels with no recent uploads get a factual note without calling Gemini'
     if (path === 'playlistItems') return json({ items: [{ contentDetails: { videoId: 'v9', videoPublishedAt: old } }] });
     throw new Error('unexpected ' + url);
   };
-  let geminiCalled = false;
-  const handler = createHandler({ env: ENV, fetch: fetchImpl, db, ai: mockAi(async () => { geminiCalled = true; return { text: 'x' }; }) });
+  const handler = createHandler({ env: ENV, fetch: fetchImpl, db });
   const res = mockRes();
   await handler({ query: { channel: 'MrBeast' } }, res);
   assert.equal(res.statusCode, 200, JSON.stringify(res.body));
-  assert.equal(geminiCalled, false);
   assert.equal(db.calls.insert[0].row.primary_volume, 0);
-  assert.match(db.calls.insert[0].row.intelligence_note, /not uploaded any videos in the last 30 days/);
-});
-
-test('Gemini failure still writes metrics and reports the error', async () => {
-  const db = mockDb();
-  const handler = createHandler({ env: ENV, fetch: mockFetch(), db, ai: mockAi(async () => { throw new Error('quota'); }) });
-  const res = mockRes();
-  await handler({ query: { channel: 'MrBeast' } }, res);
-  assert.equal(res.statusCode, 200);
-  assert.equal(db.calls.insert[0].row.intelligence_note, null);
-  assert.match(res.body.summaryError, /quota/);
 });
 
 test('Supabase write errors surface as 502, not silently', async () => {
-  const handler = createHandler({ env: ENV, fetch: mockFetch(), db: mockDb({ insertError: { message: 'permission denied' } }), ai: mockAi(async () => ({ text: 'ok' })) });
+  const handler = createHandler({ env: ENV, fetch: mockFetch(), db: mockDb({ insertError: { message: 'permission denied' } }) });
   const res = mockRes();
   await handler({ query: { channel: 'MrBeast' } }, res);
   assert.equal(res.statusCode, 502);
@@ -142,14 +123,14 @@ test('missing env vars and empty query are rejected', async () => {
   assert.equal(res.statusCode, 500);
   assert.match(res.body.error, /SUPABASE_KEY/);
   res = mockRes();
-  await createHandler({ env: ENV, db: mockDb(), ai: mockAi(async () => ({})) })({ query: {} }, res);
+  await createHandler({ env: ENV, db: mockDb() })({ query: {} }, res);
   assert.equal(res.statusCode, 400);
 });
 
 test('malformed SUPABASE_URL returns a JSON error instead of crashing', async () => {
   for (const bad of ['"https://x.supabase.co"', 'SUPABASE_URL=https://x.supabase.co', 'x.supabase.co']) {
     const res = mockRes();
-    await createHandler({ env: { ...ENV, SUPABASE_URL: bad }, ai: mockAi(async () => ({})) })({ query: { channel: 'MrBeast' } }, res);
+    await createHandler({ env: { ...ENV, SUPABASE_URL: bad } })({ query: { channel: 'MrBeast' } }, res);
     assert.equal(res.statusCode, 500);
     assert.match(res.body.error, /SUPABASE_URL is malformed/);
   }

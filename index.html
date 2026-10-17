@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Like Polling | YouTube Channel Intelligence</title>
-  <meta name="description" content="Search any YouTube channel to see monthly views, comment volume, estimated earnings, and an AI summary of why it's trending.">
+  <meta name="description" content="Search any YouTube channel to see monthly views, comment volume, and estimated earnings.">
   <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2028%2028%22%3E%3Crect%20width%3D%2228%22%20height%3D%2228%22%20rx%3D%227%22%20fill%3D%22%23b0000e%22/%3E%3Cpolyline%20points%3D%225%2C21%208%2C19%2010.5%2C20.2%2013.5%2C16.5%2015.5%2C17.6%2018.5%2C12.5%2020.5%2C13.6%2023%2C6%22%20fill%3D%22none%22%20stroke%3D%22white%22%20stroke-width%3D%222.4%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22/%3E%3C/svg%3E">
   <link rel="preload" href="/assets/fonts/inter-var-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/assets/fonts/fonts.css">
@@ -128,9 +128,6 @@
     .metric .value { font-size: 26px; font-weight: 700; letter-spacing: -.035em; margin-top: 8px; white-space: nowrap; font-variant-numeric: tabular-nums; }
     .metric .hint { font-size: 12px; color: var(--muted); margin-top: 2px; }
     .lead-tag { background: var(--red); color: #fff; font-size: 8.5px; font-weight: 700; padding: 2px 6px; border-radius: 999px; letter-spacing: .1em; }
-    .summary { margin-top: 24px; padding: 16px 18px; border-left: 2px solid var(--red); background: var(--red-soft); border-radius: 0 10px 10px 0; font-size: 14.5px; line-height: 1.6; color: #262626; }
-    .summary .tag { display: block; font-size: 10px; font-weight: 700; letter-spacing: .14em; color: var(--red); text-transform: uppercase; margin-bottom: 4px; }
-    .summary.empty { color: var(--muted); font-style: italic; }
     .notice { margin-top: 14px; font-size: 12px; color: var(--red-dark); }
     .card-foot { margin-top: 16px; font-size: 12px; color: var(--muted); }
     @media (max-width: 520px) { .metrics { grid-template-columns: 1fr; } }
@@ -170,7 +167,7 @@
     <section class="nw nw-front" id="news-front" aria-label="World news"></section>
     <section class="hero">
       <h1>Search any <em>YouTube</em> channel.</h1>
-      <p>Monthly views, comment volume, estimated earnings, and an AI read on why it's trending.</p>
+      <p>Monthly views, comment volume and estimated earnings.</p>
 
       <div class="mode" role="group" aria-label="Mode">
         <button type="button" id="mode-single" aria-pressed="true">Single</button>
@@ -198,7 +195,7 @@
     <section id="news-wire" data-supabase-url="https://iyhaoagslsrwtkcrxylp.supabase.co" data-supabase-key="sb_publishable_ZnV9HrtfDqeKlBftnDxH2Q_YK6XWJTp"></section>
   </div>
 
-  <footer>Like Polling · Data via YouTube Data API · Summaries by Gemini · Earnings are estimates ($1–$4 per 1K views)</footer>
+  <footer>Like Polling · Data via YouTube Data API · Earnings are estimates ($1–$4 per 1K views)</footer>
 
   <script src="/assets/i18n.js"></script>
   <script>
@@ -302,7 +299,7 @@
         onStatus('Loading from database…');
         entity = (await getEntity(body.entity.id)) || body.entity;
         metric = (await latestMetric(entity.id)) || body.metric;
-        return { entity, metric, warning: body.summaryError };
+        return { entity, metric };
       } catch (err) {
         console.error('Metrics service error:', err);
         if (metric) return { entity, metric, warning: `Showing cached data — live refresh failed (${err.message}).` };
@@ -315,7 +312,6 @@
       return `<article class="card skeleton">
         <div class="card-head"><div class="avatar bar"></div><div style="flex:1"><div class="bar" style="height:18px;width:45%"></div><div class="bar" style="height:12px;width:28%;margin-top:8px"></div></div></div>
         <div class="metrics">${'<div class="metric"><div class="bar" style="height:10px;width:60%"></div><div class="bar" style="height:26px;width:80%;margin-top:10px"></div></div>'.repeat(3)}</div>
-        <div class="bar" style="height:52px;margin-top:22px"></div>
         <div class="status"><span class="spinner"></span><span class="status-text">${esc(label)}</span></div>
       </article>`;
     }
@@ -345,9 +341,6 @@
           <div class="metric ${leads.comments ? 'lead' : ''}"><div class="label">Comments ${tag('comments')}</div><div class="value">${fmt(metric?.comment_volume)}</div><div class="hint">Last 30 days</div></div>
           <div class="metric ${leads.views ? 'lead' : ''}"><div class="label">Est. earnings ${tag('views')}</div><div class="value">$${fmt(e.low)}–${fmt(e.high)}</div><div class="hint">Per month, USD</div></div>
         </div>
-        ${metric?.intelligence_note
-          ? `<div class="summary"><span class="tag">AI executive summary</span>${esc(metric.intelligence_note)}</div>`
-          : '<div class="summary empty">AI summary unavailable for this snapshot.</div>'}
         ${warning ? `<div class="notice">${esc(warning)}</div>` : ''}
         <div class="card-foot">Updated ${esc(updated)}</div>
       </article>`;
