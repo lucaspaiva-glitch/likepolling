@@ -145,14 +145,38 @@
     footer { border-top: 1px solid var(--line); padding: 22px 0 34px; font-size: 11.5px; color: #8a8a8a; text-align: center; letter-spacing: .01em; }
 
     /* Search tab: rides the left edge with the scroll position and opens the search drawer. */
-    .lp-tab { position: fixed; left: 0; top: 0; z-index: 60; display: flex; flex-direction: column; align-items: center; gap: 10px; width: 32px; padding: 14px 0; border: 1px solid rgba(255,255,255,.12); border-left: 0; border-radius: 0 8px 8px 0; background: linear-gradient(180deg, #8a000c 0%, #4a0007 100%); color: #fff; cursor: pointer; box-shadow: 0 8px 24px -10px rgba(60,0,6,.7), inset 0 1px 0 rgba(255,255,255,.14); transform: translateY(var(--tab-y, 120px)); transition: width .2s, background .2s, box-shadow .3s, opacity .25s; will-change: transform; }
-    .lp-tab span { writing-mode: vertical-rl; transform: rotate(180deg); font: 600 11px/1 ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: .14em; text-transform: uppercase; white-space: nowrap; }
-    .lp-tab svg { flex: none; }
-    .lp-tab:hover, .lp-tab:focus-visible { width: 38px; background: linear-gradient(180deg, #a3000f 0%, #5a0008 100%); outline: none; }
-    .lp-tab:focus-visible { box-shadow: 0 0 0 3px var(--red-ring), 0 8px 24px -10px rgba(60,0,6,.7); }
-    .lp-tab.moving { box-shadow: 0 0 18px -2px rgba(194,24,36,.55), 0 8px 24px -10px rgba(60,0,6,.7), inset 0 1px 0 rgba(255,255,255,.14); }
+    .lp-rail { position: fixed; left: 0; top: 0; z-index: 60; display: grid; grid-auto-rows: 1fr; gap: 8px; transform: translateY(var(--tab-y, 120px)); transition: opacity .25s; will-change: transform; }
+    .lp-tab { position: relative; isolation: isolate; overflow: hidden; display: flex; flex-direction: column; align-items: center; gap: 10px; width: 32px; padding: 12px 0; border: 1px solid rgba(255,40,60,.38); border-left: 0; border-radius: 0 6px 6px 0; background: linear-gradient(90deg, #050304 0%, #12050a 60%, #1f070d 100%); color: #ff2a3c; cursor: pointer; box-shadow: 0 0 18px -6px rgba(255,20,40,.5), 0 8px 24px -12px rgba(0,0,0,.6); transition: width .2s, box-shadow .3s, color .2s; }
+    .lp-tab::before { content: ''; position: absolute; inset: 0; z-index: 2; pointer-events: none; background: repeating-linear-gradient(90deg, rgba(255,255,255,.045) 0 1px, transparent 1px 3px); }
+    .lp-tab::after { content: ''; position: absolute; inset: -60%; z-index: 1; pointer-events: none; opacity: .12; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); animation: mpe-static .5s steps(4) infinite; }
+    .lp-tab > * { position: relative; z-index: 3; flex: none; }
+    .lp-tab span { writing-mode: vertical-rl; transform: rotate(180deg); font: 600 11px/1 ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: .14em; text-transform: uppercase; white-space: nowrap; text-shadow: 0 0 5px rgba(255,30,50,.75), 0 0 14px rgba(255,0,30,.45); }
+    .lp-tab:hover, .lp-tab:focus-visible, .lp-tab[aria-expanded="true"] { width: 38px; color: #ff4655; box-shadow: 0 0 26px -4px rgba(255,20,40,.7), 0 8px 24px -12px rgba(0,0,0,.6); outline: none; }
+    .lp-tab:focus-visible { border-color: #ff4655; }
+    .lp-rail.moving .lp-tab { box-shadow: 0 0 24px -3px rgba(255,20,40,.65), 0 8px 24px -12px rgba(0,0,0,.6); }
+    .lp-ad-tab { gap: 8px; padding-top: 6px; }
+    .lp-ad-tab span { font-weight: 800; letter-spacing: .1em; }
+    .lp-ad-tab .mpe-glitch::before, .lp-ad-tab .mpe-glitch::after { display: none; }
+    .lp-ad-tab .mpe-glitch { animation: mpe-tab-glitch 3.4s steps(1) infinite, mpe-flicker 7s infinite; }
+    @keyframes mpe-tab-glitch { 0%, 86%, 100% { transform: rotate(180deg); } 88% { transform: rotate(180deg) translateX(-1.5px); text-shadow: -2px 0 rgba(0,235,255,.75), 2px 0 rgba(255,0,70,.9); } 91% { transform: rotate(180deg) translateX(1.5px); text-shadow: 2px 0 rgba(0,235,255,.75), -2px 0 rgba(255,0,70,.9); } 94% { transform: rotate(180deg); text-shadow: 0 0 8px rgba(255,30,50,.9); } }
+    .lp-ad-tab small { margin-top: auto; padding: 1px 3px; border: 1px solid rgba(255,59,74,.55); border-radius: 2px; font: 700 8px/1.2 ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: .1em; color: rgba(255,200,205,.7); }
+    .mpe-can { overflow: visible; filter: drop-shadow(0 0 4px rgba(255,30,50,.55)); }
+    .mpe-can-shake { transform-box: fill-box; transform-origin: 50% 100%; animation: mpe-can-shake 5s ease-in-out infinite; }
+    .mpe-can-pull { transform-box: fill-box; transform-origin: 0% 50%; animation: mpe-can-pull 5s ease-in-out infinite; }
+    .mpe-can-fizz circle { opacity: 0; animation: mpe-can-fizz 5s ease-out infinite; }
+    .mpe-can-fizz circle:nth-child(2) { animation-delay: .12s; }
+    .mpe-can-fizz circle:nth-child(3) { animation-delay: .24s; }
+    @keyframes mpe-can-shake { 0%, 8%, 34%, 100% { transform: none; } 11% { transform: rotate(-9deg); } 14% { transform: rotate(8deg); } 17% { transform: rotate(-7deg); } 20% { transform: rotate(6deg); } 23% { transform: rotate(-4deg); } 26% { transform: rotate(3deg); } 30% { transform: translateY(-1.5px); } }
+    @keyframes mpe-can-pull { 0%, 32%, 88%, 100% { transform: none; } 38%, 80% { transform: rotate(-70deg) translateY(-.4px); } }
+    @keyframes mpe-can-fizz { 0%, 38% { opacity: 0; transform: translateY(0); } 44% { opacity: .95; } 70%, 100% { opacity: 0; transform: translateY(-6px); } }
+    .mpe-glitch { position: relative; }
+    .mpe-glitch::before, .mpe-glitch::after { content: attr(data-text); position: absolute; inset: 0; white-space: inherit; text-shadow: none; pointer-events: none; }
+    .mpe-glitch::before { color: rgba(0,235,255,.6); animation: mpe-glitch-a 3.4s steps(1) infinite; }
+    .mpe-glitch::after { color: rgba(255,0,70,.95); animation: mpe-glitch-b 2.9s steps(1) infinite; }
+    .mpe-pop { position: fixed; left: 46px; top: var(--pop-y, 120px); z-index: 61; width: 200px; }
+    .mpe-pop[hidden] { display: none; }
     body.lp-drawer-open { overflow: hidden; }
-    body.lp-drawer-open .lp-tab { opacity: 0; pointer-events: none; }
+    body.lp-drawer-open .lp-rail, body.lp-drawer-open .mpe-pop { opacity: 0; pointer-events: none; }
     .lp-scrim { position: fixed; inset: 0; z-index: 70; background: rgba(20,0,4,.42); -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px); opacity: 0; pointer-events: none; transition: opacity .25s; }
     .lp-scrim.on { opacity: 1; pointer-events: auto; }
     .lp-drawer { position: fixed; top: 0; bottom: 0; left: 0; z-index: 80; width: min(820px, calc(100vw - 36px)); box-sizing: border-box; padding: 0 32px 32px; overflow-y: auto; overscroll-behavior: contain; background: #fff; border-right: 3px solid var(--red-dark); box-shadow: 24px 0 60px -20px rgba(60,0,6,.45); transform: translateX(-105%); visibility: hidden; transition: transform .32s cubic-bezier(.2,.8,.2,1), visibility 0s .32s; }
@@ -163,11 +187,14 @@
     .lp-drawer .hero h1 { font-size: clamp(28px, 4.2vw, 42px); }
     .lp-drawer #results { margin: 28px 0 32px; }
     .lp-drawer #results.two .metrics { grid-template-columns: 1fr; }
-    .lp-drawer > .mpe-ad { max-width: 340px; margin: 8px auto 0; }
     @media (max-width: 560px) {
-      .lp-tab { width: 24px; padding: 10px 0; gap: 8px; }
-      .lp-tab span { font-size: 9.5px; }
-      .lp-tab svg { width: 13px; height: 13px; }
+      .lp-tab { width: 26px; padding: 10px 0; gap: 7px; }
+      .lp-tab span { font-size: 9px; letter-spacing: .1em; }
+      .lp-tab > svg:not(.mpe-can) { width: 13px; height: 13px; }
+      .lp-ad-tab { padding-top: 5px; }
+      .mpe-can { width: 15px; height: 29px; }
+      .lp-ad-tab small { font-size: 7px; padding: 1px 2px; }
+      .mpe-pop { left: 34px; }
       .lp-drawer { padding: 0 18px 24px; }
     }
 
@@ -179,9 +206,6 @@
     .mpe-top { position: relative; z-index: 3; display: flex; justify-content: space-between; align-items: center; font-size: 9.5px; letter-spacing: .16em; text-transform: uppercase; color: rgba(255,200,205,.6); }
     .mpe-sym { padding: 2px 5px; border: 1px solid rgba(255,59,74,.55); border-radius: 2px; color: #ff3b4a; letter-spacing: .1em; }
     .mpe-name { position: relative; z-index: 3; margin: 20px 0 8px; white-space: pre-line; font: 800 21px/1.04 system-ui, -apple-system, 'Segoe UI', sans-serif; letter-spacing: .05em; color: #ff2a3c; text-shadow: 0 0 6px rgba(255,30,50,.8), 0 0 18px rgba(255,0,30,.55), 0 0 42px rgba(255,0,30,.35); animation: mpe-flicker 7s infinite; }
-    .mpe-name::before, .mpe-name::after { content: attr(data-text); position: absolute; inset: 0; white-space: pre-line; text-shadow: none; pointer-events: none; }
-    .mpe-name::before { color: rgba(0,235,255,.6); animation: mpe-glitch-a 3.4s steps(1) infinite; }
-    .mpe-name::after { color: rgba(255,0,70,.95); animation: mpe-glitch-b 2.9s steps(1) infinite; }
     @keyframes mpe-glitch-a { 0%, 86%, 100% { clip-path: inset(0 0 100% 0); transform: none; } 88% { clip-path: inset(8% 0 58% 0); transform: translate(-3px,-1px); } 91% { clip-path: inset(62% 0 12% 0); transform: translate(3px,1px); } 94% { clip-path: inset(34% 0 42% 0); transform: translate(-2px,0); } }
     @keyframes mpe-glitch-b { 0%, 80%, 100% { clip-path: inset(100% 0 0 0); transform: none; } 82% { clip-path: inset(48% 0 30% 0); transform: translate(3px,0); } 85% { clip-path: inset(12% 0 70% 0); transform: translate(-3px,1px); } 88% { clip-path: inset(72% 0 6% 0); transform: translate(2px,-1px); } }
     @keyframes mpe-flicker { 0%, 41%, 43%, 45%, 77%, 79%, 100% { opacity: 1; } 42%, 44%, 78% { opacity: .55; } }
@@ -189,10 +213,10 @@
     .mpe-bar { position: relative; z-index: 3; height: 2px; margin-top: 14px; overflow: hidden; background: rgba(255,42,60,.18); }
     .mpe-bar::after { content: ''; position: absolute; top: 0; bottom: 0; left: -30%; width: 30%; background: linear-gradient(90deg, transparent, #ff2a3c, transparent); animation: mpe-scan 2.4s linear infinite; }
     @keyframes mpe-scan { to { left: 100%; } }
-    .mpe-rail { position: fixed; top: 50%; left: 44px; z-index: 40; display: none; width: 168px; transform: translateY(-50%); }
-    @media (min-width: 1800px) { .mpe-rail { display: block; } }
     @media (prefers-reduced-motion: reduce) {
-      .mpe-ad::after, .mpe-name, .mpe-name::before, .mpe-name::after, .mpe-bar::after { animation: none; }
+      .mpe-ad::after, .mpe-name, .mpe-glitch::before, .mpe-glitch::after, .mpe-bar::after, .lp-tab::after, .mpe-can-shake, .mpe-can-pull, .mpe-can-fizz circle { animation: none; }
+      .mpe-glitch::before, .mpe-glitch::after { display: none; }
+      .lp-ad-tab .mpe-glitch { animation: none; }
       .lp-drawer, .lp-drawer.open, .lp-scrim { transition: none; }
     }
   </style>
@@ -223,14 +247,19 @@
   </div>
 
 
-  <button type="button" class="lp-tab" id="search-tab" aria-controls="search-drawer" aria-expanded="false"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span>Search any YouTube Channel</span></button>
-  <div class="mpe-ad mpe-rail" role="complementary" aria-label="Sponsored: Machu Picchu Energy">
+  <div class="lp-rail" id="lp-rail">
+    <button type="button" class="lp-tab" id="search-tab" aria-controls="search-drawer" aria-expanded="false"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span>Search any YouTube Channel</span></button>
+    <button type="button" class="lp-tab lp-ad-tab" id="ad-tab" aria-controls="ad-pop" aria-expanded="false" aria-label="Sponsored: Machu Picchu Energy"><svg class="mpe-can" viewBox="0 -7 20 39" width="18" height="35" aria-hidden="true"><defs><linearGradient id="mpe-can-body" x1="0" x2="1"><stop offset="0" stop-color="#4a0007"/><stop offset=".32" stop-color="#ff2a3c"/><stop offset=".55" stop-color="#c2101f"/><stop offset="1" stop-color="#2a0004"/></linearGradient><linearGradient id="mpe-can-metal" x1="0" x2="1"><stop offset="0" stop-color="#6b6b6b"/><stop offset=".42" stop-color="#f2f2f2"/><stop offset="1" stop-color="#5a5a5a"/></linearGradient></defs><g class="mpe-can-shake"><path d="M4.2 6 5.3 3.4h9.4L15.8 6Z" fill="url(#mpe-can-metal)"/><rect x="3" y="6" width="14" height="22.5" rx="2" fill="url(#mpe-can-body)"/><rect x="3.4" y="27.6" width="13.2" height="2.4" rx="1.2" fill="url(#mpe-can-metal)"/><path d="M3 11.5h14M3 23h14" stroke="rgba(0,0,0,.35)" stroke-width=".6"/><path d="M11.2 12.5 7.6 18.6h2.6l-1 4.9 3.7-6.4h-2.6Z" fill="#fff"/><g class="mpe-can-pull"><path d="M8.2 3.5h3.6" stroke="#d9d9d9" stroke-width="1.1" stroke-linecap="round"/><circle cx="12.2" cy="3.5" r=".9" fill="none" stroke="#d9d9d9" stroke-width=".6"/></g><g class="mpe-can-fizz" fill="#ffd9dc"><circle cx="9" cy="1.5" r=".9"/><circle cx="11.6" cy=".5" r=".65"/><circle cx="10.2" cy="-1" r=".55"/></g></g></svg><span class="mpe-glitch" data-no-i18n data-text="Machu Picchu Energy">Machu Picchu Energy</span><small data-no-i18n>AD</small></button>
+  </div>
+  <div class="mpe-pop" id="ad-pop" hidden>
+    <div class="mpe-ad" role="complementary" aria-label="Sponsored: Machu Picchu Energy">
       <div class="mpe-top"><span class="mpe-sym" data-no-i18n>MPE</span><span>Sponsored</span></div>
-      <div class="mpe-name" data-no-i18n data-text="MACHU PICCHU&#10;ENERGY">MACHU PICCHU
+      <div class="mpe-name mpe-glitch" data-no-i18n data-text="MACHU PICCHU&#10;ENERGY">MACHU PICCHU
 ENERGY</div>
       <div class="mpe-kana" data-no-i18n aria-hidden="true">マチュピチュ・エナジー</div>
       <div class="mpe-bar" aria-hidden="true"></div>
     </div>
+  </div>
   <div class="lp-scrim" id="search-scrim"></div>
   <aside class="lp-drawer" id="search-drawer" aria-label="Search any YouTube Channel" aria-hidden="true" inert>
     <button type="button" class="lp-drawer-x" id="search-close" aria-label="Close">&times;</button>
@@ -259,13 +288,6 @@ ENERGY</div>
       </section>
 
       <main id="results" aria-live="polite"></main>
-    <div class="mpe-ad" role="complementary" aria-label="Sponsored: Machu Picchu Energy">
-      <div class="mpe-top"><span class="mpe-sym" data-no-i18n>MPE</span><span>Sponsored</span></div>
-      <div class="mpe-name" data-no-i18n data-text="MACHU PICCHU&#10;ENERGY">MACHU PICCHU
-ENERGY</div>
-      <div class="mpe-kana" data-no-i18n aria-hidden="true">マチュピチュ・エナジー</div>
-      <div class="mpe-bar" aria-hidden="true"></div>
-    </div>
   </aside>
   <footer>Like Polling · Data via YouTube Data API · Earnings are estimates ($1–$4 per 1K views)</footer>
 
@@ -477,28 +499,43 @@ ENERGY</div>
       if (!versus || ($('input-a').value.trim() && $('input-b').value.trim())) runSearch();
     });
 
-    // Search tab: follows the scroll position down the left edge, like a scroll indicator; opens the search drawer.
+    // Left rail (search tab + sponsor tab): follows the scroll position down the left edge, like a scroll indicator.
     (() => {
-      const tab = $('search-tab'), drawer = $('search-drawer'), scrim = $('search-scrim');
+      const rail = $('lp-rail'), tab = $('search-tab'), drawer = $('search-drawer'), scrim = $('search-scrim');
+      const adTab = $('ad-tab'), adPop = $('ad-pop');
       let raf = 0, idle = 0;
+      function placePop() {
+        if (adPop.hidden) return;
+        const r = adTab.getBoundingClientRect();
+        adPop.style.setProperty('--pop-y', Math.round(Math.max(8, Math.min(r.top, innerHeight - adPop.offsetHeight - 8))) + 'px');
+      }
       function place() {
         raf = 0;
         const max = document.documentElement.scrollHeight - innerHeight;
         const p = max > 0 ? Math.min(1, Math.max(0, scrollY / max)) : 0;
-        const top = 48, room = Math.max(0, innerHeight - tab.offsetHeight - top - 16);
-        tab.style.setProperty('--tab-y', Math.round(top + p * room) + 'px');
+        const top = 48, room = Math.max(0, innerHeight - rail.offsetHeight - top - 16);
+        rail.style.setProperty('--tab-y', Math.round(top + p * room) + 'px');
+        placePop();
       }
       const queue = () => { if (!raf) raf = requestAnimationFrame(place); };
       addEventListener('scroll', () => {
         queue();
-        tab.classList.add('moving');
+        rail.classList.add('moving');
         clearTimeout(idle);
-        idle = setTimeout(() => tab.classList.remove('moving'), 700);
+        idle = setTimeout(() => rail.classList.remove('moving'), 700);
       }, { passive: true });
       addEventListener('resize', queue);
       new ResizeObserver(queue).observe(document.body);
       place();
+      function setAd(on) {
+        adPop.hidden = !on;
+        adTab.setAttribute('aria-expanded', String(on));
+        placePop();
+      }
+      adTab.addEventListener('click', (e) => { e.stopPropagation(); setAd(adPop.hidden); });
+      document.addEventListener('click', (e) => { if (!adPop.hidden && !adPop.contains(e.target)) setAd(false); });
       function setOpen(on) {
+        setAd(false);
         drawer.classList.toggle('open', on);
         scrim.classList.toggle('on', on);
         drawer.inert = !on;
@@ -511,7 +548,11 @@ ENERGY</div>
       tab.addEventListener('click', () => setOpen(true));
       $('search-close').addEventListener('click', () => setOpen(false));
       scrim.addEventListener('click', () => setOpen(false));
-      document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && drawer.classList.contains('open') && ytNote.hidden) setOpen(false); });
+      document.addEventListener('keydown', (e) => {
+        if (e.key !== 'Escape' || !ytNote.hidden) return;
+        if (!adPop.hidden) { setAd(false); adTab.focus({ preventScroll: true }); }
+        else if (drawer.classList.contains('open')) setOpen(false);
+      });
       if (new URLSearchParams(location.search).get('q')) setOpen(true);
     })();
 
