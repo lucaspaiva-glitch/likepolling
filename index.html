@@ -762,11 +762,33 @@ ENERGY</div>
       new ResizeObserver(queue).observe(document.body);
       place();
       function setAd(on) {
+        if (!on) hoverOpen = false;
         adPop.hidden = !on;
         adTab.setAttribute('aria-expanded', String(on));
         placePop();
       }
-      adTab.addEventListener('click', (e) => { e.stopPropagation(); setAd(adPop.hidden); });
+      // Computers: resting the mouse on the sponsor tab opens the card; it closes once the mouse leaves
+      // both. A click pins it open. Touch screens keep tap-to-open.
+      let hoverOpen = false, hoverT = 0;
+      if (matchMedia('(hover: hover) and (pointer: fine)').matches) {
+        const enter = (e) => {
+          if (e.pointerType !== 'mouse') return;
+          clearTimeout(hoverT);
+          if (adPop.hidden) hoverT = setTimeout(() => { hoverOpen = true; setAd(true); }, 150);
+        };
+        const leave = (e) => {
+          if (e.pointerType !== 'mouse') return;
+          clearTimeout(hoverT);
+          if (hoverOpen) hoverT = setTimeout(() => { if (hoverOpen) { hoverOpen = false; setAd(false); } }, 350);
+        };
+        [adTab, adPop].forEach((el) => { el.addEventListener('pointerenter', enter); el.addEventListener('pointerleave', leave); });
+      }
+      adTab.addEventListener('click', (e) => {
+        e.stopPropagation();
+        clearTimeout(hoverT);
+        if (hoverOpen) { hoverOpen = false; setAd(true); return; }
+        setAd(adPop.hidden);
+      });
       document.addEventListener('click', (e) => { if (!adPop.hidden && !adPop.contains(e.target)) setAd(false); });
       function setOpen(on) {
         setAd(false);
