@@ -55,10 +55,14 @@
   function show(rows) {
     const top = Math.max(...rows.map((r) => Number(r.view_count) || 0), 1);
     body.innerHTML = `
-      <table class="ymu-table">
+      <div class="ymu-cards">${rows.slice(0, 5).map((r) => `<a class="ymu-card" href="https://www.youtube.com/watch?v=${encodeURIComponent(r.video_id)}" target="_blank" rel="noopener">
+            <span class="ymu-cth"><img src="https://i.ytimg.com/vi/${encodeURIComponent(r.video_id)}/mqdefault.jpg" alt="" loading="lazy"><b class="ymu-crk">${String(r.rank).padStart(2, '0')}</b><i class="ymu-cvw">${fmt(r.view_count)}</i></span>
+            <span class="ymu-ctt" title="${esc(r.title)}">${esc(r.title)}</span>
+            <span class="ymu-cch">${esc(r.channel_title)}</span></a>`).join('')}</div>
+        ${rows.length > 5 ? `<table class="ymu-table">
         <colgroup><col class="ymu-rank-col"><col><col class="ymu-vol-col"><col class="ymu-likes-col"></colgroup>
         <thead><tr><th>#</th><th>Track</th><th class="n">Views</th><th class="n ymu-likes">Likes</th></tr></thead>
-        <tbody>${rows.map((r) => `
+        <tbody>${rows.slice(5).map((r) => `
           <tr>
             <td><span class="ymu-rank">${String(r.rank).padStart(2, '0')}</span></td>
             <td><a class="ymu-video" href="https://www.youtube.com/watch?v=${encodeURIComponent(r.video_id)}" target="_blank" rel="noopener">
@@ -69,7 +73,7 @@
             <td class="n ymu-likes"><span class="ymu-num">${fmt(r.like_count)}</span></td>
           </tr>`).join('')}
         </tbody>
-      </table>`;
+      </table>` : ''}`;
     asof.textContent = `As of ${new Date(rows[0].fetched_at).toISOString().slice(11, 16)} UTC`;
   }
 

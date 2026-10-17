@@ -65,10 +65,14 @@
       }
       const top = Math.max(...rows.map((r) => Number(r.view_count) || 0), 1);
       body.innerHTML = `
-        <table class="ytt-table">
+        <div class="ytt-cards">${rows.slice(0, 5).map((r) => `<a class="ytt-card" href="https://www.youtube.com/watch?v=${encodeURIComponent(r.video_id)}" target="_blank" rel="noopener">
+            <span class="ytt-cth"><img src="https://i.ytimg.com/vi/${encodeURIComponent(r.video_id)}/mqdefault.jpg" alt="" loading="lazy"><b class="ytt-crk">${String(r.rank).padStart(2, '0')}</b><i class="ytt-cvw">${fmt(r.view_count)}</i></span>
+            <span class="ytt-ctt" title="${esc(r.title)}">${esc(r.title)}</span>
+            <span class="ytt-cch">${esc(r.channel_title)}</span></a>`).join('')}</div>
+        ${rows.length > 5 ? `<table class="ytt-table">
           <colgroup><col class="ytt-rank-col"><col><col class="ytt-vol-col"><col class="ytt-likes-col"></colgroup>
           <thead><tr><th>#</th><th>Video</th><th class="n">Views</th><th class="n ytt-likes">Likes</th></tr></thead>
-          <tbody>${rows.map((r) => `
+          <tbody>${rows.slice(5).map((r) => `
             <tr>
               <td><span class="ytt-rank">${String(r.rank).padStart(2, '0')}</span></td>
               <td><a class="ytt-video" href="https://www.youtube.com/watch?v=${encodeURIComponent(r.video_id)}" target="_blank" rel="noopener">
@@ -79,7 +83,7 @@
               <td class="n ytt-likes"><span class="ytt-num">${fmt(r.like_count)}</span></td>
             </tr>`).join('')}
           </tbody>
-        </table>`;
+        </table>` : ''}`;
       asof.textContent = `As of ${new Date(rows[0].fetched_at).toISOString().slice(11, 16)} UTC`;
     } catch (err) {
       if (mine !== token) return;
