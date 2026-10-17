@@ -206,6 +206,11 @@
 
     /* Machu Picchu Energy (sponsored): neon red, static and scan lines. */
     .mpe-ad { --dk: #8a5d00; --mid: rgba(217,154,0,.38); position: relative; isolation: isolate; overflow: hidden; box-sizing: border-box; padding: 0 0 2px; border: 0; border-radius: 0; background: #fff; box-shadow: inset 1px 1px 0 #fff, inset -1px -1px 0 var(--dk), inset -2px -2px 0 var(--mid), 0 0 22px -6px rgba(255,186,0,.6), 3px 3px 0 rgba(0,0,0,.08); color: #d99a00; font-family: 'Lucida Console', Consolas, ui-monospace, 'SF Mono', Menlo, monospace; text-align: left; }
+    .mpe-ad { display: block; text-decoration: none; cursor: pointer; transition: box-shadow .2s; }
+    .mpe-ad:hover, .mpe-ad:focus-visible { box-shadow: inset 1px 1px 0 #fff, inset -1px -1px 0 var(--dk), inset -2px -2px 0 var(--mid), 0 0 26px -4px rgba(255,186,0,.75), 3px 3px 0 rgba(0,0,0,.08); }
+    .mpe-ad:focus-visible { outline: 2px solid rgba(217,154,0,.5); outline-offset: 2px; }
+    .mpe-url { position: relative; z-index: 3; margin: -2px 12px 10px; font: italic 900 10px/1 'Kanit', 'Arial Black', system-ui, sans-serif; letter-spacing: .06em; text-transform: uppercase; color: #d99a00; }
+    .mpe-ad:hover .mpe-url { text-decoration: underline; text-underline-offset: 2px; }
     .mpe-ad::before { content: none; }
     .mpe-ad::after { content: none; }
     @keyframes mpe-static { 0% { transform: translate(0,0); } 25% { transform: translate(-8%,4%); } 50% { transform: translate(6%,-6%); } 75% { transform: translate(-4%,8%); } 100% { transform: translate(0,0); } }
@@ -258,13 +263,14 @@
     <button type="button" class="lp-tab lp-ad-tab" id="ad-tab" aria-controls="ad-pop" aria-expanded="false" aria-label="Sponsored: Machu Picchu Energy"><svg class="mpe-can" viewBox="0 -7 20 39" width="14" height="27" aria-hidden="true"><defs><linearGradient id="mpe-can-body" x1="0" x2="1"><stop offset="0" stop-color="#b87800"/><stop offset=".3" stop-color="#ffd84a"/><stop offset=".55" stop-color="#f5b400"/><stop offset="1" stop-color="#9a6200"/></linearGradient><linearGradient id="mpe-can-band" x1="0" x2="1"><stop offset="0" stop-color="#8f0f18"/><stop offset=".32" stop-color="#ff4a55"/><stop offset=".55" stop-color="#e0232f"/><stop offset="1" stop-color="#7a0a12"/></linearGradient><linearGradient id="mpe-can-metal" x1="0" x2="1"><stop offset="0" stop-color="#7a7a7a"/><stop offset=".42" stop-color="#f4f4f4"/><stop offset="1" stop-color="#6a6a6a"/></linearGradient></defs><g class="mpe-can-shake"><path d="M4.2 6 5.3 3.4h9.4L15.8 6Z" fill="url(#mpe-can-metal)"/><rect x="3" y="6" width="14" height="22.5" rx="2" fill="url(#mpe-can-body)"/><rect x="3" y="6" width="14" height="4" fill="url(#mpe-can-band)"/><path d="M5 11.6h10M5 13.2h10" stroke="#1d1d1b" stroke-width=".9"/><circle cx="10" cy="19.4" r="3.6" fill="none" stroke="#1d1d1b" stroke-width=".7"/><path d="M7.2 21 9.4 17.4l1 1.4.9-1 1.6 3.2Z" fill="#1d1d1b"/><rect x="3.4" y="27.6" width="13.2" height="2.4" rx="1.2" fill="url(#mpe-can-metal)"/><g class="mpe-can-pull"><path d="M8.2 3.5h3.6" stroke="#d9d9d9" stroke-width="1.1" stroke-linecap="round"/><circle cx="12.2" cy="3.5" r=".9" fill="none" stroke="#bdbdbd" stroke-width=".6"/></g><g class="mpe-can-fizz" fill="#f7b500"><circle cx="9" cy="1.5" r=".9"/><circle cx="11.6" cy=".5" r=".65"/><circle cx="10.2" cy="-1" r=".55"/></g></g></svg><span class="mpe-glitch" data-no-i18n data-text="Machu Picchu Energy">Machu Picchu Energy</span><small data-no-i18n>AD</small></button>
   </div>
   <div class="mpe-pop" id="ad-pop" hidden>
-    <div class="mpe-ad" role="complementary" aria-label="Sponsored: Machu Picchu Energy">
+    <a class="mpe-ad" href="https://machupicchu.energy/" target="_blank" rel="sponsored noopener" aria-label="Sponsored: Machu Picchu Energy (opens machupicchu.energy in a new tab)">
       <div class="mpe-top"><span class="mpe-sym" data-no-i18n>MPE</span><span>Sponsored</span></div>
       <div class="mpe-name" data-no-i18n data-text="MACHU PICCHU&#10;ENERGY">MACHU PICCHU
 ENERGY</div>
       <div class="mpe-kana" data-no-i18n aria-hidden="true">マチュピチュ・エナジー</div>
       <div class="mpe-bar" aria-hidden="true"></div>
-    </div>
+      <div class="mpe-url" data-no-i18n>machupicchu.energy <span aria-hidden="true">↗</span></div>
+    </a>
   </div>
   <div class="lp-scrim" id="search-scrim"></div>
   <aside class="lp-drawer" id="search-drawer" aria-label="Search any YouTube Channel" aria-hidden="true" inert>
