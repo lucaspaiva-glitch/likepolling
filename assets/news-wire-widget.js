@@ -61,7 +61,7 @@
   const worldCache = {};
   function loadWorld(cc) {
     if (!worldCache[cc]) {
-      worldCache[cc] = fetch(`${base}/rest/v1/news_world?select=*&country_code=eq.${encodeURIComponent(cc)}&image_url=like.https%3A%2F%2F*&order=rank.asc&limit=40`, { headers })
+      worldCache[cc] = fetch(`${base}/rest/v1/news_world?select=*&country_code=eq.${encodeURIComponent(cc)}&image_url=like.https%3A%2F%2F*&order=rank.asc&limit=12`, { headers })
         .then((r) => (r.ok ? r.json() : []))
         .catch(() => []);
     }
@@ -429,7 +429,7 @@
         return;
       }
       const from = st.shown;
-      st.shown = Math.min(st.items.length, st.shown + FEED_PAGE);
+      st.shown = Math.min(st.items.length, st.shown + st.page);
       sentinel.insertAdjacentHTML('beforebegin', st.items.slice(from, st.shown).map((r, i) => {
         const n = from + i;
         const note = n === st.others ? tr('From other languages') : '';
@@ -536,7 +536,15 @@
     if (!img.classList || !img.classList.contains('nw-img')) return;
     const card = img.closest('.nw-card');
     // World News shows only stories with a photo: a headline whose photo the browser can't load is dropped.
-    if (!wPick.hidden && card.classList.contains('nw-row') && front.contains(card)) { card.remove(); if (nearEnd()) moreFeed(); return; }
+    if (!wPick.hidden && card.classList.contains('nw-row') && front.contains(card)) {
+      card.remove();
+      const st = feedState;
+      if (st && st.spare.length) {
+        (feed.querySelector('.nw-feed-end') || sentinel).insertAdjacentHTML('beforebegin', rowHtml(st.spare.shift(), st.lang, st.shown, ''));
+        watch(feed);
+      }
+      return;
+    }
     card.classList.add('nw-noimg');
     img.remove();
   };
@@ -547,16 +555,18 @@
 
   const W_NONE = 'No top stories for this country right now.';
   const W_TR = 'Headlines are translated into the site language by AI (Gemini); hover over a headline to see the original.';
-  const W_FOOT = "Top stories from Google News for the chosen country, in the country's language. Only stories with the article's own photo are shown; when a country has fewer than 20, its most recent stories from other Google News sections follow the top stories. Algeria, Ecuador and Iraq have no Google News edition, so they show Google News search results for the country's name. Refreshed hourly.";
+  const W_FOOT = "The chosen country's 10 top stories from Google News, ranked 1–10 in Google News' order, in the country's language. Only stories with the article's own photo are shown; when a country has fewer than 10, its most recent stories from other Google News sections fill the remaining places. Algeria, Ecuador and Iraq have no Google News edition, so they show Google News search results for the country's name. Refreshed 4 times a day (00:00, 06:00, 12:00 and 18:00 UTC).";
+  const W_SHOWN = 10;
   function setFrontLabels(world, cc, ui, counts) {
     let names = null;
     try { names = new Intl.DisplayNames([ui === 'pt' ? 'pt-BR' : ui], { type: 'region' }); } catch (e) { /* codes only */ }
     const name = (c) => (names ? names.of(c) : c);
     fLabel.title.el.textContent = world ? tr('World News Wire') : tr(fLabel.title.creators);
     fLabel.sym.el.textContent = world ? 'WORLD·WIRE' : fLabel.sym.creators;
-    fLabel.sub.el.textContent = world ? `${tr('Top stories')} · ${name(cc)}` : tr(fLabel.sub.creators);
+    fLabel.sub.el.textContent = world ? `${tr('Top 10')} · ${name(cc)}` : tr(fLabel.sub.creators);
     fLabel.foot.el.textContent = world ? `${tr(W_FOOT)} ${tr(W_TR)}` : tr(fLabel.foot.creators);
     wPick.hidden = !world;
+    front.classList.toggle('nw-ranked', world);
     if (!world) return;
     wSel.innerHTML = WORLD_CC.map((c) => ({ c, n: name(c) })).sort((a, b) => a.n.localeCompare(b.n, ui))
       .map((o) => `<option value="${o.c}"${counts[o.c] || o.c === cc ? '' : ' disabled'}>${esc(o.n)}</option>`).join('');
@@ -604,7 +614,9 @@
       const own = rows[0].lang || lang;
       feedState = {
         lang,
-        items: rows.slice(),
+        items: world ? rows.slice(0, W_SHOWN) : rows.slice(),
+        spare: world ? rows.slice(W_SHOWN) : [],
+        page: world ? W_SHOWN : FEED_PAGE,
         shown: 0,
         seen: new Set(rows.map((r) => r.link)),
         queue: world ? [] : ['en', ...LANGS].filter((l, i, a) => l !== own && a.indexOf(l) === i),

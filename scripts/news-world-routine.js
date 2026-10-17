@@ -11,13 +11,14 @@ const IMAGE_CONCURRENCY = 6;
 // The site shows only stories with their own photo. Countries with fewer than
 // PHOTO_TARGET top stories with a photo are topped up with recent stories from
 // the country's other Google News sections (or more search results).
-const PHOTO_TARGET = 20;
+const PHOTO_TARGET = 12; // the site shows 10, the rest stand in for photos a browser can't load
 const SECTIONS = ['NATION', 'WORLD', 'BUSINESS', 'ENTERTAINMENT', 'SPORTS', 'TECHNOLOGY'];
 const SECTION_DEPTH = 15;
 const TOPUP_LOOKUPS_PER_RUN = 400;
 // Headlines are translated once into every site language and reused afterwards.
 const SITE_LANGS = ['en', 'pt', 'pt-PT', 'es', 'de', 'ru', 'uk', 'ko', 'ja'];
-const GEMINI_MODEL = 'gemini-3.5-flash';
+// Cheapest suitable models first; the next is used if one is retired.
+const GEMINI_MODELS = ['gemini-3.1-flash-lite', 'gemini-3.5-flash-lite'];
 const TRANSLATE_BATCH = 40;
 const TRANSLATIONS_PER_RUN = 800;
 
@@ -146,17 +147,31 @@ async function addImages(rows, stored, deps) {
 function geminiTranslator(apiKey) {
   const { GoogleGenAI } = require('@google/genai');
   const ai = new GoogleGenAI({ apiKey: apiKey.trim() });
+  let m = 0;
+  let thinking = true;
   return async (titles) => {
     const prompt = `Translate each news headline below into these languages: en (English), pt (Brazilian Portuguese), pt-PT (European Portuguese), es (Spanish), de (German), ru (Russian), uk (Ukrainian), ko (Korean), ja (Japanese). Keep names, numbers and meaning exact; do not add or drop information. Reply with only a JSON array with one object per headline, in the same order, each with exactly the keys ${SITE_LANGS.map((l) => `"${l}"`).join(', ')}.\n\n${JSON.stringify(titles)}`;
-    const res = await ai.models.generateContent({ model: GEMINI_MODEL, contents: prompt, config: { responseMimeType: 'application/json' } });
+    let res;
+    for (;;) {
+      const config = { responseMimeType: 'application/json', ...(thinking ? { thinkingConfig: { thinkingLevel: 'MINIMAL' } } : {}) };
+      try {
+        res = await ai.models.generateContent({ model: GEMINI_MODELS[m], contents: prompt, config });
+        break;
+      } catch (err) {
+        const msg = String(err && err.message);
+        if (thinking && /thinking/i.test(msg)) thinking = false;
+        else if (m < GEMINI_MODELS.length - 1 && /NOT_FOUND|\b404\b/.test(msg)) m++;
+        else throw err;
+      }
+    }
     const out = JSON.parse(res.text);
     if (!Array.isArray(out) || out.length !== titles.length) throw new Error('translation count mismatch');
     return out;
   };
 }
 
-// Stored translations are reused; new headlines shown on the site (those with a
-// photo) are translated in batches, top stories first.
+// Stored translations are reused; new headlines the site can show (each country's
+// first PHOTO_TARGET with a photo) are translated in batches, top stories first.
 async function addTranslations(rows, env, deps) {
   const stored = new Map();
   try {
@@ -164,9 +179,12 @@ async function addTranslations(rows, env, deps) {
     if (res.ok) for (const r of await res.json()) stored.set(`${r.link}|${r.title}`, r.title_tr);
   } catch { /* nothing stored yet */ }
   const todo = [];
+  const pos = {};
   for (const r of [...rows].sort((a, b) => a.rank - b.rank)) {
     r.title_tr = stored.get(`${r.link}|${r.title}`) || null;
-    if (!r.title_tr && r.image_url) todo.push(r);
+    if (!r.image_url) continue;
+    pos[r.country_code] = (pos[r.country_code] || 0) + 1;
+    if (!r.title_tr && pos[r.country_code] <= PHOTO_TARGET) todo.push(r);
   }
   if (!deps.translate) return { translated: 0, pending: todo.length };
   const queue = todo.slice(0, TRANSLATIONS_PER_RUN);

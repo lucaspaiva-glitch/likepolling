@@ -105,3 +105,18 @@ test('tops up countries short of photo stories from section feeds, newest first'
   assert.ok(PHOTO_TARGET > s.perCountry.US);
   assert.equal(s.images.topped_up.looked, 0);
 });
+
+test("translates only each country's first PHOTO_TARGET photo stories", async () => {
+  const asked = [];
+  const tr = (t) => Object.fromEntries(['en', 'pt', 'pt-PT', 'es', 'de', 'ru', 'uk', 'ko', 'ja'].map((l) => [l, `${l}:${t}`]));
+  const f = async (url, init = {}) => {
+    if (url.includes('/rpc/')) return text(200, '1');
+    if (url.includes('/rest/v1/news_world?select=link,image_url')) return text(200, JSON.stringify(Array.from({ length: 30 }, (_, i) => ({ link: `https://news.google.com/rss/articles/US-${i}`, image_url: 'https://img.test/a.jpg' }))));
+    if (url.includes('/rest/v1/') || url.includes('/rss/articles/')) return text(404, '');
+    const cc = new URL(url).searchParams.get('gl');
+    if (cc !== 'US' || url.includes('/section/')) return text(200, rss());
+    return text(200, rss(...Array.from({ length: 30 }, (_, i) => item(`US story ${i}`, 'Wire', `https://news.google.com/rss/articles/US-${i}`))));
+  };
+  await run(env, { ...deps(f), translate: async (titles) => { asked.push(...titles); return titles.map(tr); } });
+  assert.deepEqual(asked, Array.from({ length: PHOTO_TARGET }, (_, i) => `US story ${i}`));
+});
