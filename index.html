@@ -429,12 +429,12 @@ ENERGY</div>
         <form class="search" id="search-form" autocomplete="off">
           <label class="field" id="field-a">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span class="at" aria-hidden="true">@</span>
-            <input id="input-a" type="search" placeholder="MrBeast or channel URL" aria-label="Channel" required>
+            <input id="input-a" type="search" spellcheck="false" autocapitalize="off" autocorrect="off" placeholder="MrBeast or channel URL" aria-label="Channel" required>
           </label>
           <span class="vs-badge">VS</span>
           <label class="field" id="field-b">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span class="at" aria-hidden="true">@</span>
-            <input id="input-b" type="search" placeholder="Second channel" aria-label="Second channel">
+            <input id="input-b" type="search" spellcheck="false" autocapitalize="off" autocorrect="off" placeholder="Second channel" aria-label="Second channel">
           </label>
           <button type="submit" id="submit-btn">Search</button>
         </form>
@@ -601,7 +601,15 @@ ENERGY</div>
     const SHORT_MAX = 180;
     const intelData = new Map();
     const uiLang = () => document.documentElement.lang || undefined;
-    const dfmt = (iso, o) => { try { return new Date(iso).toLocaleDateString(uiLang(), o); } catch (e) { return ''; } };
+    const DOPT = { dm: { day: 'numeric', month: 'short' }, my: { month: 'short', year: 'numeric' }, dmy: { day: 'numeric', month: 'short', year: 'numeric' } };
+    const dfmt = (iso, k) => { try { return new Date(iso).toLocaleDateString(uiLang(), DOPT[k]); } catch (e) { return ''; } };
+    const dspan = (iso, k) => `<span data-date="${esc(iso)}" data-dopt="${k}">${esc(dfmt(iso, k))}</span>`;
+    const region = (cc) => { try { return new Intl.DisplayNames([uiLang() || 'en'], { type: 'region' }).of(cc); } catch (e) { return cc; } };
+    // Dates and country names are formatted by the browser, so redo them when the site language changes.
+    document.addEventListener('lp:lang', () => setTimeout(() => {
+      document.querySelectorAll('#results [data-date]').forEach((el) => { el.textContent = dfmt(el.dataset.date, el.dataset.dopt); });
+      document.querySelectorAll('#results [data-region]').forEach((el) => { el.textContent = region(el.dataset.region); });
+    }));
     const watch = (id) => `https://www.youtube.com/watch?v=${encodeURIComponent(id)}`;
     const thumb = (id) => `https://i.ytimg.com/vi/${encodeURIComponent(id)}/mqdefault.jpg`;
     const isShort = (v) => v.d != null && v.d <= SHORT_MAX;
@@ -610,12 +618,10 @@ ENERGY</div>
       if (!d || !d.profile) return '';
       const p = d.profile, vids = Array.isArray(d.videos) ? d.videos : [];
       intelData.set(entity.id, vids);
-      let country = p.country;
-      try { if (country) country = new Intl.DisplayNames([uiLang() || 'en'], { type: 'region' }).of(country); } catch (e) { /* code only */ }
-      const stat = (k, v) => (v == null || v === '' ? '' : `<div class="ci-stat"><span class="ci-k">${esc(k)}</span><span class="ci-v" data-no-i18n>${esc(v)}</span></div>`);
+      const stat = (k, v, raw) => (v == null || v === '' ? '' : `<div class="ci-stat"><span class="ci-k">${esc(k)}</span><span class="ci-v" data-no-i18n>${raw ? v : esc(v)}</span></div>`);
       const profile = `<div>
           ${p.banner ? `<img class="ci-banner" src="${esc(p.banner)}=w1060" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : ''}
-          <div class="ci-stats">${stat('Country', country)}${stat('Joined', p.created ? dfmt(p.created, { month: 'short', year: 'numeric' }) : null)}${stat('Videos', p.videoCount == null ? null : fmt(p.videoCount))}${stat('Subscribers', p.subscribers == null ? null : fmt(p.subscribers))}${stat('Total views', fmt(p.views))}</div>
+          <div class="ci-stats">${stat('Country', p.country ? `<span data-region="${esc(p.country)}">${esc(region(p.country))}</span>` : null, true)}${stat('Joined', p.created ? dspan(p.created, 'my') : null, true)}${stat('Videos', p.videoCount == null ? null : fmt(p.videoCount))}${stat('Subscribers', p.subscribers == null ? null : fmt(p.subscribers))}${stat('Total views', fmt(p.views))}</div>
           ${p.description ? `<p class="ci-desc" data-no-i18n>${esc(p.description)}</p>` : ''}
         </div>`;
       if (!vids.length) return `<section class="ci">${profile}<p class="ci-empty">No uploads in the last 30 days.</p></section>`;
@@ -631,7 +637,7 @@ ENERGY</div>
           <div class="ci-chart">
             <div class="ci-max"><b data-no-i18n>${fmt(max)}</b><span>views</span></div>
             <svg class="ci-svg" data-key="${esc(entity.id)}" data-w="${W}" viewBox="0 0 ${W} 100" preserveAspectRatio="none" role="img" aria-label="Views per video">${bars}</svg>
-            <div class="ci-axis" data-no-i18n><span>${esc(dfmt(vids[0].p, { day: 'numeric', month: 'short' }))}</span><span>${esc(dfmt(vids[vids.length - 1].p, { day: 'numeric', month: 'short' }))}</span></div>
+            <div class="ci-axis" data-no-i18n>${dspan(vids[0].p, 'dm')}${dspan(vids[vids.length - 1].p, 'dm')}</div>
             <div class="ci-legend"><span><i></i><span>Long-form</span></span><span><i class="s"></i><span>Shorts-length (≤3 min)</span></span></div>
             <div class="ci-pick" aria-live="polite"><span class="ci-hint">Tap a bar to see the video</span></div>
           </div>
@@ -658,7 +664,7 @@ ENERGY</div>
       const bar = svg.querySelector(`rect[data-i="${i}"]`);
       if (bar) bar.classList.add('on');
       svg.closest('.ci-chart').querySelector('.ci-pick').innerHTML = `<a class="ci-pv" href="${watch(v.id)}" target="_blank" rel="noopener"><img src="${thumb(v.id)}" alt="" loading="lazy">
-        <span><b class="ci-pt" data-no-i18n>${esc(v.t)}</b><span class="ci-pm" data-no-i18n>${esc(dfmt(v.p, { day: 'numeric', month: 'short', year: 'numeric' }))}${isShort(v) ? ' · ≤3 MIN' : ''}</span>
+        <span><b class="ci-pt" data-no-i18n>${esc(v.t)}</b><span class="ci-pm" data-no-i18n>${dspan(v.p, 'dmy')}${isShort(v) ? ' · ≤3 MIN' : ''}</span>
         <span class="ci-pn"><b data-no-i18n>${fmt(v.v)}</b> <span>views</span> · <b data-no-i18n>${fmt(v.l)}</b> <span>likes</span> · <b data-no-i18n>${fmt(v.c)}</b> <span>comments</span></span></span></a>`;
     }
     $('results').addEventListener('click', (e) => { const svg = e.target.closest('.ci-svg'); if (svg) pickVideo(svg, e); });
