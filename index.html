@@ -428,12 +428,28 @@
     #ad-tab .lp-mq { height: 118px; -webkit-mask-image: linear-gradient(transparent, #000 10px, #000 calc(100% - 10px), transparent); mask-image: linear-gradient(transparent, #000 10px, #000 calc(100% - 10px), transparent); }
     #ad-tab .lp-mq-t { animation: lp-mq 11s linear infinite; }
     @media (prefers-reduced-motion: reduce) { #ad-tab .lp-mq-t { animation: none; } }
+    /* Readability + a ~20% smaller truck: bolder, slightly larger upright letters with even spacing and clear word gaps. */
+    #search-tab .lp-mq, #search-tab .lp-mq span, #search-tab .lp-mq i { font-size: 10px; font-weight: 800; letter-spacing: 1px; word-spacing: 7px; line-height: 1; }
+    #ad-tab .lp-mq, #ad-tab .lp-mq span, #ad-tab .lp-mq i { font-size: 10px; font-weight: 700; letter-spacing: 1px; word-spacing: 7px; line-height: 1; }
+    .lp-tab .lp-mq span, .lp-tab .lp-mq i { text-align: center; }
+    .lp-tab .lp-mq i { padding-block: 6px; }
+    #search-tab .lp-mq { height: 115px; }
+    #ad-tab .lp-mq { height: 88px; }
+    .lp-truck-cab { height: 32px; }
+    .lp-wheel { width: 11px; height: 11px; margin-top: -5.5px; left: -6px; }
+    .lp-wheel-f { top: calc(100% + 3px + 25px); }
+    @media (max-width: 560px) {
+      #search-tab .lp-mq, #search-tab .lp-mq span, #search-tab .lp-mq i, #ad-tab .lp-mq, #ad-tab .lp-mq span, #ad-tab .lp-mq i { font-size: 9px; word-spacing: 6px; }
+      #search-tab .lp-mq { height: 104px; }
+      #ad-tab .lp-mq { height: 80px; }
+      .lp-truck-cab { height: 28px; }
+      .lp-wheel { width: 10px; height: 10px; margin-top: -5px; left: -5px; }
+      .lp-wheel-f { top: calc(100% + 3px + 22px); }
+    }
     #ad-tab .lp-mq, #ad-tab .lp-mq span { font-size: 8.5px; letter-spacing: -1px; line-height: 1; }
     .lp-tab .lp-mq i { padding-block: 4px; padding-inline: 0; }
     @media (max-width: 560px) {
       #search-tab .lp-mq, #search-tab .lp-mq span, #search-tab .lp-mq i { font-size: 8px; }
-      #search-tab .lp-mq { height: 135px; }
-      #ad-tab .lp-mq { height: 108px; }
       #ad-tab .lp-mq, #ad-tab .lp-mq span { font-size: 7.5px; }
     }
     @keyframes mpe-tab-glitch { 0%, 86%, 100% { transform: none; } 88% { transform: translateX(-1.5px); } 91% { transform: translateX(1.5px); } 94% { transform: none; } }
