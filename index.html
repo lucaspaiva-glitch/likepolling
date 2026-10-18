@@ -272,9 +272,16 @@
     .lp-wheel .c { fill: #ff2a3c; }
     .lp-tab { z-index: 1; }
     body.lp-drawer-open .lp-wheels { opacity: 0; }
+    /* Wheels on the screen side (the screen edge is the road), so the truck sits a little in from the edge. */
+    .lp-rail { left: 7px; }
+    #search-tab, #ad-tab, .lp-truck-back { border-left-width: 1px; border-left-style: solid; }
+    .lp-wheel { right: auto; left: -7px; width: 13px; height: 13px; margin-top: -6.5px; }
+    .mpe-pop { left: 43px; }
     @media (max-width: 560px) {
       .lp-truck-cab { height: 30px; }
-      .lp-wheel { right: -5px; width: 10px; height: 10px; margin-top: -5px; }
+      .lp-rail { left: 6px; }
+      .lp-wheel { left: -6px; width: 11px; height: 11px; margin-top: -5.5px; }
+      .mpe-pop { left: 36px; }
     }
 
     /* Machu Picchu Energy (sponsored) card. */
