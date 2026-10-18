@@ -192,7 +192,7 @@
   mount.after(credits);
   // Popular Shorts get their own feed above the creator-economy articles.
   const S_TITLE = 'Popular Shorts by country';
-  const S_FOOT = "Videos are the most viewed Shorts of the last 2 days in the language of the country chosen above, found by YouTube search, and play in YouTube's player. Refreshed every 12 hours.";
+  const S_FOOT = "Videos are the most viewed Shorts of the last 2 days in the language of the country chosen above, found by YouTube search and ranked by views. Clicking one opens the whole ranking as a YouTube playlist. Refreshed every 12 hours.";
   const S_NONE = 'No Popular Shorts for this country right now.';
   mount.querySelector('.nw-rank').insertAdjacentHTML('afterend', `
     <div class="nw-shorts" hidden>
