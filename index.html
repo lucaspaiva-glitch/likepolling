@@ -256,13 +256,21 @@
     .lp-truck-back { bottom: calc(100% + 3px); width: calc(100% - 2px); height: 10px; box-sizing: border-box; background: #fff; border: 1px solid rgba(176,0,14,.7); border-left: 0; box-shadow: 0 0 6px -3px rgba(176,0,14,.4); }
     .lp-truck-back::before { content: ''; position: absolute; left: 0; right: -1px; top: -3px; height: 2px; background: #3b3b3b; border-radius: 0 1px 1px 0; }
     .lp-truck-back::after { content: ''; position: absolute; right: 1px; top: 1px; width: 4px; height: 3px; border-radius: 1px; background: #ff2a3c; box-shadow: 0 0 4px 1px rgba(255,42,60,.85); }
-    .lp-truck-cab { top: calc(100% + 3px); width: 100%; height: 34px; filter: drop-shadow(0 0 4px rgba(255,42,60,.55)); }
+    .lp-truck-cab { top: calc(100% + 3px); width: 100%; height: 40px; filter: drop-shadow(0 0 4px rgba(255,42,60,.55)); }
     .lp-truck-cab svg { display: block; width: 100%; height: 100%; overflow: visible; }
     .lp-truck-cab .b { fill: #6e0009; stroke: #ff2a3c; stroke-width: 1; vector-effect: non-scaling-stroke; }
     .lp-truck-cab .w { fill: rgba(255,214,219,.85); stroke: #ff2a3c; stroke-width: .8; vector-effect: non-scaling-stroke; }
     .lp-truck-cab .g { stroke: rgba(255,42,60,.7); stroke-width: 1; vector-effect: non-scaling-stroke; }
     .lp-truck-cab .l { fill: #fff3c8; filter: drop-shadow(0 0 2px #ffd36b); }
-    .lp-truck-cab::after { content: ''; position: absolute; top: 100%; right: 1px; width: 10px; height: 16px; background: linear-gradient(rgba(255,226,150,.45), transparent); clip-path: polygon(30% 0, 70% 0, 100% 100%, 0 100%); }
+    .lp-truck-cab .st { fill: #c9c9c9; stroke: #6b6b6b; stroke-width: .5; vector-effect: non-scaling-stroke; }
+    .lp-truck-cab .fr, .lp-truck-cab .bp { fill: #3b3b3b; }
+    .lp-truck-cab .bp { fill: #bdbdbd; stroke: #6b6b6b; stroke-width: .5; vector-effect: non-scaling-stroke; }
+    .lp-truck-cab .sd { fill: none; stroke: rgba(255,42,60,.55); stroke-width: .7; vector-effect: non-scaling-stroke; }
+    .lp-truck-cab .mi { fill: #2a0004; stroke: #ff2a3c; stroke-width: .6; vector-effect: non-scaling-stroke; }
+    .lp-truck-cab .ft { fill: #d4d4d4; stroke: #7a7a7a; stroke-width: .5; vector-effect: non-scaling-stroke; }
+    .lp-truck-cab .gr { stroke: rgba(255,255,255,.55); stroke-width: .6; vector-effect: non-scaling-stroke; }
+    .lp-truck-cab::after { content: ''; position: absolute; top: calc(100% - 2px); left: 42%; width: 9px; height: 16px; background: linear-gradient(rgba(255,226,150,.45), transparent); clip-path: polygon(30% 0, 70% 0, 100% 100%, 0 100%); }
+    .lp-wheel-f { top: calc(100% + 3px + 31px); }
     .lp-wheels { top: 0; right: 0; bottom: 0; }
     .lp-wheel { position: absolute; right: -6px; width: 12px; height: 12px; margin-top: -6px; }
     .lp-wheel svg { display: block; width: 100%; height: 100%; transform: rotate(var(--spin, 0deg)); }
@@ -272,13 +280,18 @@
     .lp-wheel .c { fill: #ff2a3c; }
     .lp-tab { z-index: 1; }
     body.lp-drawer-open .lp-wheels { opacity: 0; }
+    /* Tab labels read top to bottom (the scrolling search label moves upward, like a ticker). */
+    .lp-tab span, .lp-tab .lp-mq { transform: none; }
+    @keyframes mpe-tab-glitch { 0%, 86%, 100% { transform: none; } 88% { transform: translateX(-1.5px); } 91% { transform: translateX(1.5px); } 94% { transform: none; } }
+    @keyframes mpe-jitter { 0%, 100% { transform: none; } 91% { transform: translateX(.8px); opacity: .75; } 93% { transform: translate(-.8px, 1px); opacity: 1; } 95% { transform: none; opacity: .85; } 96% { transform: none; opacity: 1; } }
     /* Wheels on the screen side (the screen edge is the road), so the truck sits a little in from the edge. */
     .lp-rail { left: 7px; }
     #search-tab, #ad-tab, .lp-truck-back { border-left-width: 1px; border-left-style: solid; }
     .lp-wheel { right: auto; left: -7px; width: 13px; height: 13px; margin-top: -6.5px; }
     .mpe-pop { left: 43px; }
     @media (max-width: 560px) {
-      .lp-truck-cab { height: 30px; }
+      .lp-truck-cab { height: 34px; }
+      .lp-wheel-f { top: calc(100% + 3px + 26px); }
       .lp-rail { left: 6px; }
       .lp-wheel { left: -6px; width: 11px; height: 11px; margin-top: -5.5px; }
       .mpe-pop { left: 36px; }
@@ -441,8 +454,19 @@
     <button type="button" class="lp-tab" id="search-tab" aria-controls="search-drawer" aria-expanded="false"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span class="lp-mq"><span class="lp-mq-t"><span>Search any YouTube Channel</span><i aria-hidden="true">&bull;</i><span aria-hidden="true">Search any YouTube Channel</span><i aria-hidden="true">&bull;</i></span></span></button>
     <button type="button" class="lp-tab lp-ad-tab" id="ad-tab" aria-controls="ad-pop" aria-expanded="false" aria-label="Sponsored: Machu Picchu Energy"><svg class="mpe-can" viewBox="0 -7 20 39" width="14" height="27" aria-hidden="true"><defs><linearGradient id="mpe-can-body" x1="0" x2="1"><stop offset="0" stop-color="#b87800"/><stop offset=".3" stop-color="#ffd84a"/><stop offset=".55" stop-color="#f5b400"/><stop offset="1" stop-color="#9a6200"/></linearGradient><linearGradient id="mpe-can-band" x1="0" x2="1"><stop offset="0" stop-color="#8f0f18"/><stop offset=".32" stop-color="#ff4a55"/><stop offset=".55" stop-color="#e0232f"/><stop offset="1" stop-color="#7a0a12"/></linearGradient><linearGradient id="mpe-can-metal" x1="0" x2="1"><stop offset="0" stop-color="#7a7a7a"/><stop offset=".42" stop-color="#f4f4f4"/><stop offset="1" stop-color="#6a6a6a"/></linearGradient></defs><g class="mpe-can-shake"><path d="M4.2 6 5.3 3.4h9.4L15.8 6Z" fill="url(#mpe-can-metal)"/><rect x="3" y="6" width="14" height="22.5" rx="2" fill="url(#mpe-can-body)"/><rect x="3" y="6" width="14" height="4" fill="url(#mpe-can-band)"/><path d="M5 11.6h10M5 13.2h10" stroke="#1d1d1b" stroke-width=".9"/><circle cx="10" cy="19.4" r="3.6" fill="none" stroke="#1d1d1b" stroke-width=".7"/><path d="M7.2 21 9.4 17.4l1 1.4.9-1 1.6 3.2Z" fill="#1d1d1b"/><rect x="3.4" y="27.6" width="13.2" height="2.4" rx="1.2" fill="url(#mpe-can-metal)"/><g class="mpe-can-pull"><path d="M8.2 3.5h3.6" stroke="#d9d9d9" stroke-width="1.1" stroke-linecap="round"/><circle cx="12.2" cy="3.5" r=".9" fill="none" stroke="#bdbdbd" stroke-width=".6"/></g><g class="mpe-can-fizz" fill="#f7b500"><circle cx="9" cy="1.5" r=".9"/><circle cx="11.6" cy=".5" r=".65"/><circle cx="10.2" cy="-1" r=".55"/></g></g></svg><span class="lp-mq" data-no-i18n><span class="lp-mq-t"><span>Machu Picchu Energy</span></span></span><small data-no-i18n>AD</small></button>
     <span class="lp-truck-back" aria-hidden="true"></span>
-    <span class="lp-truck-cab" aria-hidden="true"><svg viewBox="0 0 20 34" preserveAspectRatio="none"><path class="b" d="M.5 .5H15.5Q19.5 .5 19.5 4.5V24Q19.5 33.5 11 33.5H.5Z"/><path class="w" d="M3 12.5H15.5L17 22H3Z"/><path class="g" d="M3 25H11"/><rect class="l" x="12.5" y="29" width="5" height="2.6" rx="1.2"/></svg></span>
-    <span class="lp-wheels" aria-hidden="true"><span class="lp-wheel" style="top:9px"><svg viewBox="-6 -6 12 12"><circle r="5.4" class="t"/><circle r="2.7" class="h"/><path d="M0-2.7V-1M0 2.7V1M-2.7 0H-1M2.7 0H1"/><circle r=".8" class="c"/></svg></span><span class="lp-wheel" style="top:22px"><svg viewBox="-6 -6 12 12"><circle r="5.4" class="t"/><circle r="2.7" class="h"/><path d="M0-2.7V-1M0 2.7V1M-2.7 0H-1M2.7 0H1"/><circle r=".8" class="c"/></svg></span><span class="lp-wheel" style="top:calc(100% - 33px)"><svg viewBox="-6 -6 12 12"><circle r="5.4" class="t"/><circle r="2.7" class="h"/><path d="M0-2.7V-1M0 2.7V1M-2.7 0H-1M2.7 0H1"/><circle r=".8" class="c"/></svg></span><span class="lp-wheel" style="top:calc(100% - 20px)"><svg viewBox="-6 -6 12 12"><circle r="5.4" class="t"/><circle r="2.7" class="h"/><path d="M0-2.7V-1M0 2.7V1M-2.7 0H-1M2.7 0H1"/><circle r=".8" class="c"/></svg></span><span class="lp-wheel lp-wheel-f" style="top:calc(100% + 12px)"><svg viewBox="-6 -6 12 12"><circle r="5.4" class="t"/><circle r="2.7" class="h"/><path d="M0-2.7V-1M0 2.7V1M-2.7 0H-1M2.7 0H1"/><circle r=".8" class="c"/></svg></span></span>
+    <span class="lp-truck-cab" aria-hidden="true"><svg viewBox="0 0 20 40" preserveAspectRatio="none">
+      <rect class="st" x="15.6" y="-4" width="1.6" height="13" rx=".8"/>
+      <rect class="fr" x="0" y="0" width="3.2" height="38"/>
+      <path class="b" d="M3 .5H17.6Q19.5 .5 19.5 2.4V19.2L13.6 25.6Q13 26.3 13 27.2V34.6Q13 37.4 10.2 37.4H3Z"/>
+      <path class="sd" d="M4.6 4.5H17.6V23.6M4.6 4.5V23.6H16"/>
+      <path class="w" d="M12.4 11.6H18V18.6L14.8 22H12.4Z"/>
+      <rect class="mi" x="19.2" y="19.8" width="2.2" height="3.4" rx=".6"/>
+      <rect class="ft" x="3.6" y="8" width="4.4" height="9" rx="1.6"/>
+      <path class="gr" d="M13.4 29H11M13.4 31H11M13.4 33H11"/>
+      <rect class="l" x="9.6" y="34.6" width="3.2" height="2.2" rx=".8"/>
+      <rect class="bp" x="1.6" y="37.4" width="12.4" height="2.2" rx=".9"/>
+    </svg></span>
+    <span class="lp-wheels" aria-hidden="true"><span class="lp-wheel" style="top:9px"><svg viewBox="-6 -6 12 12"><circle r="5.4" class="t"/><circle r="2.7" class="h"/><path d="M0-2.7V-1M0 2.7V1M-2.7 0H-1M2.7 0H1"/><circle r=".8" class="c"/></svg></span><span class="lp-wheel" style="top:22px"><svg viewBox="-6 -6 12 12"><circle r="5.4" class="t"/><circle r="2.7" class="h"/><path d="M0-2.7V-1M0 2.7V1M-2.7 0H-1M2.7 0H1"/><circle r=".8" class="c"/></svg></span><span class="lp-wheel" style="top:calc(100% - 33px)"><svg viewBox="-6 -6 12 12"><circle r="5.4" class="t"/><circle r="2.7" class="h"/><path d="M0-2.7V-1M0 2.7V1M-2.7 0H-1M2.7 0H1"/><circle r=".8" class="c"/></svg></span><span class="lp-wheel" style="top:calc(100% - 20px)"><svg viewBox="-6 -6 12 12"><circle r="5.4" class="t"/><circle r="2.7" class="h"/><path d="M0-2.7V-1M0 2.7V1M-2.7 0H-1M2.7 0H1"/><circle r=".8" class="c"/></svg></span><span class="lp-wheel lp-wheel-f"><svg viewBox="-6 -6 12 12"><circle r="5.4" class="t"/><circle r="2.7" class="h"/><path d="M0-2.7V-1M0 2.7V1M-2.7 0H-1M2.7 0H1"/><circle r=".8" class="c"/></svg></span></span>
   </div>
   <div class="mpe-pop" id="ad-pop" hidden>
     <a class="mpe-ad" href="https://machupicchu.energy/" target="_blank" rel="sponsored noopener" aria-label="Sponsored: Machu Picchu Energy (opens machupicchu.energy in a new tab)">
