@@ -121,12 +121,18 @@
     .ci-h::before { content: ''; width: 3px; height: 15px; border-radius: 2px; background: var(--red); }
     .ci-sub { margin: 4px 0 10px 12px; font-size: 12px; color: var(--muted); }
     .ci-chart { padding: 12px 12px 10px; border: 1px solid var(--line); border-radius: 10px; background: linear-gradient(#fff, #fffafa); }
-    .ci-max { display: flex; gap: 5px; margin-bottom: 6px; font: 600 10.5px/1 ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace; color: var(--muted); }
+    .ci-graph + .ci-graph { margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--line); }
+    .ci-gh { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+    .ci-gl { font-size: 12px; font-weight: 650; color: #0d0d0d; }
+    .ci-gl i { display: inline-block; width: 9px; height: 9px; margin-right: 6px; border-radius: 50%; vertical-align: -1px; background: var(--red); }
+    .ci-gl i.s { background: #ff8a94; }
+    .ci-max { display: flex; gap: 5px; font: 600 10.5px/1 ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace; color: var(--muted); }
     .ci-plot { position: relative; height: 150px; cursor: crosshair; touch-action: manipulation; border-bottom: 1px solid #ddd; background: linear-gradient(to bottom, transparent calc(50% - .5px), #eee calc(50% - .5px), #eee calc(50% + .5px), transparent calc(50% + .5px)); }
     .ci-svg { display: block; width: 100%; height: 100%; overflow: visible; }
     .ci-area { fill: rgba(176, 0, 14, .07); }
     .ci-line { fill: none; stroke: var(--red); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
-    .ci-line.s { stroke: #ff8a94; stroke-width: 1.5; }
+    .ci-svg.s .ci-line { stroke: #ff8a94; }
+    .ci-svg.s .ci-area { fill: rgba(255, 138, 148, .14); }
     .ci-many .ci-dot { width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; box-shadow: 0 0 0 1px #fff; }
     .ci-dot { position: absolute; width: 7px; height: 7px; margin: -3.5px 0 0 -3.5px; border-radius: 50%; background: var(--red); box-shadow: 0 0 0 1.5px #fff; pointer-events: none; transition: transform .12s; }
     .ci-dot.s { background: #ff8a94; }
@@ -134,9 +140,6 @@
     .ci-guide { position: absolute; top: 0; bottom: 0; width: 0; border-left: 1px dashed #7f000a; pointer-events: none; }
     .ci-guide[hidden] { display: none; }
     .ci-axis { display: flex; justify-content: space-between; margin-top: 6px; font: 600 10px/1 ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
-    .ci-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 10px; font-size: 11.5px; color: var(--muted); }
-    .ci-legend i { display: inline-block; width: 9px; height: 9px; margin-right: 6px; border-radius: 50%; vertical-align: -1px; background: var(--red); }
-    .ci-legend i.s { background: #ff8a94; }
     .ci-pick { display: flex; align-items: center; min-height: 66px; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line); }
     .ci-hint { font-size: 12px; color: #a3a3a3; }
     .ci-pv { display: flex; align-items: center; gap: 12px; width: 100%; min-width: 0; color: inherit; text-decoration: none; }
@@ -727,17 +730,22 @@ ENERGY</div>
           ${p.description ? `<p class="ci-desc" data-no-i18n>${esc(p.description)}</p>` : ''}
         </div>`;
       if (!vids.length) return `<section class="ci">${profile}<p class="ci-empty">No uploads in the last 30 days.</p></section>`;
-      const max = Math.max(1, ...vids.map((v) => v.v));
       const t0 = Date.parse(vids[0].p), span = Date.parse(vids[vids.length - 1].p) - t0;
       const px = (v) => (span > 0 ? ((Date.parse(v.p) - t0) / span) * 100 : 50);
-      const py = (v) => 96 - (v.v / max) * 90;
-      const path = (list) => (list.length === 1 ? `M0,${py(list[0]).toFixed(2)} L100,${py(list[0]).toFixed(2)}` : 'M' + list.map((v) => `${px(v).toFixed(2)},${py(v).toFixed(2)}`).join(' L'));
-      const longs = vids.filter((v) => !isShort(v)), shorts = vids.filter(isShort);
-      const main = longs.length ? longs : shorts;
-      const line = `<path class="ci-area" d="${path(main)} L${main.length === 1 ? 100 : px(main[main.length - 1]).toFixed(2)},100 L${main.length === 1 ? 0 : px(main[0]).toFixed(2)},100 Z"></path>`
-        + (longs.length && shorts.length ? `<path class="ci-line s" vector-effect="non-scaling-stroke" d="${path(shorts)}"></path>` : '')
-        + `<path class="ci-line${longs.length ? '' : ' s'}" vector-effect="non-scaling-stroke" d="${path(main)}"></path>`;
-      const dots = vids.map((v, i) => `<i class="ci-dot${isShort(v) ? ' s' : ''}" data-i="${i}" style="left:${px(v).toFixed(2)}%;top:${py(v).toFixed(2)}%"></i>`).join('');
+      const graph = (list, s, label) => {
+        if (!list.length) return '';
+        const max = Math.max(1, ...list.map((v) => v.v));
+        const py = (v) => 96 - (v.v / max) * 90;
+        const path = list.length === 1 ? `M0,${py(list[0]).toFixed(2)} L100,${py(list[0]).toFixed(2)}` : 'M' + list.map((v) => `${px(v).toFixed(2)},${py(v).toFixed(2)}`).join(' L');
+        const x0 = list.length === 1 ? 0 : px(list[0]).toFixed(2), x1 = list.length === 1 ? 100 : px(list[list.length - 1]).toFixed(2);
+        const dots = list.map((v) => `<i class="ci-dot${s}" data-i="${vids.indexOf(v)}" style="left:${px(v).toFixed(2)}%;top:${py(v).toFixed(2)}%"></i>`).join('');
+        return `<div class="ci-graph">
+              <div class="ci-gh"><span class="ci-gl"><i class="${s.trim()}"></i><span>${label}</span></span><span class="ci-max"><b data-no-i18n>${fmt(max)}</b><span>views</span></span></div>
+              <div class="ci-plot${list.length > 40 ? ' ci-many' : ''}" data-key="${esc(entity.id)}"><svg class="ci-svg${s}" viewBox="0 0 100 100" preserveAspectRatio="none" role="img" aria-label="${label}"><path class="ci-area" d="${path} L${x1},100 L${x0},100 Z"></path><path class="ci-line" vector-effect="non-scaling-stroke" d="${path}"></path></svg>${dots}<span class="ci-guide" hidden></span></div>
+              <div class="ci-axis" data-no-i18n>${dspan(vids[0].p, 'dm')}${dspan(vids[vids.length - 1].p, 'dm')}</div>
+            </div>`;
+      };
+      const graphs = graph(vids.filter((v) => !isShort(v)), '', 'Long-form') + graph(vids.filter(isShort), ' s', 'Shorts-length (≤3 min)');
       const top = [...vids].sort((a, b) => b.v - a.v).slice(0, 5);
       return `<section class="ci">
         ${profile}
@@ -745,10 +753,7 @@ ENERGY</div>
           <h3 class="ci-h"><span>Views per video</span></h3>
           <p class="ci-sub">Uploads in the last 30 days, oldest to newest</p>
           <div class="ci-chart">
-            <div class="ci-max"><b data-no-i18n>${fmt(max)}</b><span>views</span></div>
-            <div class="ci-plot${vids.length > 40 ? ' ci-many' : ''}" data-key="${esc(entity.id)}"><svg class="ci-svg" viewBox="0 0 100 100" preserveAspectRatio="none" role="img" aria-label="Views per video">${line}</svg>${dots}<span class="ci-guide" hidden></span></div>
-            <div class="ci-axis" data-no-i18n>${dspan(vids[0].p, 'dm')}${dspan(vids[vids.length - 1].p, 'dm')}</div>
-            <div class="ci-legend"><span><i></i><span>Long-form</span></span><span><i class="s"></i><span>Shorts-length (≤3 min)</span></span></div>
+            ${graphs}
             <div class="ci-pick" aria-live="polite"><span class="ci-hint">Tap the line to see a video</span></div>
           </div>
         </div>
@@ -774,14 +779,16 @@ ENERGY</div>
         if (dist < best) { best = dist; i = Number(d.dataset.i); }
       });
       const v = vids[i];
-      if (!v || svg.dataset.on === String(i)) return;
-      svg.dataset.on = String(i);
-      svg.querySelectorAll('.ci-dot.on').forEach((x) => x.classList.remove('on'));
+      const chart = svg.closest('.ci-chart');
+      if (!v || chart.dataset.on === String(i)) return;
+      chart.dataset.on = String(i);
+      chart.querySelectorAll('.ci-dot.on').forEach((x) => x.classList.remove('on'));
+      chart.querySelectorAll('.ci-guide').forEach((g) => { g.hidden = true; });
       const dot = svg.querySelector(`.ci-dot[data-i="${i}"]`);
       if (dot) dot.classList.add('on');
       const guide = svg.querySelector('.ci-guide');
       if (guide && dot) { guide.style.left = dot.style.left; guide.hidden = false; }
-      svg.closest('.ci-chart').querySelector('.ci-pick').innerHTML = `<a class="ci-pv" href="${watch(v.id)}" target="_blank" rel="noopener"><img src="${thumb(v.id)}" alt="" loading="lazy">
+      chart.querySelector('.ci-pick').innerHTML = `<a class="ci-pv" href="${watch(v.id)}" target="_blank" rel="noopener"><img src="${thumb(v.id)}" alt="" loading="lazy">
         <span><b class="ci-pt" data-no-i18n>${esc(v.t)}</b><span class="ci-pm" data-no-i18n>${dspan(v.p, 'dmy')}${isShort(v) ? ' · ≤3 MIN' : ''}</span>
         <span class="ci-pn"><b data-no-i18n>${fmt(v.v)}</b> <span>views</span> · <b data-no-i18n>${fmt(v.l)}</b> <span>likes</span> · <b data-no-i18n>${fmt(v.c)}</b> <span>comments</span></span></span></a>`;
     }
