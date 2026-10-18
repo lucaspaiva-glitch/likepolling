@@ -202,6 +202,7 @@
     .card.error p { margin: 0; color: var(--muted); font-size: 14px; }
 
     footer { border-top: 1px solid var(--line); padding: 22px 0 34px; font-size: 11.5px; color: #8a8a8a; text-align: center; letter-spacing: .01em; }
+    @media (max-width: 700px) { footer { padding-left: 44px; padding-right: 44px; } }
 
     /* Search tab: rides the left edge with the scroll position and opens the search drawer. */
     .lp-rail { position: fixed; left: 0; top: 0; z-index: 60; display: grid; grid-auto-rows: 1fr; gap: 6px; transform: translateY(var(--tab-y, 104px)); transition: opacity .25s; will-change: transform; }
@@ -613,6 +614,9 @@ ENERGY</div>
       return { text, channelId, slug: /^[\w.-]{3,30}$/.test(slug) ? slug : null };
     }
 
+    const timed = (query) => query.abortSignal(AbortSignal.timeout(10000));
+    async function retry(fn) { try { return await fn(); } catch (e) { return fn(); } }
+
     async function findEntity(q) {
       const filters = [];
       if (q.channelId) filters.push(`handles->>youtube_channel_id.eq.${q.channelId}`);
@@ -620,19 +624,19 @@ ENERGY</div>
       const name = q.text.replace(/[",()\\%*]/g, '');
       if (name) filters.push(`name.ilike."${name}"`);
       if (!filters.length) return null;
-      const { data, error } = await db.from('entities').select('id, name, category, handles').or(filters.join(',')).limit(5);
+      const { data, error } = await timed(db.from('entities').select('id, name, category, handles').or(filters.join(',')).limit(5));
       if (error) throw new Error('Database lookup failed: ' + error.message);
       return (data || []).find((e) => e.handles?.youtube || e.handles?.youtube_channel_id) || null;
     }
 
     async function getEntity(id) {
-      const { data, error } = await db.from('entities').select('id, name, category, handles').eq('id', id).maybeSingle();
+      const { data, error } = await timed(db.from('entities').select('id, name, category, handles').eq('id', id).maybeSingle());
       if (error) throw new Error('Database lookup failed: ' + error.message);
       return data;
     }
 
     async function latestMetric(entityId) {
-      const { data, error } = await db.from('entity_metrics').select('*').eq('entity_id', entityId).eq('platform', 'youtube').order('created_at', { ascending: false }).limit(1);
+      const { data, error } = await timed(db.from('entity_metrics').select('*').eq('entity_id', entityId).eq('platform', 'youtube').order('created_at', { ascending: false }).limit(1));
       if (error) throw new Error('Metrics lookup failed: ' + error.message);
       return data?.[0] || null;
     }
@@ -640,8 +644,8 @@ ENERGY</div>
     async function loadChannel(raw, onStatus) {
       const q = normalize(raw);
       onStatus('Searching database…');
-      let entity = await findEntity(q);
-      let metric = entity ? await latestMetric(entity.id) : null;
+      let entity = await retry(() => findEntity(q));
+      let metric = entity ? await retry(() => latestMetric(entity.id)) : null;
       const needsDetails = metric && 'details' in metric && metric.details == null;
       if (metric && !needsDetails && Date.now() - Date.parse(metric.created_at) < STALE_MS) return { entity, metric };
 
