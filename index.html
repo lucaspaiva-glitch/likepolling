@@ -122,13 +122,20 @@
     .ci-sub { margin: 4px 0 10px 12px; font-size: 12px; color: var(--muted); }
     .ci-chart { padding: 12px 12px 10px; border: 1px solid var(--line); border-radius: 10px; background: linear-gradient(#fff, #fffafa); }
     .ci-max { display: flex; gap: 5px; margin-bottom: 6px; font: 600 10.5px/1 ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace; color: var(--muted); }
-    .ci-svg { display: block; width: 100%; height: 150px; cursor: crosshair; touch-action: manipulation; border-bottom: 1px solid #ddd; background: linear-gradient(to bottom, transparent calc(50% - .5px), #eee calc(50% - .5px), #eee calc(50% + .5px), transparent calc(50% + .5px)); }
-    .ci-svg rect { fill: var(--red); transition: fill .12s; }
-    .ci-svg rect.s { fill: #ff8a94; }
-    .ci-svg rect:hover, .ci-svg rect.on { fill: #7f000a; }
+    .ci-plot { position: relative; height: 150px; cursor: crosshair; touch-action: manipulation; border-bottom: 1px solid #ddd; background: linear-gradient(to bottom, transparent calc(50% - .5px), #eee calc(50% - .5px), #eee calc(50% + .5px), transparent calc(50% + .5px)); }
+    .ci-svg { display: block; width: 100%; height: 100%; overflow: visible; }
+    .ci-area { fill: rgba(176, 0, 14, .07); }
+    .ci-line { fill: none; stroke: var(--red); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+    .ci-line.s { stroke: #ff8a94; stroke-width: 1.5; }
+    .ci-many .ci-dot { width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; box-shadow: 0 0 0 1px #fff; }
+    .ci-dot { position: absolute; width: 7px; height: 7px; margin: -3.5px 0 0 -3.5px; border-radius: 50%; background: var(--red); box-shadow: 0 0 0 1.5px #fff; pointer-events: none; transition: transform .12s; }
+    .ci-dot.s { background: #ff8a94; }
+    .ci-dot.on { z-index: 1; transform: scale(1.7); background: #7f000a; }
+    .ci-guide { position: absolute; top: 0; bottom: 0; width: 0; border-left: 1px dashed #7f000a; pointer-events: none; }
+    .ci-guide[hidden] { display: none; }
     .ci-axis { display: flex; justify-content: space-between; margin-top: 6px; font: 600 10px/1 ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
     .ci-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 10px; font-size: 11.5px; color: var(--muted); }
-    .ci-legend i { display: inline-block; width: 10px; height: 10px; margin-right: 6px; border-radius: 2px; vertical-align: -1px; background: var(--red); }
+    .ci-legend i { display: inline-block; width: 9px; height: 9px; margin-right: 6px; border-radius: 50%; vertical-align: -1px; background: var(--red); }
     .ci-legend i.s { background: #ff8a94; }
     .ci-pick { display: flex; align-items: center; min-height: 66px; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line); }
     .ci-hint { font-size: 12px; color: #a3a3a3; }
@@ -514,7 +521,7 @@ ENERGY</div>
     <button type="button" class="lp-drawer-x" id="search-close" aria-label="Close">&times;</button>
       <section class="hero">
         <h1>Search any <em>YouTube</em> channel.</h1>
-        <p>Monthly views, comment volume and estimated earnings.</p>
+        <p>Monthly views, comments, estimated earnings, subscribers, total views, country, join date, views per video and the top 5 videos of the last 30 days.</p>
 
         <div class="mode" role="group" aria-label="Mode">
           <button type="button" id="mode-single" aria-pressed="true">Single</button>
@@ -721,8 +728,16 @@ ENERGY</div>
         </div>`;
       if (!vids.length) return `<section class="ci">${profile}<p class="ci-empty">No uploads in the last 30 days.</p></section>`;
       const max = Math.max(1, ...vids.map((v) => v.v));
-      const W = Math.max(vids.length, 12) * 10;
-      const bars = vids.map((v, i) => { const h = Math.max(1.5, (v.v / max) * 100); return `<rect data-i="${i}"${isShort(v) ? ' class="s"' : ''} x="${i * 10 + 1.5}" y="${(100 - h).toFixed(2)}" width="7" height="${h.toFixed(2)}"></rect>`; }).join('');
+      const t0 = Date.parse(vids[0].p), span = Date.parse(vids[vids.length - 1].p) - t0;
+      const px = (v) => (span > 0 ? ((Date.parse(v.p) - t0) / span) * 100 : 50);
+      const py = (v) => 96 - (v.v / max) * 90;
+      const path = (list) => (list.length === 1 ? `M0,${py(list[0]).toFixed(2)} L100,${py(list[0]).toFixed(2)}` : 'M' + list.map((v) => `${px(v).toFixed(2)},${py(v).toFixed(2)}`).join(' L'));
+      const longs = vids.filter((v) => !isShort(v)), shorts = vids.filter(isShort);
+      const main = longs.length ? longs : shorts;
+      const line = `<path class="ci-area" d="${path(main)} L${main.length === 1 ? 100 : px(main[main.length - 1]).toFixed(2)},100 L${main.length === 1 ? 0 : px(main[0]).toFixed(2)},100 Z"></path>`
+        + (longs.length && shorts.length ? `<path class="ci-line s" vector-effect="non-scaling-stroke" d="${path(shorts)}"></path>` : '')
+        + `<path class="ci-line${longs.length ? '' : ' s'}" vector-effect="non-scaling-stroke" d="${path(main)}"></path>`;
+      const dots = vids.map((v, i) => `<i class="ci-dot${isShort(v) ? ' s' : ''}" data-i="${i}" style="left:${px(v).toFixed(2)}%;top:${py(v).toFixed(2)}%"></i>`).join('');
       const top = [...vids].sort((a, b) => b.v - a.v).slice(0, 5);
       return `<section class="ci">
         ${profile}
@@ -731,10 +746,10 @@ ENERGY</div>
           <p class="ci-sub">Uploads in the last 30 days, oldest to newest</p>
           <div class="ci-chart">
             <div class="ci-max"><b data-no-i18n>${fmt(max)}</b><span>views</span></div>
-            <svg class="ci-svg" data-key="${esc(entity.id)}" data-w="${W}" viewBox="0 0 ${W} 100" preserveAspectRatio="none" role="img" aria-label="Views per video">${bars}</svg>
+            <div class="ci-plot${vids.length > 40 ? ' ci-many' : ''}" data-key="${esc(entity.id)}"><svg class="ci-svg" viewBox="0 0 100 100" preserveAspectRatio="none" role="img" aria-label="Views per video">${line}</svg>${dots}<span class="ci-guide" hidden></span></div>
             <div class="ci-axis" data-no-i18n>${dspan(vids[0].p, 'dm')}${dspan(vids[vids.length - 1].p, 'dm')}</div>
             <div class="ci-legend"><span><i></i><span>Long-form</span></span><span><i class="s"></i><span>Shorts-length (≤3 min)</span></span></div>
-            <div class="ci-pick" aria-live="polite"><span class="ci-hint">Tap a bar to see the video</span></div>
+            <div class="ci-pick" aria-live="polite"><span class="ci-hint">Tap the line to see a video</span></div>
           </div>
         </div>
         <div>
@@ -751,19 +766,27 @@ ENERGY</div>
       const vids = intelData.get(svg.dataset.key);
       if (!vids || !vids.length) return;
       const r = svg.getBoundingClientRect();
-      const i = Math.floor(((e.clientX - r.left) / r.width) * Number(svg.dataset.w) / 10);
+      const x = e.clientX - r.left, y = e.clientY - r.top;
+      let i = -1, best = Infinity;
+      svg.querySelectorAll('.ci-dot').forEach((d) => {
+        const dx = (parseFloat(d.style.left) / 100) * r.width - x, dy = (parseFloat(d.style.top) / 100) * r.height - y;
+        const dist = dx * dx + dy * dy * 0.25;
+        if (dist < best) { best = dist; i = Number(d.dataset.i); }
+      });
       const v = vids[i];
       if (!v || svg.dataset.on === String(i)) return;
       svg.dataset.on = String(i);
-      svg.querySelectorAll('rect.on').forEach((x) => x.classList.remove('on'));
-      const bar = svg.querySelector(`rect[data-i="${i}"]`);
-      if (bar) bar.classList.add('on');
+      svg.querySelectorAll('.ci-dot.on').forEach((x) => x.classList.remove('on'));
+      const dot = svg.querySelector(`.ci-dot[data-i="${i}"]`);
+      if (dot) dot.classList.add('on');
+      const guide = svg.querySelector('.ci-guide');
+      if (guide && dot) { guide.style.left = dot.style.left; guide.hidden = false; }
       svg.closest('.ci-chart').querySelector('.ci-pick').innerHTML = `<a class="ci-pv" href="${watch(v.id)}" target="_blank" rel="noopener"><img src="${thumb(v.id)}" alt="" loading="lazy">
         <span><b class="ci-pt" data-no-i18n>${esc(v.t)}</b><span class="ci-pm" data-no-i18n>${dspan(v.p, 'dmy')}${isShort(v) ? ' · ≤3 MIN' : ''}</span>
         <span class="ci-pn"><b data-no-i18n>${fmt(v.v)}</b> <span>views</span> · <b data-no-i18n>${fmt(v.l)}</b> <span>likes</span> · <b data-no-i18n>${fmt(v.c)}</b> <span>comments</span></span></span></a>`;
     }
-    $('results').addEventListener('click', (e) => { const svg = e.target.closest('.ci-svg'); if (svg) pickVideo(svg, e); });
-    $('results').addEventListener('pointermove', (e) => { if (e.pointerType !== 'mouse') return; const svg = e.target.closest('.ci-svg'); if (svg) pickVideo(svg, e); });
+    $('results').addEventListener('click', (e) => { const svg = e.target.closest('.ci-plot'); if (svg) pickVideo(svg, e); });
+    $('results').addEventListener('pointermove', (e) => { if (e.pointerType !== 'mouse') return; const svg = e.target.closest('.ci-plot'); if (svg) pickVideo(svg, e); });
 
     const syncAt = () => ['input-a', 'input-b'].forEach((id) => { const v = $(id).value.trim(); $(id).parentElement.classList.toggle('raw', /^@|\/|^UC[\w-]{22}$/.test(v)); });
     ['input-a', 'input-b'].forEach((id) => $(id).addEventListener('input', syncAt));
