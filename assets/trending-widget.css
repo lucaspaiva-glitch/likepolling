@@ -1,6 +1,8 @@
 /* YouTube Trending Index widget (assets/trending-widget.js). All classes prefixed ytt-. */
 .ytt { container-type: inline-size; margin: 8px 0 56px; border: 1px solid var(--line, #ebebeb); border-radius: var(--radius, 12px); background: #fff; overflow: hidden; }
 .ytt[hidden] { display: none; }
+/* Hold the card's usual height while the chart loads, so nothing below it jumps. */
+.ytt-body:empty { min-height: 456px; }
 .ytt-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 14px 18px; border-bottom: 1px solid var(--line, #ebebeb); }
 .ytt-title { display: flex; align-items: center; gap: 10px; margin: 0; font-size: 14px; font-weight: 650; letter-spacing: -.01em; }
 .ytt-title::before { content: ''; width: 3px; height: 16px; border-radius: 2px; background: var(--red, #b0000e); }

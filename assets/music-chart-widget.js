@@ -14,7 +14,8 @@
   const css = document.createElement('link');
   css.rel = 'stylesheet';
   css.href = '/assets/music-chart-widget.css';
-  document.head.appendChild(css);
+  // Linked in index.html <head> so the layout is right on first paint; added here only if missing.
+  if (!document.querySelector('link[href="/assets/music-chart-widget.css"]')) document.head.appendChild(css);
 
   const compact = new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 });
   const fmt = (n) => (n == null || isNaN(n) ? '—' : compact.format(Number(n)));
