@@ -194,7 +194,7 @@
     footer { border-top: 1px solid var(--line); padding: 22px 0 34px; font-size: 11.5px; color: #8a8a8a; text-align: center; letter-spacing: .01em; }
 
     /* Search tab: rides the left edge with the scroll position and opens the search drawer. */
-    .lp-rail { position: fixed; left: 0; top: 0; z-index: 60; display: grid; grid-auto-rows: 1fr; gap: 6px; transform: translateY(var(--tab-y, 113px)); transition: opacity .25s; will-change: transform; }
+    .lp-rail { position: fixed; left: 0; top: 0; z-index: 60; display: grid; grid-auto-rows: 1fr; gap: 6px; transform: translateY(var(--tab-y, 104px)); transition: opacity .25s; will-change: transform; }
     .lp-tab { --c: var(--red, #b0000e); --soft: var(--red-soft, #fbf1f1); position: relative; isolation: isolate; overflow: hidden; display: flex; flex-direction: column; align-items: center; gap: 9px; width: 26px; padding: 12px 0 11px; border: 1px solid var(--line, #ebebeb); border-left: 0; border-radius: 0 8px 8px 0; background: #fff; color: var(--c); cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,.04), 0 6px 16px -10px rgba(0,0,0,.18); transition: width .2s, border-color .2s, background-color .2s; }
     .lp-tab::before { content: ''; position: absolute; top: 10px; bottom: 10px; right: 0; width: 2px; z-index: 2; border-radius: 2px 0 0 2px; pointer-events: none; background: currentColor; opacity: .55; }
     .lp-tab::after { content: none; }
@@ -438,8 +438,6 @@
     .lp-truck-cab { height: 32px; }
     .lp-wheel { width: 11px; height: 11px; margin-top: -5.5px; left: -6px; }
     .lp-wheel-f { top: calc(100% + 3px + 25px); }
-    /* First-paint start below the logo row (JS then measures it exactly). */
-    @media (max-width: 560px) { .lp-rail { transform: translateY(var(--tab-y, 152px)); } }
     @media (max-width: 560px) {
       #search-tab .lp-mq, #search-tab .lp-mq span, #search-tab .lp-mq i, #ad-tab .lp-mq, #ad-tab .lp-mq span, #ad-tab .lp-mq i { font-size: 9px; word-spacing: 6px; }
       #search-tab .lp-mq { height: 104px; }
@@ -857,9 +855,9 @@ ENERGY</div>
         raf = 0;
         const max = document.documentElement.scrollHeight - innerHeight;
         const p = max > 0 ? Math.min(1, Math.max(0, scrollY / max)) : 0;
-        // Start just below the logo row (the truck's tail sits above the rail), then drive down with the scroll.
-        const head = document.querySelector('header.top');
-        const below = head ? head.getBoundingClientRect().bottom + scrollY + 16 : 52;
+        // Start just below the Like Polling logo (the truck's tail sits above the rail), then drive down with the scroll.
+        const logo = document.querySelector('.brand-mark');
+        const below = logo ? logo.getBoundingClientRect().bottom + scrollY + 16 : 52;
         const top = Math.round(Math.max(52, Math.min(below, innerHeight * 0.4)));
         const room = Math.max(0, innerHeight - rail.offsetHeight - top - 16 - (cab ? cab.offsetHeight + 3 : 0));
         target = Math.round(top + p * room);
