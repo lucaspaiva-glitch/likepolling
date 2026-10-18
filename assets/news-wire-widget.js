@@ -149,8 +149,8 @@
   const asof = mount.querySelector('.nw-asof');
   const prevBtn = mount.querySelector('.nw-prev');
   const nextBtn = mount.querySelector('.nw-next');
-  // Creator economy opens the page, above the search; Popular Shorts
-  // close the page as endless "ending credits".
+  // Creator economy opens the page, above the search; Popular Shorts sit
+  // above "Trending in the most countries", near the end of the page.
   // index.html reserves this frame (#news-front) so the page never shows the search first.
   const front = document.getElementById('news-front') || document.createElement('section');
   front.className = 'nw nw-front';
@@ -189,7 +189,7 @@
   credits.className = 'nw nw-credits';
   credits.hidden = true;
   credits.setAttribute('aria-label', 'Popular Shorts by country');
-  mount.after(credits);
+  mount.before(credits);
   // Popular Shorts get their own feed above the creator-economy articles.
   const S_TITLE = 'Popular Shorts by country';
   const S_FOOT = "Videos are the most viewed Shorts of the last 2 days in the language of the country chosen above, found by YouTube search and ranked by views. Clicking one opens the whole ranking as a YouTube playlist. Refreshed every 12 hours.";

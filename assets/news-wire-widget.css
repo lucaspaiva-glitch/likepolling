@@ -188,8 +188,8 @@
   .wrap:has(> .ytt:not([hidden])):has(> .nw-front:not([hidden])) > #results { grid-row: 4; }
   .wrap:has(> .ytt:not([hidden])):has(> .nw-front:not([hidden])) > .ymu { grid-row: 5; }
   .wrap:has(> .ytt:not([hidden])):has(> .nw-front:not([hidden])):has(> .ymu:not([hidden])) > .ytt { grid-row: 2 / span 4; }
-  .wrap:has(> .ytt:not([hidden])):has(> .nw-front:not([hidden])) > .nw:not(.nw-front):not(.nw-credits) { grid-row: 6; }
-  .wrap:has(> .ytt:not([hidden])) > .nw.nw-credits { grid-column: 1 / -1; grid-row: 7; margin: 0 0 56px; }
+  .wrap:has(> .ytt:not([hidden])):has(> .nw-front:not([hidden])) > .nw:not(.nw-front):not(.nw-credits) { grid-row: 7; }
+  .wrap:has(> .ytt:not([hidden])) > .nw.nw-credits { grid-column: 1 / -1; grid-row: 6; margin: 0 0 56px; }
 }
 /* Popular Shorts: how-to hint next to the country dropdown (arrow keys; swipe on touch screens). */
 .nw-keys, .nw-swipe { margin-left: auto; display: inline-flex; align-items: center; gap: 8px; font-size: 11.5px; font-weight: 500; color: var(--muted, #737373); }
