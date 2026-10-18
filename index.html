@@ -280,10 +280,6 @@
     .lp-wheel .c { fill: #ff2a3c; }
     .lp-tab { z-index: 1; }
     body.lp-drawer-open .lp-wheels { opacity: 0; }
-    /* Tab labels read top to bottom (the scrolling search label moves upward, like a ticker). */
-    .lp-tab span, .lp-tab .lp-mq { transform: none; }
-    @keyframes mpe-tab-glitch { 0%, 86%, 100% { transform: none; } 88% { transform: translateX(-1.5px); } 91% { transform: translateX(1.5px); } 94% { transform: none; } }
-    @keyframes mpe-jitter { 0%, 100% { transform: none; } 91% { transform: translateX(.8px); opacity: .75; } 93% { transform: translate(-.8px, 1px); opacity: 1; } 95% { transform: none; opacity: .85; } 96% { transform: none; opacity: 1; } }
     /* Wheels on the screen side (the screen edge is the road), so the truck sits a little in from the edge. */
     .lp-rail { left: 7px; }
     #search-tab, #ad-tab, .lp-truck-back { border-left-width: 1px; border-left-style: solid; }
@@ -422,6 +418,21 @@
       .lp-ad-tab .mpe-glitch { animation: none; }
       .lp-drawer, .lp-drawer.open, .lp-scrim { transition: none; }
     }
+      /* Tab labels read top to bottom (the scrolling search label moves upward, like a ticker). */
+    .lp-tab span, .lp-tab .lp-mq { transform: none; }
+    /* Upright letters stacked one under another (like a vertical sign). */
+    .lp-tab .lp-mq, .lp-tab .lp-mq span, .lp-tab .lp-mq i { text-orientation: upright; }
+    #search-tab .lp-mq, #search-tab .lp-mq span, #search-tab .lp-mq i { font-size: 9px; letter-spacing: -.5px; line-height: 1; }
+    #search-tab .lp-mq { height: 262px; }
+    #ad-tab .lp-mq, #ad-tab .lp-mq span { font-size: 8.5px; letter-spacing: -1px; line-height: 1; }
+    .lp-tab .lp-mq i { padding-block: 4px; padding-inline: 0; }
+    @media (max-width: 560px) {
+      #search-tab .lp-mq, #search-tab .lp-mq span, #search-tab .lp-mq i { font-size: 8px; }
+      #search-tab .lp-mq { height: 238px; }
+      #ad-tab .lp-mq, #ad-tab .lp-mq span { font-size: 7.5px; }
+    }
+    @keyframes mpe-tab-glitch { 0%, 86%, 100% { transform: none; } 88% { transform: translateX(-1.5px); } 91% { transform: translateX(1.5px); } 94% { transform: none; } }
+    @keyframes mpe-jitter { 0%, 100% { transform: none; } 91% { transform: translateX(.8px); opacity: .75; } 93% { transform: translate(-.8px, 1px); opacity: 1; } 95% { transform: none; opacity: .85; } 96% { transform: none; opacity: 1; } }
   </style>
 </head>
 <body>
