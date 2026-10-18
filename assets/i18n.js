@@ -108,6 +108,7 @@
     'likes': ['curtidas', 'me gusta', 'Likes', 'лайков', 'вподобань', '좋아요', '高評価'],
     'comments': ['comentários', 'comentarios', 'Kommentare', 'комментариев', 'коментарів', '댓글', 'コメント'],
     'No uploads in the last 30 days.': ['Nenhum vídeo nos últimos 30 dias.', 'Sin videos en los últimos 30 días.', 'Keine Uploads in den letzten 30 Tagen.', 'Нет видео за последние 30 дней.', 'Немає відео за останні 30 днів.', '최근 30일 동안 업로드가 없어요.', '過去30日間の投稿はありません。'],
+    'Opens the whole ranking as a YouTube playlist': ['Abre o ranking inteiro como playlist do YouTube', 'Abre todo el ranking como lista de YouTube', 'Öffnet das ganze Ranking als YouTube-Playlist', 'Открывает весь рейтинг как плейлист YouTube', 'Відкриває весь рейтинг як плейлист YouTube', '전체 순위를 YouTube 재생목록으로 열기', 'ランキング全体をYouTubeの再生リストで開く'],
     'Monthly views': ['Visualizações mensais', 'Vistas mensuales', 'Monatliche Aufrufe', 'Просмотры за месяц', 'Перегляди за місяць', '월간 조회수', '月間再生回数'],
     'LEADS': ['LIDERA', 'LIDERA', 'VORNE', 'ЛИДЕР', 'ЛІДЕР', '우세', 'リード'],
     'Uploads, last 30 days': ['Vídeos dos últimos 30 dias', 'Videos de los últimos 30 días', 'Uploads der letzten 30 Tage', 'Видео за последние 30 дней', 'Відео за останні 30 днів', '최근 30일 업로드', '過去30日の投稿'],

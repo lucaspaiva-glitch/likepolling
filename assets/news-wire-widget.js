@@ -779,8 +779,22 @@
     stopPreview();
     closeShort();
     const vids = rows.filter((v, i, a) => a.findIndex((x) => x.video_id === v.video_id) === i);
-    sFeed.classList.add('nw-grid');
-    sFeed.innerHTML = vids.map((v) => tileHtml(v, ui)).join('');
+    // Ranked by views; any click opens the whole ranking as a YouTube quick playlist (watch_videos:
+    // no login, no API units), starting at the clicked Short.
+    const ranked = vids.filter((v) => /^[A-Za-z0-9_-]{11}$/.test(v.video_id)).sort((x, y) => (Number(y.view_count) || 0) - (Number(x.view_count) || 0));
+    const ids = ranked.map((v) => v.video_id);
+    const plist = (i) => `https://www.youtube.com/watch_videos?video_ids=${ids.slice(i).concat(ids.slice(0, i)).join(',')}`;
+    const peak = Math.max(1, ...ranked.map((v) => Number(v.view_count) || 0));
+    const rk = (i) => String(i + 1).padStart(2, '0');
+    const ch = (v) => esc(String(v.channel_title || 'YouTube').trim());
+    sFeed.classList.remove('nw-grid');
+    sFeed.classList.add('ysh');
+    sFeed.innerHTML = `<div class="ysh-cards">${ranked.slice(0, 5).map((v, i) => `<a class="ysh-card" href="${plist(i)}" target="_blank" rel="noopener">
+        <span class="ysh-cth"><img src="https://i.ytimg.com/vi/${v.video_id}/hqdefault.jpg" alt="" loading="lazy" referrerpolicy="no-referrer"><b class="ysh-crk">${rk(i)}</b>${v.view_count != null ? `<i class="ysh-cvw">${esc(compact(v.view_count, ui))}</i>` : ''}</span>
+        <span class="ysh-ctt" title="${esc(v.title)}">${esc(v.title)}</span><span class="ysh-cch">${ch(v)}</span></a>`).join('')}</div>${ranked.length > 5 ? `<ol class="ysh-list">${ranked.slice(5).map((v, j) => `<li><a href="${plist(j + 5)}" target="_blank" rel="noopener">
+        <span class="ysh-rk">${rk(j + 5)}</span><img class="ysh-th" src="https://i.ytimg.com/vi/${v.video_id}/default.jpg" alt="" loading="lazy" referrerpolicy="no-referrer">
+        <span class="ysh-tx"><span class="ysh-vt" title="${esc(v.title)}">${esc(v.title)}</span><span class="ysh-ch">${ch(v)}</span></span>
+        <span class="ysh-vol"><span class="ysh-num">${v.view_count != null ? esc(compact(v.view_count, ui)) : '—'}</span><span class="ysh-bar" style="width:${Math.max(4, Math.round((Number(v.view_count) || 0) / peak * 100))}%"></span></span></a></li>`).join('')}</ol>` : ''}`;
     sBox.querySelector('.nw-feed-wrap').hidden = !vids.length;
     const none = sBox.querySelector('.nw-empty');
     none.textContent = tr(S_NONE);
@@ -790,7 +804,7 @@
     sBox.querySelector('.nw-sub').textContent = tr(S_TITLE);
     sBox.querySelector('.nw-pick-l').textContent = tr('Country');
     sBox.querySelector('.nw-foot').textContent = tr(S_FOOT);
-    sBox.querySelector('.nw-ghint').textContent = tr(touch ? 'Tap to preview · tap again to watch with sound' : 'Hover to preview · click to watch with sound');
+    sBox.querySelector('.nw-ghint').textContent = tr('Opens the whole ranking as a YouTube playlist');
     sFeed.setAttribute('aria-label', tr(S_TITLE));
     sPrev.setAttribute('aria-label', tr('Previous story'));
     sPrev.title = tr('Previous story');
