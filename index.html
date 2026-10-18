@@ -194,7 +194,7 @@
     footer { border-top: 1px solid var(--line); padding: 22px 0 34px; font-size: 11.5px; color: #8a8a8a; text-align: center; letter-spacing: .01em; }
 
     /* Search tab: rides the left edge with the scroll position and opens the search drawer. */
-    .lp-rail { position: fixed; left: 0; top: 0; z-index: 60; display: grid; grid-auto-rows: 1fr; gap: 6px; transform: translateY(var(--tab-y, 48px)); transition: opacity .25s; will-change: transform; }
+    .lp-rail { position: fixed; left: 0; top: 0; z-index: 60; display: grid; grid-auto-rows: 1fr; gap: 6px; transform: translateY(var(--tab-y, 52px)); transition: opacity .25s; will-change: transform; }
     .lp-tab { --c: var(--red, #b0000e); --soft: var(--red-soft, #fbf1f1); position: relative; isolation: isolate; overflow: hidden; display: flex; flex-direction: column; align-items: center; gap: 9px; width: 26px; padding: 12px 0 11px; border: 1px solid var(--line, #ebebeb); border-left: 0; border-radius: 0 8px 8px 0; background: #fff; color: var(--c); cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,.04), 0 6px 16px -10px rgba(0,0,0,.18); transition: width .2s, border-color .2s, background-color .2s; }
     .lp-tab::before { content: ''; position: absolute; top: 10px; bottom: 10px; right: 0; width: 2px; z-index: 2; border-radius: 2px 0 0 2px; pointer-events: none; background: currentColor; opacity: .55; }
     .lp-tab::after { content: none; }
@@ -248,6 +248,33 @@
       .lp-ad-tab small { font-size: 6px; padding: 0 1.5px; }
       .mpe-pop { left: 30px; }
       .lp-drawer { padding: 0 18px 24px; }
+    }
+
+    /* The two tabs as a truck driving down the left edge: rear above the search tab, cab below the ad tab,
+       wheels on the outer side that roll with the rail. */
+    .lp-truck-back, .lp-truck-cab, .lp-wheels { position: absolute; left: 0; pointer-events: none; }
+    .lp-truck-back { bottom: calc(100% + 3px); width: calc(100% - 2px); height: 10px; box-sizing: border-box; background: #fff; border: 1px solid rgba(176,0,14,.7); border-left: 0; box-shadow: 0 0 6px -3px rgba(176,0,14,.4); }
+    .lp-truck-back::before { content: ''; position: absolute; left: 0; right: -1px; top: -3px; height: 2px; background: #3b3b3b; border-radius: 0 1px 1px 0; }
+    .lp-truck-back::after { content: ''; position: absolute; right: 1px; top: 1px; width: 4px; height: 3px; border-radius: 1px; background: #ff2a3c; box-shadow: 0 0 4px 1px rgba(255,42,60,.85); }
+    .lp-truck-cab { top: calc(100% + 3px); width: 100%; height: 34px; filter: drop-shadow(0 0 4px rgba(255,42,60,.55)); }
+    .lp-truck-cab svg { display: block; width: 100%; height: 100%; overflow: visible; }
+    .lp-truck-cab .b { fill: #6e0009; stroke: #ff2a3c; stroke-width: 1; vector-effect: non-scaling-stroke; }
+    .lp-truck-cab .w { fill: rgba(255,214,219,.85); stroke: #ff2a3c; stroke-width: .8; vector-effect: non-scaling-stroke; }
+    .lp-truck-cab .g { stroke: rgba(255,42,60,.7); stroke-width: 1; vector-effect: non-scaling-stroke; }
+    .lp-truck-cab .l { fill: #fff3c8; filter: drop-shadow(0 0 2px #ffd36b); }
+    .lp-truck-cab::after { content: ''; position: absolute; top: 100%; right: 1px; width: 10px; height: 16px; background: linear-gradient(rgba(255,226,150,.45), transparent); clip-path: polygon(30% 0, 70% 0, 100% 100%, 0 100%); }
+    .lp-wheels { top: 0; right: 0; bottom: 0; }
+    .lp-wheel { position: absolute; right: -6px; width: 12px; height: 12px; margin-top: -6px; }
+    .lp-wheel svg { display: block; width: 100%; height: 100%; transform: rotate(var(--spin, 0deg)); }
+    .lp-wheel .t { fill: #1c1c1c; stroke: #ff2a3c; stroke-width: .7; }
+    .lp-wheel .h { fill: #d9d9d9; }
+    .lp-wheel path { stroke: #1c1c1c; stroke-width: .9; }
+    .lp-wheel .c { fill: #ff2a3c; }
+    .lp-tab { z-index: 1; }
+    body.lp-drawer-open .lp-wheels { opacity: 0; }
+    @media (max-width: 560px) {
+      .lp-truck-cab { height: 30px; }
+      .lp-wheel { right: -5px; width: 10px; height: 10px; margin-top: -5px; }
     }
 
     /* Machu Picchu Energy (sponsored) card. */
@@ -406,6 +433,9 @@
   <div class="lp-rail" id="lp-rail">
     <button type="button" class="lp-tab" id="search-tab" aria-controls="search-drawer" aria-expanded="false"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span class="lp-mq"><span class="lp-mq-t"><span>Search any YouTube Channel</span><i aria-hidden="true">&bull;</i><span aria-hidden="true">Search any YouTube Channel</span><i aria-hidden="true">&bull;</i></span></span></button>
     <button type="button" class="lp-tab lp-ad-tab" id="ad-tab" aria-controls="ad-pop" aria-expanded="false" aria-label="Sponsored: Machu Picchu Energy"><svg class="mpe-can" viewBox="0 -7 20 39" width="14" height="27" aria-hidden="true"><defs><linearGradient id="mpe-can-body" x1="0" x2="1"><stop offset="0" stop-color="#b87800"/><stop offset=".3" stop-color="#ffd84a"/><stop offset=".55" stop-color="#f5b400"/><stop offset="1" stop-color="#9a6200"/></linearGradient><linearGradient id="mpe-can-band" x1="0" x2="1"><stop offset="0" stop-color="#8f0f18"/><stop offset=".32" stop-color="#ff4a55"/><stop offset=".55" stop-color="#e0232f"/><stop offset="1" stop-color="#7a0a12"/></linearGradient><linearGradient id="mpe-can-metal" x1="0" x2="1"><stop offset="0" stop-color="#7a7a7a"/><stop offset=".42" stop-color="#f4f4f4"/><stop offset="1" stop-color="#6a6a6a"/></linearGradient></defs><g class="mpe-can-shake"><path d="M4.2 6 5.3 3.4h9.4L15.8 6Z" fill="url(#mpe-can-metal)"/><rect x="3" y="6" width="14" height="22.5" rx="2" fill="url(#mpe-can-body)"/><rect x="3" y="6" width="14" height="4" fill="url(#mpe-can-band)"/><path d="M5 11.6h10M5 13.2h10" stroke="#1d1d1b" stroke-width=".9"/><circle cx="10" cy="19.4" r="3.6" fill="none" stroke="#1d1d1b" stroke-width=".7"/><path d="M7.2 21 9.4 17.4l1 1.4.9-1 1.6 3.2Z" fill="#1d1d1b"/><rect x="3.4" y="27.6" width="13.2" height="2.4" rx="1.2" fill="url(#mpe-can-metal)"/><g class="mpe-can-pull"><path d="M8.2 3.5h3.6" stroke="#d9d9d9" stroke-width="1.1" stroke-linecap="round"/><circle cx="12.2" cy="3.5" r=".9" fill="none" stroke="#bdbdbd" stroke-width=".6"/></g><g class="mpe-can-fizz" fill="#f7b500"><circle cx="9" cy="1.5" r=".9"/><circle cx="11.6" cy=".5" r=".65"/><circle cx="10.2" cy="-1" r=".55"/></g></g></svg><span class="lp-mq" data-no-i18n><span class="lp-mq-t"><span>Machu Picchu Energy</span></span></span><small data-no-i18n>AD</small></button>
+    <span class="lp-truck-back" aria-hidden="true"></span>
+    <span class="lp-truck-cab" aria-hidden="true"><svg viewBox="0 0 20 34" preserveAspectRatio="none"><path class="b" d="M.5 .5H15.5Q19.5 .5 19.5 4.5V24Q19.5 33.5 11 33.5H.5Z"/><path class="w" d="M3 12.5H15.5L17 22H3Z"/><path class="g" d="M3 25H11"/><rect class="l" x="12.5" y="29" width="5" height="2.6" rx="1.2"/></svg></span>
+    <span class="lp-wheels" aria-hidden="true"><span class="lp-wheel" style="top:9px"><svg viewBox="-6 -6 12 12"><circle r="5.4" class="t"/><circle r="2.7" class="h"/><path d="M0-2.7V-1M0 2.7V1M-2.7 0H-1M2.7 0H1"/><circle r=".8" class="c"/></svg></span><span class="lp-wheel" style="top:22px"><svg viewBox="-6 -6 12 12"><circle r="5.4" class="t"/><circle r="2.7" class="h"/><path d="M0-2.7V-1M0 2.7V1M-2.7 0H-1M2.7 0H1"/><circle r=".8" class="c"/></svg></span><span class="lp-wheel" style="top:calc(100% - 33px)"><svg viewBox="-6 -6 12 12"><circle r="5.4" class="t"/><circle r="2.7" class="h"/><path d="M0-2.7V-1M0 2.7V1M-2.7 0H-1M2.7 0H1"/><circle r=".8" class="c"/></svg></span><span class="lp-wheel" style="top:calc(100% - 20px)"><svg viewBox="-6 -6 12 12"><circle r="5.4" class="t"/><circle r="2.7" class="h"/><path d="M0-2.7V-1M0 2.7V1M-2.7 0H-1M2.7 0H1"/><circle r=".8" class="c"/></svg></span><span class="lp-wheel lp-wheel-f" style="top:calc(100% + 12px)"><svg viewBox="-6 -6 12 12"><circle r="5.4" class="t"/><circle r="2.7" class="h"/><path d="M0-2.7V-1M0 2.7V1M-2.7 0H-1M2.7 0H1"/><circle r=".8" class="c"/></svg></span></span>
   </div>
   <div class="mpe-pop" id="ad-pop" hidden>
     <a class="mpe-ad" href="https://machupicchu.energy/" target="_blank" rel="sponsored noopener" aria-label="Sponsored: Machu Picchu Energy (opens machupicchu.energy in a new tab)">
@@ -739,7 +769,20 @@ ENERGY</div>
     (() => {
       const rail = $('lp-rail'), tab = $('search-tab'), drawer = $('search-drawer'), scrim = $('search-scrim');
       const adTab = $('ad-tab'), adPop = $('ad-pop');
-      let raf = 0, idle = 0;
+      let raf = 0, idle = 0, cur = null, target = 0, glide = 0, spin = 0;
+      const still = matchMedia('(prefers-reduced-motion: reduce)');
+      const cab = rail.querySelector('.lp-truck-cab');
+      // Ease the rail toward its scroll position each frame; wheels turn by the distance travelled.
+      function step() {
+        glide = 0;
+        const prev = cur;
+        cur = cur == null || still.matches || Math.abs(target - cur) < 0.4 ? target : cur + (target - cur) * 0.16;
+        spin -= (cur - prev || 0) * 10;
+        rail.style.setProperty('--tab-y', cur.toFixed(1) + 'px');
+        rail.style.setProperty('--spin', spin.toFixed(1) + 'deg');
+        placePop();
+        if (cur !== target) glide = requestAnimationFrame(step);
+      }
       function placePop() {
         if (adPop.hidden) return;
         const r = adTab.getBoundingClientRect();
@@ -749,9 +792,9 @@ ENERGY</div>
         raf = 0;
         const max = document.documentElement.scrollHeight - innerHeight;
         const p = max > 0 ? Math.min(1, Math.max(0, scrollY / max)) : 0;
-        const top = 48, room = Math.max(0, innerHeight - rail.offsetHeight - top - 16);
-        rail.style.setProperty('--tab-y', Math.round(top + p * room) + 'px');
-        placePop();
+        const top = 52, room = Math.max(0, innerHeight - rail.offsetHeight - top - 16 - (cab ? cab.offsetHeight + 3 : 0));
+        target = Math.round(top + p * room);
+        if (!glide) glide = requestAnimationFrame(step);
       }
       const queue = () => { if (!raf) raf = requestAnimationFrame(place); };
       addEventListener('scroll', () => {
