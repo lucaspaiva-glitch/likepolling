@@ -1,0 +1,111 @@
+:host { all: initial; }
+.cp, .cp-pill { --red:#b0000e; --red-dark:#7f000a; --red-soft:#fbf1f1; --ink:#0d0d0d; --mute:#6b6b6b; --line:#ebebeb; --up:#0a8f4a; --up-soft:#e6f5ec; --pink:#e0457b;
+  font: 13px/1.35 'CP Inter', Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji'; color: var(--ink); box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+.cp *, .cp *::before, .cp *::after, .cp-pill * { box-sizing: border-box; }
+.cp { width: 360px; max-height: min(620px, calc(100vh - 24px)); display: flex; flex-direction: column; background: #fff; border: 1px solid #e3d6d6; border-radius: 14px; box-shadow: 0 18px 48px rgba(60,0,6,.22), 0 2px 6px rgba(0,0,0,.08); overflow: hidden; }
+.cp.popup { width: 100%; max-height: none; height: 100%; border: 0; border-radius: 0; box-shadow: none; }
+.cp.full { width: 100%; height: 100%; max-height: none; }
+.cp button { font: inherit; color: inherit; cursor: pointer; }
+.cp a { color: inherit; text-decoration: none; }
+.cp-logo { width: 22px; height: 22px; flex: none; }
+.cp-bar { display: flex; align-items: center; gap: 8px; padding: 8px 8px 8px 12px; background: #fff; border-bottom: 1px solid var(--line); user-select: none; }
+.cp.hud .cp-bar { cursor: grab; }
+.cp-name { font-weight: 800; font-size: 14px; letter-spacing: -.01em; }
+.cp-name i { font-style: normal; color: var(--red); }
+.cp-tools { margin-left: auto; display: flex; gap: 2px; align-items: center; }
+.cp-ico { width: 28px; height: 28px; display: grid; place-items: center; border: 0; background: transparent; border-radius: 7px; }
+.cp-ico:hover { background: var(--red-soft); }
+.cp-ico svg { width: 15px; height: 15px; fill: none; stroke: var(--ink); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.cp-tape { background: var(--red-dark); color: #fff; overflow: hidden; white-space: nowrap; font: 600 11px/24px 'CP Chakra', ui-monospace, monospace; letter-spacing: .02em; }
+.cp-tape-in { display: inline-block; padding-left: 100%; animation: cp-tape 60s linear infinite; }
+.cp-tape:hover .cp-tape-in { animation-play-state: paused; }
+.cp-tape span { margin-right: 26px; }
+.cp-tape em { font-style: normal; color: #7dffb0; }
+@keyframes cp-tape { to { transform: translateX(-100%); } }
+@media (prefers-reduced-motion: reduce) { .cp-tape-in { animation: none; padding-left: 12px; } }
+.cp-tabs { display: flex; gap: 4px; padding: 8px 10px 0; border-bottom: 1px solid var(--line); }
+.cp-tabs button { flex: 1; border: 0; background: none; padding: 7px 4px 9px; font-weight: 700; font-size: 12.5px; color: var(--mute); border-bottom: 2.5px solid transparent; }
+.cp-tabs button[aria-selected="true"] { color: var(--red); border-bottom-color: var(--red); }
+.cp-body { flex: 1; overflow: auto; padding: 12px; overscroll-behavior: contain; }
+.cp-foot { display: flex; justify-content: space-between; padding: 7px 12px; border-top: 1px solid var(--line); font-size: 11px; color: var(--mute); }
+.cp-foot a { color: var(--red); font-weight: 700; }
+.cp-who { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
+.cp-who img, .cp-av { width: 36px; height: 36px; border-radius: 50%; background: var(--red-soft); flex: none; object-fit: cover; }
+.cp-who b { display: block; font-size: 15px; }
+.cp-who span { color: var(--mute); font-size: 12px; }
+.cp-k { display: block; font-size: 11px; font-weight: 600; color: var(--mute); text-transform: uppercase; letter-spacing: .04em; }
+.cp-s { display: block; font-size: 11px; color: var(--mute); }
+.cp-big { display: block; font: 700 36px/1.05 'CP Chakra', 'CP Inter', system-ui, sans-serif; color: var(--ink); letter-spacing: -.01em; margin: 2px 0; font-variant-numeric: tabular-nums; }
+.cp-head { padding: 10px 12px; background: var(--red-soft); border-radius: 10px; margin-bottom: 8px; }
+.cp-stale { color: #9a5b00; }
+.cp-live { color: var(--up); }
+.cp-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.cp-stat { border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; min-width: 0; }
+.cp-n { display: block; font: 700 18px/1.2 'CP Chakra', 'CP Inter', system-ui, sans-serif; margin: 2px 0 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
+.cp-sec { margin-top: 14px; }
+.cp-sec h3 { margin: 0 0 6px; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; }
+.cp-graph { margin-bottom: 6px; }
+.cp-gh { display: flex; justify-content: space-between; font-size: 11px; color: var(--mute); margin-bottom: 2px; }
+.cp-graph svg { display: block; width: 100%; height: 64px; cursor: crosshair; touch-action: manipulation; }
+.cp.full .cp-graph svg { height: 110px; }
+.cp-graph .cp-line { fill: none; stroke-width: 2; vector-effect: non-scaling-stroke; }
+.cp-graph.long .cp-line { stroke: var(--red); } .cp-graph.long .cp-area { fill: rgba(176,0,14,.08); } .cp-graph.long circle { fill: var(--red); }
+.cp-graph.short .cp-line { stroke: var(--pink); } .cp-graph.short .cp-area { fill: rgba(224,69,123,.08); } .cp-graph.short circle { fill: var(--pink); }
+.cp-graph circle.on { stroke: #fff; stroke-width: 1.5; }
+.cp-mark { stroke: var(--ink); stroke-dasharray: 2 3; vector-effect: non-scaling-stroke; }
+.cp-pick { min-height: 34px; padding: 6px 8px; border: 1px dashed #e3d6d6; border-radius: 8px; }
+.cp-pick b { display: block; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cp-pick span { font-size: 11px; color: var(--mute); }
+.cp-top { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.cp-top a { display: flex; gap: 8px; align-items: center; }
+.cp-top img { width: 72px; aspect-ratio: 16/9; object-fit: cover; border-radius: 6px; background: var(--red-soft); flex: none; }
+.cp-top b, .cp-title b { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-size: 12px; font-weight: 650; }
+.cp-top em, .cp-title em { display: block; font-style: normal; font-size: 11px; color: var(--mute); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cp-ctl { display: flex; gap: 6px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
+.cp-ctl > button { border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 4px 11px; font-size: 12px; font-weight: 700; }
+.cp-ctl > button.on { background: var(--red); border-color: var(--red); color: #fff; }
+.cp-sel { margin-left: auto; }
+.cp-sel select, .cp-settings select { font: inherit; font-size: 12px; border: 1px solid var(--line); border-radius: 8px; padding: 4px 6px; background: #fff; color: var(--ink); max-width: 150px; }
+.cp-vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.cp-rows { list-style: none; margin: 0; padding: 0; }
+.cp-rows li + li { border-top: 1px solid var(--line); }
+.cp-rows a { display: grid; grid-template-columns: 22px 1fr 96px; gap: 8px; align-items: center; padding: 7px 0; }
+.cp-rows.wide a { grid-template-columns: 26px 96px 1fr 180px; }
+.cp-rows img { width: 96px; aspect-ratio: 16/9; object-fit: cover; border-radius: 6px; background: var(--red-soft); }
+.cp-rank { font: 700 13px 'CP Chakra', ui-monospace, monospace; color: var(--red); }
+.cp-title { min-width: 0; }
+.cp-speed { display: grid; gap: 3px; justify-items: end; font: 700 11.5px 'CP Chakra', ui-monospace, monospace; color: var(--up); text-align: right; }
+.cp-meter { width: 100%; height: 5px; background: var(--up-soft); border-radius: 3px; overflow: hidden; }
+.cp-meter i { display: block; height: 100%; background: var(--up); border-radius: 3px; }
+.cp-badge { font: 800 9.5px/1 'CP Inter', system-ui, sans-serif; text-transform: uppercase; letter-spacing: .05em; color: #fff; background: var(--up); border-radius: 4px; padding: 3px 5px; }
+.cp-note { margin: 8px 0 0; font-size: 11px; color: var(--mute); }
+.cp-warn { margin: 10px 0 0; font-size: 11.5px; color: #9a5b00; }
+.cp-msg { text-align: center; padding: 34px 12px; color: var(--mute); }
+.cp-msg p { margin: 0 0 12px; }
+.cp-btn { border: 0; background: var(--red); color: #fff !important; font-weight: 700; padding: 8px 14px; border-radius: 999px; }
+.cp-btn.ghost { background: #fff; color: var(--red) !important; border: 1px solid var(--red); }
+.cp-btn.small { padding: 4px 10px; font-size: 11.5px; }
+.cp-skel { display: grid; gap: 8px; }
+.cp-skel i { display: block; height: 38px; border-radius: 10px; background: linear-gradient(90deg, #f5eeee 25%, #fbf7f7 50%, #f5eeee 75%); background-size: 200% 100%; animation: cp-sh 1.2s infinite; }
+.cp-skel i:first-child { height: 72px; }
+@keyframes cp-sh { to { background-position: -200% 0; } }
+.cp-settings { display: grid; gap: 14px; padding: 6px 2px; font-weight: 600; }
+.cp-settings label { display: grid; gap: 6px; }
+.cp-settings .cp-check { display: flex; gap: 8px; align-items: center; font-weight: 500; }
+.cp.full .cp-body { padding: 18px 24px; }
+.cp.full .cp-creator { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 0 24px; }
+.cp.full .cp-who, .cp.full .cp-head, .cp.full .cp-stats { grid-column: 1; }
+.cp.full .cp-sec { grid-column: 2; grid-row: 1 / span 4; margin-top: 0; }
+.cp.full .cp-sec + .cp-sec { grid-row: 5 / span 2; grid-column: 1 / -1; margin-top: 16px; }
+.cp.full .cp-top { grid-template-columns: repeat(5, 1fr); }
+.cp.full .cp-top a { flex-direction: column; align-items: stretch; }
+.cp.full .cp-top img { width: 100%; }
+.cp.full .cp-big { font-size: 48px; }
+/* pill */
+.cp-pill { display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 14px 0 6px; background: #fff; border: 1px solid #ecd2d2; border-radius: 999px; cursor: grab; user-select: none; white-space: nowrap;
+  box-shadow: 0 6px 20px rgba(176,0,14,.22), 0 0 0 0 rgba(176,0,14,.35); animation: cp-glow 2.6s ease-out 3; font-weight: 600; font-size: 12.5px; }
+.cp-pill .cp-logo { width: 26px; height: 26px; }
+.cp-pill b { font: 700 13px 'CP Chakra', 'CP Inter', system-ui, sans-serif; color: var(--red); }
+.cp-pill span { color: var(--mute); font-weight: 500; }
+@keyframes cp-glow { 0% { box-shadow: 0 6px 20px rgba(176,0,14,.22), 0 0 0 0 rgba(176,0,14,.35); } 70% { box-shadow: 0 6px 20px rgba(176,0,14,.22), 0 0 0 12px rgba(176,0,14,0); } 100% { box-shadow: 0 6px 20px rgba(176,0,14,.22), 0 0 0 0 rgba(176,0,14,0); } }
+@media (prefers-reduced-motion: reduce) { .cp-pill { animation: none; } }

@@ -1,5 +1,7 @@
 {
   "rewrites": [
-    { "source": "/api/metrics/youtube-active", "destination": "/api/youtube-active" }
+    { "source": "/api/metrics/youtube-active", "destination": "/api/youtube-active" },
+    { "source": "/api/v1/:route", "destination": "/api/v1?route=:route" },
+    { "source": "/privacy", "destination": "/privacy.html" }
   ]
 }

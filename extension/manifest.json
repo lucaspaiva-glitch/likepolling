@@ -1,0 +1,27 @@
+{
+  "manifest_version": 3,
+  "name": "Creators +",
+  "short_name": "Creators +",
+  "version": "1.0.0",
+  "description": "YouTube rankings, who's trending and channel graphs from Like Polling, right on YouTube.",
+  "homepage_url": "https://www.likepolling.com",
+  "minimum_chrome_version": "116",
+  "icons": { "16": "icons/icon16.png", "32": "icons/icon32.png", "48": "icons/icon48.png", "128": "icons/icon128.png" },
+  "permissions": ["storage"],
+  "host_permissions": ["https://www.youtube.com/*", "https://www.likepolling.com/*"],
+  "background": { "service_worker": "background.js" },
+  "action": {
+    "default_title": "Creators +",
+    "default_popup": "popup.html",
+    "default_icon": { "16": "icons/icon16.png", "32": "icons/icon32.png", "48": "icons/icon48.png" }
+  },
+  "content_scripts": [{
+    "matches": ["https://www.youtube.com/*"],
+    "js": ["config.js", "lib/core.js", "lib/dashboard.js", "content.js"],
+    "run_at": "document_idle"
+  }],
+  "web_accessible_resources": [{
+    "resources": ["lib/dashboard.css", "fonts/*.woff2"],
+    "matches": ["https://www.youtube.com/*"]
+  }]
+}
