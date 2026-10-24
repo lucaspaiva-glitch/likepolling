@@ -283,6 +283,7 @@
     ['.ytt', { 'Views': ['Visualiz.', 'Vistas', 'Aufrufe', 'Просм.', 'Перегл.', '조회수', '再生数'] }],
   ];
   const TITLES = {
+    'Like Polling | Human + AI analytics for what the world watches': ["Like Polling | Análise humana + IA do que o mundo vê", "Like Polling | Análisis humano + IA de lo que el mundo ve", "Like Polling | Mensch + KI: Analysen dazu, was die Welt schaut", "Like Polling | Аналитика того, что смотрит мир: человек + ИИ", "Like Polling | Аналітика того, що дивиться світ: людина + ШІ", "Like Polling | 사람 + AI가 분석하는 세계가 보는 콘텐츠", "Like Polling | 人 + AI で世界が見ているものを分析"],
     'Like Polling | YouTube Channel Intelligence': ['Like Polling | Inteligência de canais do YouTube', 'Like Polling | Inteligencia de canales de YouTube', 'Like Polling | YouTube-Kanalanalyse', 'Like Polling | Аналитика YouTube-каналов', 'Like Polling | Аналітика YouTube-каналів', 'Like Polling | YouTube 채널 인텔리전스', 'Like Polling | YouTubeチャンネル分析'],
   };
   const ATTRS = ['placeholder', 'aria-label', 'title'];
