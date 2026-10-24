@@ -1,0 +1,29 @@
+name: Education
+
+on:
+  schedule:
+    - cron: '23 0,12 * * *' # twice a day (UTC), off the top of the hour
+  workflow_dispatch:
+
+concurrency:
+  group: education
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+      - name: Install dependencies (Gemini SDK)
+        run: npm ci --omit=dev
+      - name: Refresh education_videos and education_subjects
+        env:
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: node scripts/education-routine.js

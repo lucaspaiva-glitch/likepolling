@@ -1,0 +1,422 @@
+{
+ "US": [
+  {
+   "id": "UCHnyfMqiRRG1u-2MsSQLbXA",
+   "name": "Veritasium",
+   "handle": "@veritasium"
+  },
+  {
+   "id": "UC6nSFpj9HTCZ5t-N3Rm3-HA",
+   "name": "Vsauce",
+   "handle": "@vsauce"
+  },
+  {
+   "id": "UCX6b17PVsYBQ0ip5gyeme-Q",
+   "name": "CrashCourse",
+   "handle": "@crashcourse"
+  },
+  {
+   "id": "UC4a-Gbdw7vOaccHmFo40b9g",
+   "name": "Khan Academy",
+   "handle": "@khanacademy"
+  },
+  {
+   "id": "UCsooa4yRKGN_zEE8iknghZA",
+   "name": "TED-Ed",
+   "handle": "@TEDEd"
+  },
+  {
+   "id": "UCY1kMZp36IQSyNx_9h4mpCg",
+   "name": "Mark Rober",
+   "handle": "@MarkRober"
+  },
+  {
+   "id": "UCYO_jab_esuFRV4b17AJtAw",
+   "name": "3Blue1Brown",
+   "handle": "@3blue1brown"
+  },
+  {
+   "id": "UCZYTClx2T1of7BRZ86-8fow",
+   "name": "SciShow",
+   "handle": "@scishow"
+  },
+  {
+   "id": "UC6107grRI4m0o2-emgoDnAA",
+   "name": "SmarterEveryDay",
+   "handle": "@smartereveryday"
+  },
+  {
+   "id": "UCR1IuLEqb6UEA_zQ81kwXfg",
+   "name": "Real Engineering",
+   "handle": "@RealEngineering"
+  },
+  {
+   "id": "UCUHW94eEFW7hkUMVaZz4eDg",
+   "name": "minutephysics",
+   "handle": "@minutephysics"
+  },
+  {
+   "id": "UC7_gcs09iThXybpVgjHZ_7g",
+   "name": "PBS Space Time",
+   "handle": "@pbsspacetime"
+  }
+ ],
+ "GB": [
+  {
+   "id": "UCoxcjq-8xIDTYp3uz647V5A",
+   "name": "Numberphile",
+   "handle": "@numberphile"
+  },
+  {
+   "id": "UCBa659QWEk1AI4Tg--mrJ2A",
+   "name": "Tom Scott",
+   "handle": "@tomscottgo"
+  },
+  {
+   "id": "UC9-y-6csu5WGm29I7JiwpnA",
+   "name": "Computerphile",
+   "handle": "@computerphile"
+  },
+  {
+   "id": "UCtESv1e7ntJaLJYKIO1FoYw",
+   "name": "Periodic Videos",
+   "handle": "@periodicvideos"
+  },
+  {
+   "id": "UCYeF244yNGuFefuFKqxIAXw",
+   "name": "The Royal Institution",
+   "handle": "@TheRoyalInstitution"
+  },
+  {
+   "id": "UCSju5G2aFaWMqn-_0YBtq5A",
+   "name": "Stand-up Maths",
+   "handle": "@standupmaths"
+  },
+  {
+   "id": "UCvBqzzvUBLCs8Y7Axb-jZew",
+   "name": "Sixty Symbols",
+   "handle": "@sixtysymbols"
+  }
+ ],
+ "DE": [
+  {
+   "id": "UCsXVk37bltHxD1rDPwtNM8Q",
+   "name": "Kurzgesagt – In a Nutshell",
+   "handle": "@kurzgesagt"
+  },
+  {
+   "id": "UCZHpIFMfoJJ_1QxNGLJTzyA",
+   "name": "MrWissen2go",
+   "handle": "@MrWissen2go"
+  },
+  {
+   "id": "UCE2hJ9CYR57BYhk3TjGVG6w",
+   "name": "Breaking Lab",
+   "handle": "@breakingLab"
+  },
+  {
+   "id": "UC97dp7op_ZjSCNp3DRLGymQ",
+   "name": "DorFuchs",
+   "handle": "@DorFuchs"
+  },
+  {
+   "id": "UCy0FxMgGUlRnkxCoNZUNRQQ",
+   "name": "Lehrerschmidt",
+   "handle": "@LehrerSchmidt"
+  },
+  {
+   "id": "UCA3mpqm67CpJ13YfA8qAnow",
+   "name": "Terra X History",
+   "handle": "@terraxhistory"
+  },
+  {
+   "id": "UCyHDQ5C6z1NDmJ4g6SerW8g",
+   "name": "MAITHINK X",
+   "handle": "@maithinkx"
+  },
+  {
+   "id": "UC146qqkUMTrn4nfSSOTNwiA",
+   "name": "musstewissen Chemie",
+   "handle": "@musstewissenchemie"
+  }
+ ],
+ "BR": [
+  {
+   "id": "UCKHhA5hN2UohhFDfNXB_cvQ",
+   "name": "Manual do Mundo",
+   "handle": "@manualdomundo"
+  },
+  {
+   "id": "UCn9Erjy00mpnWeLnRqhsA1g",
+   "name": "Ciência Todo Dia",
+   "handle": "@CienciaTodoDia"
+  },
+  {
+   "id": "UClu474HMt895mVxZdlIHXEA",
+   "name": "Nerdologia",
+   "handle": "@nerdologia"
+  },
+  {
+   "id": "UCWv7JMNjrWlVtkiBmygefHQ",
+   "name": "Me Salva! ENEM",
+   "handle": "@MeSalva"
+  },
+  {
+   "id": "UCT0JugAtGmqiYkwxFZOwAtg",
+   "name": "Descomplica",
+   "handle": "@descomplica"
+  },
+  {
+   "id": "UC_Fk7hHbl7vv_7K8tYqJd5A",
+   "name": "SpaceToday",
+   "handle": "@SpaceToday"
+  },
+  {
+   "id": "UCwSxSJqGpSRpEsq5-YUbM8g",
+   "name": "Professor Noslen",
+   "handle": "@ProfessorNoslen"
+  },
+  {
+   "id": "UCsgHWN8lYveMUEWTDheTjZA",
+   "name": "Brasil Escola Oficial",
+   "handle": "@brasilescola"
+  },
+  {
+   "id": "UCW9_n8p_Byz-4k8wV1tnUBg",
+   "name": "Professor Ferretto | ENEM e Vestibulares",
+   "handle": "@professorferretto"
+  }
+ ],
+ "PT": [
+  {
+   "id": "UCb3-l9xYb7RduMra_5PmeLA",
+   "name": "Escola Virtual",
+   "handle": "@EscolaVirtual"
+  },
+  {
+   "id": "UCR-8OqCp-koLUfT4SIDznIQ",
+   "name": "As Explicações do Pontes",
+   "handle": "@asexplicacoesdopontes"
+  },
+  {
+   "id": "UCfgDai8wARSkUag_-WRGlmw",
+   "name": "Matemática Professor Costa",
+   "handle": "@professorcosta_matematica"
+  },
+  {
+   "id": "UC_qqR-yMdI1TtKj9FTXpEow",
+   "name": "Psicologia também é ciência",
+   "handle": "@psicologiatambemeciencia"
+  }
+ ],
+ "ES": [
+  {
+   "id": "UCbdSYaPD-lr1kW27UJuk8Pw",
+   "name": "QuantumFracture",
+   "handle": "@QuantumFracture"
+  },
+  {
+   "id": "UC52hytXteCKmuOzMViTK8_w",
+   "name": "CdeCiencia",
+   "handle": "@CdeCiencia"
+  },
+  {
+   "id": "UCQX_MZRCaluNKxkywkLEgfA",
+   "name": "Date un Vlog",
+   "handle": "@DateunVlog"
+  },
+  {
+   "id": "UC3RYy7GbMHDvPQGCdAh3H5g",
+   "name": "unicoos",
+   "handle": "@unicoos"
+  },
+  {
+   "id": "UCv05qOuJ6Igbe-EyQibJgwQ",
+   "name": "Academia Play",
+   "handle": "@academiaplay"
+  },
+  {
+   "id": "UCH-Z8ya93m7_RD02WsCSZYA",
+   "name": "Derivando",
+   "handle": "@Derivando"
+  },
+  {
+   "id": "UCa3DVlGH2_QhvwuWlPa6MDQ",
+   "name": "Jaime Altozano",
+   "handle": "@JaimeAltozano"
+  },
+  {
+   "id": "UCV5G678sZwW5IcF3pCfRbHQ",
+   "name": "La Hiperactina",
+   "handle": "@LaHiperactina"
+  }
+ ],
+ "MX": [
+  {
+   "id": "UCX16cLWl6dCjlZMgUBxgGkA",
+   "name": "CuriosaMente",
+   "handle": "@CuriosaMente"
+  },
+  {
+   "id": "UCaVPhFg-Ax873wvhbNitsrQ",
+   "name": "El Robot de Platón",
+   "handle": "@ElRobotdePlaton"
+  }
+ ],
+ "CO": [
+  {
+   "id": "UCIkCzk3ezlAxX5r2OFlHLaQ",
+   "name": "julioprofe",
+   "handle": "@julioprofe"
+  },
+  {
+   "id": "UCEQnVzpL_nUKjS2PXNgocyQ",
+   "name": "julioprofenet",
+   "handle": "@julioprofenet"
+  }
+ ],
+ "FR": [
+  {
+   "id": "UCaNlbnghtwlsGF-KzAFThqA",
+   "name": "ScienceEtonnante",
+   "handle": "@ScienceEtonnante"
+  },
+  {
+   "id": "UCtqICqGbPSbTN09K1_7VZ3Q",
+   "name": "DirtyBiology",
+   "handle": "@DirtyBiology"
+  },
+  {
+   "id": "UCYnvxJ-PKiGXo_tYXpWAC-w",
+   "name": "Micode",
+   "handle": "@Micode"
+  },
+  {
+   "id": "UCP46_MXP_WG_auH88FnfS1A",
+   "name": "Nota Bene",
+   "handle": "@NotaBeneMovies"
+  },
+  {
+   "id": "UC1EacOJoqsKaYxaDomTCTEQ",
+   "name": "Le Réveilleur",
+   "handle": "@LeReveilleur"
+  },
+  {
+   "id": "UCV6uM3y-8TeO7JlCtcEN-Bg",
+   "name": "ScienceClic",
+   "handle": "@scienceclic"
+  },
+  {
+   "id": "UCWnfDPdZw6A23UtuBpYBbAg",
+   "name": "Dr Nozman",
+   "handle": "@drnozman"
+  }
+ ],
+ "IT": [
+  {
+   "id": "UCx7EWheHmjCW3vX8K2d09vg",
+   "name": "Geopop",
+   "handle": "@Geopop"
+  },
+  {
+   "id": "UCH-y44M0pvwaZx2rTq0rJoQ",
+   "name": "Barbascura X",
+   "handle": "@BarbascuraX"
+  },
+  {
+   "id": "UCQPnCKNfzKn4OmPrx1KDWvg",
+   "name": "Entropy for Life - Giacomo Moro Mauretto",
+   "handle": "@EntropyforLife"
+  }
+ ],
+ "IN": [
+  {
+   "id": "UCiGyWN6DEbnj2alu7iapuKQ",
+   "name": "Physics Wallah - Alakh Pandey",
+   "handle": "@PhysicsWallah"
+  },
+  {
+   "id": "UCR_faRupOZjPVB0rAg4sxRQ",
+   "name": "Khan Academy India - Hindi medium",
+   "handle": "@KhanAcademyHindi"
+  },
+  {
+   "id": "UCrC8mOqJQpoB7NuIMKIS6rQ",
+   "name": "StudyIQ IAS",
+   "handle": "@StudyIQEducationLtd"
+  },
+  {
+   "id": "UCpyc1eTpM1cA3P0ZWym4clw",
+   "name": "Mohit Tyagi",
+   "handle": "@mohittyagi"
+  },
+  {
+   "id": "UCx1VY57UmjU76Tgq8YwkklA",
+   "name": "Unacademy India",
+   "handle": "@unacademy"
+  }
+ ],
+ "JP": [
+  {
+   "id": "UCQ_MqAw18jFTlBB-f8BP7dw",
+   "name": "QuizKnock",
+   "handle": "@QuizKnock"
+  },
+  {
+   "id": "UCqmWJJolqAgjIdLqK3zD1QQ",
+   "name": "予備校のノリで学ぶ「大学の数学・物理」",
+   "handle": "@Yobinori"
+  },
+  {
+   "id": "UCFo4kqllbcQ4nV83WCyraiw",
+   "name": "中田敦彦のYouTube大学 - NAKATA UNIVERSITY",
+   "handle": "@NKTofficial"
+  },
+  {
+   "id": "UCzw2KK537iRgsrYnWaEMs8Q",
+   "name": "世界をわかりやすく – Kurzgesagt",
+   "handle": "@kurzgesagt_jp"
+  }
+ ],
+ "ID": [
+  {
+   "id": "UCu0yQD7NFMyLu_-TmKa4Hqg",
+   "name": "Kok Bisa?",
+   "handle": "@KokBisa"
+  },
+  {
+   "id": "UCPFc7-vFol1QBMZxw62w_Hw",
+   "name": "Zenius",
+   "handle": "@ZeniusEducation"
+  },
+  {
+   "id": "UCbc1RY0McnikiEMD8Box5Ig",
+   "name": "Ruangguru Bimbel Terbesar No. 1 di Indonesia!",
+   "handle": "@ruangguru"
+  }
+ ],
+ "TR": [
+  {
+   "id": "UCv6jcPwFujuTIwFQ11jt1Yw",
+   "name": "Barış Özcan",
+   "handle": "@barisozcan"
+  },
+  {
+   "id": "UCatnasFAiXUvWwH8NlSdd3A",
+   "name": "Evrim Ağacı",
+   "handle": "@EvrimAgaci"
+  }
+ ],
+ "KR": [
+  {
+   "id": "UCFCtZJTuJhE18k8IXwmXTYQ",
+   "name": "EBSDocumentary (EBS 다큐)",
+   "handle": "@EBSDocumentary"
+  },
+  {
+   "id": "UCIk1-yPCTnFuzfgu4gyfWqw",
+   "name": "과학드림 [Science Dream]",
+   "handle": "@sciencedream"
+  }
+ ]
+}

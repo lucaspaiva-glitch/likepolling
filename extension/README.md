@@ -1,7 +1,7 @@
 # Creators + (browser extension)
 
 Manifest V3 extension that shows Like Polling's YouTube data on YouTube and in the toolbar popup.
-It reads everything from the shared API in `api/v1.js` (`/api/v1/channel|trending|music|worldwide`) and never calls YouTube itself.
+It reads everything from the shared API in `api/v1.js` (`/api/v1/channel|trending|music|worldwide|education`) and never calls YouTube itself.
 
 - `content.js`: YouTube only. Finds the channel locally, shows the pill/panel in a Shadow DOM.
 - `popup.html`: the toolbar dashboard (Trending by default, Creators on a YouTube channel/video).

@@ -1,4 +1,4 @@
-// Compact country strip for the World News, Trending, Music and Popular Shorts panels.
+// Compact country strip for the World News, Trending, Music, Popular Shorts and Education panels.
 // Each widget's own <select> sits invisibly over a "flag · NAME · CODE n/N" strip, so tapping
 // the strip opens the native country list and the widgets load data exactly as before.
 (() => {
@@ -7,6 +7,7 @@
     ['#yt-trending', '.ytt-select'],
     ['#yt-music', '.ymu-select'],
     ['.nw-credits', '.nw-pick .nw-select'],
+    ['#edu', '.edu-select'],
   ];
   const still = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
   const MONO = "ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace";
@@ -25,8 +26,8 @@
     .lp-cs-grp select.lp-cs-sel { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; min-width: 0; margin: 0; padding: 0; border: 0; opacity: 0; cursor: pointer; font-size: 16px; -webkit-appearance: none; appearance: none; }
     .lp-cs-grp select.lp-cs-sel option { color: #0d0d0d; background: #fff; }
     @media (max-width: 560px) {
-      #news-front .nw-head .nw-wpick, #yt-trending .lp-cs-grp, #yt-music .lp-cs-grp { order: 2; flex-basis: 100%; }
-      #yt-trending .lp-cs-grp, #yt-music .lp-cs-grp { flex: 0 0 auto; margin-right: 100%; }
+      #news-front .nw-head .nw-wpick, #yt-trending .lp-cs-grp, #yt-music .lp-cs-grp, #edu .lp-cs-grp { order: 2; flex-basis: 100%; }
+      #yt-trending .lp-cs-grp, #yt-music .lp-cs-grp, #edu .lp-cs-grp { flex: 0 0 auto; margin-right: 100%; }
       #news-front .nw-head .nw-spacer { display: none; }
     }
   `;

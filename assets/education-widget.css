@@ -1,0 +1,40 @@
+/* Education widget (assets/education-widget.js). Cards reuse the Trending Index .ytt-* styles. */
+.edu { margin: 8px 0 56px; }
+.edu[hidden] { display: none; }
+.edu-top { margin: 0 0 14px; }
+.edu-h { margin: 0; font-size: clamp(22px, 2.4vw, 26px); font-weight: 750; letter-spacing: -.02em; }
+.edu-p { margin: 4px 0 0; font-size: 14px; color: var(--muted, #737373); }
+.edu-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; align-items: start; }
+.edu .ytt { margin: 0; }
+.edu-ib:empty { min-height: 420px; }
+.edu-sb:empty { min-height: 420px; }
+.edu-key { display: inline-flex; align-items: center; font-family: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace; font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted, #737373); }
+.edu-yt, .edu-nw { display: inline-block; flex: none; width: 8px; height: 8px; margin: 0 5px 0 9px; border-radius: 2px; background: var(--red, #b0000e); }
+.edu-nw { background: #e8a3a8; }
+.edu-list { list-style: none; margin: 0; padding: 4px 18px; }
+.edu-s { padding: 11px 0; border-bottom: 1px solid var(--line, #ebebeb); }
+.edu-s:last-child { border-bottom: 0; }
+.edu-sh { display: flex; align-items: center; gap: 10px; font-size: 13.5px; }
+.edu-sh b { font-weight: 650; }
+.edu-ct { margin-left: auto; display: inline-flex; align-items: center; gap: 3px; font: 12px ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace; color: var(--muted, #737373); white-space: nowrap; }
+.edu-ct .edu-yt { margin-left: 0; }
+.edu-n { color: var(--ink, #0d0d0d); font-weight: 600; }
+.edu-bar { display: flex; height: 6px; margin: 7px 0 6px; border-radius: 3px; background: #f4f4f4; overflow: hidden; }
+.edu-byt { background: var(--red, #b0000e); }
+.edu-bnw { background: #e8a3a8; }
+.edu-ex a { display: block; min-width: 0; font-size: 11.5px; line-height: 1.6; color: #8a8a8a; text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.edu-ex a:hover { color: var(--red, #b0000e); }
+.edu-ex .edu-yt, .edu-ex .edu-nw { width: 6px; height: 6px; margin: 0 7px 1px 0; vertical-align: middle; }
+.edu-ex em { font-style: normal; color: #b0b0b0; }
+@media (min-width: 900px) { .edu-grid { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); } }
+@media (max-width: 560px) {
+  .edu-list { padding: 4px 14px; }
+  .edu-sh { flex-wrap: wrap; row-gap: 4px; }
+  .edu-ct { margin-left: 32px; width: 100%; }
+  .edu-key { width: 100%; }
+  .edu-key .edu-yt:first-child { margin-left: 0; }
+}
+/* Wide layout from trending-widget.css: full width under the Creator News Wire. */
+@media (min-width: 1240px) {
+  .wrap:has(> .ytt:not([hidden])) > .edu { grid-column: 1 / -1; grid-row: 8; margin: 0 0 56px; }
+}

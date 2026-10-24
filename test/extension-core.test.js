@@ -23,6 +23,6 @@ test('language comes from the browser, with every string translated', () => {
   assert.equal(CP.detectLang(['fr-FR']), 'en');
   for (const lang of CP.LANGS) {
     const t = CP.translator(lang);
-    for (const key of ['creators', 'views30', 'in_countries', 'w_title', 'speed_h']) assert.ok(t(key) && t(key) !== key, `${lang}:${key}`);
+    for (const key of ['creators', 'views30', 'in_countries', 'w_title', 'speed_h', 'education', 'edu_subjects', 'n_videos', 's_exams_admissions', 'no_edu']) assert.ok(t(key) && t(key) !== key, `${lang}:${key}`);
   }
 });

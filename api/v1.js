@@ -4,6 +4,7 @@
 //   GET /api/v1/trending?country=BR
 //   GET /api/v1/music?country=BR
 //   GET /api/v1/worldwide
+//   GET /api/v1/education?country=BR
 // Every number is a stored value or one of the formulas listed in FORMULAS.
 const metrics = require('./metrics');
 
@@ -21,6 +22,7 @@ const FORMULAS = {
   views_per_day: 'view_count / days between published_at and fetched_at',
   like_rate: 'like_count / view_count',
   countries: 'number of the 41 Trending Index countries whose latest list contains the video',
+  subject_score: 'video_count × 3 + news_count (videos: recent uploads of the tracked education channels; news: last 24 h of Google News education headlines; subjects assigned by Google Gemini)',
 };
 const CHART_COLS = 'rank,video_id,title,channel_id,channel_title,thumbnail_url,view_count,like_count,comment_count,published_at,fetched_at';
 
@@ -207,6 +209,28 @@ async function worldwideRoute(get) {
   };
 }
 
+// Education: tracked channels' fastest recent uploads + most talked-about subjects.
+async function educationRoute(req, get) {
+  const country = countryParam(req);
+  const [videos, subjects, firsts] = await Promise.all([
+    get(`education_videos?select=rank,video_id,title,channel_id,channel_title,thumbnail_url,view_count,like_count,published_at,views_per_hour,subject,fetched_at&country_code=eq.${country}&order=rank.asc&limit=50`),
+    get(`education_subjects?select=rank,subject,score,video_count,news_count,example_video_id,example_video_title,example_news_title,example_news_link,example_news_source,fetched_at&country_code=eq.${country}&order=rank.asc&limit=50`),
+    get('education_videos?select=country_code&rank=eq.1&order=country_code.asc'),
+  ]);
+  const updated = [...videos, ...subjects].reduce((m, r) => (!m || r.fetched_at > m ? r.fetched_at : m), null);
+  return {
+    body: {
+      country, countries: firsts.map((r) => r.country_code), updated_at: updated,
+      videos: videos.map((r) => ({ rank: r.rank, video_id: r.video_id, title: r.title, channel_id: r.channel_id, channel_title: r.channel_title,
+        thumbnail_url: r.thumbnail_url, views: num(r.view_count), likes: num(r.like_count), published_at: r.published_at,
+        views_per_hour: num(r.views_per_hour), subject: r.subject })),
+      subjects: subjects.map(({ fetched_at, ...s }) => s),
+      formulas: { views_per_hour: FORMULAS.views_per_hour, subject_score: FORMULAS.subject_score },
+    },
+    cache: 'public, max-age=300, s-maxage=1800, stale-while-revalidate=7200',
+  };
+}
+
 function corsHeaders(req, res, env) {
   const origin = req.headers?.origin;
   const extra = String(env.CREATORS_PLUS_ORIGINS || '').split(',').map((s) => s.trim()).filter(Boolean);
@@ -235,8 +259,9 @@ function createHandler(deps = {}) {
         : route === 'trending' ? await chartRoute('youtube_trending', req, get)
         : route === 'music' ? await chartRoute('youtube_music_chart', req, get)
         : route === 'worldwide' ? await worldwideRoute(get)
+        : route === 'education' ? await educationRoute(req, get)
         : null;
-      if (!out) throw new HttpError(404, 'Unknown route. Try /api/v1/channel, /trending, /music or /worldwide.');
+      if (!out) throw new HttpError(404, 'Unknown route. Try /api/v1/channel, /trending, /music, /worldwide or /education.');
       res.setHeader('Cache-Control', out.cache);
       return res.status(200).json(out.body);
     } catch (err) {

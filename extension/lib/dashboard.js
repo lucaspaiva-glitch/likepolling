@@ -1,4 +1,4 @@
-// Creators + dashboard: the Creators / Trending / Music panel, shared by the YouTube
+// Creators + dashboard: the Creators / Trending / Music / Education panel, shared by the YouTube
 // overlay (content.js, inside a Shadow DOM) and the toolbar popup.
 (function (root) {
   'use strict';
@@ -58,10 +58,12 @@
       loadChannel(true);
     }
 
+    const eduCountry = () => st.eduCountry || st.country;
     function ensureTabData() {
       need('worldwide', 'worldwide');
       if (st.tab === 'trending' && st.scope === 'country') need(`trending:${st.country}`, `trending?country=${st.country}`);
       if (st.tab === 'music') need(`music:${st.country}`, `music?country=${st.country}`);
+      if (st.tab === 'education') need(`edu:${eduCountry()}`, `education?country=${eduCountry()}`);
     }
 
     // ---------- views ----------
@@ -155,6 +157,30 @@
       return picker + body;
     }
 
+    const SUBJ_KEYS = ['ai_tech', 'space_physics', 'math', 'health_biology', 'chemistry', 'climate_environment', 'history_geography', 'engineering', 'exams_admissions', 'schools_policy', 'money_careers', 'languages_culture'];
+    function education() {
+      const cc = eduCountry();
+      const c = st.charts[`edu:${cc}`];
+      const b = c?.body;
+      // The user's country has no tracked channels: switch once to a country that has data.
+      if (b && !b.videos.length && b.countries.length && !st.eduCountry) {
+        st.eduCountry = b.countries.includes('US') ? 'US' : b.countries[0];
+        queueMicrotask(() => { ensureTabData(); render(); });
+      }
+      const codes = [...new Set([...(b?.countries || []), cc])];
+      const picker = `<div class="cp-ctl"><label class="cp-sel"><span class="cp-vh">${t('country')}</span><select data-act="edu-country">${codes.map((k) => `<option value="${k}"${k === cc ? ' selected' : ''}>${esc(f.country(k))}</option>`).join('')}</select></label></div>`;
+      if (!c || (c.status === 'loading' && !b)) return picker + skeleton(6);
+      if (!b) return picker + msg(t('offline'), `<button class="cp-btn ghost" data-act="retry">${t('retry')}</button>`);
+      if (!b.videos.length) return picker + msg(t('no_edu'));
+      const max = Math.max(...b.subjects.map((s) => s.score), 1);
+      const subjects = b.subjects.length ? `<div class="cp-sec"><h3>${t('edu_subjects')}</h3><ol class="cp-subj">${b.subjects.map((s) => `<li>
+          <div class="cp-sj"><span class="cp-rank">${String(s.rank).padStart(2, '0')}</span><b>${esc(SUBJ_KEYS.includes(s.subject) ? t(`s_${s.subject}`) : s.subject)}</b><em>${t('n_videos', { n: s.video_count })} · ${t('n_news', { n: s.news_count })}</em></div>
+          <div class="cp-sbar"><i class="yt" style="width:${(s.video_count * 3 / max * 100).toFixed(1)}%"></i><i class="nw" style="width:${(s.news_count / max * 100).toFixed(1)}%"></i></div></li>`).join('')}</ol>
+          <p class="cp-note">${t('edu_note')}</p></div>` : '';
+      return `${picker}<div class="cp-sec cp-edu"><h3>${t('edu_index')}</h3>${rows(b.videos, 'views_per_hour', 'per_hour', b.videos[0].video_id, false)}<p class="cp-note">${t('speed')} = ${t('speed_h')}</p></div>${subjects}`
+        + (b.updated_at ? `<p class="cp-note">${t('updated', { t: f.ago(b.updated_at) })}</p>` : '');
+    }
+
     function ticker() {
       const w = st.charts.worldwide?.body;
       if (!w?.items?.length) return '<div class="cp-tape"><div class="cp-tape-in"><span>Like Polling · YouTube</span></div></div>';
@@ -170,13 +196,13 @@
     function render() {
       if (!st.active) return;
       const hud = opts.mode === 'hud';
-      const tabs = ['creators', 'trending', 'music'].map((k) => `<button role="tab" aria-selected="${st.tab === k}" data-act="tab" data-v="${k}">${t(k)}</button>`).join('');
+      const tabs = ['creators', 'trending', 'music', 'education'].map((k) => `<button role="tab" aria-selected="${st.tab === k}" data-act="tab" data-v="${k}">${t(k)}</button>`).join('');
       const tools = hud
         ? `<button class="cp-ico" data-act="min" title="${t('minimize')}" aria-label="${t('minimize')}">${ICON.min}</button>
            <button class="cp-ico" data-act="full" title="${t(st.full ? 'exit_full' : 'full')}" aria-label="${t(st.full ? 'exit_full' : 'full')}">${st.full ? ICON.exit : ICON.full}</button>
            <button class="cp-ico" data-act="close" title="${t('close')}" aria-label="${t('close')}">${ICON.close}</button>`
         : `${opts.canShowOnPage ? `<button class="cp-btn small" data-act="show-on-page">${t('show_on_page')}</button>` : ''}<button class="cp-ico" data-act="settings" title="${t('settings')}" aria-label="${t('settings')}">${ICON.gear}</button>`;
-      const view = st.settings ? settingsView() : st.tab === 'creators' ? creators() : chart(st.tab);
+      const view = st.settings ? settingsView() : st.tab === 'creators' ? creators() : st.tab === 'education' ? education() : chart(st.tab);
       const report = st.tab === 'creators' && st.ch?.body ? st.ch.body.channel.report_url : SITE;
       const scrollTop = container.querySelector('.cp-body')?.scrollTop || 0;
       container.innerHTML = `<div class="cp ${hud ? 'hud' : 'popup'}${st.full ? ' full' : ''}" lang="${esc(CP.LOCALE[opts.lang] || 'en')}">
@@ -213,6 +239,7 @@
     container.addEventListener('change', (e) => {
       const el = e.target;
       if (el.dataset.act === 'country') { st.country = el.value; opts.onAction && opts.onAction('country', el.value); ensureTabData(); render(); }
+      if (el.dataset.act === 'edu-country') { st.eduCountry = el.value; ensureTabData(); render(); }
       if (el.dataset.act === 'pill') opts.onAction && opts.onAction('pill', el.checked);
     });
 

@@ -131,3 +131,22 @@ test('CORS is limited to likepolling.com and configured extension origins', asyn
   const other = await run({ route: 'trending', country: 'US' }, { fetch }, { origin: 'https://evil.example' });
   assert.equal(other.headers['access-control-allow-origin'], undefined);
 });
+
+test('education: videos, subjects and the countries that have data', async () => {
+  const fetch = mockFetch({
+    education_videos: (p) => (p.includes('rank=eq.1') ? [{ country_code: 'BR' }, { country_code: 'US' }]
+      : [{ rank: 1, video_id: 'v', title: 'T', channel_id: 'UC1', channel_title: 'C', thumbnail_url: 't', view_count: '900', like_count: null, published_at: '2026-10-24T00:00:00Z', views_per_hour: '75', subject: 'math', fetched_at: '2026-10-24T12:00:00Z' }]),
+    education_subjects: [{ rank: 1, subject: 'math', score: 7, video_count: 2, news_count: 1, example_video_id: 'v', example_video_title: 'T', example_news_title: 'N', example_news_link: 'https://n', example_news_source: 'S', fetched_at: '2026-10-24T12:00:01Z' }],
+  });
+  const res = await run({ route: 'education', country: 'br' }, { fetch });
+  assert.equal(res.statusCode, 200);
+  assert.deepEqual(res.body.countries, ['BR', 'US']);
+  assert.equal(res.body.videos[0].views, 900);
+  assert.equal(res.body.videos[0].views_per_hour, 75);
+  assert.equal(res.body.subjects[0].subject, 'math');
+  assert.equal(res.body.subjects[0].fetched_at, undefined);
+  assert.equal(res.body.updated_at, '2026-10-24T12:00:01Z');
+  assert.match(res.body.formulas.subject_score, /× 3/);
+  assert.ok(fetch.calls.some((c) => c.includes('country_code=eq.BR')));
+  assert.equal((await run({ route: 'education', country: 'XX' }, { fetch })).statusCode, 400);
+});

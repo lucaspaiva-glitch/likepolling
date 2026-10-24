@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="/assets/news-wire-widget.css">
   <link rel="stylesheet" href="/assets/trending-widget.css">
   <link rel="stylesheet" href="/assets/music-chart-widget.css">
+  <link rel="stylesheet" href="/assets/education-widget.css">
   <script src="/assets/vendor/supabase-js-2.117.3.js"></script>
   <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
   <script defer src="/_vercel/insights/script.js"></script>
@@ -492,7 +493,7 @@
     .cpx-shot span { display: block; margin-top: 2px; font-size: 12.5px; line-height: 1.35; color: var(--muted); }
     @media (min-width: 900px) { .cpx { grid-template-columns: 300px minmax(0, 1fr); align-items: center; } .cpx-shots { padding: 22px 22px 22px 0; } }
     @media (max-width: 640px) { .cpx-shots { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 78%; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; } .cpx-shots::-webkit-scrollbar { display: none; } .cpx-shot { scroll-snap-align: start; } }
-    @media (min-width: 1240px) { .wrap:has(> .ytt:not([hidden])) > .cpx { grid-column: 1 / -1; grid-row: 8; margin: 0 0 56px; } }
+    @media (min-width: 1240px) { .wrap:has(> .ytt:not([hidden])) > .cpx { grid-column: 1 / -1; grid-row: 9; margin: 0 0 56px; } }
   </style>
 </head>
 <body>
@@ -518,6 +519,7 @@
     <section class="ytt" id="yt-trending" data-supabase-url="https://iyhaoagslsrwtkcrxylp.supabase.co" data-supabase-key="sb_publishable_ZnV9HrtfDqeKlBftnDxH2Q_YK6XWJTp"></section>
     <section class="ymu" id="yt-music" data-supabase-url="https://iyhaoagslsrwtkcrxylp.supabase.co" data-supabase-key="sb_publishable_ZnV9HrtfDqeKlBftnDxH2Q_YK6XWJTp"></section>
     <section id="news-wire" data-supabase-url="https://iyhaoagslsrwtkcrxylp.supabase.co" data-supabase-key="sb_publishable_ZnV9HrtfDqeKlBftnDxH2Q_YK6XWJTp"></section>
+    <section id="edu" data-supabase-url="https://iyhaoagslsrwtkcrxylp.supabase.co" data-supabase-key="sb_publishable_ZnV9HrtfDqeKlBftnDxH2Q_YK6XWJTp"></section>
     <section class="cpx" id="creators-plus" aria-labelledby="cpx-h">
       <div class="cpx-intro">
         <span class="cpx-sym">Extension</span>
@@ -1013,6 +1015,7 @@ ENERGY</div>
   </script>
   <script src="/assets/trending-widget.js" defer></script>
   <script src="/assets/music-chart-widget.js" defer></script>
+  <script src="/assets/education-widget.js" defer></script>
   <script src="/assets/news-wire-widget.js" defer></script>
   <script src="/assets/country-swipe.js" defer></script>
 </body>
