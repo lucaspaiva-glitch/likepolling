@@ -10,15 +10,17 @@
     return views == null || !(h > 0) ? null : Math.max(0, Math.round(Number(views) / Math.max(h, 1)));
   };
 
-  // Calls back once a YouTube embed (enablejsapi=1) is really playing, so the
-  // thumbnail stays up and YouTube's big play button is never seen.
+  // Calls back once a YouTube embed (enablejsapi=1) has played a few seconds.
+  // YouTube shows its own play/pause controls when playback starts and hides
+  // them about 3s later, so the thumbnail stays up until then.
+  const SHOW_AFTER = 3.5;
   window.lpWhenPlaying = (f, cb) => {
     let done = false, poll = 0;
     const onMsg = (e) => {
       if (e.source !== f.contentWindow) return;
       let d; try { d = JSON.parse(e.data); } catch { return; }
       const info = d && d.info;
-      if (info && (info.playerState === 1 || info.currentTime > 0.2)) finish(true);
+      if (info && info.currentTime >= SHOW_AFTER) finish(true);
     };
     const finish = (ok) => {
       if (done) return;
@@ -28,7 +30,7 @@
     addEventListener('message', onMsg);
     f.addEventListener('load', () => {
       let n = 0;
-      const hello = () => { if (!f.isConnected || ++n > 40) return finish(false); f.contentWindow.postMessage(JSON.stringify({ event: 'listening', id: 1, channel: 'widget' }), '*'); };
+      const hello = () => { if (!f.isConnected || ++n > 60) return finish(false); f.contentWindow.postMessage(JSON.stringify({ event: 'listening', id: 1, channel: 'widget' }), '*'); };
       hello(); poll = setInterval(hello, 250);
     }, { once: true });
   };
@@ -37,9 +39,11 @@
   css.textContent = `
 .lp-vph { position: absolute; right: 6px; top: 6px; z-index: 2; padding: 3px 5px; border: 1px solid rgba(255,42,60,.6); border-radius: 3px; background: #7f000a; color: #fff; font: 700 10px/1 ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace; font-style: normal; letter-spacing: .04em; pointer-events: none; }
 .lp-vph-t { display: block; margin-top: 4px; color: var(--red, #b0000e); font: 650 11px/1 ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace; font-variant-numeric: tabular-nums; }
-.lp-prev { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; border: 0; border-radius: 8px; background: #000; pointer-events: none; opacity: 0; transition: opacity .25s; }
+/* Rendered 4x larger and scaled down, so YouTube's own buttons shrink; 10% overscan hides its title bar and logo. */
+.lp-prev { position: absolute; left: -10%; top: -10%; z-index: 1; width: 480%; height: 480%; transform: scale(.25); transform-origin: 0 0; border: 0; background: #000; pointer-events: none; opacity: 0; transition: opacity .25s; }
 .lp-prev.on { opacity: 1; }
-${SEL.split(', ').map((s) => `${s} > b, ${s} > i:not(.lp-vph)`).join(', ')} { z-index: 2; }`;
+${SEL.split(', ').map((s) => `${s} > b, ${s} > i:not(.lp-vph)`).join(', ')} { z-index: 2; }
+.ci-th { overflow: hidden; border-radius: 8px; }`;
   document.head.appendChild(css);
 
   if (!matchMedia('(hover: hover) and (pointer: fine)').matches) return;
