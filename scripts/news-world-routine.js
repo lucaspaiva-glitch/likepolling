@@ -39,6 +39,8 @@ const EDITIONS = {
 // No Google News edition of their own (Google serves France's, Egypt's or US
 // Spanish news instead), so these use a Google News search for the country's name.
 const SEARCH = { DZ: 'Algérie', EC: 'Ecuador', IQ: 'العراق' };
+// Links are part of the table's primary key; Postgres can't index very long ones.
+const MAX_LINK = 2000;
 const BLOCKED_SOURCES = /^(instagram|facebook|tiktok|youtube|x|twitter|reddit|threads|linkedin)$/i;
 
 const defaultSleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -58,7 +60,7 @@ function sectionUrl(cc, topic) {
 
 function uniqueItems(items, seen) {
   return items.filter((it) => {
-    if (!it.title || !/^https:\/\//.test(it.link) || BLOCKED_SOURCES.test(it.source)) return false;
+    if (!it.title || !/^https:\/\//.test(it.link) || it.link.length > MAX_LINK || BLOCKED_SOURCES.test(it.source)) return false;
     const k = it.title.toLowerCase();
     if (seen.has(it.link) || seen.has(k)) return false;
     seen.add(it.link); seen.add(k);

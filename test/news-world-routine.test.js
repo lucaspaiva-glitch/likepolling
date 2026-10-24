@@ -16,7 +16,7 @@ test('covers the 41 Trending Index countries; editions vs country searches', () 
   assert.deepEqual(Object.keys(SEARCH).sort(), ['DZ', 'EC', 'IQ']);
 });
 
-test('keeps Google News order, drops blocked sources and repeats, writes one RPC', async () => {
+test('keeps Google News order, drops blocked sources, repeats and overlong links, writes one RPC', async () => {
   let payload;
   const f = async (url, init = {}) => {
     if (url.includes('/rpc/replace_news_world')) { payload = JSON.parse(init.body).payload; return text(200, String(payload.length)); }
@@ -29,6 +29,7 @@ test('keeps Google News order, drops blocked sources and repeats, writes one RPC
       item('A clip', 'YouTube', `https://news.google.com/rss/articles/${cc}-yt`),
       item('Second story', 'Paper', `https://news.google.com/rss/articles/${cc}-2`),
       item('first story', 'Other', `https://news.google.com/rss/articles/${cc}-dup`),
+      item('Huge link', 'Paper', `https://news.google.com/rss/articles/${cc}-${'x'.repeat(2100)}`),
     ));
   };
   const s = await run(env, deps(f));

@@ -36,6 +36,8 @@ const FEEDS = [
 
 // Social posts and video pages are not news articles.
 // Also drops sites that post fake "watch the game live on YouTube" pages.
+// Links are part of the table's primary key; Postgres can't index very long ones.
+const MAX_LINK = 2000;
 const BLOCKED_SOURCES = /^(instagram|facebook|tiktok|youtube|x|twitter|reddit|threads|linkedin|howl\.link)$|universidad de c[oó]rdoba/i;
 const SPAM_TITLE = /\b(ao vivo|en vivo|live stream|livestream|assistir|ver gratis|grátis|gratis)\b|\blive on youtube\b|\byoutube live\b|прямая трансляция|смотреть онлайн|пряма трансляція|дивитися онлайн/i;
 
@@ -71,7 +73,7 @@ function parseItems(xml) {
 }
 
 function keep(item, now) {
-  return item.title && /^https:\/\//.test(item.link) && item.published_at &&
+  return item.title && /^https:\/\//.test(item.link) && item.link.length <= MAX_LINK && item.published_at &&
     now - Date.parse(item.published_at) <= MAX_AGE_MS &&
     !BLOCKED_SOURCES.test(item.source) && !SPAM_TITLE.test(item.title);
 }
