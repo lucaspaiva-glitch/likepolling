@@ -516,6 +516,7 @@
     .lp-sp-row { display: flex; gap: 6px; padding: 10px 12px 0; }
     .lp-sp-at { flex: 1; min-width: 0; display: flex; align-items: center; box-sizing: border-box; padding: 0 10px; border: 1px solid rgba(255,42,60,.6); border-radius: 8px; background: #fff; cursor: text; }
     .lp-sp-at:focus-within { border-color: #ff2a3c; box-shadow: 0 0 0 3px rgba(255,42,60,.3); }
+    .lp-sp-at.raw span { display: none; }
     .lp-sp-at span { flex: none; color: #b0000e; font: 700 14px/1 Inter, system-ui, sans-serif; margin-right: 2px; }
     .lp-sp-row input { flex: 1; min-width: 0; padding: 8px 0; border: 0; outline: none; background: transparent; color: #0d0d0d; font: 13px/1.2 Inter, system-ui, sans-serif; }
     .lp-sp-row button { flex: none; padding: 0 12px; border: 1px solid #ff2a3c; border-radius: 8px; background: #b0000e; color: #fff; font: 650 12.5px Inter, system-ui, sans-serif; cursor: pointer; }
@@ -1052,6 +1053,9 @@ ENERGY</div>
         if (on) setTimeout(() => sIn.focus({ preventScroll: true }), 30);
       }
       const pin = () => { sHover = false; clearTimeout(sT); };
+      // Links and channel IDs are looked up as they are, so the @ sign is hidden while one is in the box.
+      const isLink = (v) => /\/|^https?:|youtube\.com|youtu\.be|^UC[\w-]{22}$/i.test(v.trim());
+      sIn.addEventListener('input', () => sIn.parentElement.classList.toggle('raw', isLink(sIn.value)));
       if (matchMedia('(hover: hover) and (pointer: fine)').matches) {
         [tab, sPop].forEach((el) => {
           el.addEventListener('pointerenter', (e) => {
@@ -1079,7 +1083,7 @@ ENERGY</div>
         // Look up as a handle (@name: 1 YouTube unit) unless a channel link or ID was pasted; a name search costs 100.
         const raw = sIn.value.trim();
         if (!raw) return;
-        const q = /\/|^UC[\w-]{22}$/.test(raw) ? raw : '@' + raw.replace(/^@+/, '').replace(/\s+/g, '');
+        const q = isLink(raw) ? raw : '@' + raw.replace(/^@+/, '').replace(/\s+/g, '');
         const mine = ++sToken;
         const status = (msg) => { if (mine === sToken) sOut.innerHTML = `<p class="lp-sp-msg"><span class="spinner"></span><span>${esc(msg)}</span></p>`; };
         status('Searching database…');
