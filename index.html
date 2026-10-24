@@ -216,7 +216,7 @@
     @media (max-width: 700px) { footer { padding-left: 44px; padding-right: 44px; } }
 
     /* Search tab: rides the left edge with the scroll position and opens the search drawer. */
-    .lp-rail { position: fixed; left: 0; top: 0; z-index: 60; display: grid; grid-auto-rows: 1fr; gap: 6px; transform: translateY(var(--tab-y, 108px)); transition: opacity .25s; will-change: transform; }
+    .lp-rail { position: fixed; left: 0; top: 0; z-index: 60; display: grid; grid-auto-rows: 1fr; gap: 6px; transform: translateY(var(--tab-y, 239px)); transition: opacity .25s; will-change: transform; }
     .lp-tab { --c: var(--red, #b0000e); --soft: var(--red-soft, #fbf1f1); position: relative; isolation: isolate; overflow: hidden; display: flex; flex-direction: column; align-items: center; gap: 9px; width: 26px; padding: 12px 0 11px; border: 1px solid var(--line, #ebebeb); border-left: 0; border-radius: 0 8px 8px 0; background: #fff; color: var(--c); cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,.04), 0 6px 16px -10px rgba(0,0,0,.18); transition: width .2s, border-color .2s, background-color .2s; }
     .lp-tab::before { content: ''; position: absolute; top: 10px; bottom: 10px; right: 0; width: 2px; z-index: 2; border-radius: 2px 0 0 2px; pointer-events: none; background: currentColor; opacity: .55; }
     .lp-tab::after { content: none; }
@@ -504,7 +504,7 @@
     #search-tab .lp-mq, #search-tab .lp-mq span, #search-tab .lp-mq i { color: #ffe3e6; text-shadow: 0 0 2px #ff2a3c, 0 0 6px rgba(255,42,60,.7); }
     #search-tab:focus-visible { outline-color: #ff2a3c; }
     .lp-truck-back { background: linear-gradient(90deg, #5a0007, #6e0009 60%, #7f000a); border-color: rgba(255,42,60,.7); box-shadow: 0 0 8px -3px rgba(255,42,60,.6); }
-    @media (max-width: 560px) { .lp-rail { --tab-y: 159px; } }
+    @media (max-width: 560px) { .lp-rail { --tab-y: 299px; } }
     .lp-truck-papers { position: absolute; left: 1px; bottom: calc(100% + 7px); width: calc(100% - 4px); height: 11px; pointer-events: none; filter: drop-shadow(0 0 3px rgba(255,42,60,.45)); }
     .lp-truck-papers svg { display: block; width: 100%; height: 100%; overflow: visible; }
     .lp-truck-papers .p { fill: #f6f1e4; stroke: #8a8172; stroke-width: .5; vector-effect: non-scaling-stroke; }
@@ -951,10 +951,11 @@ ENERGY</div>
         raf = 0;
         const max = document.documentElement.scrollHeight - innerHeight;
         const p = max > 0 ? Math.min(1, Math.max(0, scrollY / max)) : 0;
-        // Start below the whole header, so the Like Polling title stands alone at the top, then drive down with the scroll.
-        const head = document.querySelector('header.top');
-        const below = head ? head.getBoundingClientRect().bottom + scrollY + 40 : 52;
-        const top = Math.round(Math.max(52, Math.min(below, innerHeight * 0.4)));
+        // Start with the truck's back level with the World News top-story picture (below "Top 10 · <country>"),
+        // so the Like Polling title stands alone at the top. Until the news loads, the usual spot (same as the CSS default).
+        const lead = document.querySelector('#news-front:not([hidden]) .nw-lead');
+        const anchor = lead && lead.offsetHeight ? lead.getBoundingClientRect().top + scrollY + 18 : innerWidth <= 560 ? 299 : 239;
+        const top = Math.round(Math.max(52, Math.min(anchor, innerHeight * 0.45)));
         const room = Math.max(0, innerHeight - rail.offsetHeight - top - 16 - (cab ? cab.offsetHeight + 3 : 0));
         target = Math.round(top + p * room);
         if (!glide) glide = requestAnimationFrame(step);
