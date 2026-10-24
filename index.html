@@ -216,7 +216,7 @@
     @media (max-width: 700px) { footer { padding-left: 44px; padding-right: 44px; } }
 
     /* Search tab: rides the left edge with the scroll position and opens the search drawer. */
-    .lp-rail { position: fixed; left: 0; top: 0; z-index: 60; display: grid; grid-auto-rows: 1fr; gap: 6px; transform: translateY(var(--tab-y, 239px)); transition: opacity .25s; will-change: transform; }
+    .lp-rail { position: fixed; left: 0; top: 0; z-index: 60; display: grid; grid-auto-rows: 1fr; gap: 6px; transform: translate3d(0, var(--tab-y, 239px), 0); transition: opacity .25s; will-change: transform; }
     .lp-tab { --c: var(--red, #b0000e); --soft: var(--red-soft, #fbf1f1); position: relative; isolation: isolate; overflow: hidden; display: flex; flex-direction: column; align-items: center; gap: 9px; width: 26px; padding: 12px 0 11px; border: 1px solid var(--line, #ebebeb); border-left: 0; border-radius: 0 8px 8px 0; background: #fff; color: var(--c); cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,.04), 0 6px 16px -10px rgba(0,0,0,.18); transition: width .2s, border-color .2s, background-color .2s; }
     .lp-tab::before { content: ''; position: absolute; top: 10px; bottom: 10px; right: 0; width: 2px; z-index: 2; border-radius: 2px 0 0 2px; pointer-events: none; background: currentColor; opacity: .55; }
     .lp-tab::after { content: none; }
@@ -493,7 +493,6 @@
     .cpx-shot span { display: block; margin-top: 2px; font-size: 12.5px; line-height: 1.35; color: var(--muted); }
     @media (min-width: 900px) { .cpx { grid-template-columns: 300px minmax(0, 1fr); align-items: center; } .cpx-shots { padding: 22px 22px 22px 0; } }
     @media (max-width: 640px) { .cpx-shots { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 78%; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; } .cpx-shots::-webkit-scrollbar { display: none; } .cpx-shot { scroll-snap-align: start; } }
-    @media (min-width: 1240px) { .wrap:has(> .ytt:not([hidden])) > .cpx { grid-column: 1 / -1; grid-row: 9; margin: 0 0 56px; } }
 
     /* Newspaper delivery truck: the search tab, the ad tab and the tail form one oxblood cargo box,
        with a tied bundle of newspapers on the roof. */
@@ -538,6 +537,37 @@
     .lp-sp-stats b { display: block; margin-top: 3px; font: 700 13.5px/1.1 'Chakra Petch', Inter, system-ui, sans-serif; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .lp-sp-full { display: block; width: 100%; margin-top: 10px; padding: 8px; border: 0; border-radius: 999px; background: #fff; color: #b0000e; font: 650 12.5px Inter, system-ui, sans-serif; cursor: pointer; }
     .lp-sp-full:hover { background: #ffe3e6; }
+    #cp-tab, #cp-tab:hover, #cp-tab:focus-visible, #cp-tab[aria-expanded="true"] { background: linear-gradient(90deg, #5a0007, #6e0009 60%, #7f000a); color: #ff4a5c; border-color: rgba(255,42,60,.7); box-shadow: inset 0 0 0 2px #630008, inset 0 0 0 2.5px rgba(255,42,60,.25), inset 0 0 6px rgba(255,42,60,.2), 0 0 8px -3px rgba(255,42,60,.6); }
+    #cp-tab:hover, #cp-tab:focus-visible, #cp-tab[aria-expanded="true"] { background: linear-gradient(90deg, #6a0008, #7f000a 60%, #94000c); border-color: #ff2a3c; box-shadow: inset 0 0 0 2px #7f000a, inset 0 0 0 2.5px rgba(255,42,60,.35), inset 0 0 8px rgba(255,42,60,.28), 0 0 10px -3px rgba(255,42,60,.75); }
+    #cp-tab::before { background: #ff2a3c; opacity: .8; box-shadow: 0 0 3px rgba(255,42,60,.55); }
+    #cp-tab > svg { color: #fff; filter: drop-shadow(0 0 2px rgba(255,42,60,.9)); }
+    #cp-tab .lp-mq, #cp-tab .lp-mq span, #cp-tab .lp-mq i { color: #ffe3e6; text-shadow: 0 0 2px #ff2a3c, 0 0 6px rgba(255,42,60,.7); }
+    #cp-tab:focus-visible { outline-color: #ff2a3c; }
+    #cp-tab > svg { filter: drop-shadow(0 0 2px rgba(255,42,60,.9)); }
+    .lp-cpp { width: min(300px, calc(100vw - 56px)); }
+    .lp-cpp-in { padding: 10px 12px 0; }
+    .lp-cpp h3 { display: flex; align-items: center; gap: 8px; margin: 0; color: #fff; font-size: 19px; font-weight: 750; letter-spacing: -.02em; }
+    .lp-cpp h3 svg { box-shadow: 0 0 0 1px rgba(255,42,60,.6); border-radius: 6px; }
+    .lp-cpp h3 b { color: #ff6a78; }
+    .lp-cpp p { margin: 6px 0 0; font-size: 12.5px; line-height: 1.4; color: rgba(255,227,230,.92); }
+    .lp-cpp ul { list-style: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin: 10px 0 0; padding: 0; }
+    .lp-cpp li img { display: block; width: 100%; height: 54px; object-fit: cover; object-position: top; border-radius: 6px; border: 1px solid rgba(255,42,60,.45); background: rgba(0,0,0,.2); }
+    .lp-cpp li span { display: block; margin-top: 4px; font: 600 9px/1.2 ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: .04em; text-transform: uppercase; color: rgba(255,190,195,.85); }
+    .lp-cpp a.lp-sp-full { text-align: center; text-decoration: none; box-sizing: border-box; }
+    .lp-cpp small { display: block; margin-top: 8px; font-size: 10.5px; line-height: 1.35; color: rgba(255,190,195,.75); }
+    .lp-ext { flex: none; display: inline-flex; align-items: center; gap: 6px; margin-left: 10px; padding: 6px 12px; border-radius: 999px; background: var(--red); color: #fff; font-size: 12px; font-weight: 600; text-decoration: none; box-shadow: 0 0 0 1px rgba(255,42,60,.4), 0 4px 12px -6px rgba(176,0,14,.7); transition: background .15s; }
+    .lp-ext:hover { background: var(--red-dark); }
+    .lp-ext:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
+    /* Three compartments: shorter labels so the truck still has room to drive. */
+    .lp-tab .lp-mq { height: 118px; }
+    @media (max-width: 560px) { .lp-tab .lp-mq { height: 92px; } }
+    /* Phones: the Chrome button becomes a round icon on the same line as 24/7. */
+    @media (max-width: 520px) {
+      header.top > .brand { flex: 1 1 0; min-width: 0; white-space: normal; }
+      header.top > .live { margin-left: 8px; }
+      header.top > .lp-ext { order: 2; margin-left: 6px; width: 30px; height: 30px; padding: 0; justify-content: center; font-size: 0; gap: 0; }
+      header.top > .lp-ext svg { width: 14px; height: 14px; }
+    }
   </style>
 </head>
 <body>
@@ -557,6 +587,7 @@
     <header class="top">
       <a class="brand" href="/" aria-label="Like Polling home"><svg class="brand-mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="var(--red)"/><polyline points="5,21 8,19 10.5,20.2 13.5,16.5 15.5,17.6 18.5,12.5 20.5,13.6 23,6" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="23" cy="6" r="1.9" fill="#fff"/></svg><span class="brand-txt"><span data-no-i18n>Like Polling</span><small class="tagline">Human + AI analytics for what the world watches</small></span></a>
       <div class="live">Live data, 24/7</div>
+      <a class="lp-ext" href="https://chromewebstore.google.com/detail/creators-+/ibajjhdapncbacoinjjcagimpcjpahbn" target="_blank" rel="noopener" aria-label="Add to Chrome"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path d="M8 2v8m0 0L4.8 6.8M8 10l3.2-3.2M3 13h10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Add to Chrome</span></a>
     </header>
 
     <section class="nw nw-front" id="news-front" aria-label="World news"></section>
@@ -564,26 +595,13 @@
     <section class="ymu" id="yt-music" data-supabase-url="https://iyhaoagslsrwtkcrxylp.supabase.co" data-supabase-key="sb_publishable_ZnV9HrtfDqeKlBftnDxH2Q_YK6XWJTp"></section>
     <section id="news-wire" data-supabase-url="https://iyhaoagslsrwtkcrxylp.supabase.co" data-supabase-key="sb_publishable_ZnV9HrtfDqeKlBftnDxH2Q_YK6XWJTp"></section>
     <section id="edu" data-supabase-url="https://iyhaoagslsrwtkcrxylp.supabase.co" data-supabase-key="sb_publishable_ZnV9HrtfDqeKlBftnDxH2Q_YK6XWJTp"></section>
-    <section class="cpx" id="creators-plus" aria-labelledby="cpx-h">
-      <div class="cpx-intro">
-        <span class="cpx-sym">Extension</span>
-        <h2 id="cpx-h" data-no-i18n><svg viewBox="0 0 28 28" width="34" height="34" aria-hidden="true"><rect width="28" height="28" rx="7" fill="var(--red)"/><polyline points="5,21 8,19 10.5,20.2 13.5,16.5 15.5,17.6 18.5,12.5 20.5,13.6 23,6" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="23" cy="6" r="1.9" fill="#fff"/></svg>Creators <b>+</b></h2>
-        <p>YouTube rankings, who's trending and channel graphs, right on YouTube.</p>
-        <a class="cpx-cta" href="https://chromewebstore.google.com/detail/creators-+/ibajjhdapncbacoinjjcagimpcjpahbn" target="_blank" rel="noopener">Add to Chrome · it's free</a>
-        <small class="cpx-note">Also works in Edge, Brave, Arc and Opera on computers. No account needed.</small>
-      </div>
-      <ul class="cpx-shots">
-        <li class="cpx-shot"><img src="/assets/creators-plus/rankings.webp" width="800" height="500" loading="lazy" alt=""><strong>Rankings</strong><span>Which videos trend in the most countries</span></li>
-        <li class="cpx-shot"><img src="/assets/creators-plus/trending.webp" width="800" height="500" loading="lazy" alt=""><strong>Who's trending</strong><span>Each country's top videos and how fast they grow</span></li>
-        <li class="cpx-shot"><img src="/assets/creators-plus/graphs.webp" width="800" height="500" loading="lazy" alt=""><strong>Graphs</strong><span>Any channel's last 30 days, video by video</span></li>
-      </ul>
-    </section>
   </div>
 
 
   <div class="lp-rail" id="lp-rail">
     <button type="button" class="lp-tab" id="search-tab" aria-controls="search-drawer" aria-expanded="false"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span class="lp-mq"><span class="lp-mq-t"><span>Search any YouTube Channel</span><i aria-hidden="true">&bull;</i><span aria-hidden="true">Search any YouTube Channel</span><i aria-hidden="true">&bull;</i></span></span></button>
     <button type="button" class="lp-tab lp-ad-tab" id="ad-tab" aria-controls="ad-pop" aria-expanded="false" aria-label="Sponsored: Machu Picchu Energy"><svg class="mpe-can" viewBox="0 -7 20 39" width="14" height="27" aria-hidden="true"><defs><linearGradient id="mpe-can-body" x1="0" x2="1"><stop offset="0" stop-color="#b87800"/><stop offset=".3" stop-color="#ffd84a"/><stop offset=".55" stop-color="#f5b400"/><stop offset="1" stop-color="#9a6200"/></linearGradient><linearGradient id="mpe-can-band" x1="0" x2="1"><stop offset="0" stop-color="#8f0f18"/><stop offset=".32" stop-color="#ff4a55"/><stop offset=".55" stop-color="#e0232f"/><stop offset="1" stop-color="#7a0a12"/></linearGradient><linearGradient id="mpe-can-metal" x1="0" x2="1"><stop offset="0" stop-color="#7a7a7a"/><stop offset=".42" stop-color="#f4f4f4"/><stop offset="1" stop-color="#6a6a6a"/></linearGradient></defs><g class="mpe-can-shake"><path d="M4.2 6 5.3 3.4h9.4L15.8 6Z" fill="url(#mpe-can-metal)"/><rect x="3" y="6" width="14" height="22.5" rx="2" fill="url(#mpe-can-body)"/><rect x="3" y="6" width="14" height="4" fill="url(#mpe-can-band)"/><path d="M5 11.6h10M5 13.2h10" stroke="#1d1d1b" stroke-width=".9"/><circle cx="10" cy="19.4" r="3.6" fill="none" stroke="#1d1d1b" stroke-width=".7"/><path d="M7.2 21 9.4 17.4l1 1.4.9-1 1.6 3.2Z" fill="#1d1d1b"/><rect x="3.4" y="27.6" width="13.2" height="2.4" rx="1.2" fill="url(#mpe-can-metal)"/><g class="mpe-can-pull"><path d="M8.2 3.5h3.6" stroke="#d9d9d9" stroke-width="1.1" stroke-linecap="round"/><circle cx="12.2" cy="3.5" r=".9" fill="none" stroke="#bdbdbd" stroke-width=".6"/></g><g class="mpe-can-fizz" fill="#f7b500"><circle cx="9" cy="1.5" r=".9"/><circle cx="11.6" cy=".5" r=".65"/><circle cx="10.2" cy="-1" r=".55"/></g></g></svg><span class="lp-mq" data-no-i18n><span class="lp-mq-t"><span>Machu Picchu Energy</span><i aria-hidden="true">&bull;</i><span aria-hidden="true">Machu Picchu Energy</span><i aria-hidden="true">&bull;</i></span></span><small data-no-i18n>AD</small></button>
+    <button type="button" class="lp-tab lp-cp-tab" id="cp-tab" aria-controls="cp-pop" aria-label="Creators +: Chrome Extension" aria-expanded="false"><svg viewBox="0 0 28 28" width="14" height="14" aria-hidden="true"><rect width="28" height="28" rx="7" fill="#b0000e"/><polyline points="5,21 8,19 10.5,20.2 13.5,16.5 15.5,17.6 18.5,12.5 20.5,13.6 23,6" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="23" cy="6" r="1.9" fill="#fff"/></svg><span class="lp-mq" data-no-i18n><span class="lp-mq-t"><span>Creators +</span><i aria-hidden="true">&bull;</i><span aria-hidden="true">Creators +</span><i aria-hidden="true">&bull;</i></span></span></button>
     <span class="lp-truck-papers" aria-hidden="true"><svg viewBox="0 0 18 11" preserveAspectRatio="none"><rect class="p" x="1" y="7" width="16" height="3.4" rx=".6"/><rect class="p" x="2" y="3.6" width="15" height="3.4" rx=".6"/><rect class="p" x=".5" y=".4" width="15.5" height="3.2" rx=".6"/><path class="t" d="M3 2H9M3 5.3H8M4 8.7H11"/><path class="s" d="M12.6 0V11M12.6 5.4H17.4"/></svg></span>
     <span class="lp-truck-back" aria-hidden="true"></span>
     <span class="lp-truck-cab" aria-hidden="true"><svg viewBox="0 0 20 40" preserveAspectRatio="none">
@@ -615,6 +633,18 @@ ENERGY</div>
       <div class="lp-sp-row"><label class="lp-sp-at"><span aria-hidden="true">@</span><input id="sp-input" type="search" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Search any YouTube Channel"></label><button type="submit">Search</button></div>
       <div class="lp-sp-out" id="sp-out" aria-live="polite"></div>
     </form>
+  </div>
+  <div class="mpe-pop lp-sp lp-cpp" id="cp-pop" hidden>
+    <div class="lp-sp-card">
+      <div class="mpe-top"><span class="mpe-sym" data-no-i18n>EXT</span><span>Chrome Extension</span></div>
+      <div class="lp-cpp-in">
+        <h3 data-no-i18n><svg viewBox="0 0 28 28" width="26" height="26" aria-hidden="true"><rect width="28" height="28" rx="7" fill="#b0000e"/><polyline points="5,21 8,19 10.5,20.2 13.5,16.5 15.5,17.6 18.5,12.5 20.5,13.6 23,6" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="23" cy="6" r="1.9" fill="#fff"/></svg>Creators <b>+</b></h3>
+        <p>YouTube rankings, who's trending and channel graphs, right on YouTube.</p>
+        <ul><li><img src="/assets/creators-plus/rankings.webp" width="800" height="500" loading="lazy" alt=""><span>Rankings</span></li><li><img src="/assets/creators-plus/trending.webp" width="800" height="500" loading="lazy" alt=""><span>Who's trending</span></li><li><img src="/assets/creators-plus/graphs.webp" width="800" height="500" loading="lazy" alt=""><span>Graphs</span></li></ul>
+        <a class="lp-sp-full" href="https://chromewebstore.google.com/detail/creators-+/ibajjhdapncbacoinjjcagimpcjpahbn" target="_blank" rel="noopener">Add to Chrome · it's free</a>
+        <small>Also works in Edge, Brave, Arc and Opera on computers. No account needed.</small>
+      </div>
+    </div>
   </div>
   <div class="lp-scrim" id="search-scrim"></div>
   <aside class="lp-drawer" id="search-drawer" aria-label="Search any YouTube Channel" aria-hidden="true" inert>
@@ -963,25 +993,37 @@ ENERGY</div>
       const rail = $('lp-rail'), tab = $('search-tab'), drawer = $('search-drawer'), scrim = $('search-scrim');
       const adTab = $('ad-tab'), adPop = $('ad-pop');
       const sPop = $('search-pop'), sIn = $('sp-input'), sOut = $('sp-out');
+      const cpTab = $('cp-tab'), cpPop = $('cp-pop');
       let raf = 0, idle = 0, cur = null, target = 0, glide = 0, spin = 0;
       const still = matchMedia('(prefers-reduced-motion: reduce)');
       const cab = rail.querySelector('.lp-truck-cab');
       // Ease the rail toward its scroll position each frame; wheels turn by the distance travelled.
-      function step() {
+      // Brakes like a truck: eases to a stop over ~0.8 s, the same on 60 Hz and 120 Hz screens.
+      let last = 0;
+      const vh = () => document.documentElement.clientHeight || innerHeight; // ignores the iPhone toolbar showing/hiding
+      function step(now) {
         glide = 0;
         const prev = cur;
-        cur = cur == null || still.matches || Math.abs(target - cur) < 0.4 ? target : cur + (target - cur) * 0.16;
+        const dt = Math.min(64, last && now ? now - last : 16);
+        last = now || 0;
+        cur = cur == null || still.matches || Math.abs(target - cur) < 0.3 ? target : cur + (target - cur) * (1 - Math.exp(-dt / 240));
         spin -= (cur - prev || 0) * 10;
         rail.style.setProperty('--tab-y', cur.toFixed(1) + 'px');
         rail.style.setProperty('--spin', spin.toFixed(1) + 'deg');
         placePop();
         placeSearchPop();
-        if (cur !== target) glide = requestAnimationFrame(step);
+        placeCpPop();
+        if (cur !== target) glide = requestAnimationFrame(step); else last = 0;
       }
       function placePop() {
         if (adPop.hidden) return;
         const r = adTab.getBoundingClientRect();
         adPop.style.setProperty('--pop-y', Math.round(Math.max(8, Math.min(r.top, innerHeight - adPop.offsetHeight - 8))) + 'px');
+      }
+      function placeCpPop() {
+        if (cpPop.hidden) return;
+        const r = cpTab.getBoundingClientRect();
+        cpPop.style.setProperty('--pop-y', Math.round(Math.max(8, Math.min(r.top, innerHeight - cpPop.offsetHeight - 8))) + 'px');
       }
       function placeSearchPop() {
         if (sPop.hidden) return;
@@ -990,14 +1032,14 @@ ENERGY</div>
       }
       function place() {
         raf = 0;
-        const max = document.documentElement.scrollHeight - innerHeight;
+        const max = document.documentElement.scrollHeight - vh();
         const p = max > 0 ? Math.min(1, Math.max(0, scrollY / max)) : 0;
         // Start with the truck's back level with the World News top-story picture (below "Top 10 · <country>"),
         // so the Like Polling title stands alone at the top. Until the news loads, the usual spot (same as the CSS default).
         const lead = document.querySelector('#news-front:not([hidden]) .nw-lead');
         const anchor = lead && lead.offsetHeight ? lead.getBoundingClientRect().top + scrollY + 18 : innerWidth <= 560 ? 299 : 239;
-        const top = Math.round(Math.max(52, Math.min(anchor, innerHeight * 0.45)));
-        const room = Math.max(0, innerHeight - rail.offsetHeight - top - 16 - (cab ? cab.offsetHeight + 3 : 0));
+        const top = Math.round(Math.max(52, Math.min(anchor, vh() * 0.45)));
+        const room = Math.max(0, vh() - rail.offsetHeight - top - 16 - (cab ? cab.offsetHeight + 3 : 0));
         target = Math.round(top + p * room);
         if (!glide) glide = requestAnimationFrame(step);
       }
@@ -1013,7 +1055,7 @@ ENERGY</div>
       place();
       function setAd(on) {
         if (!on) hoverOpen = false;
-        if (on) setSearch(false);
+        if (on) { setSearch(false); setCp(false); }
         adPop.hidden = !on;
         adTab.setAttribute('aria-expanded', String(on));
         placePop();
@@ -1046,7 +1088,7 @@ ENERGY</div>
       let sHover = false, sT = 0, sToken = 0;
       function setSearch(on) {
         if (!on) { sHover = false; clearTimeout(sT); }
-        if (on) setAd(false);
+        if (on) { setAd(false); setCp(false); }
         sPop.hidden = !on;
         tab.setAttribute('aria-expanded', String(on));
         placeSearchPop();
@@ -1108,7 +1150,25 @@ ENERGY</div>
         }
         placeSearchPop();
       });
+      // Creators + compartment: same hover / click / tap rules as the sponsor and search cards.
+      let cHover = false, cT = 0;
+      function setCp(on) {
+        if (!on) { cHover = false; clearTimeout(cT); }
+        if (on) { setAd(false); setSearch(false); }
+        cpPop.hidden = !on;
+        cpTab.setAttribute('aria-expanded', String(on));
+        placeCpPop();
+      }
+      if (matchMedia('(hover: hover) and (pointer: fine)').matches) {
+        [cpTab, cpPop].forEach((el) => {
+          el.addEventListener('pointerenter', (e) => { if (e.pointerType !== 'mouse') return; clearTimeout(cT); if (cpPop.hidden) cT = setTimeout(() => { setCp(true); cHover = true; }, 150); });
+          el.addEventListener('pointerleave', (e) => { if (e.pointerType !== 'mouse') return; clearTimeout(cT); if (cHover) cT = setTimeout(() => { if (cHover) setCp(false); }, 350); });
+        });
+      }
+      cpTab.addEventListener('click', (e) => { e.stopPropagation(); if (cHover) { cHover = false; clearTimeout(cT); return; } setCp(cpPop.hidden); });
+      document.addEventListener('click', (e) => { if (!cpPop.hidden && !cpPop.contains(e.target)) setCp(false); });
       function setOpen(on) {
+        setCp(false);
         setSearch(false);
         setAd(false);
         drawer.classList.toggle('open', on);
@@ -1126,6 +1186,7 @@ ENERGY</div>
         if (e.key !== 'Escape' || !ytNote.hidden) return;
         if (!adPop.hidden) { setAd(false); adTab.focus({ preventScroll: true }); }
         else if (!sPop.hidden) { setSearch(false); tab.focus({ preventScroll: true }); }
+        else if (!cpPop.hidden) { setCp(false); cpTab.focus({ preventScroll: true }); }
         else if (drawer.classList.contains('open')) setOpen(false);
       });
       if (new URLSearchParams(location.search).get('q')) setOpen(true);
