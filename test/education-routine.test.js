@@ -93,3 +93,16 @@ test('stops on quota exhaustion and fails without writing when nothing was fetch
   assert.ok(!f.calls.some((c) => c.url.includes('/rpc/')));
   await assert.rejects(run({}, { fetch: f }), /Missing env vars/);
 });
+
+test('classifies in batches of 25 and retries a failed batch once', async () => {
+  const many = { US: [{ id: 'UCcccccccccccccccccccccc', handle: '@c' }] };
+  const sizes = [];
+  let fails = 1;
+  const classify = async (titles) => { sizes.push(titles.length); if (titles.length === 25 && fails-- > 0) throw new Error('count mismatch'); return titles.map(() => 'math'); };
+  const f = mockFetch({ match: 'news.google.com', respond: () => json(200, rss(Array.from({ length: 30 }, (_, i) => `Story ${i}`))) });
+  const s = await run(env, { fetch: f, sleep: async () => {}, log: () => {}, classify, now: () => NOW, channels: many });
+  assert.deepEqual(sizes, [25, 25, 6]);
+  assert.equal(s.subjectErrors.length, 0);
+  const body = JSON.parse(f.calls.find((c) => c.url.includes('/rpc/')).init.body);
+  assert.equal(body.subjects[0].news_count, 30);
+});

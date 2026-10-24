@@ -6,8 +6,8 @@
 //    MAX_PER_CHANNEL per channel. Costs about 1 YouTube unit per channel
 //    (playlistItems.list) plus 1 per 50 videos (videos.list).
 // 2. Most talked-about subjects: those videos plus the last 24 h of Google News
-//    education headlines for the country, sorted into SUBJECTS by Gemini (one
-//    call per country). Score = videos × VIDEO_WEIGHT + headlines.
+//    education headlines for the country, sorted into SUBJECTS by Gemini (batches
+//    of CLASSIFY_BATCH). Score = videos × VIDEO_WEIGHT + headlines.
 // Writes both through the service-role RPC replace_education.
 // Env: YOUTUBE_API_KEY, SUPABASE_URL, SUPABASE_KEY, GEMINI_API_KEY (optional:
 // without it only the videos are refreshed).
@@ -26,6 +26,8 @@ const TOP_N = 10;
 const NEWS_PER_COUNTRY = 40;
 const VIDEO_WEIGHT = 3;
 const SUBJECTS_PER_COUNTRY = 8;
+// Long lists made Gemini return the wrong number of labels, so it gets small batches.
+const CLASSIFY_BATCH = 25;
 const CONCURRENCY = 6;
 const MAX_LINK = 2000;
 const GEMINI_MODELS = ['gemini-3.1-flash-lite', 'gemini-3.5-flash-lite'];
@@ -150,6 +152,15 @@ function geminiClassifier(apiKey) {
   };
 }
 
+async function classifyAll(titles, classify) {
+  const out = [];
+  for (let i = 0; i < titles.length; i += CLASSIFY_BATCH) {
+    const batch = titles.slice(i, i + CLASSIFY_BATCH);
+    out.push(...await classify(batch).catch(() => classify(batch)));
+  }
+  return out;
+}
+
 // videos: all recent videos of the country (fastest first); news: headlines in Google News order.
 function scoreSubjects(country, videos, videoKeys, news, newsKeys) {
   const by = {};
@@ -213,7 +224,7 @@ async function run(env = process.env, deps = {}) {
     if (!deps.classify) { videos.push(...ranked); return; }
     try {
       const news = await fetchNews(cc, deps).catch((err) => { subjectErrors.push({ cc, error: `news: ${err.message}` }); return []; });
-      const keys = await deps.classify([...recent[cc].map((v) => v.title), ...news.map((n) => n.title)]);
+      const keys = await classifyAll([...recent[cc].map((v) => v.title), ...news.map((n) => n.title)], deps.classify);
       const vKeys = keys.slice(0, recent[cc].length);
       const subjectOf = new Map(recent[cc].map((v, i) => [v.video_id, vKeys[i]]));
       videos.push(...ranked.map((v) => ({ ...v, subject: subjectOf.get(v.video_id) === 'other' ? null : subjectOf.get(v.video_id) || null })));
