@@ -80,7 +80,7 @@
                 ${r.thumbnail_url ? `<img class="ytt-thumb" src="${esc(r.thumbnail_url)}" alt="" width="64" height="36" loading="lazy">` : '<span class="ytt-thumb"></span>'}
                 <span class="ytt-text"><span class="ytt-vt" title="${esc(r.title)}">${esc(r.title)}</span><span class="ytt-ch">${esc(r.channel_title)}</span></span>
               </a></td>
-              <td class="n ytt-vol"><span class="ytt-num">${fmt(r.view_count)}</span><div class="ytt-bar" style="width:${Math.max(4, Math.round((Number(r.view_count) || 0) / top * 100))}%"></div></td>
+              <td class="n ytt-vol"><span class="ytt-num">${fmt(r.view_count)}</span>${window.lpVph && lpVph(r.view_count, r.published_at, r.fetched_at) != null ? `<span class="lp-vph-t">${fmt(lpVph(r.view_count, r.published_at, r.fetched_at))}/h</span>` : ''}<div class="ytt-bar" style="width:${Math.max(4, Math.round((Number(r.view_count) || 0) / top * 100))}%"></div></td>
               <td class="n ytt-likes"><span class="ytt-num">${fmt(r.like_count)}</span></td>
             </tr>`).join('')}
           </tbody>

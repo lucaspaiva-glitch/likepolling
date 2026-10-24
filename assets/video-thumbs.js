@@ -13,6 +13,7 @@
   const css = document.createElement('style');
   css.textContent = `
 .lp-vph { position: absolute; right: 6px; top: 6px; z-index: 2; padding: 3px 5px; border: 1px solid rgba(255,42,60,.6); border-radius: 3px; background: #7f000a; color: #fff; font: 700 10px/1 ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace; font-style: normal; letter-spacing: .04em; pointer-events: none; }
+.lp-vph-t { display: block; margin-top: 4px; color: var(--red, #b0000e); font: 650 11px/1 ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace; font-variant-numeric: tabular-nums; }
 .lp-prev { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; border: 0; border-radius: 8px; background: #000; pointer-events: none; opacity: 0; transition: opacity .25s; }
 .lp-prev.on { opacity: 1; }
 ${SEL.split(', ').map((s) => `${s} > b, ${s} > i:not(.lp-vph)`).join(', ')} { z-index: 2; }`;

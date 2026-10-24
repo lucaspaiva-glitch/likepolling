@@ -794,7 +794,7 @@
         <span class="ysh-ctt" title="${esc(v.title)}">${esc(v.title)}</span><span class="ysh-cch">${ch(v)}</span></a>`).join('')}</div>${ranked.length > 5 ? `<ol class="ysh-list">${ranked.slice(5).map((v, j) => `<li><a href="${plist(j + 5)}" target="_blank" rel="noopener">
         <span class="ysh-rk">${rk(j + 5)}</span><img class="ysh-th" src="https://i.ytimg.com/vi/${v.video_id}/default.jpg" alt="" loading="lazy" referrerpolicy="no-referrer">
         <span class="ysh-tx"><span class="ysh-vt" title="${esc(v.title)}">${esc(v.title)}</span><span class="ysh-ch">${ch(v)}</span></span>
-        <span class="ysh-vol"><span class="ysh-num">${v.view_count != null ? esc(compact(v.view_count, ui)) : '—'}</span><span class="ysh-bar" style="width:${Math.max(4, Math.round((Number(v.view_count) || 0) / peak * 100))}%"></span></span></a></li>`).join('')}</ol>` : ''}`;
+        <span class="ysh-vol"><span class="ysh-num">${v.view_count != null ? esc(compact(v.view_count, ui)) : '—'}</span>${window.lpVph && lpVph(v.view_count, v.published_at, v.fetched_at) != null ? `<span class="lp-vph-t">${esc(compact(lpVph(v.view_count, v.published_at, v.fetched_at), ui))}/h</span>` : ''}<span class="ysh-bar" style="width:${Math.max(4, Math.round((Number(v.view_count) || 0) / peak * 100))}%"></span></span></a></li>`).join('')}</ol>` : ''}`;
     sBox.querySelector('.nw-feed-wrap').hidden = !vids.length;
     const none = sBox.querySelector('.nw-empty');
     none.textContent = tr(S_NONE);

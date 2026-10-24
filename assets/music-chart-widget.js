@@ -70,7 +70,7 @@
               ${r.thumbnail_url ? `<img class="ymu-thumb" src="${esc(r.thumbnail_url)}" alt="" width="64" height="36" loading="lazy">` : '<span class="ymu-thumb"></span>'}
               <span class="ymu-text"><span class="ymu-vt" title="${esc(r.title)}">${esc(r.title)}</span><span class="ymu-ch">${esc(r.channel_title)}</span></span>
             </a></td>
-            <td class="n ymu-vol"><span class="ymu-num">${fmt(r.view_count)}</span><div class="ymu-bar" style="width:${Math.max(4, Math.round((Number(r.view_count) || 0) / top * 100))}%"></div></td>
+            <td class="n ymu-vol"><span class="ymu-num">${fmt(r.view_count)}</span>${window.lpVph && lpVph(r.view_count, r.published_at, r.fetched_at) != null ? `<span class="lp-vph-t">${fmt(lpVph(r.view_count, r.published_at, r.fetched_at))}/h</span>` : ''}<div class="ymu-bar" style="width:${Math.max(4, Math.round((Number(r.view_count) || 0) / top * 100))}%"></div></td>
             <td class="n ymu-likes"><span class="ymu-num">${fmt(r.like_count)}</span></td>
           </tr>`).join('')}
         </tbody>
