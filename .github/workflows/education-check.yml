@@ -1,6 +1,10 @@
 name: Education channel check
 on:
   workflow_dispatch:
+    inputs:
+      mode:
+        description: 'handles or search'
+        default: search
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -11,4 +15,5 @@ jobs:
           node-version: 20
       - run: node scripts/education-check.js
         env:
+          MODE: ${{ inputs.mode }}
           YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
