@@ -514,8 +514,10 @@
     .lp-sp { width: min(300px, calc(100vw - 56px)); }
     .lp-sp-card { box-sizing: border-box; padding: 0 0 12px; border: 1px solid #ff2a3c; border-radius: 12px; background: linear-gradient(160deg, #5a0007, #7f000a); color: #ffe3e6; box-shadow: 0 0 0 1px rgba(255,42,60,.25), 0 0 22px -4px rgba(255,42,60,.7); }
     .lp-sp-row { display: flex; gap: 6px; padding: 10px 12px 0; }
-    .lp-sp-row input { flex: 1; min-width: 0; box-sizing: border-box; padding: 8px 10px; border: 1px solid rgba(255,42,60,.6); border-radius: 8px; background: #fff; color: #0d0d0d; font: 13px/1.2 Inter, system-ui, sans-serif; }
-    .lp-sp-row input:focus { outline: none; border-color: #ff2a3c; box-shadow: 0 0 0 3px rgba(255,42,60,.3); }
+    .lp-sp-at { flex: 1; min-width: 0; display: flex; align-items: center; box-sizing: border-box; padding: 0 10px; border: 1px solid rgba(255,42,60,.6); border-radius: 8px; background: #fff; cursor: text; }
+    .lp-sp-at:focus-within { border-color: #ff2a3c; box-shadow: 0 0 0 3px rgba(255,42,60,.3); }
+    .lp-sp-at span { flex: none; color: #b0000e; font: 700 14px/1 Inter, system-ui, sans-serif; margin-right: 2px; }
+    .lp-sp-row input { flex: 1; min-width: 0; padding: 8px 0; border: 0; outline: none; background: transparent; color: #0d0d0d; font: 13px/1.2 Inter, system-ui, sans-serif; }
     .lp-sp-row button { flex: none; padding: 0 12px; border: 1px solid #ff2a3c; border-radius: 8px; background: #b0000e; color: #fff; font: 650 12.5px Inter, system-ui, sans-serif; cursor: pointer; }
     .lp-sp-row button:hover { background: #d0001a; }
     .lp-sp-out:empty { display: none; }
@@ -609,7 +611,7 @@ ENERGY</div>
   <div class="mpe-pop lp-sp" id="search-pop" hidden>
     <form class="lp-sp-card" id="sp-form" role="search" aria-label="Search any YouTube Channel">
       <div class="mpe-top"><span class="mpe-sym" data-no-i18n>YT</span><span>Search any YouTube Channel</span></div>
-      <div class="lp-sp-row"><input id="sp-input" type="search" placeholder="MrBeast or channel URL" autocomplete="off" spellcheck="false" aria-label="MrBeast or channel URL"><button type="submit">Search</button></div>
+      <div class="lp-sp-row"><label class="lp-sp-at"><span aria-hidden="true">@</span><input id="sp-input" type="search" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Search any YouTube Channel"></label><button type="submit">Search</button></div>
       <div class="lp-sp-out" id="sp-out" aria-live="polite"></div>
     </form>
   </div>
@@ -1074,8 +1076,10 @@ ENERGY</div>
       $('sp-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         pin();
-        const q = sIn.value.trim();
-        if (!q) return;
+        // Look up as a handle (@name: 1 YouTube unit) unless a channel link or ID was pasted; a name search costs 100.
+        const raw = sIn.value.trim();
+        if (!raw) return;
+        const q = /\/|^UC[\w-]{22}$/.test(raw) ? raw : '@' + raw.replace(/^@+/, '').replace(/\s+/g, '');
         const mine = ++sToken;
         const status = (msg) => { if (mine === sToken) sOut.innerHTML = `<p class="lp-sp-msg"><span class="spinner"></span><span>${esc(msg)}</span></p>`; };
         status('Searching database…');
