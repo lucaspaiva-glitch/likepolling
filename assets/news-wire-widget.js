@@ -671,7 +671,7 @@
         </div>
       </article>`;
   }
-  const embed = (id, muted) => `${YT_ORIGIN}/embed/${id}?${new URLSearchParams({ autoplay: '1', mute: muted ? '1' : '0', controls: muted ? '0' : '1', playsinline: '1', rel: '0', loop: '1', playlist: id, cc_load_policy: '1', cc_lang_pref: siteLang(), hl: siteLang() })}`;
+  const embed = (id, muted) => `${YT_ORIGIN}/embed/${id}?${new URLSearchParams({ autoplay: '1', mute: muted ? '1' : '0', controls: muted ? '0' : '1', playsinline: '1', rel: '0', loop: '1', playlist: id, cc_load_policy: '1', cc_lang_pref: siteLang(), hl: siteLang(), enablejsapi: '1', origin: location.origin })}`;
   let pv = null;
   let pvTimer = 0;
   function stopPreview() {
@@ -693,7 +693,8 @@
     f.title = t.dataset.title || 'YouTube';
     f.tabIndex = -1;
     f.allow = 'autoplay; encrypted-media';
-    f.addEventListener('load', () => { f.classList.add('nw-ready'); t.classList.add('nw-pvlive'); }, { once: true });
+    const live = () => { f.classList.add('nw-ready'); t.classList.add('nw-pvlive'); };
+    if (window.lpWhenPlaying) lpWhenPlaying(f, live); else f.addEventListener('load', live, { once: true });
     t.querySelector('.nw-tile-media').appendChild(f);
   }
   sFeed.addEventListener('mouseover', (ev) => {
