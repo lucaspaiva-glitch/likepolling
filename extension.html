@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Creators + · YouTube stats in your browser · Like Polling</title>
+  <meta name="description" content="See any YouTube channel's stats, rankings and who's trending, right on YouTube. Free, no account.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://www.likepolling.com/extension">
+  <meta property="og:title" content="Creators + · YouTube stats in your browser">
+  <meta property="og:description" content="See any YouTube channel's stats, rankings and who's trending, right on YouTube. Free, no account.">
+  <meta property="og:image" content="https://www.likepolling.com/assets/creators-plus/og.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="stylesheet" href="/assets/fonts/fonts.css">
+  <script defer src="/_vercel/insights/script.js"></script>
+  <style>
+    :root { --red: #b0000e; --red-dark: #7f000a; --red-soft: #fbf1f1; --red-ring: rgba(176,0,14,.14); --ink: #0d0d0d; --muted: #737373; --line: #ebebeb; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: var(--ink); background: #fff; -webkit-font-smoothing: antialiased; }
+    main { max-width: 980px; margin: 0 auto; padding: 22px 20px 48px; }
+    .brand { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; color: var(--ink); text-decoration: none; }
+    .hero { text-align: center; padding: 44px 0 36px; }
+    .sym { display: inline-block; font: 600 10.5px/1 ui-monospace, 'SF Mono', Menlo, Consolas, monospace; letter-spacing: .08em; text-transform: uppercase; color: var(--red); background: var(--red-soft); padding: 5px 8px; border-radius: 5px; }
+    h1 { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 14px 0 10px; font-size: clamp(36px, 6vw, 52px); font-weight: 750; letter-spacing: -.03em; }
+    h1 b { color: var(--red); }
+    .lead { max-width: 34ch; margin: 0 auto; font-size: clamp(17px, 2.2vw, 20px); line-height: 1.45; }
+    .cta { display: inline-block; margin-top: 26px; padding: 15px 28px; border: 2px solid var(--red); border-radius: 999px; background: var(--red); color: #fff; font-size: 17px; font-weight: 650; text-decoration: none; transition: background .15s; }
+    .cta:hover { background: var(--red-dark); border-color: var(--red-dark); }
+    .cta:focus-visible, .btn:focus-visible { outline: none; box-shadow: 0 0 0 4px var(--red-ring); }
+    .note { margin: 14px auto 0; max-width: 46ch; font-size: 13px; line-height: 1.45; color: var(--muted); }
+    .only-mobile, .only-other, .only-edge { display: none; }
+    body[data-mode="mobile"] .only-mobile, body[data-mode="other"] .only-other, body[data-edge] .only-edge { display: block; }
+    body[data-mode="mobile"] .cta, body[data-mode="other"] .cta { background: #fff; color: var(--red); font-size: 15px; padding: 11px 22px; }
+    .alert { max-width: 520px; margin: 26px auto 0; padding: 18px 20px; border: 1px solid var(--red-ring); border-radius: 12px; background: var(--red-soft); text-align: left; }
+    .alert strong { display: block; font-size: 16px; }
+    .alert p { margin: 6px 0 12px; font-size: 14px; line-height: 1.45; }
+    .btn { padding: 10px 16px; border: 0; border-radius: 999px; background: var(--red); color: #fff; font: inherit; font-size: 14px; font-weight: 650; cursor: pointer; }
+    .btn.ghost { background: #fff; color: var(--red); border: 1px solid var(--red-ring); margin-left: 6px; }
+    .btn[hidden] { display: none; }
+    h2 { margin: 0 0 18px; font-size: 22px; letter-spacing: -.01em; text-align: center; }
+    .box { border: 1px solid var(--line); border-radius: 12px; padding: 26px 22px; margin-top: 12px; }
+    .steps, .shots { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+    .pic { display: block; width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover; object-position: left top; border: 1px solid var(--line); border-radius: 10px; background: #f6f6f6; }
+    .shots .pic { aspect-ratio: 16 / 10; object-position: center; }
+    .store { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; }
+    .store img { width: 64px; height: 64px; }
+    .store span { padding: 9px 18px; border-radius: 999px; background: #0b57d0; color: #fff; font-size: 14px; font-weight: 600; }
+    .num { display: inline-grid; place-items: center; width: 24px; height: 24px; margin: 14px 8px 0 0; border-radius: 50%; background: var(--red); color: #fff; font-size: 13px; font-weight: 700; vertical-align: top; }
+    .steps p { display: inline-block; width: calc(100% - 36px); margin: 15px 0 0; font-size: 15px; line-height: 1.45; }
+    .tip { margin: 22px 0 0; font-size: 14px; line-height: 1.45; color: var(--muted); text-align: center; }
+    .shots strong { display: block; margin-top: 10px; font-size: 14.5px; }
+    .shots span { display: block; margin-top: 2px; font-size: 13px; color: var(--muted); }
+    footer { margin-top: 34px; font-size: 13px; color: var(--muted); text-align: center; }
+    footer a { color: var(--muted); }
+    @media (max-width: 720px) { .steps, .shots { grid-template-columns: minmax(0, 1fr); } .hero { padding-top: 30px; } }
+  </style>
+</head>
+<body>
+  <main>
+    <a class="brand" href="/"><svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="#b0000e"/><polyline points="5,21 8,19 10.5,20.2 13.5,16.5 15.5,17.6 18.5,12.5 20.5,13.6 23,6" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="23" cy="6" r="1.9" fill="#fff"/></svg>Like Polling</a>
+
+    <section class="hero">
+      <span class="sym">Extension</span>
+      <h1 data-no-i18n><svg viewBox="0 0 28 28" width="48" height="48" aria-hidden="true"><rect width="28" height="28" rx="7" fill="#b0000e"/><polyline points="5,21 8,19 10.5,20.2 13.5,16.5 15.5,17.6 18.5,12.5 20.5,13.6 23,6" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="23" cy="6" r="1.9" fill="#fff"/></svg>Creators <b>+</b></h1>
+      <p class="lead">See any YouTube channel's stats, rankings and who's trending, right on YouTube.</p>
+
+      <div class="alert only-mobile">
+        <strong>Creators + works on computers</strong>
+        <p>Open this link in Chrome on your computer to install it. Send it to yourself:</p>
+        <button class="btn" type="button" data-copy>Copy link</button><button class="btn ghost" type="button" data-share hidden>Share</button>
+      </div>
+      <div class="alert only-other">
+        <strong>Open this page in Chrome to install</strong>
+        <p>Creators + works in Chrome, Edge, Brave, Arc and Opera. Firefox and Safari aren't supported yet.</p>
+        <button class="btn" type="button" data-copy>Copy link</button>
+      </div>
+
+      <a class="cta" href="https://chromewebstore.google.com/detail/creators-+/ibajjhdapncbacoinjjcagimpcjpahbn" target="_blank" rel="noopener">Add to Chrome · it's free</a>
+      <p class="note">Also works in Edge, Brave, Arc and Opera on computers. No account needed.</p>
+      <p class="note only-edge">Using Edge? Click "Allow extensions from other stores" when asked.</p>
+    </section>
+
+    <section class="box" aria-labelledby="setup-h">
+      <h2 id="setup-h">Set up in 30 seconds</h2>
+      <ol class="steps">
+        <li><div class="pic store" aria-hidden="true"><img src="/assets/creators-plus/icon128.png" alt="" width="64" height="64"><span>Add to Chrome</span></div><span class="num">1</span><p>Click "Add to Chrome", then "Add extension".</p></li>
+        <li><img class="pic" src="/assets/creators-plus/pill.webp" width="640" height="480" loading="lazy" alt=""><span class="num">2</span><p>Open any YouTube channel. A Creators + button appears on the left.</p></li>
+        <li><img class="pic" src="/assets/creators-plus/panel.webp" width="640" height="480" loading="lazy" alt=""><span class="num">3</span><p>Click it to see the channel's stats, graphs and top videos.</p></li>
+      </ol>
+      <p class="tip">Tip: click the puzzle icon at the top right of Chrome and pin Creators +. Its icon shows what's trending on any website.</p>
+    </section>
+
+    <section class="box" aria-labelledby="get-h">
+      <h2 id="get-h">What you get</h2>
+      <ul class="shots">
+        <li><img class="pic" src="/assets/creators-plus/rankings.webp" width="800" height="500" loading="lazy" alt=""><strong>Rankings</strong><span>Which videos trend in the most countries</span></li>
+        <li><img class="pic" src="/assets/creators-plus/trending.webp" width="800" height="500" loading="lazy" alt=""><strong>Who's trending</strong><span>Each country's top videos and how fast they grow</span></li>
+        <li><img class="pic" src="/assets/creators-plus/graphs.webp" width="800" height="500" loading="lazy" alt=""><strong>Graphs</strong><span>Any channel's last 30 days, video by video</span></li>
+      </ul>
+    </section>
+
+    <footer><a href="/">likepolling.com</a> · <a href="/privacy">Privacy</a></footer>
+  </main>
+  <script>
+    (function () {
+      var ua = navigator.userAgent;
+      var mobile = /Android|iPhone|iPad|iPod|Mobile/i.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+      var chromium = /Chrome\/|Edg\//.test(ua);
+      document.body.dataset.mode = mobile ? 'mobile' : chromium ? 'ok' : 'other';
+      if (!mobile && /Edg\//.test(ua)) document.body.dataset.edge = '';
+      var link = 'https://www.likepolling.com/extension';
+      document.querySelectorAll('[data-copy]').forEach(function (b) {
+        b.addEventListener('click', function () {
+          var done = function () { b.textContent = 'Link copied'; setTimeout(function () { b.textContent = 'Copy link'; }, 2000); };
+          if (navigator.clipboard) navigator.clipboard.writeText(link).then(done, function () { prompt('', link); });
+          else prompt('', link);
+        });
+      });
+      var share = document.querySelector('[data-share]');
+      if (navigator.share) {
+        share.hidden = false;
+        share.addEventListener('click', function () { navigator.share({ title: 'Creators +', url: link }).catch(function () {}); });
+      }
+    })();
+  </script>
+  <script src="/assets/i18n.js"></script>
+</body>
+</html>

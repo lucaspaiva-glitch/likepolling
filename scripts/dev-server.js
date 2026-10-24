@@ -20,7 +20,7 @@ http.createServer(async (req, res) => {
     res.json = (body) => { res.setHeader('Content-Type', 'application/json'); res.end(JSON.stringify(body)); return res; };
     return api(req, res);
   }
-  const page = { '/': 'index.html', '/index.html': 'index.html', '/privacy': 'privacy.html' }[url.pathname];
+  const page = { '/': 'index.html', '/index.html': 'index.html', '/privacy': 'privacy.html', '/extension': 'extension.html' }[url.pathname];
   if (page) {
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     return fs.createReadStream(path.join(root, page)).pipe(res);

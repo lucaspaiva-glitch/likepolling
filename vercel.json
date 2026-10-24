@@ -2,6 +2,7 @@
   "rewrites": [
     { "source": "/api/metrics/youtube-active", "destination": "/api/youtube-active" },
     { "source": "/api/v1/:route", "destination": "/api/v1?route=:route" },
-    { "source": "/privacy", "destination": "/privacy.html" }
+    { "source": "/privacy", "destination": "/privacy.html" },
+    { "source": "/extension", "destination": "/extension.html" }
   ]
 }
