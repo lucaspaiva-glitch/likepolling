@@ -494,6 +494,22 @@
     @media (min-width: 900px) { .cpx { grid-template-columns: 300px minmax(0, 1fr); align-items: center; } .cpx-shots { padding: 22px 22px 22px 0; } }
     @media (max-width: 640px) { .cpx-shots { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 78%; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; } .cpx-shots::-webkit-scrollbar { display: none; } .cpx-shot { scroll-snap-align: start; } }
     @media (min-width: 1240px) { .wrap:has(> .ytt:not([hidden])) > .cpx { grid-column: 1 / -1; grid-row: 9; margin: 0 0 56px; } }
+
+    /* Newspaper delivery truck: the search tab, the ad tab and the tail form one oxblood cargo box,
+       with a tied bundle of newspapers on the roof. */
+    #search-tab, #search-tab:hover, #search-tab:focus-visible, #search-tab[aria-expanded="true"] { background: linear-gradient(90deg, #5a0007, #6e0009 60%, #7f000a); color: #ff4a5c; border-color: rgba(255,42,60,.7); box-shadow: inset 0 0 0 2px #630008, inset 0 0 0 2.5px rgba(255,42,60,.25), inset 0 0 6px rgba(255,42,60,.2), 0 0 8px -3px rgba(255,42,60,.6); }
+    #search-tab:hover, #search-tab:focus-visible, #search-tab[aria-expanded="true"] { background: linear-gradient(90deg, #6a0008, #7f000a 60%, #94000c); border-color: #ff2a3c; box-shadow: inset 0 0 0 2px #7f000a, inset 0 0 0 2.5px rgba(255,42,60,.35), inset 0 0 8px rgba(255,42,60,.28), 0 0 10px -3px rgba(255,42,60,.75); }
+    #search-tab::before { background: #ff2a3c; opacity: .8; box-shadow: 0 0 3px rgba(255,42,60,.55); }
+    #search-tab > svg { color: #fff; filter: drop-shadow(0 0 2px rgba(255,42,60,.9)); }
+    #search-tab .lp-mq, #search-tab .lp-mq span, #search-tab .lp-mq i { color: #ffe3e6; text-shadow: 0 0 2px #ff2a3c, 0 0 6px rgba(255,42,60,.7); }
+    #search-tab:focus-visible { outline-color: #ff2a3c; }
+    .lp-truck-back { background: linear-gradient(90deg, #5a0007, #6e0009 60%, #7f000a); border-color: rgba(255,42,60,.7); box-shadow: 0 0 8px -3px rgba(255,42,60,.6); }
+    .lp-truck-papers { position: absolute; left: 1px; bottom: calc(100% + 7px); width: calc(100% - 4px); height: 11px; pointer-events: none; filter: drop-shadow(0 0 3px rgba(255,42,60,.45)); }
+    .lp-truck-papers svg { display: block; width: 100%; height: 100%; overflow: visible; }
+    .lp-truck-papers .p { fill: #f6f1e4; stroke: #8a8172; stroke-width: .5; vector-effect: non-scaling-stroke; }
+    .lp-truck-papers .t { stroke: #9a9080; stroke-width: .5; vector-effect: non-scaling-stroke; }
+    .lp-truck-papers .s { fill: none; stroke: #ff2a3c; stroke-width: .9; vector-effect: non-scaling-stroke; }
+    body.lp-drawer-open .lp-truck-papers { opacity: 0; }
   </style>
 </head>
 <body>
@@ -540,6 +556,7 @@
   <div class="lp-rail" id="lp-rail">
     <button type="button" class="lp-tab" id="search-tab" aria-controls="search-drawer" aria-expanded="false"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span class="lp-mq"><span class="lp-mq-t"><span>Search any YouTube Channel</span><i aria-hidden="true">&bull;</i><span aria-hidden="true">Search any YouTube Channel</span><i aria-hidden="true">&bull;</i></span></span></button>
     <button type="button" class="lp-tab lp-ad-tab" id="ad-tab" aria-controls="ad-pop" aria-expanded="false" aria-label="Sponsored: Machu Picchu Energy"><svg class="mpe-can" viewBox="0 -7 20 39" width="14" height="27" aria-hidden="true"><defs><linearGradient id="mpe-can-body" x1="0" x2="1"><stop offset="0" stop-color="#b87800"/><stop offset=".3" stop-color="#ffd84a"/><stop offset=".55" stop-color="#f5b400"/><stop offset="1" stop-color="#9a6200"/></linearGradient><linearGradient id="mpe-can-band" x1="0" x2="1"><stop offset="0" stop-color="#8f0f18"/><stop offset=".32" stop-color="#ff4a55"/><stop offset=".55" stop-color="#e0232f"/><stop offset="1" stop-color="#7a0a12"/></linearGradient><linearGradient id="mpe-can-metal" x1="0" x2="1"><stop offset="0" stop-color="#7a7a7a"/><stop offset=".42" stop-color="#f4f4f4"/><stop offset="1" stop-color="#6a6a6a"/></linearGradient></defs><g class="mpe-can-shake"><path d="M4.2 6 5.3 3.4h9.4L15.8 6Z" fill="url(#mpe-can-metal)"/><rect x="3" y="6" width="14" height="22.5" rx="2" fill="url(#mpe-can-body)"/><rect x="3" y="6" width="14" height="4" fill="url(#mpe-can-band)"/><path d="M5 11.6h10M5 13.2h10" stroke="#1d1d1b" stroke-width=".9"/><circle cx="10" cy="19.4" r="3.6" fill="none" stroke="#1d1d1b" stroke-width=".7"/><path d="M7.2 21 9.4 17.4l1 1.4.9-1 1.6 3.2Z" fill="#1d1d1b"/><rect x="3.4" y="27.6" width="13.2" height="2.4" rx="1.2" fill="url(#mpe-can-metal)"/><g class="mpe-can-pull"><path d="M8.2 3.5h3.6" stroke="#d9d9d9" stroke-width="1.1" stroke-linecap="round"/><circle cx="12.2" cy="3.5" r=".9" fill="none" stroke="#bdbdbd" stroke-width=".6"/></g><g class="mpe-can-fizz" fill="#f7b500"><circle cx="9" cy="1.5" r=".9"/><circle cx="11.6" cy=".5" r=".65"/><circle cx="10.2" cy="-1" r=".55"/></g></g></svg><span class="lp-mq" data-no-i18n><span class="lp-mq-t"><span>Machu Picchu Energy</span><i aria-hidden="true">&bull;</i><span aria-hidden="true">Machu Picchu Energy</span><i aria-hidden="true">&bull;</i></span></span><small data-no-i18n>AD</small></button>
+    <span class="lp-truck-papers" aria-hidden="true"><svg viewBox="0 0 18 11" preserveAspectRatio="none"><rect class="p" x="1" y="7" width="16" height="3.4" rx=".6"/><rect class="p" x="2" y="3.6" width="15" height="3.4" rx=".6"/><rect class="p" x=".5" y=".4" width="15.5" height="3.2" rx=".6"/><path class="t" d="M3 2H9M3 5.3H8M4 8.7H11"/><path class="s" d="M12.6 0V11M12.6 5.4H17.4"/></svg></span>
     <span class="lp-truck-back" aria-hidden="true"></span>
     <span class="lp-truck-cab" aria-hidden="true"><svg viewBox="0 0 20 40" preserveAspectRatio="none">
       <rect class="st" x="15.6" y="-4" width="1.6" height="13" rx=".8"/>
@@ -981,6 +998,7 @@ ENERGY</div>
       });
       document.addEventListener('click', (e) => { if (!adPop.hidden && !adPop.contains(e.target)) setAd(false); });
       function setOpen(on) {
+        if (!on) searchHover = false;
         setAd(false);
         drawer.classList.toggle('open', on);
         scrim.classList.toggle('on', on);
@@ -991,7 +1009,25 @@ ENERGY</div>
         if (on) setTimeout(() => $('input-a').focus({ preventScroll: true }), 330);
         else tab.focus({ preventScroll: true });
       }
-      tab.addEventListener('click', () => setOpen(true));
+      tab.addEventListener('click', () => { clearTimeout(searchT); searchHover = false; setOpen(true); });
+      // Computers: resting the mouse on the search tab opens the search, like the sponsor tab. It closes once the
+      // mouse leaves the panel, unless the visitor clicked or typed in it. Touch screens keep tap-to-open.
+      let searchHover = false, searchT = 0;
+      if (matchMedia('(hover: hover) and (pointer: fine)').matches) {
+        tab.addEventListener('pointerenter', (e) => {
+          if (e.pointerType !== 'mouse' || drawer.classList.contains('open')) return;
+          clearTimeout(searchT);
+          searchT = setTimeout(() => { searchHover = true; setOpen(true); }, 150);
+        });
+        tab.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse' && !drawer.classList.contains('open')) clearTimeout(searchT); });
+        drawer.addEventListener('pointerenter', () => clearTimeout(searchT));
+        drawer.addEventListener('pointerleave', (e) => {
+          if (e.pointerType !== 'mouse' || !searchHover) return;
+          clearTimeout(searchT);
+          searchT = setTimeout(() => { if (searchHover) setOpen(false); }, 400);
+        });
+        ['pointerdown', 'input', 'keydown'].forEach((ev) => drawer.addEventListener(ev, () => { searchHover = false; clearTimeout(searchT); }));
+      }
       $('search-close').addEventListener('click', () => setOpen(false));
       scrim.addEventListener('click', () => setOpen(false));
       document.addEventListener('keydown', (e) => {
