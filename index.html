@@ -511,6 +511,30 @@
     .lp-truck-papers .t { stroke: #9a9080; stroke-width: .5; vector-effect: non-scaling-stroke; }
     .lp-truck-papers .s { fill: none; stroke: #ff2a3c; stroke-width: .9; vector-effect: non-scaling-stroke; }
     body.lp-drawer-open .lp-truck-papers { opacity: 0; }
+    .lp-sp { width: min(300px, calc(100vw - 56px)); }
+    .lp-sp-card { box-sizing: border-box; padding: 0 0 12px; border: 1px solid #ff2a3c; border-radius: 12px; background: linear-gradient(160deg, #5a0007, #7f000a); color: #ffe3e6; box-shadow: 0 0 0 1px rgba(255,42,60,.25), 0 0 22px -4px rgba(255,42,60,.7); }
+    .lp-sp-row { display: flex; gap: 6px; padding: 10px 12px 0; }
+    .lp-sp-row input { flex: 1; min-width: 0; box-sizing: border-box; padding: 8px 10px; border: 1px solid rgba(255,42,60,.6); border-radius: 8px; background: #fff; color: #0d0d0d; font: 13px/1.2 Inter, system-ui, sans-serif; }
+    .lp-sp-row input:focus { outline: none; border-color: #ff2a3c; box-shadow: 0 0 0 3px rgba(255,42,60,.3); }
+    .lp-sp-row button { flex: none; padding: 0 12px; border: 1px solid #ff2a3c; border-radius: 8px; background: #b0000e; color: #fff; font: 650 12.5px Inter, system-ui, sans-serif; cursor: pointer; }
+    .lp-sp-row button:hover { background: #d0001a; }
+    .lp-sp-out:empty { display: none; }
+    .lp-sp-out { padding: 10px 12px 0; }
+    .lp-sp-msg { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 12px; color: rgba(255,220,224,.85); }
+    .lp-sp-msg.err { color: #ffd0d5; }
+    .lp-sp-ch { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .lp-sp-ch img, .lp-sp-ch i { flex: none; width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,.15); object-fit: cover; box-shadow: 0 0 0 1px rgba(255,42,60,.6); }
+    .lp-sp-ch div { min-width: 0; }
+    .lp-sp-ch b, .lp-sp-ch span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .lp-sp-ch b { color: #fff; font-size: 14px; }
+    .lp-sp-ch span { color: rgba(255,190,195,.85); font-size: 11.5px; }
+    .lp-sp-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin-top: 10px; }
+    .lp-sp-stats div:last-child { grid-column: 1 / -1; }
+    .lp-sp-stats div { min-width: 0; padding: 6px 7px; border: 1px solid rgba(255,42,60,.35); border-radius: 8px; background: rgba(0,0,0,.22); }
+    .lp-sp-stats span { display: block; font: 600 8.5px/1.2 ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: .05em; text-transform: uppercase; color: rgba(255,190,195,.8); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .lp-sp-stats b { display: block; margin-top: 3px; font: 700 13.5px/1.1 'Chakra Petch', Inter, system-ui, sans-serif; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .lp-sp-full { display: block; width: 100%; margin-top: 10px; padding: 8px; border: 0; border-radius: 999px; background: #fff; color: #b0000e; font: 650 12.5px Inter, system-ui, sans-serif; cursor: pointer; }
+    .lp-sp-full:hover { background: #ffe3e6; }
   </style>
 </head>
 <body>
@@ -581,6 +605,13 @@ ENERGY</div>
       <div class="mpe-bar" aria-hidden="true"></div>
       <div class="mpe-url" data-no-i18n>machupicchu.energy <span aria-hidden="true">↗</span></div>
     </a>
+  </div>
+  <div class="mpe-pop lp-sp" id="search-pop" hidden>
+    <form class="lp-sp-card" id="sp-form" role="search" aria-label="Search any YouTube Channel">
+      <div class="mpe-top"><span class="mpe-sym" data-no-i18n>YT</span><span>Search any YouTube Channel</span></div>
+      <div class="lp-sp-row"><input id="sp-input" type="search" placeholder="MrBeast or channel URL" autocomplete="off" spellcheck="false" aria-label="MrBeast or channel URL"><button type="submit">Search</button></div>
+      <div class="lp-sp-out" id="sp-out" aria-live="polite"></div>
+    </form>
   </div>
   <div class="lp-scrim" id="search-scrim"></div>
   <aside class="lp-drawer" id="search-drawer" aria-label="Search any YouTube Channel" aria-hidden="true" inert>
@@ -928,6 +959,7 @@ ENERGY</div>
     (() => {
       const rail = $('lp-rail'), tab = $('search-tab'), drawer = $('search-drawer'), scrim = $('search-scrim');
       const adTab = $('ad-tab'), adPop = $('ad-pop');
+      const sPop = $('search-pop'), sIn = $('sp-input'), sOut = $('sp-out');
       let raf = 0, idle = 0, cur = null, target = 0, glide = 0, spin = 0;
       const still = matchMedia('(prefers-reduced-motion: reduce)');
       const cab = rail.querySelector('.lp-truck-cab');
@@ -940,12 +972,18 @@ ENERGY</div>
         rail.style.setProperty('--tab-y', cur.toFixed(1) + 'px');
         rail.style.setProperty('--spin', spin.toFixed(1) + 'deg');
         placePop();
+        placeSearchPop();
         if (cur !== target) glide = requestAnimationFrame(step);
       }
       function placePop() {
         if (adPop.hidden) return;
         const r = adTab.getBoundingClientRect();
         adPop.style.setProperty('--pop-y', Math.round(Math.max(8, Math.min(r.top, innerHeight - adPop.offsetHeight - 8))) + 'px');
+      }
+      function placeSearchPop() {
+        if (sPop.hidden) return;
+        const r = tab.getBoundingClientRect();
+        sPop.style.setProperty('--pop-y', Math.round(Math.max(8, Math.min(r.top, innerHeight - sPop.offsetHeight - 8))) + 'px');
       }
       function place() {
         raf = 0;
@@ -972,6 +1010,7 @@ ENERGY</div>
       place();
       function setAd(on) {
         if (!on) hoverOpen = false;
+        if (on) setSearch(false);
         adPop.hidden = !on;
         adTab.setAttribute('aria-expanded', String(on));
         placePop();
@@ -999,8 +1038,70 @@ ENERGY</div>
         setAd(adPop.hidden);
       });
       document.addEventListener('click', (e) => { if (!adPop.hidden && !adPop.contains(e.target)) setAd(false); });
+      // Search tab: a small search card beside the tab (like the sponsor card). Resting the mouse on the tab opens it
+      // on computers and it closes when the mouse leaves, unless the visitor is using it. "Open full report" opens the big panel.
+      let sHover = false, sT = 0, sToken = 0;
+      function setSearch(on) {
+        if (!on) { sHover = false; clearTimeout(sT); }
+        if (on) setAd(false);
+        sPop.hidden = !on;
+        tab.setAttribute('aria-expanded', String(on));
+        placeSearchPop();
+        if (on) setTimeout(() => sIn.focus({ preventScroll: true }), 30);
+      }
+      const pin = () => { sHover = false; clearTimeout(sT); };
+      if (matchMedia('(hover: hover) and (pointer: fine)').matches) {
+        [tab, sPop].forEach((el) => {
+          el.addEventListener('pointerenter', (e) => {
+            if (e.pointerType !== 'mouse') return;
+            clearTimeout(sT);
+            if (sPop.hidden) sT = setTimeout(() => { setSearch(true); sHover = true; }, 150);
+          });
+          el.addEventListener('pointerleave', (e) => {
+            if (e.pointerType !== 'mouse') return;
+            clearTimeout(sT);
+            if (sHover) sT = setTimeout(() => { if (sHover) setSearch(false); }, 350);
+          });
+        });
+      }
+      ['pointerdown', 'input'].forEach((ev) => sPop.addEventListener(ev, pin));
+      tab.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (sHover) { pin(); return; }
+        setSearch(sPop.hidden);
+      });
+      document.addEventListener('click', (e) => { if (!sPop.hidden && !sPop.contains(e.target)) setSearch(false); });
+      $('sp-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        pin();
+        const q = sIn.value.trim();
+        if (!q) return;
+        const mine = ++sToken;
+        const status = (msg) => { if (mine === sToken) sOut.innerHTML = `<p class="lp-sp-msg"><span class="spinner"></span><span>${esc(msg)}</span></p>`; };
+        status('Searching database…');
+        placeSearchPop();
+        try {
+          const { entity, metric } = await loadChannel(q, status);
+          if (mine !== sToken) return;
+          const h = entity.handles || {};
+          const e2 = earnings(metric?.primary_volume);
+          const subs = metric?.details?.profile?.subscribers;
+          sOut.innerHTML = `<div class="lp-sp-ch">${h.youtube_avatar ? `<img src="${esc(h.youtube_avatar)}" alt="" referrerpolicy="no-referrer">` : '<i></i>'}<div><b data-no-i18n>${esc(entity.name)}</b><span data-no-i18n>${esc(h.youtube || '')}</span></div></div>
+            <div class="lp-sp-stats"><div><span>Subscribers</span><b>${fmt(subs)}</b></div><div><span>Monthly views</span><b>${fmt(metric?.primary_volume)}</b></div><div><span>Est. earnings</span><b>$${fmt(e2.low)}–$${fmt(e2.high)}</b></div></div>
+            <button type="button" class="lp-sp-full">Open full report</button>`;
+          sOut.querySelector('.lp-sp-full').addEventListener('click', () => {
+            $('input-a').value = q;
+            setSearch(false);
+            setOpen(true);
+            runSearch();
+          });
+        } catch (err) {
+          if (mine === sToken) sOut.innerHTML = `<p class="lp-sp-msg err">${esc(err.message || 'Unknown error')}</p>`;
+        }
+        placeSearchPop();
+      });
       function setOpen(on) {
-        if (!on) searchHover = false;
+        setSearch(false);
         setAd(false);
         drawer.classList.toggle('open', on);
         scrim.classList.toggle('on', on);
@@ -1011,30 +1112,12 @@ ENERGY</div>
         if (on) setTimeout(() => $('input-a').focus({ preventScroll: true }), 330);
         else tab.focus({ preventScroll: true });
       }
-      tab.addEventListener('click', () => { clearTimeout(searchT); searchHover = false; setOpen(true); });
-      // Computers: resting the mouse on the search tab opens the search, like the sponsor tab. It closes once the
-      // mouse leaves the panel, unless the visitor clicked or typed in it. Touch screens keep tap-to-open.
-      let searchHover = false, searchT = 0;
-      if (matchMedia('(hover: hover) and (pointer: fine)').matches) {
-        tab.addEventListener('pointerenter', (e) => {
-          if (e.pointerType !== 'mouse' || drawer.classList.contains('open')) return;
-          clearTimeout(searchT);
-          searchT = setTimeout(() => { searchHover = true; setOpen(true); }, 150);
-        });
-        tab.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse' && !drawer.classList.contains('open')) clearTimeout(searchT); });
-        drawer.addEventListener('pointerenter', () => clearTimeout(searchT));
-        drawer.addEventListener('pointerleave', (e) => {
-          if (e.pointerType !== 'mouse' || !searchHover) return;
-          clearTimeout(searchT);
-          searchT = setTimeout(() => { if (searchHover) setOpen(false); }, 400);
-        });
-        ['pointerdown', 'input', 'keydown'].forEach((ev) => drawer.addEventListener(ev, () => { searchHover = false; clearTimeout(searchT); }));
-      }
       $('search-close').addEventListener('click', () => setOpen(false));
       scrim.addEventListener('click', () => setOpen(false));
       document.addEventListener('keydown', (e) => {
         if (e.key !== 'Escape' || !ytNote.hidden) return;
         if (!adPop.hidden) { setAd(false); adTab.focus({ preventScroll: true }); }
+        else if (!sPop.hidden) { setSearch(false); tab.focus({ preventScroll: true }); }
         else if (drawer.classList.contains('open')) setOpen(false);
       });
       if (new URLSearchParams(location.search).get('q')) setOpen(true);
