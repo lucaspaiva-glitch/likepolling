@@ -79,7 +79,7 @@
     const max = Math.max(...rows.map((s) => s.score), 1);
     return `<ol class="edu-list">${rows.map((s) => `<li class="edu-s">
         <div class="edu-sh"><span class="ytt-rank">${pad(s.rank)}</span><b>${esc(SUBJECTS[s.subject] || s.subject)}</b>
-          <span class="edu-ct"><i class="edu-yt"></i><span class="edu-n" data-no-i18n>${s.video_count}</span> <span>videos</span><i class="edu-nw"></i><span class="edu-n" data-no-i18n>${s.news_count}</span> <span>news</span></span></div>
+          <span class="edu-ct"><i class="edu-yt"></i><span class="edu-n" data-no-i18n>${s.video_count}</span> <span>${s.video_count === 1 ? 'video' : 'videos'}</span><i class="edu-nw"></i><span class="edu-n" data-no-i18n>${s.news_count}</span> <span>news</span></span></div>
         <div class="edu-bar"><span class="edu-byt" style="width:${(s.video_count * 3 / max * 100).toFixed(1)}%"></span><span class="edu-bnw" style="width:${(s.news_count / max * 100).toFixed(1)}%"></span></div>
         <div class="edu-ex" data-no-i18n>${s.example_video_id ? `<a href="${watch(s.example_video_id)}" target="_blank" rel="noopener"><i class="edu-yt"></i>${esc(s.example_video_title)}</a>` : ''}
           ${s.example_news_link ? `<a href="${esc(s.example_news_link)}" target="_blank" rel="noopener"><i class="edu-nw"></i>${esc(s.example_news_title)}${s.example_news_source ? ` <em>· ${esc(s.example_news_source)}</em>` : ''}</a>` : ''}</div>

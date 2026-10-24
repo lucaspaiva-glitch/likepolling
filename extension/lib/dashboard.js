@@ -174,7 +174,7 @@
       if (!b.videos.length) return picker + msg(t('no_edu'));
       const max = Math.max(...b.subjects.map((s) => s.score), 1);
       const subjects = b.subjects.length ? `<div class="cp-sec"><h3>${t('edu_subjects')}</h3><ol class="cp-subj">${b.subjects.map((s) => `<li>
-          <div class="cp-sj"><span class="cp-rank">${String(s.rank).padStart(2, '0')}</span><b>${esc(SUBJ_KEYS.includes(s.subject) ? t(`s_${s.subject}`) : s.subject)}</b><em>${t('n_videos', { n: s.video_count })} · ${t('n_news', { n: s.news_count })}</em></div>
+          <div class="cp-sj"><span class="cp-rank">${String(s.rank).padStart(2, '0')}</span><b>${esc(SUBJ_KEYS.includes(s.subject) ? t(`s_${s.subject}`) : s.subject)}</b><em>${t(s.video_count === 1 ? 'n_video' : 'n_videos', { n: s.video_count })} · ${t('n_news', { n: s.news_count })}</em></div>
           <div class="cp-sbar"><i class="yt" style="width:${(s.video_count * 3 / max * 100).toFixed(1)}%"></i><i class="nw" style="width:${(s.news_count / max * 100).toFixed(1)}%"></i></div></li>`).join('')}</ol>
           <p class="cp-note">${t('edu_note')}</p></div>` : '';
       return `${picker}<div class="cp-sec cp-edu"><h3>${t('edu_index')}</h3>${rows(b.videos, 'views_per_hour', 'per_hour', b.videos[0].video_id, false)}<p class="cp-note">${t('speed')} = ${t('speed_h')}</p></div>${subjects}`
