@@ -57,7 +57,7 @@
     const top = Math.max(...rows.map((r) => Number(r.view_count) || 0), 1);
     body.innerHTML = `
       <div class="ymu-cards">${rows.slice(0, 5).map((r) => `<a class="ymu-card" href="https://www.youtube.com/watch?v=${encodeURIComponent(r.video_id)}" target="_blank" rel="noopener">
-            <span class="ymu-cth"><img src="https://i.ytimg.com/vi/${encodeURIComponent(r.video_id)}/mqdefault.jpg" alt="" loading="lazy"><b class="ymu-crk">${String(r.rank).padStart(2, '0')}</b><i class="ymu-cvw">${fmt(r.view_count)}</i></span>
+            <span class="ymu-cth"><img src="https://i.ytimg.com/vi/${encodeURIComponent(r.video_id)}/mqdefault.jpg" alt="" loading="lazy"><b class="ymu-crk">${String(r.rank).padStart(2, '0')}</b><i class="ymu-cvw">${fmt(r.view_count)}</i>${window.lpVph && lpVph(r.view_count, r.published_at, r.fetched_at) != null ? `<i class="lp-vph">${fmt(lpVph(r.view_count, r.published_at, r.fetched_at))}/h</i>` : ''}</span>
             <span class="ymu-ctt" title="${esc(r.title)}">${esc(r.title)}</span>
             <span class="ymu-cch">${esc(r.channel_title)}</span></a>`).join('')}</div>
         ${rows.length > 5 ? `<table class="ymu-table">
@@ -81,7 +81,7 @@
   (async () => {
     try {
       const [rows, countries] = await Promise.all([
-        get('youtube_music_chart?select=country_code,rank,video_id,title,channel_title,thumbnail_url,view_count,like_count,fetched_at&order=country_code,rank'),
+        get('youtube_music_chart?select=country_code,rank,video_id,title,channel_title,thumbnail_url,view_count,like_count,published_at,fetched_at&order=country_code,rank'),
         get('youtube_active_users?select=country_code,country_name&order=country_name'),
       ]);
       const byCountry = {};

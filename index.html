@@ -890,7 +890,7 @@ ENERGY</div>
         <div>
           <h3 class="ci-h"><span>Top 5 · last 30 days</span></h3>
           <div class="ci-top" style="margin-top:10px">${top.map((v, i) => `<a class="ci-tv" href="${watch(v.id)}" target="_blank" rel="noopener">
-            <span class="ci-th"><img src="${thumb(v.id)}" alt="" loading="lazy"><b class="ci-rk" data-no-i18n>0${i + 1}</b>${isShort(v) ? '<i data-no-i18n>≤3 MIN</i>' : ''}</span>
+            <span class="ci-th"><img src="${thumb(v.id)}" alt="" loading="lazy"><b class="ci-rk" data-no-i18n>0${i + 1}</b>${isShort(v) ? '<i data-no-i18n>≤3 MIN</i>' : ''}${window.lpVph && lpVph(v.v, v.p) != null ? `<i class="lp-vph" data-no-i18n>${fmt(lpVph(v.v, v.p))}/h</i>` : ''}</span>
             <span class="ci-tt" data-no-i18n>${esc(v.t)}</span>
             <span class="ci-tn"><b data-no-i18n>${fmt(v.v)}</b> <span>views</span></span></a>`).join('')}</div>
         </div>
@@ -1203,6 +1203,7 @@ ENERGY</div>
       }
     });
   </script>
+  <script src="/assets/video-thumbs.js" defer></script>
   <script src="/assets/trending-widget.js" defer></script>
   <script src="/assets/music-chart-widget.js" defer></script>
   <script src="/assets/education-widget.js" defer></script>

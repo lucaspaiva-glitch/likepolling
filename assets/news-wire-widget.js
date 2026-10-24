@@ -790,7 +790,7 @@
     sFeed.classList.remove('nw-grid');
     sFeed.classList.add('ysh');
     sFeed.innerHTML = `<div class="ysh-cards">${ranked.slice(0, 5).map((v, i) => `<a class="ysh-card" href="${plist(i)}" target="_blank" rel="noopener">
-        <span class="ysh-cth"><img src="https://i.ytimg.com/vi/${v.video_id}/hqdefault.jpg" alt="" loading="lazy" referrerpolicy="no-referrer"><b class="ysh-crk">${rk(i)}</b>${v.view_count != null ? `<i class="ysh-cvw">${esc(compact(v.view_count, ui))}</i>` : ''}</span>
+        <span class="ysh-cth"><img src="https://i.ytimg.com/vi/${v.video_id}/hqdefault.jpg" alt="" loading="lazy" referrerpolicy="no-referrer"><b class="ysh-crk">${rk(i)}</b>${v.view_count != null ? `<i class="ysh-cvw">${esc(compact(v.view_count, ui))}</i>` : ''}${window.lpVph && lpVph(v.view_count, v.published_at, v.fetched_at) != null ? `<i class="lp-vph">${esc(compact(lpVph(v.view_count, v.published_at, v.fetched_at), ui))}/h</i>` : ''}</span>
         <span class="ysh-ctt" title="${esc(v.title)}">${esc(v.title)}</span><span class="ysh-cch">${ch(v)}</span></a>`).join('')}</div>${ranked.length > 5 ? `<ol class="ysh-list">${ranked.slice(5).map((v, j) => `<li><a href="${plist(j + 5)}" target="_blank" rel="noopener">
         <span class="ysh-rk">${rk(j + 5)}</span><img class="ysh-th" src="https://i.ytimg.com/vi/${v.video_id}/default.jpg" alt="" loading="lazy" referrerpolicy="no-referrer">
         <span class="ysh-tx"><span class="ysh-vt" title="${esc(v.title)}">${esc(v.title)}</span><span class="ysh-ch">${ch(v)}</span></span>

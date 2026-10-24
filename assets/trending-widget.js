@@ -57,7 +57,7 @@
   async function show(code) {
     const mine = ++token;
     try {
-      const rows = await get(`youtube_trending?select=rank,video_id,title,channel_title,thumbnail_url,view_count,like_count,fetched_at&country_code=eq.${encodeURIComponent(code)}&order=rank`);
+      const rows = await get(`youtube_trending?select=rank,video_id,title,channel_title,thumbnail_url,view_count,like_count,published_at,fetched_at&country_code=eq.${encodeURIComponent(code)}&order=rank`);
       if (mine !== token) return;
       if (!rows.length) {
         body.innerHTML = '<div class="ytt-empty">No trending data for this country yet.</div>';
@@ -67,7 +67,7 @@
       const top = Math.max(...rows.map((r) => Number(r.view_count) || 0), 1);
       body.innerHTML = `
         <div class="ytt-cards">${rows.slice(0, 5).map((r) => `<a class="ytt-card" href="https://www.youtube.com/watch?v=${encodeURIComponent(r.video_id)}" target="_blank" rel="noopener">
-            <span class="ytt-cth"><img src="https://i.ytimg.com/vi/${encodeURIComponent(r.video_id)}/mqdefault.jpg" alt="" loading="lazy"><b class="ytt-crk">${String(r.rank).padStart(2, '0')}</b><i class="ytt-cvw">${fmt(r.view_count)}</i></span>
+            <span class="ytt-cth"><img src="https://i.ytimg.com/vi/${encodeURIComponent(r.video_id)}/mqdefault.jpg" alt="" loading="lazy"><b class="ytt-crk">${String(r.rank).padStart(2, '0')}</b><i class="ytt-cvw">${fmt(r.view_count)}</i>${window.lpVph && lpVph(r.view_count, r.published_at, r.fetched_at) != null ? `<i class="lp-vph">${fmt(lpVph(r.view_count, r.published_at, r.fetched_at))}/h</i>` : ''}</span>
             <span class="ytt-ctt" title="${esc(r.title)}">${esc(r.title)}</span>
             <span class="ytt-cch">${esc(r.channel_title)}</span></a>`).join('')}</div>
         ${rows.length > 5 ? `<table class="ytt-table">
