@@ -145,6 +145,16 @@
     'No headlines in this filter yet.': ['Ainda não há manchetes neste filtro.', 'Aún no hay titulares en este filtro.', 'In diesem Filter gibt es noch keine Schlagzeilen.', 'В этом фильтре пока нет заголовков.', 'У цьому фільтрі ще немає заголовків.', '이 필터에는 아직 헤드라인이 없습니다.', 'このフィルターにはまだ見出しがありません。'],
     'News is unavailable right now.': ['As notícias estão indisponíveis no momento.', 'Las noticias no están disponibles en este momento.', 'Nachrichten sind gerade nicht verfügbar.', 'Новости сейчас недоступны.', 'Новини зараз недоступні.', '지금은 뉴스를 사용할 수 없습니다.', '現在、ニュースを利用できません。'],
     'Latest headlines from Google News in the selected language. Refreshed hourly.': ['Manchetes mais recentes do Google News no idioma do país escolhido acima. Atualizado a cada hora.', 'Titulares más recientes de Google News en el idioma seleccionado. Se actualiza cada hora.', 'Aktuelle Schlagzeilen von Google News in der gewählten Sprache. Stündlich aktualisiert.', 'Свежие заголовки Google News на выбранном языке. Обновляется каждый час.', 'Свіжі заголовки Google News обраною мовою. Оновлюється щогодини.', '선택한 언어의 Google News 최신 헤드라인. 매시간 업데이트.', '選択した言語のGoogle News最新見出し。1時間ごとに更新。'],
+    "Extension": ["Extensão", "Extensión", "Erweiterung", "Расширение", "Розширення", "확장 프로그램", "拡張機能"],
+    "YouTube rankings, who's trending and channel graphs, right on YouTube.": ["Rankings do YouTube, quem está em alta e gráficos de canais, direto no YouTube.", "Rankings de YouTube, quién es tendencia y gráficos de canales, directamente en YouTube.", "YouTube-Rankings, wer im Trend liegt, und Kanal-Grafiken – direkt auf YouTube.", "Рейтинги YouTube, кто в трендах и графики каналов — прямо на YouTube.", "Рейтинги YouTube, хто в трендах, і графіки каналів — просто на YouTube.", "YouTube 순위, 인기 급상승 콘텐츠, 채널 그래프를 YouTube에서 바로 확인하세요.", "YouTube のランキング、急上昇中の動画、チャンネルのグラフを YouTube 上でそのまま表示。"],
+    "Add to Chrome · it's free": ["Adicionar ao Chrome · é grátis", "Añadir a Chrome · es gratis", "Zu Chrome hinzufügen · kostenlos", "Установить в Chrome · бесплатно", "Додати в Chrome · безкоштовно", "Chrome에 추가 · 무료", "Chrome に追加 · 無料"],
+    "Also works in Edge, Brave, Arc and Opera on computers. No account needed.": ["Também funciona no Edge, Brave, Arc e Opera em computadores. Não precisa de conta.", "También funciona en Edge, Brave, Arc y Opera en computadoras. No necesitas cuenta.", "Funktioniert auch in Edge, Brave, Arc und Opera auf Computern. Kein Konto nötig.", "Работает также в Edge, Brave, Arc и Opera на компьютерах. Аккаунт не нужен.", "Працює також в Edge, Brave, Arc і Opera на комп'ютерах. Обліковий запис не потрібен.", "컴퓨터의 Edge, Brave, Arc, Opera에서도 작동합니다. 계정이 필요 없습니다.", "パソコンの Edge、Brave、Arc、Opera でも使えます。アカウントは不要です。"],
+    "Rankings": ["Rankings", "Rankings", "Rankings", "Рейтинги", "Рейтинги", "순위", "ランキング"],
+    "Who's trending": ["Quem está em alta", "Quién es tendencia", "Wer im Trend liegt", "Кто в трендах", "Хто в трендах", "인기 급상승", "急上昇中"],
+    "Graphs": ["Gráficos", "Gráficos", "Grafiken", "Графики", "Графіки", "그래프", "グラフ"],
+    "Which videos trend in the most countries": ["Os vídeos em alta em mais países", "Los videos en tendencia en más países", "Videos, die in den meisten Ländern im Trend sind", "Видео в трендах в наибольшем числе стран", "Відео в трендах у найбільшій кількості країн", "가장 많은 국가에서 인기 급상승 중인 동영상", "最も多くの国で急上昇中の動画"],
+    "Each country's top videos and how fast they grow": ["Os principais vídeos de cada país e a velocidade com que crescem", "Los videos principales de cada país y qué tan rápido crecen", "Die Top-Videos jedes Landes und wie schnell sie wachsen", "Лучшие видео каждой страны и скорость их роста", "Найкращі відео кожної країни та швидкість їхнього зростання", "국가별 인기 동영상과 성장 속도", "各国の人気動画と伸びの速さ"],
+    "Any channel's last 30 days, video by video": ["Os últimos 30 dias de qualquer canal, vídeo a vídeo", "Los últimos 30 días de cualquier canal, video a video", "Die letzten 30 Tage jedes Kanals, Video für Video", "Последние 30 дней любого канала, видео за видео", "Останні 30 днів будь-якого каналу, відео за відео", "모든 채널의 최근 30일, 동영상별로", "どのチャンネルも直近 30 日を動画ごとに"],
   };
   // Exact text nodes, whitespace included (the headline wraps "YouTube" in <em>;
   // the ticker label puts " YouTube" in its own span).
@@ -202,6 +212,11 @@
     'Latest headlines from Google News in the selected language. Refreshed hourly.': 'Últimos títulos do Google News no idioma do país escolhido acima. Atualizado de hora a hora.',
     [/^Showing cached data — live refresh failed \(([\s\S]*)\)\.$/.source]: 'A mostrar dados em cache — a atualização em direto falhou ($1).',
     [/^Database lookup failed: ([\s\S]*)$/.source]: 'Falha na consulta à base de dados: $1',
+    "YouTube rankings, who's trending and channel graphs, right on YouTube.": "Rankings do YouTube, o que está em tendência e gráficos de canais, diretamente no YouTube.",
+    "Who's trending": "Em tendência",
+    "Which videos trend in the most countries": "Os vídeos em tendência em mais países",
+    "Add to Chrome · it's free": "Adicionar ao Chrome · é gratuito",
+    "Also works in Edge, Brave, Arc and Opera on computers. No account needed.": "Também funciona no Edge, Brave, Arc e Opera em computadores. Não é preciso conta.",
   };
   // Narrower wording inside a container: [selector, { English: [pt, es, de, ru, uk, ko, ja] }]
   const CONTEXT = [

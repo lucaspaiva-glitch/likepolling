@@ -467,6 +467,24 @@
     }
     @keyframes mpe-tab-glitch { 0%, 86%, 100% { transform: none; } 88% { transform: translateX(-1.5px); } 91% { transform: translateX(1.5px); } 94% { transform: none; } }
     @keyframes mpe-jitter { 0%, 100% { transform: none; } 91% { transform: translateX(.8px); opacity: .75; } 93% { transform: translate(-.8px, 1px); opacity: 1; } 95% { transform: none; opacity: .85; } 96% { transform: none; opacity: 1; } }
+      /* Creators + extension promo (homepage). */
+    .cpx { margin: 8px 0 56px; border: 1px solid var(--line); border-radius: 12px; background: #fff; overflow: hidden; display: grid; grid-template-columns: minmax(0, 1fr); }
+    .cpx-intro { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; padding: 22px 22px 18px; }
+    .cpx-sym { font-family: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace; font-size: 10.5px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--red); background: var(--red-soft); padding: 3px 7px; border-radius: 5px; }
+    .cpx h2 { display: flex; align-items: center; gap: 10px; margin: 0; font-size: clamp(26px, 3vw, 32px); font-weight: 750; letter-spacing: -.02em; }
+    .cpx h2 b { color: var(--red); }
+    .cpx-intro p { margin: 0; max-width: 40ch; font-size: 15px; line-height: 1.45; }
+    .cpx-cta { margin-top: 6px; padding: 11px 18px; border-radius: 999px; background: var(--red); color: #fff; font-size: 14px; font-weight: 650; text-decoration: none; transition: background .15s; }
+    .cpx-cta:hover { background: var(--red-dark); }
+    .cpx-cta:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--red-ring); }
+    .cpx-note { font-size: 12px; line-height: 1.4; color: var(--muted); }
+    .cpx-shots { list-style: none; margin: 0; padding: 0 22px 22px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+    .cpx-shot img { display: block; width: 100%; height: auto; aspect-ratio: 16 / 10; object-fit: cover; border: 1px solid var(--line); border-radius: 10px; background: #f2f2f2; }
+    .cpx-shot strong { display: block; margin-top: 10px; font-size: 13.5px; font-weight: 650; }
+    .cpx-shot span { display: block; margin-top: 2px; font-size: 12.5px; line-height: 1.35; color: var(--muted); }
+    @media (min-width: 900px) { .cpx { grid-template-columns: 300px minmax(0, 1fr); align-items: center; } .cpx-shots { padding: 22px 22px 22px 0; } }
+    @media (max-width: 640px) { .cpx-shots { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 78%; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; } .cpx-shots::-webkit-scrollbar { display: none; } .cpx-shot { scroll-snap-align: start; } }
+    @media (min-width: 1240px) { .wrap:has(> .ytt:not([hidden])) > .cpx { grid-column: 1 / -1; grid-row: 8; margin: 0 0 56px; } }
   </style>
 </head>
 <body>
@@ -492,6 +510,20 @@
     <section class="ytt" id="yt-trending" data-supabase-url="https://iyhaoagslsrwtkcrxylp.supabase.co" data-supabase-key="sb_publishable_ZnV9HrtfDqeKlBftnDxH2Q_YK6XWJTp"></section>
     <section class="ymu" id="yt-music" data-supabase-url="https://iyhaoagslsrwtkcrxylp.supabase.co" data-supabase-key="sb_publishable_ZnV9HrtfDqeKlBftnDxH2Q_YK6XWJTp"></section>
     <section id="news-wire" data-supabase-url="https://iyhaoagslsrwtkcrxylp.supabase.co" data-supabase-key="sb_publishable_ZnV9HrtfDqeKlBftnDxH2Q_YK6XWJTp"></section>
+    <section class="cpx" id="creators-plus" aria-labelledby="cpx-h">
+      <div class="cpx-intro">
+        <span class="cpx-sym">Extension</span>
+        <h2 id="cpx-h" data-no-i18n><svg viewBox="0 0 28 28" width="34" height="34" aria-hidden="true"><rect width="28" height="28" rx="7" fill="var(--red)"/><polyline points="5,21 8,19 10.5,20.2 13.5,16.5 15.5,17.6 18.5,12.5 20.5,13.6 23,6" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="23" cy="6" r="1.9" fill="#fff"/></svg>Creators <b>+</b></h2>
+        <p>YouTube rankings, who's trending and channel graphs, right on YouTube.</p>
+        <a class="cpx-cta" href="https://chromewebstore.google.com/detail/creators-+/ibajjhdapncbacoinjjcagimpcjpahbn" target="_blank" rel="noopener">Add to Chrome · it's free</a>
+        <small class="cpx-note">Also works in Edge, Brave, Arc and Opera on computers. No account needed.</small>
+      </div>
+      <ul class="cpx-shots">
+        <li class="cpx-shot"><img src="/assets/creators-plus/rankings.webp" width="800" height="500" loading="lazy" alt=""><strong>Rankings</strong><span>Which videos trend in the most countries</span></li>
+        <li class="cpx-shot"><img src="/assets/creators-plus/trending.webp" width="800" height="500" loading="lazy" alt=""><strong>Who's trending</strong><span>Each country's top videos and how fast they grow</span></li>
+        <li class="cpx-shot"><img src="/assets/creators-plus/graphs.webp" width="800" height="500" loading="lazy" alt=""><strong>Graphs</strong><span>Any channel's last 30 days, video by video</span></li>
+      </ul>
+    </section>
   </div>
 
 
