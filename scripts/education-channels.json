@@ -418,5 +418,501 @@
    "name": "과학드림 [Science Dream]",
    "handle": "@sciencedream"
   }
+ ],
+ "AU": [
+  {
+   "id": "UCR_kFbcwWy1cKLCkmcMf4lg",
+   "name": "ABC Science",
+   "handle": "@abcscience"
+  },
+  {
+   "id": "UCaHT88aobpcvRFEuy4v5Clg",
+   "name": "Lessons in Meme Culture",
+   "handle": "@limc"
+  }
+ ],
+ "BD": [
+  {
+   "id": "UCaY3R1U4k0uLPkkz0wj8duA",
+   "name": "Ghoori Learning",
+   "handle": "@ghoorilearning"
+  },
+  {
+   "id": "UCekAEOx_o6tmW8MiBJbtrjA",
+   "name": "Science Bee",
+   "handle": "@sciencebee"
+  }
+ ],
+ "BE": [
+  {
+   "id": "UCw5SiHhsastHxT6dgF7rcJQ",
+   "name": "KU Leuven",
+   "handle": "@kuleuven"
+  },
+  {
+   "id": "UCLPgBhFEeKRnB060VavvNSg",
+   "name": "Universiteit Gent | Ghent University",
+   "handle": "@ugent"
+  }
+ ],
+ "CA": [
+  {
+   "id": "UCxrUsyn6xLrp6Dy21-CFPFQ",
+   "name": "McGill University",
+   "handle": "@mcgillu"
+  },
+  {
+   "id": "UC327M9im1ba32Pv32LR118w",
+   "name": "The University of British Columbia",
+   "handle": "@ubc"
+  },
+  {
+   "id": "UCC552Sd-3nyi_tk2BudLUzA",
+   "name": "AsapSCIENCE",
+   "handle": "@asapscience"
+  }
+ ],
+ "CL": [
+  {
+   "id": "UC875v6TOQR-sLyED-jfZp7g",
+   "name": "Universidad de Chile",
+   "handle": "@uchile"
+  },
+  {
+   "id": "UCmJ3zaG97LrvBd0yaTKihzA",
+   "name": "educarchile",
+   "handle": "@educarchile"
+  }
+ ],
+ "DZ": [
+  {
+   "id": "UCqNApt8CUzeR92CKm4nYuMg",
+   "name": "الاستاذ نورالدين",
+   "handle": "@noureddine2013"
+  },
+  {
+   "id": "UChwRLvVhjOMQKo8d7_iJ6tQ",
+   "name": "الأستاذ عبد اللطيف Abdellatif",
+   "handle": "@abdelatif_phydz"
+  },
+  {
+   "id": "UCTiFoJXhyBE1QYL4ClQVprQ",
+   "name": "الاستاذ حيقون أسامة",
+   "handle": "@prof_haigoune"
+  },
+  {
+   "id": "UCEpuRLQpVVre6nwaV6cRjrw",
+   "name": "الأستاذ شريفي عربية",
+   "handle": "@الاستاذشريفي"
+  },
+  {
+   "id": "UCwy5nzYHV06XfP9iixv_BZA",
+   "name": "أستاذ الفلسفة. خليل سعيداني",
+   "handle": "@saidani-philo"
+  }
+ ],
+ "EC": [
+  {
+   "id": "UCZVC1rEzAoO4CpEXRDnnUhA",
+   "name": "RED ECUATORIANA DE PEDAGOGÍA",
+   "handle": "@redecuatorianadepedagogia"
+  },
+  {
+   "id": "UCAdHRVt7DV0fRqRXX1zZDTA",
+   "name": "Educativo Yuri",
+   "handle": "@educativoyuri1426"
+  },
+  {
+   "id": "UCJwXOl-MQDRHalvVoCTPYgA",
+   "name": "Educación Ecuador",
+   "handle": "@mineducacionecuador"
+  },
+  {
+   "id": "UCeZeRJaNdTuaZrUHLvSR3fg",
+   "name": "Educa Televisión Educativa",
+   "handle": "@educatele"
+  },
+  {
+   "id": "UCXPtMjRUHnCBJJOdn3MlxnA",
+   "name": "SerMaestros",
+   "handle": "@sermaestros"
+  }
+ ],
+ "EG": [
+  {
+   "id": "UChXGb5nQemm79sUjjll5Qkg",
+   "name": "Nafham - نفهم",
+   "handle": "@nafham"
+  },
+  {
+   "id": "UCEHvaZ336u7TIsUQ2c6SAeQ",
+   "name": "دروس أونلاين",
+   "handle": "@droosonline4u"
+  },
+  {
+   "id": "UCxhMyy_YpfigS83kign-0_g",
+   "name": "El Schoola - الاسكوله",
+   "handle": "@elschoola"
+  },
+  {
+   "id": "UC7fHSfm6zxGJYC-P7RMzX7w",
+   "name": "Reda El Farouk - رضا الفاروق",
+   "handle": "@redaelfaroukofficial"
+  },
+  {
+   "id": "UCw4oq-ZoBSXBLZID-4SaldA",
+   "name": "الخطة التعليمية - الثالث الثانوي",
+   "handle": "@elkheta-senior3"
+  }
+ ],
+ "IQ": [
+  {
+   "id": "UC_hXlmP8BLXHcO__66C_Aqg",
+   "name": "العراقية التربوية",
+   "handle": "@العراقيةالتربوية-ض7ي"
+  },
+  {
+   "id": "UCKaTWMBJGGqIT7spoAnWtwQ",
+   "name": "حيدر عبدالائمة",
+   "handle": "@hayder_89"
+  },
+  {
+   "id": "UCfRvY3ZuEEypaHMNleQKuMQ",
+   "name": "العراق Kids التربوية",
+   "handle": "@iraqedukids"
+  },
+  {
+   "id": "UCRAlLgaHGuTAAx-hjFubSnw",
+   "name": "شبكة العراق التعليمية / عبدالله الشمري",
+   "handle": "@iq-net"
+  },
+  {
+   "id": "UC4loodxvdOprkL1otjGkRSA",
+   "name": "موقع وتد التعليمي العراق - Watad",
+   "handle": "@watadirq"
+  }
+ ],
+ "KE": [
+  {
+   "id": "UCByj0XrDmb0UDUui63EOnhA",
+   "name": "Edu TV Kenya",
+   "handle": "@edutvkenya"
+  },
+  {
+   "id": "UC4WXMPOBzN4GQgZzLrw2TcQ",
+   "name": "TAW SCHOOL KENYA",
+   "handle": "@tawschoolkenya"
+  },
+  {
+   "id": "UC9bprZ0txzc7cJS2heNoPBA",
+   "name": "Kenya Education Guide",
+   "handle": "@kenyaeducationguide"
+  }
+ ],
+ "MA": [
+  {
+   "id": "UCDrqMuSC1Fp7Z4tHO974JRw",
+   "name": "Driss DOTCOM",
+   "handle": "@driss.dotcom"
+  },
+  {
+   "id": "UCwYFwuJjVbVTm19wur8SkoA",
+   "name": "قناة المغراوي elmaghraoui channel",
+   "handle": "@elmaghraouichannel4240"
+  },
+  {
+   "id": "UCHWFwb9-caepaEsi8wVsyIQ",
+   "name": "Salma Ghalmi",
+   "handle": "@salmaghalmi21"
+  },
+  {
+   "id": "UCP2w05MnXgBNPJCU0lYx7rg",
+   "name": "الاجتماعيات ببساطة",
+   "handle": "@el_ijtima3yat_bibasata"
+  },
+  {
+   "id": "UCcgpUF3H-VwLiRIXoUXdLbw",
+   "name": "Nizar Noury",
+   "handle": "@nizarnoury"
+  }
+ ],
+ "MY": [
+  {
+   "id": "UCJhyayA9_JmsM_aBaD-a5_A",
+   "name": "Histrozi",
+   "handle": "@histrozi"
+  },
+  {
+   "id": "UCDNlV8AOSathgejmsPvC1Dw",
+   "name": "ILMU FREE by MCPLUS",
+   "handle": "@ilmufreebymcplus8848"
+  },
+  {
+   "id": "UCNjlA1_T1u_9jzC8Isp-nqQ",
+   "name": "iTTV Education",
+   "handle": "@ittve-learning"
+  },
+  {
+   "id": "UCJ4TAZJlH4SSxfo39bAtWgg",
+   "name": "Mr Ruel Tuition",
+   "handle": "@mrrueltuition"
+  },
+  {
+   "id": "UCb5NnldC3yX-pn61cUSsfsQ",
+   "name": "Jom Belajar TV",
+   "handle": "@jombelajartv"
+  }
+ ],
+ "NG": [
+  {
+   "id": "UCXFUIQnv3AbWO-HDQ2-TOHw",
+   "name": "Myschool",
+   "handle": "@myschoolnigeria"
+  },
+  {
+   "id": "UCGpKjGyEq8MepUcnym1w2tQ",
+   "name": "O3SCHOOLS",
+   "handle": "@o3schools"
+  },
+  {
+   "id": "UCBwZHGNG_rnnhTm-QGZndSA",
+   "name": "The uLesson Group",
+   "handle": "@ulessonapp"
+  },
+  {
+   "id": "UC_BnnokJom1DWipMl0oSxWA",
+   "name": "Afrilearn Education",
+   "handle": "@afrilearn"
+  }
+ ],
+ "NL": [
+  {
+   "id": "UCf63l7Wp_wX7T-5ChM_Km9Q",
+   "name": "NOS op 3",
+   "handle": "@nosop3"
+  },
+  {
+   "id": "UCw_N3obzNBAbDXV0pSrr_xA",
+   "name": "WiskundeAcademie",
+   "handle": "@wiskundeacademie"
+  },
+  {
+   "id": "UC2Cn5pOKmQWrhcEFjZB8HuA",
+   "name": "TU Delft",
+   "handle": "@tudelft"
+  }
+ ],
+ "PE": [
+  {
+   "id": "UCGF6kjYMAlDut6JmhJXWpsA",
+   "name": "PUCP",
+   "handle": "@pucp"
+  },
+  {
+   "id": "UCEhXv_Se62og4ihwAxZFC4Q",
+   "name": "Docentes Perú",
+   "handle": "@docentesperu5339"
+  },
+  {
+   "id": "UCVrpQom0JKpIfbX-0zMZB0A",
+   "name": "🎯Educación en acción",
+   "handle": "@educacionenaccion"
+  },
+  {
+   "id": "UCcUbSyuetc57wMmcE5XxlWg",
+   "name": "Plataforma PerúEduca ",
+   "handle": "@plataformaperueduca"
+  },
+  {
+   "id": "UCPu9knHt7Ra_Zd58Wr0p1YQ",
+   "name": "ITEC - Educación en tiempo real",
+   "handle": "@itec123"
+  }
+ ],
+ "PK": [
+  {
+   "id": "UCedwbo99-DFpf_I3fBTodBw",
+   "name": "Knowledge for Students",
+   "handle": "@knowledgeforstudents"
+  },
+  {
+   "id": "UCtDKo_stVI_WP07_2uV8iaA",
+   "name": "Dr Hafiz Sultan Academy",
+   "handle": "@drhafizsultanacademy7826"
+  },
+  {
+   "id": "UCAQfQqunzE8frH3ukEbgOhA",
+   "name": "Virtual University of Pakistan",
+   "handle": "@thevirtualuniversityofpakistan"
+  },
+  {
+   "id": "UCggSLHchMbjSB_VQeWV07LQ",
+   "name": "Learn With Asifa",
+   "handle": "@learnwithasifa4582"
+  },
+  {
+   "id": "UCfYT5mSvVv85TKRVJqjjHsA",
+   "name": "ITL",
+   "handle": "@itl"
+  }
+ ],
+ "PL": [
+  {
+   "id": "UCxwq89z7GG6aWh29cUFF81A",
+   "name": "Matemaks",
+   "handle": "@matemaks"
+  },
+  {
+   "id": "UCCRXm_ENFXkMl7_iwERqlrQ",
+   "name": "Polimaty",
+   "handle": "@polimaty"
+  }
+ ],
+ "SA": [
+  {
+   "id": "UCnVAbSDu4c5ULIY6EEXoaLQ",
+   "name": "KAUST Official",
+   "handle": "@kaustofficial"
+  },
+  {
+   "id": "UCndb1LGM5oQJVhjh2NViU5g",
+   "name": "عين دروس",
+   "handle": "@iendroos"
+  },
+  {
+   "id": "UC3O-2MWIOCf6K6B2JSSJZaQ",
+   "name": "شبكة فاهم التعليمية",
+   "handle": "@ifahemasd"
+  },
+  {
+   "id": "UCYS78ualcgv0oIy4txFC2eA",
+   "name": "أكاديمية همة التعليمية",
+   "handle": "@hemma-academy"
+  },
+  {
+   "id": "UCOnnRQjPdyQtsUpcbw7dyHw",
+   "name": "رياضيات ابتدائي - حسن القرني",
+   "handle": "@hassan_alqarnee"
+  }
+ ],
+ "TH": [
+  {
+   "id": "UC19WzEAM5krCT5PVAkJitPw",
+   "name": "OpenDurian TCAS ติว (TGAT, TPAT, A-LEVEL)",
+   "handle": "@opendurian"
+  },
+  {
+   "id": "UC_R1DLDO1A0FRxAVKWGgmaA",
+   "name": "ติวสอบ TOEIC กับ ครูดิว",
+   "handle": "@krudewtoeic"
+  },
+  {
+   "id": "UCmPP5SW2YstymMGrVLF8xWA",
+   "name": "พี่น็อต GoodBrain ติวสอบราชการ",
+   "handle": "@goodbraingb"
+  },
+  {
+   "id": "UCXDjB-XhmWAf6B_vDfJHDNg",
+   "name": "แก็บติวเตอร์ คณิตศาสตร์ขนมหวาน",
+   "handle": "@gaptutor"
+  },
+  {
+   "id": "UCBwrucL5XBrKrQOlyBUPfsw",
+   "name": "CHULATUTOR | ติว CU-TEP IELTS GED SAT ข้อสอบจริง",
+   "handle": "@chulatutor"
+  }
+ ],
+ "TW": [
+  {
+   "id": "UCi_ljbl9zaZPa3wcykYvWLA",
+   "name": "臺大開放式課程 NTU OCW",
+   "handle": "@ntuocw"
+  },
+  {
+   "id": "UCbDEamSXQhxqhovhd2NdEyg",
+   "name": "均一教育平台 Junyi Academy",
+   "handle": "@junyiacademy"
+  },
+  {
+   "id": "UCEjSMfRDks28MYaJ4iPkQMQ",
+   "name": "LIS 情境科學教材",
+   "handle": "@lisscience"
+  },
+  {
+   "id": "UCp4PY14p-zim26ACwfCzTvQ",
+   "name": "NYCU OCW",
+   "handle": "@nycuocw"
+  },
+  {
+   "id": "UCOkQJxKQ8Ldegcr1WJsoDug",
+   "name": "臺北酷課雲",
+   "handle": "@cooc-cloud"
+  }
+ ],
+ "UA": [
+  {
+   "id": "UCz3iBih-MsBlBvhIgkHuRzQ",
+   "name": "Освіторія",
+   "handle": "@osvitoria"
+  },
+  {
+   "id": "UCeh1dAupre7xBeHoOCqhKbw",
+   "name": "nauka․ua — Новини науки. Українською",
+   "handle": "@naukaua"
+  }
+ ],
+ "VN": [
+  {
+   "id": "UCof6nOQwEk9dqIpXuJuwU8Q",
+   "name": "VietJack THPT Official",
+   "handle": "@vietjackthptofficial5597"
+  },
+  {
+   "id": "UCP98Gj2fYErscrQy56hX1ig",
+   "name": "Thầy Vũ Ngọc Anh - Chuyên luyện thi Vật Lý",
+   "handle": "@thayvnachuyenluyenthivatly"
+  },
+  {
+   "id": "UC1ngRQm9fW4l2gd2f0TogBw",
+   "name": "HỌC247 TV",
+   "handle": "@hoc247tv3"
+  },
+  {
+   "id": "UCQ1ZVmWxah7qqxpz9nVu8oA",
+   "name": "Thầy Nguyễn Đình Khiêm - Luyện Thi Toán 8,9",
+   "handle": "@thaynguyendinhkhiemtoan89"
+  },
+  {
+   "id": "UChQz1YZEkVFfdOHTCgBCJ8g",
+   "name": "giuphoctot.vn",
+   "handle": "@giuphoctotvn"
+  }
+ ],
+ "ZA": [
+  {
+   "id": "UCRfDNAbcR-Y3T46XiL4Sqsw",
+   "name": "Kevinmathscience",
+   "handle": "@kevinmathscience"
+  },
+  {
+   "id": "UCEXZeo15BRlkSceGcSbzlng",
+   "name": "Miss Martins Maths and Science",
+   "handle": "@missmartinsmathsscience"
+  },
+  {
+   "id": "UCPQG0dcSGvOP20NLcjnYTPQ",
+   "name": "Mr Long Education - IT & CAT",
+   "handle": "@mrlongitandcat"
+  },
+  {
+   "id": "UCHh0J4KeA28mQoftGr7sJDg",
+   "name": "Distance learning with Lee",
+   "handle": "@distancelearningwithlee"
+  },
+  {
+   "id": "UC1HIOborssDT17pi9KxSQ_g",
+   "name": "Impaq Education",
+   "handle": "@impaqeducation"
+  }
  ]
 }
