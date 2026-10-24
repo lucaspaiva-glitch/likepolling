@@ -3,7 +3,7 @@
 //   node scripts/education-routine.js
 // 1. Education Index: recent uploads (last 30 days) of the channels in
 //    education-channels.json, ranked by views per hour since upload, at most
-//    MAX_PER_CHANNEL per channel. Costs about 1 YouTube unit per channel
+//    MAX_PER_CHANNEL per channel (thin countries: last 60 days, 3 per channel). Costs about 1 YouTube unit per channel
 //    (playlistItems.list) plus 1 per 50 videos (videos.list).
 // 2. Most talked-about subjects: those videos plus the last 24 h of Google News
 //    education headlines for the country, sorted into SUBJECTS by Gemini (batches
@@ -22,6 +22,10 @@ const YT = 'https://www.googleapis.com/youtube/v3/';
 const WINDOW_DAYS = 30;
 const UPLOADS_PER_CHANNEL = 10;
 const MAX_PER_CHANNEL = 2;
+// Thin countries (fewer than FILL_MIN videos) look back FILL_WINDOW_DAYS with FILL_MAX_PER_CHANNEL per channel.
+const FILL_MIN = 5;
+const FILL_WINDOW_DAYS = 60;
+const FILL_MAX_PER_CHANNEL = 3;
 const TOP_N = 10;
 const NEWS_PER_COUNTRY = 40;
 const VIDEO_WEIGHT = 3;
@@ -102,10 +106,10 @@ function toVideo(country, it, now) {
 }
 
 // Fastest first, at most MAX_PER_CHANNEL per channel, ranked 1..TOP_N.
-function rankVideos(videos) {
+function rankVideos(videos, max = MAX_PER_CHANNEL) {
   const per = {};
   return [...videos].sort((a, b) => b.views_per_hour - a.views_per_hour)
-    .filter((v) => (per[v.channel_id] = (per[v.channel_id] || 0) + 1) <= MAX_PER_CHANNEL)
+    .filter((v) => (per[v.channel_id] = (per[v.channel_id] || 0) + 1) <= max)
     .slice(0, TOP_N).map((v, i) => ({ ...v, rank: i + 1 }));
 }
 
@@ -186,7 +190,8 @@ async function run(env = process.env, deps = {}) {
     try { deps.classify = geminiClassifier(env.GEMINI_API_KEY); } catch (err) { deps.log(`Subjects skipped: ${err.message.split('\n')[0]}`); }
   }
   const now = deps.now();
-  const since = now - WINDOW_DAYS * 86400000;
+  const since = now - FILL_WINDOW_DAYS * 86400000;
+  const fresh = now - WINDOW_DAYS * 86400000;
   const failed = [];
   let quotaHit = false;
 
@@ -194,12 +199,14 @@ async function run(env = process.env, deps = {}) {
   const owner = new Map();
   const ids = [];
   const jobs = Object.entries(deps.channels).flatMap(([cc, list]) => list.map((ch) => ({ cc, ch })));
+  const broken = new Set();
   await pool(jobs, CONCURRENCY, async ({ cc, ch }) => {
     if (quotaHit) return;
     try {
       for (const id of await recentUploads(ch.id, env, deps, since)) if (!owner.has(id)) { owner.set(id, cc); ids.push(id); }
     } catch (err) {
       if (err instanceof QuotaError) quotaHit = true;
+      if (!/\b404\b|notFound/i.test(err.message)) broken.add(cc);
       failed.push({ channel: ch.handle || ch.id, error: err.message });
     }
   });
@@ -211,7 +218,14 @@ async function run(env = process.env, deps = {}) {
       (recent[cc] ||= []).push(toVideo(cc, it, now));
     }
   }
-  for (const list of Object.values(recent)) list.sort((a, b) => b.views_per_hour - a.views_per_hour);
+  // A country whose channel lookup failed keeps its previous lists (a deleted channel, 404, does not block it).
+  for (const cc of broken) delete recent[cc];
+  const cap = {};
+  for (const [cc, list] of Object.entries(recent)) {
+    list.sort((a, b) => b.views_per_hour - a.views_per_hour);
+    const last30 = list.filter((v) => Date.parse(v.published_at) >= fresh);
+    if (rankVideos(last30).length >= FILL_MIN) { recent[cc] = last30; cap[cc] = MAX_PER_CHANNEL; } else cap[cc] = FILL_MAX_PER_CHANNEL;
+  }
   const countries = Object.keys(recent);
   if (!countries.length) throw new Error(`No education videos fetched (${failed.map((f) => `${f.channel}: ${f.error}`).join('; ') || 'no recent uploads'})`);
 
@@ -220,7 +234,7 @@ async function run(env = process.env, deps = {}) {
   const subjects = [];
   const subjectErrors = [];
   await pool(countries, 3, async (cc) => {
-    const ranked = rankVideos(recent[cc]);
+    const ranked = rankVideos(recent[cc], cap[cc]);
     if (!deps.classify) { videos.push(...ranked); return; }
     try {
       const news = await fetchNews(cc, deps).catch((err) => { subjectErrors.push({ cc, error: `news: ${err.message}` }); return []; });
@@ -240,7 +254,7 @@ async function run(env = process.env, deps = {}) {
     { method: 'POST', headers: { apikey: env.SUPABASE_KEY, Authorization: `Bearer ${env.SUPABASE_KEY}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ videos, subjects }) },
     deps
   );
-  const summary = { countries: countries.length, videos: videos.length, subjects: subjects.length, rows: written, youtube_units: jobs.length + Math.ceil(ids.length / 50), failed, subjectErrors, quotaHit };
+  const summary = { countries: countries.length, kept_previous: [...broken], filled: countries.filter((cc) => cap[cc] === FILL_MAX_PER_CHANNEL), videos: videos.length, subjects: subjects.length, rows: written, youtube_units: jobs.length + Math.ceil(ids.length / 50), failed, subjectErrors, quotaHit };
   deps.log(JSON.stringify(summary));
   return summary;
 }

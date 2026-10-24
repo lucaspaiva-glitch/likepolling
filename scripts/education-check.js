@@ -5,12 +5,8 @@ const CANDIDATES = require('./education-candidates.json');
 const YT = 'https://www.googleapis.com/youtube/v3';
 
 const SEARCHES = {
-  AR: 'clases educación universidad', AU: 'education lessons university', DZ: 'دروس تعليم بكالوريا الجزائر',
-  EC: 'clases educación Ecuador', EG: 'دروس تعليمية ثانوية عامة', IQ: 'دروس تعليمية العراق السادس',
-  KE: 'education lessons Kenya', MA: 'دروس تعليم المغرب باكالوريا', MY: 'pendidikan belajar SPM',
-  NG: 'education lessons Nigeria WAEC', PE: 'clases educación Perú', PH: 'education lessons Filipino tutorial',
-  PK: 'education lectures Pakistan urdu', RO: 'educatie lectii bacalaureat', SA: 'دروس تعليمية السعودية',
-  TH: 'การศึกษา ติว บทเรียน', TW: '教育 教學 課程', VN: 'giáo dục bài giảng ôn thi', ZA: 'education lessons South Africa matric'
+  PT: 'explicações aulas matemática exames nacionais', UA: 'уроки НМТ ЗНО освіта', BD: 'শিক্ষা ক্লাস HSC SSC',
+  MY: 'pendidikan cikgu SPM tuisyen', NG: 'WAEC JAMB lessons tutorial', CO: 'clases ICFES educación Colombia'
 };
 
 const get = async (path) => (await fetch(`${YT}/${path}&key=${process.env.YOUTUBE_API_KEY}`)).json();

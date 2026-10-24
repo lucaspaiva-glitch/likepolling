@@ -45,6 +45,7 @@
           <select class="ytt-select edu-select" aria-label="Country"></select><span class="ytt-asof"></span></div>
         <div class="edu-ib"></div>
         <div class="ytt-foot">Fastest-growing uploads of the last 30 days from the education channels we track in this country, at most 2 per channel. Speed = views per hour since upload. Refreshed twice a day.</div>
+        <div class="ytt-foot">Countries with fewer than 5 videos look back 60 days, with up to 3 per channel.</div>
       </section>
       <section class="ytt edu-sub">
         <div class="ytt-head"><h3 class="ytt-title">Most talked-about subjects</h3><span class="ytt-sym" data-no-i18n>YT + NEWS</span><span class="ytt-spacer"></span>
