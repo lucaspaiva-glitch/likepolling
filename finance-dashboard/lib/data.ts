@@ -91,7 +91,11 @@ function flowOf(t: Transaction, accountType: Map<string, string>, internal: Set<
   if (internal.has(t.id) || t.category === "Trades") return null;
   const type = (t.account_id && accountType.get(t.account_id)) || "";
   if (t.amount >= 0) {
-    if (isLiability(type)) return { income: 0, burn: -t.amount };
+    if (isLiability(type)) {
+      // Card payments whose other side isn't tracked are still transfers, not refunds.
+      if (t.category === "Transfer" || t.category === "Loan payments" || /\bpayment\b/i.test(t.payee ?? "")) return null;
+      return { income: 0, burn: -t.amount };
+    }
     // Brokerage → bank transfers from before the brokerage history begins have no counterpart to pair with.
     if (type !== "investment" && t.category === "Investments" && investmentHistoryStart && t.date < investmentHistoryStart) return null;
     return { income: t.amount, burn: 0 };
