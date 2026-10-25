@@ -7,16 +7,16 @@
 //   GET /api/v1/education?country=BR
 // Every number is a stored value or one of the formulas listed in FORMULAS.
 const metrics = require('./metrics');
+const earnings = require('../assets/earnings.js');
 
 const COUNTRIES = ['AR', 'AU', 'BD', 'BE', 'BR', 'CA', 'CL', 'CO', 'DE', 'DZ', 'EC', 'EG', 'ES', 'FR', 'GB', 'ID', 'IN', 'IQ', 'IT', 'JP', 'KE',
   'KR', 'MA', 'MX', 'MY', 'NG', 'NL', 'PE', 'PH', 'PK', 'PL', 'PT', 'RO', 'SA', 'TH', 'TR', 'TW', 'UA', 'US', 'VN', 'ZA'];
 const STALE_MS = 6 * 60 * 60 * 1000; // same rule as the site's search (index.html STALE_MS)
-const RPM_LOW = 1, RPM_HIGH = 4;     // same as api/metrics.js and index.html
 const SHORTS_MAX_S = 180;
 const REFRESH_LIMIT = 20;            // YouTube refreshes per IP per hour (per server instance)
 const SITE_ORIGINS = ['https://www.likepolling.com', 'https://likepolling.com'];
 const FORMULAS = {
-  earnings_usd: `views_30d / 1000 × $${RPM_LOW}–$${RPM_HIGH} (estimated RPM)`,
+  earnings_usd: 'views_30d / 1000 × RPM. RPM (USD per 1,000 views): long videos by channel country (group 1 $3–$5, group 2 $1.20–$2, group 3 $0.45–$0.75); Shorts (≤3 min) $0.04–$0.07; × 1.3 for Education, Science & Tech, Howto; × 0.7 for Music, Gaming, Comedy. Typical creator-reported rates, not YouTube payouts.',
   avg_views_per_video: 'views_30d / uploads_30d',
   views_per_hour: 'view_count / hours between published_at and fetched_at',
   views_per_day: 'view_count / days between published_at and fetched_at',
@@ -101,7 +101,7 @@ function channelBody(entity, metric, now) {
       comments_30d: num(metric.comment_volume),
       uploads_30d: d.videos ? videos.length : null,
       avg_views_per_video: d.videos && videos.length ? Math.round(views30 / videos.length) : null,
-      earnings_usd: { low: Math.round((views30 / 1000) * RPM_LOW), high: Math.round((views30 / 1000) * RPM_HIGH) },
+      earnings_usd: (({ low, high, rpm_low, rpm_high }) => ({ low, high, rpm_low, rpm_high }))(earnings.estimate(views30, d.videos, p.country)),
     },
     videos,
     updated_at: updated,

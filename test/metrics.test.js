@@ -73,7 +73,7 @@ test('aggregate sums views/comments and estimates earnings', () => {
   const s = aggregate([{ statistics: { viewCount: '2000', commentCount: '5' } }, { statistics: { viewCount: '1000' } }]);
   assert.equal(s.monthlyViews, 3000);
   assert.equal(s.commentVolume, 5);
-  assert.deepEqual(s.estimatedEarnings, { low: 3, high: 12, currency: 'USD' });
+  assert.deepEqual(s.estimatedEarnings, { low: 4, high: 6, currency: 'USD' });
 });
 
 test('handler writes entity + metric row, with no AI summary', async () => {

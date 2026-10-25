@@ -3,15 +3,13 @@
 // Fetches a YouTube channel's trailing-30-day metrics and writes the result to
 // Supabase `entity_metrics`.
 const { createClient } = require('@supabase/supabase-js');
+const earnings = require('../assets/earnings.js');
 
 const YT_API = 'https://www.googleapis.com/youtube/v3';
 const WINDOW_DAYS = 30;
 const MAX_PLAYLIST_PAGES = 4;
 const MAX_DETAIL_VIDEOS = 120;
 const ENTITY_CATEGORY = 'creators';
-// Estimated creator revenue per 1,000 views (USD). Mirrored in index.html.
-const RPM_LOW = 1;
-const RPM_HIGH = 4;
 
 class HttpError extends Error {
   constructor(status, message) {
@@ -88,7 +86,7 @@ async function fetchRecentVideos(uploadsPlaylistId, apiKey, fetchImpl, now = Dat
   return videos;
 }
 
-function aggregate(videos) {
+function aggregate(videos, country) {
   let views = 0;
   let comments = 0;
   for (const v of videos) {
@@ -104,7 +102,9 @@ function aggregate(videos) {
     commentVolume: comments,
     videoCount: videos.length,
     topVideos: top,
-    estimatedEarnings: { low: Math.round((views / 1000) * RPM_LOW), high: Math.round((views / 1000) * RPM_HIGH), currency: 'USD' },
+    estimatedEarnings: (({ low, high }) => ({ low, high, currency: 'USD' }))(earnings.estimate(views, videos.map((v) => ({
+      v: Number(v.statistics?.viewCount || 0), d: durationSeconds(v.contentDetails?.duration), k: v.snippet?.categoryId,
+    })), country)),
   };
 }
 
@@ -126,6 +126,7 @@ function channelDetails(channel, videos) {
       l: v.statistics?.likeCount == null ? null : Number(v.statistics.likeCount),
       c: v.statistics?.commentCount == null ? null : Number(v.statistics.commentCount),
       d: durationSeconds(v.contentDetails?.duration),
+      k: v.snippet?.categoryId || null,
     }))
     .filter((v) => v.id && v.p)
     .sort((a, b) => Date.parse(a.p) - Date.parse(b.p))
@@ -214,7 +215,7 @@ function createHandler(deps = {}) {
       const channel = await resolveChannel(query, env.YOUTUBE_API_KEY, fetchImpl);
       const uploads = channel.contentDetails?.relatedPlaylists?.uploads;
       const videos = uploads ? await fetchRecentVideos(uploads, env.YOUTUBE_API_KEY, fetchImpl) : [];
-      const stats = aggregate(videos);
+      const stats = aggregate(videos, channel.snippet?.country);
       const details = channelDetails(channel, videos);
 
       const entity = await upsertEntity(db, channel);

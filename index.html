@@ -594,6 +594,7 @@
       header.top .lp-ext { width: 30px; height: 30px; padding: 0; justify-content: center; font-size: 0; gap: 0; }
       header.top .lp-ext svg { width: 14px; height: 14px; }
     }
+    .earn-note { margin: 10px 0 0; font-size: 11.5px; line-height: 1.45; color: var(--muted); }
   </style>
 </head>
 <body>
@@ -707,8 +708,9 @@ ENERGY</div>
 
       <main id="results" aria-live="polite"></main>
   </aside>
-  <footer><div class="foot-tag">Human + AI analytics for what the world watches</div><div class="foot-src">Sources: YouTube Data API · Google News · Google Gemini (AI)</div>Like Polling · Data via YouTube Data API · Earnings are estimates ($1–$4 per 1K views)</footer>
+  <footer><div class="foot-tag">Human + AI analytics for what the world watches</div><div class="foot-src">Sources: YouTube Data API · Google News · Google Gemini (AI)</div>Like Polling · Data via YouTube Data API · Earnings are estimates (by country, topic and Shorts)</footer>
 
+  <script src="/assets/earnings.js"></script>
   <script src="/assets/i18n.js"></script>
   <script>
     const SUPABASE_URL = 'https://iyhaoagslsrwtkcrxylp.supabase.co';
@@ -716,7 +718,6 @@ ENERGY</div>
     const db = supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, { auth: { persistSession: false } });
 
     const STALE_MS = 6 * 60 * 60 * 1000; // refresh from YouTube when the cached row is older than this
-    const RPM_LOW = 1, RPM_HIGH = 4;      // keep in sync with api/metrics.js
 
     const $ = (id) => document.getElementById(id);
     const compact = new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 });
@@ -837,14 +838,14 @@ ENERGY</div>
       return `<article class="card error"><h2>Couldn't load "${esc(query)}"</h2><p>${esc(message)}</p></article>`;
     }
 
-    function earnings(views) {
-      const v = Number(views || 0) / 1000;
-      return { low: v * RPM_LOW, high: v * RPM_HIGH };
+    // By country, topic and Shorts share (assets/earnings.js, same as the API).
+    function earnings(metric) {
+      return LPEarnings.estimate(metric?.primary_volume, metric?.details?.videos, metric?.details?.profile?.country);
     }
 
     function resultCard({ entity, metric, warning }, leads = {}) {
       const h = entity.handles || {};
-      const e = earnings(metric?.primary_volume);
+      const e = earnings(metric);
       const updated = metric?.created_at ? new Date(metric.created_at).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) : '—';
       const tag = (k) => (leads[k] ? '<span class="lead-tag">LEADS</span>' : '');
       const url = h.youtube_channel_id ? `https://www.youtube.com/channel/${encodeURIComponent(h.youtube_channel_id)}` : h.youtube ? `https://www.youtube.com/${encodeURIComponent(h.youtube)}` : null;
@@ -856,8 +857,9 @@ ENERGY</div>
         <div class="metrics">
           <div class="metric ${leads.views ? 'lead' : ''}"><div class="label">Monthly views ${tag('views')}</div><div class="value">${fmt(metric?.primary_volume)}</div><div class="hint">Uploads, last 30 days</div></div>
           <div class="metric ${leads.comments ? 'lead' : ''}"><div class="label">Comments ${tag('comments')}</div><div class="value">${fmt(metric?.comment_volume)}</div><div class="hint">Last 30 days</div></div>
-          <div class="metric ${leads.views ? 'lead' : ''}"><div class="label">Est. earnings ${tag('views')}</div><div class="value">$${fmt(e.low)}–${fmt(e.high)}</div><div class="hint">Per month, USD</div></div>
+          <div class="metric ${leads.views ? 'lead' : ''}"><div class="label">Est. earnings ${tag('views')}</div><div class="value">$${fmt(e.low)}–${fmt(e.high)}</div><div class="hint">Per month, USD</div><div class="hint" data-no-i18n>$${e.rpm_low.toFixed(2)}–$${e.rpm_high.toFixed(2)} / 1K</div></div>
         </div>
+        <p class="earn-note">How we estimate earnings: last-30-day views × a rate per 1,000 views. Long videos use the channel's country (about &#36;3–&#36;5 in the US, UK or Germany, &#36;1.20–&#36;2 in Brazil or Mexico, &#36;0.45–&#36;0.75 in India or Nigeria). Shorts use &#36;0.04–&#36;0.07. Education, science and how-to videos count ×1.3; music, gaming and comedy ×0.7. YouTube doesn't publish real payouts, so this is an estimate.</p>
         ${intel(entity, metric?.details)}
         ${warning ? `<div class="notice">${esc(warning)}</div>` : ''}
         <div class="card-foot">Updated ${esc(updated)}</div>
@@ -1175,7 +1177,7 @@ ENERGY</div>
           const { entity, metric } = await loadChannel(q, status);
           if (mine !== sToken) return;
           const h = entity.handles || {};
-          const e2 = earnings(metric?.primary_volume);
+          const e2 = earnings(metric);
           const subs = metric?.details?.profile?.subscribers;
           sOut.innerHTML = `<div class="lp-sp-ch">${h.youtube_avatar ? `<img src="${esc(h.youtube_avatar)}" alt="" referrerpolicy="no-referrer">` : '<i></i>'}<div><b data-no-i18n>${esc(entity.name)}</b><span data-no-i18n>${esc(h.youtube || '')}</span></div></div>
             <div class="lp-sp-stats"><div><span>Subscribers</span><b>${fmt(subs)}</b></div><div><span>Monthly views</span><b>${fmt(metric?.primary_volume)}</b></div><div><span>Est. earnings</span><b>$${fmt(e2.low)}–$${fmt(e2.high)}</b></div></div>

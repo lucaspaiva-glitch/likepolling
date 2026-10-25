@@ -68,7 +68,7 @@
     open_yt: ['Abrir o YouTube', 'Abrir YouTube', 'YouTube öffnen', 'Открыть YouTube', 'Відкрити YouTube', 'YouTube 열기', 'YouTube を開く'],
     w_noacct: ['Sem conta, sem cadastro.', 'Sin cuenta ni registro.', 'Kein Konto, keine Anmeldung.', 'Без аккаунта и регистрации.', 'Без акаунта та реєстрації.', '계정이나 가입이 필요 없습니다.', 'アカウント登録は不要です。'],
     w_privacy: ['Só enviamos o canal que você está vendo e o seu país. Nunca o conteúdo da página nem o seu histórico.', 'Solo enviamos el canal que estás viendo y tu país. Nunca el contenido de la página ni tu historial.', 'Wir senden nur den angesehenen Kanal und dein Land – nie Seiteninhalte oder deinen Verlauf.', 'Мы отправляем только канал, который вы смотрите, и вашу страну. Никогда — содержимое страниц или историю.', 'Ми надсилаємо лише канал, який ви дивитеся, і вашу країну. Ніколи — вміст сторінок чи історію.', '보고 있는 채널과 국가만 전송합니다. 페이지 내용이나 기록은 절대 보내지 않습니다.', '送信するのは表示中のチャンネルと国だけ。ページの内容や履歴は送信しません。'],
-    earn_note: ['US$ 1–4 a cada 1.000 visualizações (estimativa)', 'US$1–4 por cada 1.000 vistas (estimación)', '1–4 US$ pro 1.000 Aufrufe (Schätzung)', '$1–4 за 1000 просмотров (оценка)', '$1–4 за 1000 переглядів (оцінка)', '조회수 1,000회당 $1–4 (추정)', '1,000回再生あたり$1〜4（推定）'],
+    earn_note: ['Por país, tema e Shorts (estimativa)', 'Por país, tema y Shorts (estimación)', 'Nach Land, Thema und Shorts (Schätzung)', 'По стране, теме и Shorts (оценка)', 'За країною, темою та Shorts (оцінка)', '국가·주제·Shorts 기준 (추정)', '国・トピック・ショートで算出（推定）'],
     speed_h: ['visualizações por hora desde a publicação', 'vistas por hora desde la publicación', 'Aufrufe pro Stunde seit Veröffentlichung', 'просмотров в час с момента публикации', 'переглядів на годину від публікації', '게시 후 시간당 조회수', '公開からの1時間あたり再生回数'],
     speed_d: ['visualizações por dia desde a publicação', 'vistas por día desde la publicación', 'Aufrufe pro Tag seit Veröffentlichung', 'просмотров в день с момента публикации', 'переглядів на день від публікації', '게시 후 일일 조회수', '公開からの1日あたり再生回数'],
     no_rows: ['Ainda não há ranking para este país.', 'Aún no hay ranking para este país.', 'Für dieses Land gibt es noch kein Ranking.', 'Для этой страны пока нет рейтинга.', 'Для цієї країни ще немає рейтингу.', '이 국가의 순위가 아직 없습니다.', 'この国のランキングはまだありません。'],
@@ -100,7 +100,7 @@
     tap_dot: 'Toque num ponto para ver o vídeo', w_q: 'De que país quer ver os rankings?', w_pin: 'Dica: afixe o Creators +. Clique no ícone de peça na barra do Chrome e depois no pionés ao lado de Creators +.',
     w_done: 'A abrir o YouTube…', w_try: 'Experimente num vídeo do MrBeast', w_change: 'País e idioma vêm do seu navegador. Mude quando quiser no Creators + (ícone da roda dentada).', w_where: 'Funciona no youtube.com, no Chrome, Edge, Brave, Arc e Opera em computadores. Não funciona no telemóvel nem na app do YouTube.', w_lang: 'Idioma: {l} (do seu navegador)', like_rate: 'Taxa de gostos',
     w_privacy: 'Só enviamos o canal que está a ver e o seu país. Nunca o conteúdo da página nem o seu histórico.', w_noacct: 'Sem conta, sem registo.',
-    w_sub: 'Rankings do YouTube, o que está em destaque e gráficos dos canais, diretamente no seu navegador.', earn_note: 'US$ 1–4 por cada 1000 visualizações (estimativa)',
+    w_sub: 'Rankings do YouTube, o que está em destaque e gráficos dos canais, diretamente no seu navegador.', earn_note: 'Por país, tema e Shorts (estimativa)',
   };
   const EN = {
     creators: 'Creators', trending: 'Trending', music: 'Music', views30: 'Views in the last 30 days', subs: 'Subscribers', subs_sub: 'people subscribed',
@@ -118,7 +118,7 @@
     w_done: 'Opening YouTube…', open_yt: 'Open YouTube',
     w_where: 'Works on youtube.com in Chrome, Edge, Brave, Arc and Opera on computers. Not on phones or the YouTube app.', w_noacct: 'No account, no sign-up.',
     w_privacy: 'We only send the channel you’re viewing and your country. Never page contents or your history.',
-    earn_note: '$1–$4 per 1,000 views (estimate)', speed_h: 'views per hour since posting', speed_d: 'views per day since posting',
+    earn_note: 'By country, topic and Shorts (estimate)', speed_h: 'views per hour since posting', speed_d: 'views per day since posting',
     no_rows: 'No ranking for this country yet.', channel_hint: 'Open the panel for graphs',
     education: "Education",
     edu_index: "Education Index",

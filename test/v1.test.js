@@ -58,7 +58,7 @@ test('channel: saved data with stored values and stated formulas, edge-cached', 
   const b = res.body;
   assert.equal(b.channel.subscribers, 522000000);
   assert.equal(b.metrics.views_30d, 603460424);
-  assert.deepEqual(b.metrics.earnings_usd, { low: 603460, high: 2413842 });
+  assert.deepEqual(b.metrics.earnings_usd, { low: 1208138, high: 2014242, rpm_low: 2, rpm_high: 3.34 });
   assert.equal(b.metrics.avg_views_per_video, 301730212);
   assert.deepEqual(b.videos.map((v) => v.shorts_length), [false, true]);
   assert.equal(b.stale, false);
