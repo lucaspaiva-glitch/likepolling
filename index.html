@@ -592,7 +592,7 @@
     /* Four compartments: label windows shrink with the screen height so the whole truck always fits on screen. */
     #lp-rail .lp-tab .lp-mq { height: clamp(40px, calc((100vh - 330px) / 4 - 40px), 104px); }
     @media (max-width: 560px) { #lp-rail .lp-tab .lp-mq { height: clamp(40px, calc((100vh - 310px) / 4 - 32px), 96px); } }
-    .lp-ext { flex: none; display: inline-flex; align-items: center; gap: 6px; margin-left: 10px; padding: 6px 12px; border-radius: 999px; background: var(--red); color: #fff; font-size: 12px; font-weight: 600; text-decoration: none; box-shadow: 0 0 0 1px rgba(255,42,60,.4), 0 4px 12px -6px rgba(176,0,14,.7); transition: background .15s; }
+    .lp-ext { flex: none; display: inline-flex; align-items: center; gap: 6px; margin-left: 10px; padding: 6px 11px; border-radius: 999px; background: var(--red); color: #fff; font-size: 11px; font-weight: 600; text-decoration: none; transition: background .15s; }
     .lp-ext:hover { background: var(--red-dark); }
     /* "Free Extension" link under the Chrome button; opens the Creators + card below it. */
     .lp-ext-wrap { flex: none; display: flex; flex-direction: column; align-items: center; gap: 5px; margin-left: 10px; position: relative; }
@@ -651,7 +651,7 @@
     <header class="top">
       <a class="brand" href="/" aria-label="Like Polling home"><svg class="brand-mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="var(--red)"/><polyline points="5,21 8,19 10.5,20.2 13.5,16.5 15.5,17.6 18.5,12.5 20.5,13.6 23,6" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="23" cy="6" r="1.9" fill="#fff"/></svg><span class="brand-txt"><span data-no-i18n>Like Polling</span><small class="tagline">Human + AI analytics for what the world watches</small></span></a>
       <div class="live">Live data, 24/7</div>
-      <div class="lp-ext-wrap"><a class="lp-ext" href="https://chromewebstore.google.com/detail/creators-+/ibajjhdapncbacoinjjcagimpcjpahbn" target="_blank" rel="noopener" aria-label="Add to Chrome"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path d="M8 2v8m0 0L4.8 6.8M8 10l3.2-3.2M3 13h10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Add to Chrome</span></a><button type="button" class="lp-ext-info" id="cp-link" aria-controls="cp-pop" aria-expanded="false">Free Extension</button></div>
+      <div class="lp-ext-wrap"><a class="lp-ext" href="https://chromewebstore.google.com/detail/creators-+/ibajjhdapncbacoinjjcagimpcjpahbn" target="_blank" rel="noopener" aria-label="Add to Chrome"><svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path d="M8 2v8m0 0L4.8 6.8M8 10l3.2-3.2M3 13h10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Add to Chrome</span></a><button type="button" class="lp-ext-info" id="cp-link" aria-controls="cp-pop" aria-expanded="false">Free Extension</button></div>
     </header>
 
     <section class="nw nw-front" id="news-front" aria-label="World news"></section>
