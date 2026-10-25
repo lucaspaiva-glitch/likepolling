@@ -16,7 +16,7 @@ function Kpi({ label, value, sub, tone }: { label: string; value: string; sub?: 
 export default function KpiStrip({ kpis }: { kpis: DashboardData["kpis"] }) {
   const change = kpis.portfolioChangePct;
   return (
-    <div className="grid grid-cols-5 gap-2">
+    <div className="grid grid-cols-6 gap-2">
       <Kpi label="Checking" value={fmtUsd(kpis.checking)} />
       <Kpi
         label="Credit card owed"
@@ -24,7 +24,13 @@ export default function KpiStrip({ kpis }: { kpis: DashboardData["kpis"] }) {
         tone={kpis.cardOwed > 0 ? "neg" : undefined}
         sub={`${fmtUsd(kpis.cardSpentSincePayment)} spent ${kpis.lastCardPayment ? `since last payment ${kpis.lastCardPayment}` : "so far"}`}
       />
-      <Kpi label="Net worth" value={fmtUsd(kpis.netWorth)} sub={`investments + checking − card${kpis.estimatedTaxes > 0 ? ` − est. taxes ${fmtUsd(kpis.estimatedTaxes)}` : ""}`} />
+      <Kpi
+        label="Money to Spend"
+        value={fmtUsd(kpis.moneyToSpend)}
+        tone={kpis.moneyToSpend < 0 ? "neg" : "pos"}
+        sub={`checking − card − est. taxes ${fmtUsd(kpis.estimatedTaxes)}`}
+      />
+      <Kpi label="Net worth" value={fmtUsd(kpis.netWorth)} sub="investments + checking − card" />
       <Kpi
         label="Portfolio value"
         value={fmtUsd(kpis.portfolio)}

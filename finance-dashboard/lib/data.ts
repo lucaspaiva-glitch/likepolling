@@ -25,6 +25,7 @@ export interface DashboardData {
     checking: number;
     cardOwed: number;
     estimatedTaxes: number;
+    moneyToSpend: number;
     cardSpentSincePayment: number;
     lastCardPayment: string | null;
     netWorth: number;
@@ -58,6 +59,7 @@ function emptyData(configured: boolean, error: string | null): DashboardData {
       checking: 0,
       cardOwed: 0,
       estimatedTaxes: 0,
+      moneyToSpend: 0,
       cardSpentSincePayment: 0,
       lastCardPayment: null,
       netWorth: 0,
@@ -277,9 +279,10 @@ export async function getDashboardData(): Promise<DashboardData> {
       checking,
       cardOwed,
       estimatedTaxes,
+      moneyToSpend: checking - cardOwed - estimatedTaxes,
       cardSpentSincePayment,
       lastCardPayment,
-      netWorth: assets - liabilities,
+      netWorth: assets - liabilities + estimatedTaxes,
       portfolio,
       portfolioStart: startPoint?.Value ?? null,
       portfolioStartDate: startPoint?.date ?? null,
