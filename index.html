@@ -44,9 +44,9 @@
     button.yt-ticker-label { border: 0; color: inherit; font-family: inherit; cursor: pointer; }
     button.yt-ticker-label:focus-visible { outline: 2px solid #fff; outline-offset: -4px; }
     .yt-info { display: inline-grid; place-items: center; width: 13px; height: 13px; border: 1px solid rgba(255,255,255,.6); border-radius: 50%; font: italic 700 9px/1 Georgia, serif; letter-spacing: 0; text-transform: none; opacity: .85; }
-    .yt-note { position: fixed; top: var(--note-y, 42px); left: var(--note-x, 12px); z-index: 60; width: min(360px, calc(100vw - 24px)); font-size: 13.5px; line-height: 1.55; }
+    .yt-note { position: fixed; top: var(--note-y, 42px); left: var(--note-x, 12px); z-index: 60; width: min(380px, calc(100vw - 24px)); font-size: 13.5px; line-height: 1.55; }
     /* Same card as the Machu Picchu ad (.mpe-ad: neon title, scan bar, scanlines). */
-    .yt-note .yt-note-ad { cursor: default; padding-bottom: 14px; }
+    .yt-note .yt-note-ad { cursor: default; padding-bottom: 14px; background: linear-gradient(160deg, #1c0004, #2c0007); }
     /* Scanlines and grain only behind the title, so the explanation stays easy to read. */
     .yt-note .yt-note-ad::before, .yt-note .yt-note-ad::after { bottom: auto; height: 74px; -webkit-mask-image: linear-gradient(#000 70%, transparent); mask-image: linear-gradient(#000 70%, transparent); }
     .yt-note .mpe-name { margin: 12px 14px 0; font-size: 18px; line-height: 1.1; white-space: normal; color: #ff4a5c; text-shadow: 1px 0 0 rgba(255,255,255,.95), -1px 0 0 rgba(255,255,255,.95), 0 1px 0 rgba(255,255,255,.95), 0 -1px 0 rgba(255,255,255,.95), 0 0 10px rgba(255,42,60,.7); }
@@ -54,7 +54,9 @@
     .yt-note-in { padding: 0 14px; }
     .yt-note[hidden] { display: none; }
     .yt-note h2 { letter-spacing: .03em; }
-    .yt-note p { margin: 9px 0 0; color: rgba(255,255,255,.96); }
+    /* Terminal-style readout: monospace, light text on near-black red. */
+    .yt-note p { margin: 9px 0 0; padding-left: 14px; text-indent: -14px; font: 12.5px/1.6 ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace; letter-spacing: .01em; color: #f3e9ea; }
+    .yt-note p::before { content: '› '; color: #ff4a5c; }
     @keyframes yt-pulse { 0% { box-shadow: 0 0 0 0 rgba(255,255,255,.55); } 70%, 100% { box-shadow: 0 0 0 6px rgba(255,255,255,0); } }
     .yt-ticker-viewport { flex: 1; min-width: 0; display: flex; align-items: center; overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 28px, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(90deg, transparent, #000 28px, #000 calc(100% - 28px), transparent); }
     .yt-ticker-rail { display: flex; width: max-content; animation: yt-marquee var(--yt-duration, 120s) linear infinite; will-change: transform; }
