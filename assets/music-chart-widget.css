@@ -34,7 +34,7 @@
 .ymu-empty { padding: 28px 18px; text-align: center; font-size: 13px; color: var(--muted, #737373); }
 .ymu-foot { padding: 10px 18px; border-top: 1px solid var(--line, #ebebeb); font-size: 11px; color: #8a8a8a; }
 /* Top 5 as thumbnail cards (same look as the channel search's Top 5), ranks 6-10 in the table below. */
-.ymu-cards { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(118px, 1fr); gap: 12px; overflow-x: auto; padding: 14px 18px 16px; border-bottom: 1px solid var(--line, #ebebeb); scroll-snap-type: x mandatory; scroll-padding-inline: 18px; scrollbar-width: thin; scrollbar-color: #e8c9cb transparent; }
+.ymu-cards { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 14px 12px; padding: 14px 18px 16px; border-bottom: 1px solid var(--line, #ebebeb); scroll-snap-type: x mandatory; scroll-padding-inline: 18px; scrollbar-width: thin; scrollbar-color: #e8c9cb transparent; }
 .ymu-card { display: flex; flex-direction: column; gap: 5px; min-width: 0; color: inherit; text-decoration: none; scroll-snap-align: start; }
 .ymu-card:focus-visible { outline: 2px solid var(--red, #b0000e); outline-offset: 3px; border-radius: 8px; }
 .ymu-cth { position: relative; display: block; }
@@ -46,33 +46,37 @@
 .ymu-ctt { font-size: 12.5px; font-weight: 600; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .ymu-card:hover .ymu-ctt { color: var(--red, #b0000e); }
 .ymu-cch { font-size: 11.5px; color: var(--muted, #737373); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-/* The top 5 never get smaller than the row screens below them: 5 across only when wide enough,
-   otherwise a big #1 with #2-#5 in a 2x2 grid (beside it, or under it in narrow spaces). */
-@container (max-width: 860px) {
-  .ymu-cards { grid-auto-flow: row; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px 12px; overflow: visible; }
-  .ymu-cards > :first-child { grid-column: span 2; grid-row: span 2; }
-  .ymu-cards > :first-child .ymu-ctt { font-size: 14px; }
-}
-@container (max-width: 700px) {
-  .ymu-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .ymu-cards > :first-child { grid-column: 1 / -1; grid-row: auto; }
+/* Screen size follows rank: #1 biggest, each lower rank a little smaller (rows below via --k). */
+.ymu-cards > :nth-child(1) { width: calc((100% - 12px) * .56); }
+.ymu-cards > :nth-child(2) { width: calc((100% - 12px) * .44); }
+.ymu-cards > :nth-child(3) { width: calc((100% - 24px) * .36); }
+.ymu-cards > :nth-child(4) { width: calc((100% - 24px) * .33); }
+.ymu-cards > :nth-child(5) { width: calc((100% - 24px) * .31); }
+.ymu-cards > :first-child .ymu-ctt { font-size: 14px; }
+.ymu-table { --rw: min(26cqi, 230px); }
+.ymu-table .lp-rth { width: calc(var(--rw) * (1 - var(--i, 0) * var(--st, .05))); }
+@container (max-width: 560px) {
+  .ymu-cards > :nth-child(1) { width: 100%; }
+  .ymu-cards > :nth-child(2) { width: calc((100% - 12px) * .52); }
+  .ymu-cards > :nth-child(3) { width: calc((100% - 12px) * .48); }
+  .ymu-cards > :nth-child(4) { width: calc((100% - 12px) * .47); }
+  .ymu-cards > :nth-child(5) { width: calc((100% - 12px) * .46); }
+  .ymu-table { --rw: 39cqi; --st: .025; }
 }
 @container (max-width: 560px) {
   .ymu-cards { padding: 14px 14px 16px; }
   .ymu-rank-col { width: 0; }
   .ymu-table tr > :first-child { padding: 0; font-size: 0; }
   .ymu-table tr > :first-child > * { display: none; }
-  .ymu-table .lp-rth { width: 132px; }
   .ymu-table .lp-rth > b { display: block; }
 }
 @container (max-width: 400px) {
-  .ymu-table .lp-rth { width: 112px; }
   .ymu-video { gap: 10px; }
 }
 @container (max-width: 560px) {
   .ymu-head { padding: 12px 14px; }
   .ymu-table th, .ymu-table td { padding: 9px 12px; }
-  .ymu-vol-col { width: 84px; }
+  .ymu-vol-col { width: 76px; }
   .ymu-likes-col, .ymu-likes { display: none; }
   .ymu-asof { width: 100%; order: 3; }
 }

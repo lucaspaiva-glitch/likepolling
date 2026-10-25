@@ -77,7 +77,7 @@
             <tr>
               <td><span class="ytt-rank">${String(r.rank).padStart(2, '0')}</span></td>
               <td><a class="ytt-video" href="https://www.youtube.com/watch?v=${encodeURIComponent(r.video_id)}" target="_blank" rel="noopener">
-                <span class="lp-rth"><img src="https://i.ytimg.com/vi/${encodeURIComponent(r.video_id)}/mqdefault.jpg" alt="" loading="lazy"><b>${String(r.rank).padStart(2, '0')}</b></span>
+                <span class="lp-rth" style="--i:${r.rank - 6}"><img src="https://i.ytimg.com/vi/${encodeURIComponent(r.video_id)}/mqdefault.jpg" alt="" loading="lazy"><b>${String(r.rank).padStart(2, '0')}</b></span>
                 <span class="ytt-text"><span class="ytt-vt" title="${esc(r.title)}">${esc(r.title)}</span><span class="ytt-ch">${esc(r.channel_title)}</span></span>
               </a></td>
               <td class="n ytt-vol"><span class="ytt-num">${fmt(r.view_count)}</span>${window.lpVph && lpVph(r.view_count, r.published_at, r.fetched_at) != null ? `<span class="lp-vph-t">${fmt(lpVph(r.view_count, r.published_at, r.fetched_at))}/h</span>` : ''}<div class="ytt-bar" style="width:${Math.max(4, Math.round((Number(r.view_count) || 0) / top * 100))}%"></div></td>
