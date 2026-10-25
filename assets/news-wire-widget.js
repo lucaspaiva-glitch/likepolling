@@ -673,9 +673,10 @@
   }
   const embed = (id, muted) => `${YT_ORIGIN}/embed/${id}?${new URLSearchParams({ autoplay: '1', mute: muted ? '1' : '0', controls: muted ? '0' : '1', playsinline: '1', rel: '0', loop: '1', playlist: id, cc_load_policy: '1', cc_lang_pref: siteLang(), hl: siteLang(), enablejsapi: '1', origin: location.origin })}`;
   let pv = null;
-  let pvTimer = 0;
+  let pvTimer = 0, pvUnwatch = null;
   function stopPreview() {
     clearTimeout(pvTimer);
+    if (pvUnwatch) { pvUnwatch(); pvUnwatch = null; }
     if (!pv) return;
     const f = pv.querySelector('.nw-tpv');
     if (f) f.remove();
@@ -694,7 +695,7 @@
     f.tabIndex = -1;
     f.allow = 'autoplay; encrypted-media';
     const live = () => { f.classList.add('nw-ready'); t.classList.add('nw-pvlive'); };
-    if (window.lpWhenPlaying) lpWhenPlaying(f, live); else f.addEventListener('load', live, { once: true });
+    if (window.lpWhenPlaying) pvUnwatch = lpWhenPlaying(f, live); else f.addEventListener('load', live, { once: true });
     t.querySelector('.nw-tile-media').appendChild(f);
   }
   sFeed.addEventListener('mouseover', (ev) => {

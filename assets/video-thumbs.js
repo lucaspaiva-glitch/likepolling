@@ -31,10 +31,12 @@
       };
       hello(); poll = setInterval(hello, 250);
     }, { once: true });
+    return stop;
   };
 
   // YouTube draws its own play/pause controls for the first ~3.5s of playback.
   const CONTROLS_GONE = 3.7;
+  // Returns a function that stops listening (call it when the preview is removed early).
   window.lpWhenPlaying = (f, cb, at = CONTROLS_GONE) =>
     ytWatch(f, (info, stop) => { if (info.currentTime >= at) { stop(); cb(); } });
 
@@ -70,12 +72,13 @@ a:hover > .lp-rth img { transform: scale(1.04); }
   document.head.appendChild(css);
 
   if (!matchMedia('(hover: hover) and (pointer: fine)').matches) return;
-  const DELAY = 120;
+  // Long enough that sweeping the mouse across thumbnails doesn't load a YouTube player for each one.
+  const DELAY = 250;
   const ICON_MUTED = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 4V5L7 9H3z"/><path d="M16 9l5 6m0-6l-5 6" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"/></svg>';
   const ICON_SOUND = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 4V5L7 9H3z"/><path d="M15.5 8.5a5 5 0 010 7M18 6a8.5 8.5 0 010 12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>';
   // Remembered while the page is open, so the next preview starts the same way.
   const pref = { sound: false, cc: false };
-  let box = null, timer = 0, warmed = false;
+  let box = null, timer = 0, warmed = false, unwatch = null;
   const idOf = (el) => (el.querySelector('img')?.src.match(/\/vi\/([A-Za-z0-9_-]{11})\//) || [])[1];
   function warm() {
     if (warmed) return;
@@ -88,6 +91,7 @@ a:hover > .lp-rth img { transform: scale(1.04); }
   }
   function stop() {
     clearTimeout(timer);
+    if (unwatch) { unwatch(); unwatch = null; }
     if (box) box.querySelectorAll('.lp-prev, .lp-veil, .lp-pvc').forEach((n) => n.remove());
     box = null;
   }
@@ -133,7 +137,7 @@ a:hover > .lp-rth img { transform: scale(1.04); }
         if (b === cc) { pref.cc = !pref.cc; applyCc(f, cc); }
       });
       let shown = false;
-      ytWatch(f, (info, done) => {
+      unwatch = ytWatch(f, (info, done) => {
         if (!shown && (info.playerState === 1 || info.currentTime > 0)) {
           shown = true;
           f.classList.add('on'); veil.classList.add('on'); ctl.classList.add('on');
