@@ -1,5 +1,5 @@
 import "server-only";
-import { getServerSupabase, isSupabaseConfigured } from "@/lib/supabase/server";
+import { getServerSupabase, isSupabaseConfigured } from "@/lib/db/server";
 import { isLiability } from "@/lib/categorize";
 import type { Account, Transaction } from "@/lib/types";
 

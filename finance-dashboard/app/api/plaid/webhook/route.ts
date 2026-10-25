@@ -2,7 +2,7 @@ import { createHash, timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import { decodeProtectedHeader, importJWK, jwtVerify, type JWK } from "jose";
 import { getPlaid, isPlaidConfigured } from "@/lib/plaid";
-import { isSupabaseConfigured } from "@/lib/supabase/server";
+import { isSupabaseConfigured } from "@/lib/db/server";
 import { syncItems } from "@/lib/sync";
 
 export const dynamic = "force-dynamic";

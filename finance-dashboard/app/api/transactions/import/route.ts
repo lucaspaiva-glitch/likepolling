@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
-import { getServerSupabase, isSupabaseConfigured } from "@/lib/supabase/server";
+import { getServerSupabase, isSupabaseConfigured } from "@/lib/db/server";
 import { categorize, txType } from "@/lib/categorize";
 import type { ImportRow } from "@/lib/types";
 

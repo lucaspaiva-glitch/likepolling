@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getPlaid, isPlaidConfigured, plaidErrorMessage } from "@/lib/plaid";
-import { getServerSupabase, isSupabaseConfigured } from "@/lib/supabase/server";
+import { getServerSupabase, isSupabaseConfigured } from "@/lib/db/server";
 
 export const dynamic = "force-dynamic";
 

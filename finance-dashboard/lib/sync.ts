@@ -1,7 +1,7 @@
 import "server-only";
 import type { RemovedTransaction, Transaction as PlaidTransaction } from "plaid";
 import { getPlaid, plaidErrorMessage } from "@/lib/plaid";
-import { getServerSupabase } from "@/lib/supabase/server";
+import { getServerSupabase } from "@/lib/db/server";
 import { categorize, isLiability, plaidAccountType, prettyPlaidCategory, txType } from "@/lib/categorize";
 
 export type Item = { id: string; item_id: string; access_token: string; institution: string | null; cursor: string | null };

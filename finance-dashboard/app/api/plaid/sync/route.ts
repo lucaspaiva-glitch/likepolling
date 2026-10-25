@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { isPlaidConfigured } from "@/lib/plaid";
-import { isSupabaseConfigured } from "@/lib/supabase/server";
+import { isSupabaseConfigured } from "@/lib/db/server";
 import { syncItems } from "@/lib/sync";
 
 export const dynamic = "force-dynamic";
