@@ -22,6 +22,7 @@ export interface DashboardData {
   kpis: {
     checking: number;
     cardOwed: number;
+    estimatedTaxes: number;
     cardSpentSincePayment: number;
     lastCardPayment: string | null;
     netWorth: number;
@@ -54,6 +55,7 @@ function emptyData(configured: boolean, error: string | null): DashboardData {
     kpis: {
       checking: 0,
       cardOwed: 0,
+      estimatedTaxes: 0,
       cardSpentSincePayment: 0,
       lastCardPayment: null,
       netWorth: 0,
@@ -170,12 +172,14 @@ export async function getDashboardData(): Promise<DashboardData> {
   let liabilities = 0;
   let checking = 0;
   let cardOwed = 0;
+  let estimatedTaxes = 0;
   let portfolio = 0;
   const buckets = new Map<string, number>();
   for (const a of accounts) {
     if (isLiability(a.type) || a.balance < 0) {
       liabilities += Math.abs(a.balance);
       if (a.type === "credit") cardOwed += Math.abs(a.balance);
+      else estimatedTaxes += Math.abs(a.balance);
       continue;
     }
     assets += a.balance;
@@ -247,6 +251,7 @@ export async function getDashboardData(): Promise<DashboardData> {
     kpis: {
       checking,
       cardOwed,
+      estimatedTaxes,
       cardSpentSincePayment,
       lastCardPayment,
       netWorth: assets - liabilities,

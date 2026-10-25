@@ -24,7 +24,7 @@ export default function KpiStrip({ kpis }: { kpis: DashboardData["kpis"] }) {
         tone={kpis.cardOwed > 0 ? "neg" : undefined}
         sub={`${fmtUsd(kpis.cardSpentSincePayment)} spent ${kpis.lastCardPayment ? `since last payment ${kpis.lastCardPayment}` : "so far"}`}
       />
-      <Kpi label="Net worth" value={fmtUsd(kpis.netWorth)} sub="investments + checking − card" />
+      <Kpi label="Net worth" value={fmtUsd(kpis.netWorth)} sub={`investments + checking − card${kpis.estimatedTaxes > 0 ? ` − est. taxes ${fmtUsd(kpis.estimatedTaxes)}` : ""}`} />
       <Kpi
         label="Portfolio value"
         value={fmtUsd(kpis.portfolio)}
