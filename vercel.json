@@ -2,6 +2,9 @@
   "rewrites": [
     { "source": "/api/metrics/youtube-active", "destination": "/api/youtube-active" },
     { "source": "/api/v1/:route", "destination": "/api/v1?route=:route" },
+    { "source": "/llms.txt", "destination": "/api/llms?format=summary" },
+    { "source": "/llms-full.txt", "destination": "/api/llms?format=full" },
+    { "source": "/data", "destination": "/api/llms?format=html" },
     { "source": "/privacy", "destination": "/privacy.html" },
     { "source": "/extension", "destination": "/extension.html" }
   ]

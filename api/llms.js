@@ -1,0 +1,141 @@
+// Machine-readable snapshot of the numbers Like Polling gathers, for AI assistants and crawlers
+// that do not run JavaScript. Served as /llms.txt (summary), /llms-full.txt (all countries) and /data (HTML).
+const SITE = 'https://www.likepolling.com';
+const CACHE = 'public, max-age=300, s-maxage=900, stale-while-revalidate=3600';
+const TOP = 10;
+
+function rest(env, fetchImpl) {
+  const base = `${env.SUPABASE_URL.trim().replace(/\/$/, '')}/rest/v1/`;
+  const key = env.SUPABASE_KEY.trim();
+  const once = async (path) => {
+    const res = await fetchImpl(base + path, { headers: { apikey: key, Authorization: `Bearer ${key}` }, signal: AbortSignal.timeout(10000) });
+    if (!res.ok) throw new Error(`Database read failed (${res.status})`);
+    return res.json();
+  };
+  return (path) => once(path).catch(() => once(path));
+}
+
+async function load(get) {
+  const chart = 'select=country_code,rank,video_id,title,channel_title,view_count,published_at,fetched_at';
+  const [users, trending, music, news, subjects] = await Promise.all([
+    get('youtube_active_users?select=country_code,country_name,online_users_estimate,updated_at&order=online_users_estimate.desc'),
+    get(`youtube_trending?${chart}&rank=lte.${TOP}&order=country_code,rank&limit=1000`),
+    get(`youtube_music_chart?${chart}&rank=lte.${TOP}&order=country_code,rank&limit=1000`),
+    get('news_world?select=country_code,rank,title,source,link,published_at&rank=lte.5&order=country_code,rank&limit=1000'),
+    get('education_subjects?select=country_code,rank,subject,video_count,news_count&rank=lte.5&order=country_code,rank&limit=1000'),
+  ]);
+  const by = (rows) => rows.reduce((m, r) => ((m[r.country_code] ||= []).push(r), m), {});
+  const countries = users.map((u) => ({ code: u.country_code, name: u.country_name, live: Number(u.online_users_estimate) || 0 }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+  const seen = new Map();
+  for (const r of trending) {
+    const v = seen.get(r.video_id) || { title: r.title, channel: r.channel_title, countries: [] };
+    v.countries.push(r.country_code);
+    seen.set(r.video_id, v);
+  }
+  const worldwide = [...seen.entries()].map(([id, v]) => ({ id, ...v }))
+    .filter((v) => v.countries.length > 1).sort((a, b) => b.countries.length - a.countries.length).slice(0, TOP);
+  const stamp = (rows, k) => rows.reduce((t, r) => (r[k] && r[k] > t ? r[k] : t), '');
+  return {
+    countries, worldwide,
+    live: users.reduce((s, u) => s + (Number(u.online_users_estimate) || 0), 0),
+    liveAt: stamp(users, 'updated_at'), trendingAt: stamp(trending, 'fetched_at'),
+    trending: by(trending), music: by(music), news: by(news), subjects: by(subjects),
+  };
+}
+
+const fmt = (n) => (n == null ? '–' : Number(n).toLocaleString('en-US'));
+const short = (n) => (n >= 1e6 ? `${(n / 1e6).toFixed(1)}M` : n >= 1e3 ? `${Math.round(n / 1e3)}K` : String(n));
+const utc = (s) => (s ? `${new Date(s).toISOString().slice(0, 16).replace('T', ' ')} UTC` : 'unknown');
+const yt = (id) => `https://www.youtube.com/watch?v=${id}`;
+const md = (s) => String(s ?? '').replace(/\s+/g, ' ').replace(/([\[\]|*_`])/g, '\\$1').trim();
+
+const ABOUT = [
+  'Like Polling (likepolling.com) tracks what people watch on YouTube in 41 countries: live viewer estimates, Trending and Music top 10s, education topics and the top news in each country.',
+  'All data is free to read and cite. Please credit "Like Polling (likepolling.com)".',
+];
+const METHOD = [
+  'Estimated live viewers are modelled, not measured: YouTube users per country (Google ad reach, late 2025, via DataReportal) × about 80 minutes of viewing per person per day, spread over the day by a typical hourly pattern. Recalculated at 03:00 and 15:00 UTC. Read them as an order of magnitude.',
+  'Trending and Music: YouTube Data API "most popular" charts per country, refreshed hourly. Views are YouTube\'s public counts at fetch time.',
+  'World News: top stories from each country\'s Google News edition. Education topics: recent videos from education channels plus local news, grouped into subjects with Google Gemini (AI).',
+];
+const LINKS = [
+  [`${SITE}/llms-full.txt`, 'every country: Trending, Music, World News, Education'],
+  [`${SITE}/data`, 'the same numbers as HTML tables'],
+  [`${SITE}/api/v1/worldwide`, 'JSON: videos trending in the most countries'],
+  [`${SITE}/api/v1/trending?country=US`, 'JSON: Trending top 10 for one country (also /music, /education)'],
+  [`${SITE}/api/v1/channel?handle=@MrBeast`, 'JSON: one channel\'s 30-day views, comments and estimated earnings'],
+];
+
+function markdown(d, full) {
+  const out = [`# Like Polling`, '', `> ${ABOUT[0]}`, '', ABOUT[1], ''];
+  out.push(`## Estimated people watching YouTube right now`, '', `Total across ${d.countries.length} countries: about ${short(d.live)} (as of ${utc(d.liveAt)}).`, '');
+  out.push('| Country | Code | Est. watching now |', '|---|---|---|');
+  for (const c of [...d.countries].sort((a, b) => b.live - a.live)) out.push(`| ${md(c.name)} | ${c.code} | ${fmt(c.live)} |`);
+  out.push('', `## Trending in the most countries`, '', `YouTube Trending top ${TOP}s as of ${utc(d.trendingAt)}.`, '');
+  d.worldwide.forEach((v, i) => out.push(`${i + 1}. [${md(v.title)}](${yt(v.id)}) – ${md(v.channel)} – trending in ${v.countries.length} countries (${v.countries.join(', ')})`));
+  if (full) {
+    for (const c of d.countries) {
+      out.push('', `## ${md(c.name)} (${c.code})`, '', `Est. watching YouTube now: ${fmt(c.live)}`);
+      const list = (title, rows, line) => { if (rows && rows.length) { out.push('', `### ${title}`, ''); rows.forEach((r) => out.push(line(r))); } };
+      list('YouTube Trending', d.trending[c.code], (r) => `${r.rank}. [${md(r.title)}](${yt(r.video_id)}) – ${md(r.channel_title)} – ${fmt(r.view_count)} views`);
+      list('YouTube Music', d.music[c.code], (r) => `${r.rank}. [${md(r.title)}](${yt(r.video_id)}) – ${md(r.channel_title)} – ${fmt(r.view_count)} views`);
+      list('Top news', d.news[c.code], (r) => `${r.rank}. [${md(r.title)}](${r.link})${r.source ? ` – ${md(r.source)}` : ''}`);
+      list('Education topics', d.subjects[c.code], (r) => `${r.rank}. ${md(r.subject)} (${r.video_count} videos, ${r.news_count} news stories)`);
+    }
+  }
+  out.push('', '## Method', '', ...METHOD.map((m) => `- ${m}`), '', '## More data', '', ...LINKS.map(([u, t]) => `- [${u}](${u}): ${t}`));
+  if (!full) out.splice(out.indexOf('## Method'), 0, `Per-country Trending, Music, news and education topics: ${SITE}/llms-full.txt`, '');
+  return out.join('\n') + '\n';
+}
+
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+function html(d) {
+  const table = (head, rows) => rows && rows.length
+    ? `<table><thead><tr>${head.map((h) => `<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.map((r) => `<tr>${r.map((c) => `<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table>` : '<p class="muted">No data right now.</p>';
+  const vid = (r) => [r.rank, `<a href="${yt(r.video_id)}">${esc(r.title)}</a>`, esc(r.channel_title), fmt(r.view_count)];
+  const sections = d.countries.map((c) => `<section id="${c.code}"><h2>${esc(c.name)} <small>${c.code}</small></h2>
+<p>Est. watching YouTube now: <b>${fmt(c.live)}</b></p>
+<h3>YouTube Trending</h3>${table(['#', 'Video', 'Channel', 'Views'], (d.trending[c.code] || []).map(vid))}
+<h3>YouTube Music</h3>${table(['#', 'Video', 'Channel', 'Views'], (d.music[c.code] || []).map(vid))}
+<h3>Top news</h3>${table(['#', 'Headline', 'Source'], (d.news[c.code] || []).map((r) => [r.rank, `<a href="${esc(r.link)}">${esc(r.title)}</a>`, esc(r.source)]))}
+<h3>Education topics</h3>${table(['#', 'Subject', 'Videos', 'News'], (d.subjects[c.code] || []).map((r) => [r.rank, esc(r.subject), r.video_count, r.news_count]))}
+</section>`).join('\n');
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Like Polling data: what the world watches on YouTube</title>
+<meta name="description" content="${esc(ABOUT[0])}">
+<link rel="canonical" href="${SITE}/data"><link rel="alternate" type="text/markdown" href="/llms-full.txt" title="Like Polling data (Markdown)">
+<style>body{font:15px/1.5 system-ui,sans-serif;max-width:960px;margin:0 auto;padding:16px;color:#16181d}a{color:#b0001c}h1{margin:.2em 0}h2{margin-top:2em;border-top:2px solid #b0001c;padding-top:.6em}small,.muted{color:#6b7280}table{border-collapse:collapse;width:100%;font-size:14px}th,td{text-align:left;padding:4px 6px;border-bottom:1px solid #e5e7eb;vertical-align:top}th{background:#f6f6f7}nav a{display:inline-block;margin:0 8px 4px 0}</style></head><body>
+<p><a href="/">← Like Polling</a></p><h1>What the world watches on YouTube: open data</h1>
+<p>${esc(ABOUT[0])} ${esc(ABOUT[1])}</p>
+<p>Estimated people watching YouTube now in these ${d.countries.length} countries: <b>about ${short(d.live)}</b> (${utc(d.liveAt)}). Trending updated ${utc(d.trendingAt)}.</p>
+<h2>Trending in the most countries</h2>${table(['#', 'Video', 'Channel', 'Countries'], d.worldwide.map((v, i) => [i + 1, `<a href="${yt(v.id)}">${esc(v.title)}</a>`, esc(v.channel), `${v.countries.length}: ${v.countries.join(', ')}`]))}
+<h2>Estimated people watching YouTube now</h2>${table(['Country', 'Code', 'Est. watching now'], [...d.countries].sort((a, b) => b.live - a.live).map((c) => [`<a href="#${c.code}">${esc(c.name)}</a>`, c.code, fmt(c.live)]))}
+<h2>Countries</h2><nav>${d.countries.map((c) => `<a href="#${c.code}">${esc(c.name)}</a>`).join('')}</nav>
+${sections}
+<h2>Method</h2><ul>${METHOD.map((m) => `<li>${esc(m)}</li>`).join('')}</ul>
+<h2>More data</h2><ul>${LINKS.map(([u, t]) => `<li><a href="${u}">${u.replace(SITE, '')}</a>: ${esc(t)}</li>`).join('')}</ul>
+</body></html>`;
+}
+
+function createHandler(deps = {}) {
+  return async (req, res) => {
+    const env = deps.env || process.env;
+    const format = ['full', 'html'].includes(req.query?.format) ? req.query.format : 'summary';
+    try {
+      if (!env.SUPABASE_URL || !env.SUPABASE_KEY) throw new Error('Server is missing SUPABASE_URL/SUPABASE_KEY');
+      const d = await load(rest(env, deps.fetch || fetch));
+      res.setHeader('Content-Type', format === 'html' ? 'text/html; charset=utf-8' : 'text/markdown; charset=utf-8');
+      res.setHeader('Cache-Control', CACHE);
+      res.status(200).end(format === 'html' ? html(d) : markdown(d, format === 'full'));
+    } catch (err) {
+      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+      res.setHeader('Cache-Control', 'no-store');
+      res.status(502).end(`Like Polling data is temporarily unavailable. Try again shortly, or use ${SITE}/api/v1/worldwide.\n`);
+    }
+  };
+}
+
+module.exports = createHandler();
+module.exports.createHandler = createHandler;

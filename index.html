@@ -610,6 +610,8 @@
     }
     .earn-note { margin: 10px 0 0; font-size: 11.5px; line-height: 1.45; color: var(--muted); }
   </style>
+  <link rel="alternate" type="text/markdown" href="/llms.txt" title="Like Polling data for AI">
+  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "Dataset", "name": "Like Polling: what the world watches on YouTube", "description": "Estimated live YouTube viewers, YouTube Trending and Music top 10s, top news and education topics for 41 countries, refreshed hourly. Live viewer figures are modelled estimates.", "url": "https://www.likepolling.com/data", "isAccessibleForFree": true, "creator": {"@type": "Organization", "name": "Like Polling", "url": "https://www.likepolling.com/"}, "keywords": ["YouTube", "trending", "music", "news", "education", "countries", "creators"], "distribution": [{"@type": "DataDownload", "encodingFormat": "text/markdown", "contentUrl": "https://www.likepolling.com/llms-full.txt"}, {"@type": "DataDownload", "encodingFormat": "text/html", "contentUrl": "https://www.likepolling.com/data"}, {"@type": "DataDownload", "encodingFormat": "application/json", "contentUrl": "https://www.likepolling.com/api/v1/worldwide"}]}</script>
 </head>
 <body>
   <div class="yt-ticker" id="yt-ticker" role="region" aria-label="Estimated number of people watching YouTube right now, by country">
@@ -727,7 +729,7 @@ ENERGY</div>
 
       <main id="results" aria-live="polite"></main>
   </aside>
-  <footer><div class="foot-tag">Human + AI analytics for what the world watches</div><div class="foot-src">Sources: YouTube Data API · Google News · Google Gemini (AI)</div>Like Polling · Data via YouTube Data API · Earnings are estimates (by country, topic and Shorts)</footer>
+  <footer><div class="foot-tag">Human + AI analytics for what the world watches</div><div class="foot-src">Sources: YouTube Data API · Google News · Google Gemini (AI)</div>Like Polling · Data via YouTube Data API · Earnings are estimates (by country, topic and Shorts)<span aria-hidden="true"> · </span><a href="/data">Open data for AI</a></footer>
 
   <script src="/assets/earnings.js"></script>
   <script src="/assets/i18n.js"></script>
