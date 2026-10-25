@@ -1,0 +1,283 @@
+{
+ "US": [
+  {
+   "id": "UCRXiA3h1no_PFkb1JCP0yMA",
+   "name": "Vogue",
+   "handle": "@Vogue"
+  },
+  {
+   "id": "UCV8Do0nwSrYP7lwPBS4LWpw",
+   "name": "ELLE",
+   "handle": "@ELLE"
+  },
+  {
+   "id": "UCzsF1ghKHeif7AmTNlRYAzQ",
+   "name": "Harper's BAZAAR",
+   "handle": "@HarpersBazaar"
+  },
+  {
+   "id": "UCj6iVt0NLGyj406r2kD161g",
+   "name": "InStyle",
+   "handle": "@InStyle"
+  },
+  {
+   "id": "UCZyQcFvEE8VWNheDYyAHUzg",
+   "name": "WWD",
+   "handle": "@wwd"
+  },
+  {
+   "id": "UCr7ZFxNlDvb3waeoTN1_3mA",
+   "name": "Teen Vogue",
+   "handle": "@TeenVogue"
+  }
+ ],
+ "GB": [
+  {
+   "id": "UCdC4oG9R2WxTE_rH6em-euQ",
+   "name": "Harper's Bazaar UK",
+   "handle": "@harpersbazaaruk"
+  },
+  {
+   "id": "UCw7aeTxfJ4aP8REx8SMZQxQ",
+   "name": "Burberry",
+   "handle": "@Burberry"
+  },
+  {
+   "id": "UCwLnjNtJw8Tsa2tAJW7-nnQ",
+   "name": "Tamara Kalinic",
+   "handle": "@TamaraKalinic"
+  },
+  {
+   "id": "UCeOTjQIX1I90BTO1m4gDz-Q",
+   "name": "SHOWstudio",
+   "handle": "@showstudio"
+  }
+ ],
+ "FR": [
+  {
+   "id": "UC3VHLsAbsU4XAZ4B0PX9v3Q",
+   "name": "ELLE",
+   "handle": "@ELLEFR"
+  },
+  {
+   "id": "UCclHSnngVTZK7LEOQAzcg1w",
+   "name": "CHANEL",
+   "handle": "@CHANEL"
+  },
+  {
+   "id": "UC6xD-jKli-_qIYXDTsNv4dw",
+   "name": "Christian Dior",
+   "handle": "@Dior"
+  },
+  {
+   "id": "UC5q0PIKGr2lGOsiT14AlEYg",
+   "name": "Louis Vuitton",
+   "handle": "@louisvuitton"
+  },
+  {
+   "id": "UCmFOnqrNg-YHLXfdB3GexBg",
+   "name": "Hermès",
+   "handle": "@hermes"
+  },
+  {
+   "id": "UCB9eJ05Qv9wbwCDeUg6yBEQ",
+   "name": "Balmain",
+   "handle": "@BALMAIN"
+  }
+ ],
+ "IT": [
+  {
+   "id": "UCD8lIuVeQJ1oNch-2NapOpQ",
+   "name": "Vogue Italia",
+   "handle": "@VogueItalia"
+  },
+  {
+   "id": "UCo6fjlKg6GuCmEMeqYbGJng",
+   "name": "GUCCI",
+   "handle": "@gucci"
+  },
+  {
+   "id": "UCyKqxNOVX6e1kBKB23g8r6g",
+   "name": "Prada",
+   "handle": "@Prada"
+  },
+  {
+   "id": "UCEVPnj90D28Z4KDYQ2tLzqw",
+   "name": "Valentino",
+   "handle": "@valentino"
+  },
+  {
+   "id": "UCrx5pVziMo1qzF8isicR5SQ",
+   "name": "Versace",
+   "handle": "@Versace"
+  }
+ ],
+ "DE": [
+  {
+   "id": "UC3VBFypNtk9N7dgMyEfMeSA",
+   "name": "VOGUE Germany",
+   "handle": "@VogueGermany"
+  },
+  {
+   "id": "UCYMfTVf0T1F1D8lIL-VqYEQ",
+   "name": "ELLE Germany",
+   "handle": "@ELLEgermany"
+  },
+  {
+   "id": "UCjfFAxLaJ_oGCjrFSGWI9vg",
+   "name": "GQ Germany",
+   "handle": "@GQGermany"
+  }
+ ],
+ "ES": [
+  {
+   "id": "UCsuszFvxLDmIURtW7NOf92Q",
+   "name": "Vogue Spain",
+   "handle": "@VogueSpain"
+  },
+  {
+   "id": "UCa8RD6FJLllG4nBskvhOGZw",
+   "name": "zara",
+   "handle": "@zara"
+  },
+  {
+   "id": "UCXAYDnIfvOZKDAEOUTVQThg",
+   "name": "MANGO",
+   "handle": "@MANGO"
+  }
+ ],
+ "JP": [
+  {
+   "id": "UCn1qbwd476aiRH9d8RT5D0Q",
+   "name": "VOGUE JAPAN",
+   "handle": "@VogueJapan"
+  },
+  {
+   "id": "UCLKNp-ua37bAXkkPJRD-mfQ",
+   "name": "GQ JAPAN",
+   "handle": "@GQJapan"
+  },
+  {
+   "id": "UCdhJWTqm6JDadOO4MJDmX5Q",
+   "name": "ELLE Japan（エル・ジャパン）",
+   "handle": "@ellejapan"
+  },
+  {
+   "id": "UCvm-1tfv4nk4dz_EHeRGbXw",
+   "name": "UNIQLO ユニクロ",
+   "handle": "@UNIQLO"
+  }
+ ],
+ "KR": [
+  {
+   "id": "UC2DHU9RPlx9DpY0pMfL7jBg",
+   "name": "VOGUE KOREA",
+   "handle": "@VogueKorea"
+  },
+  {
+   "id": "UC7QX2YavsZmS7Se3ZKOsCLQ",
+   "name": "GQ KOREA",
+   "handle": "@GQKOREA"
+  },
+  {
+   "id": "UCcwtrNEHqIKU_1-w6Se1i_w",
+   "name": "Harper's BAZAAR Korea",
+   "handle": "@HarpersBAZAARKorea"
+  },
+  {
+   "id": "UCjO3ji06DxmTM1RrzLVwmkA",
+   "name": "W KOREA",
+   "handle": "@wkorea"
+  }
+ ],
+ "BR": [
+  {
+   "id": "UCEhkEygfrxwWPSHlSK6aM1w",
+   "name": "Vogue Brasil",
+   "handle": "@VogueBrasil"
+  }
+ ],
+ "IN": [
+  {
+   "id": "UCh29s-RNWI6z63670hUv71Q",
+   "name": "VOGUE India",
+   "handle": "@VogueIndia"
+  },
+  {
+   "id": "UCaOWowT_-_8hPofUxfoHwYQ",
+   "name": "Lakmé Fashion Week",
+   "handle": "@lakmefashionweek"
+  }
+ ],
+ "AU": [
+  {
+   "id": "UCnTU3MvOqhKclQ6OpnsY87Q",
+   "name": "Vogue Australia",
+   "handle": "@vogueaustralia"
+  }
+ ],
+ "MX": [
+  {
+   "id": "UCLBMjQDJ5r8kbTrN1kev4dw",
+   "name": "Vogue México y Latinoamérica",
+   "handle": "@VogueMexicoyLatinoamerica"
+  },
+  {
+   "id": "UCMMI4xC-Re-OymZU2N14Icg",
+   "name": "ELLE México",
+   "handle": "@ElleMexicoDigital"
+  }
+ ],
+ "CO": [
+  {
+   "id": "UCXU9x7jT8UWSon4uSpF6B0A",
+   "name": "Inexmoda",
+   "handle": "@inexmoda"
+  }
+ ],
+ "TH": [
+  {
+   "id": "UChX1KCEUgfy-sVNisjuyDkQ",
+   "name": "Vogue Thailand",
+   "handle": "@VogueThailand"
+  },
+  {
+   "id": "UCARSBKu7BPpvIxAmtKFdw5g",
+   "name": "ELLE Thailand",
+   "handle": "@ELLEThailand"
+  }
+ ],
+ "PH": [
+  {
+   "id": "UCjkEi04vPGXvR4GrPO_Qaig",
+   "name": "Vogue Philippines",
+   "handle": "@voguephilippines"
+  },
+  {
+   "id": "UCpzDINoS62eXwSQGX9Orb1w",
+   "name": "MEGA",
+   "handle": "@MEGAmagazine"
+  }
+ ],
+ "NL": [
+  {
+   "id": "UCaQ5cwQdXDFxskimSgyOvvg",
+   "name": "VOGUE Nederland",
+   "handle": "@voguenederland"
+  }
+ ],
+ "TR": [
+  {
+   "id": "UCiI8ZSYaOQfoyvmIymF2cFw",
+   "name": "Vogue Türkiye",
+   "handle": "@VogueTürkiye"
+  }
+ ],
+ "ZA": [
+  {
+   "id": "UCDPxb3tafPgvf009lGjFo_g",
+   "name": "SOUTH AFRICAN FASHION WEEK",
+   "handle": "@SAFashionWeek"
+  }
+ ]
+}

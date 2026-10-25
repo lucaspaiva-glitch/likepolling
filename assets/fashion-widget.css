@@ -1,7 +1,12 @@
 /* Fashion News widget (assets/fashion-widget.js). Card chrome comes from trending-widget.css (.ytt-*). */
 .fsh { margin: 8px 0 56px; }
 .fsh[hidden] { display: none; }
-.fsh-top { margin: 0 0 14px; }
+.fsh-top { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin: 0 0 14px; }
+.fsh-top .fsh-select { flex: none; }
+.fsh-vcard { margin: 0 0 22px !important; }
+.fsh-vcard[hidden] { display: none; }
+.fsh-vbody { padding: 0; }
+.fsh-vbody:empty { min-height: 240px; margin: 18px; background: linear-gradient(100deg, #f2f2f2 40%, #fafafa 50%, #f2f2f2 60%) 0 0 / 300% 100%; border-radius: 14px; animation: fsh-load 1.4s linear infinite; }
 .fsh-h { margin: 0; font-size: clamp(22px, 2.4vw, 26px); font-weight: 750; letter-spacing: -.02em; }
 .fsh-p { margin: 4px 0 0; font-size: 14px; color: var(--muted, #737373); }
 .fsh .ytt { margin: 0; }

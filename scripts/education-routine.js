@@ -259,7 +259,7 @@ async function run(env = process.env, deps = {}) {
   return summary;
 }
 
-module.exports = { run, rankVideos, scoreSubjects, newsUrl, toVideo, SUBJECTS, NEWS_QUERY };
+module.exports = { run, rankVideos, scoreSubjects, newsUrl, toVideo, recentUploads, videoDetails, pool, SUBJECTS, NEWS_QUERY };
 
 if (require.main === module) {
   run().catch((err) => {
