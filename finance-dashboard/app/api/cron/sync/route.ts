@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { isPlaidConfigured } from "@/lib/plaid";
-import { isSupabaseConfigured } from "@/lib/db/server";
+import { getServerSupabase, isSupabaseConfigured } from "@/lib/db/server";
+import { refreshTaxDeadline } from "@/lib/br-tax";
 import { syncItems } from "@/lib/sync";
 
 export const dynamic = "force-dynamic";
@@ -17,7 +18,8 @@ export async function GET(req: Request) {
   }
   try {
     const items = await syncItems();
-    return NextResponse.json({ items }, { status: items.some((r) => !r.ok) ? 502 : 200 });
+    const taxDeadline = await refreshTaxDeadline(getServerSupabase()).catch((e: Error) => ({ error: e.message }));
+    return NextResponse.json({ items, taxDeadline }, { status: items.some((r) => !r.ok) ? 502 : 200 });
   } catch (err) {
     return NextResponse.json({ error: (err as Error).message }, { status: 500 });
   }
