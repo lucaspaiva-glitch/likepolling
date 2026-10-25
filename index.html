@@ -44,12 +44,14 @@
     button.yt-ticker-label { border: 0; color: inherit; font-family: inherit; cursor: pointer; }
     button.yt-ticker-label:focus-visible { outline: 2px solid #fff; outline-offset: -4px; }
     .yt-info { display: inline-grid; place-items: center; width: 13px; height: 13px; border: 1px solid rgba(255,255,255,.6); border-radius: 50%; font: italic 700 9px/1 Georgia, serif; letter-spacing: 0; text-transform: none; opacity: .85; }
-    .yt-note { position: fixed; top: var(--note-y, 42px); left: var(--note-x, 12px); z-index: 60; width: min(340px, calc(100vw - 24px)); box-sizing: border-box; padding: 0 0 12px; border: 1px solid #ff2a3c; border-radius: 12px; background: linear-gradient(160deg, #5a0007, #7f000a); color: #ffe3e6; box-shadow: 0 0 0 1px rgba(255,42,60,.25), 0 0 22px -4px rgba(255,42,60,.7); font-size: 12.5px; line-height: 1.45; }
-    .yt-note .mpe-top { color: rgba(255,190,195,.75); }
-    .yt-note .mpe-sym { background: rgba(255,42,60,.18); color: #ff6a78; }
-    .yt-note-in { padding: 8px 14px 0; }
+    .yt-note { position: fixed; top: var(--note-y, 42px); left: var(--note-x, 12px); z-index: 60; width: min(340px, calc(100vw - 24px)); font-size: 12.5px; line-height: 1.45; }
+    /* Same card as the Machu Picchu ad (.mpe-ad: neon title, scan bar, scanlines). */
+    .yt-note .yt-note-ad { cursor: default; padding-bottom: 12px; }
+    .yt-note .mpe-name { margin: 12px 14px 0; font-size: 18px; line-height: 1.1; white-space: normal; }
+    .yt-note .mpe-bar { margin: 10px 14px 4px; }
+    .yt-note-in { padding: 0 14px; }
     .yt-note[hidden] { display: none; }
-    .yt-note h2 { margin: 0 0 6px; color: #fff; font-size: 15px; font-weight: 700; letter-spacing: -.005em; }
+    .yt-note h2 { letter-spacing: .03em; }
     .yt-note p { margin: 7px 0 0; color: rgba(255,227,230,.9); }
     @keyframes yt-pulse { 0% { box-shadow: 0 0 0 0 rgba(255,255,255,.55); } 70%, 100% { box-shadow: 0 0 0 6px rgba(255,255,255,0); } }
     .yt-ticker-viewport { flex: 1; min-width: 0; display: flex; align-items: center; overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 28px, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(90deg, transparent, #000 28px, #000 calc(100% - 28px), transparent); }
@@ -605,12 +607,15 @@
     <div class="yt-ticker-meta" id="yt-updated"></div>
   </div>
   <div class="yt-note" id="yt-note" role="dialog" aria-labelledby="yt-note-h" hidden>
-    <div class="mpe-top"><span class="mpe-sym" data-no-i18n>LIVE · EST.</span></div>
-    <div class="yt-note-in">
-    <h2 id="yt-note-h">What these numbers mean</h2>
+    <div class="mpe-ad yt-note-ad">
+      <div class="mpe-top"><span class="mpe-sym" data-no-i18n>LIVE · EST.</span></div>
+      <h2 class="mpe-name" id="yt-note-h">What these numbers mean</h2>
+      <div class="mpe-bar" aria-hidden="true"></div>
+      <div class="yt-note-in">
     <p>An estimate of how many people are watching YouTube at the same moment in each country, on any screen: phones, computers, tablets and TVs. It counts people, not devices or monthly users.</p>
     <p>Modelled, not measured: YouTube does not publish live viewer counts. Each figure is YouTube users in that country (Google's ad-reach figures, late 2025, via DataReportal) × about 80 minutes of viewing per person per day, spread over the day by a typical hourly viewing pattern.</p>
     <p>Recalculated at 03:00 and 15:00 UTC, the two daily viewing peaks across these countries. Read the figures as an order of magnitude, not an exact count.</p>
+      </div>
     </div>
   </div>
   <div class="wrap">
