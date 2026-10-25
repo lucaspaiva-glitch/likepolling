@@ -2,8 +2,8 @@
 // Loaded by the content script, popup, welcome page and background worker (and by node tests).
 (function (root) {
   'use strict';
-  const COUNTRIES = ['AR', 'AU', 'BD', 'BE', 'BR', 'CA', 'CL', 'CO', 'DE', 'DZ', 'EC', 'EG', 'ES', 'FR', 'GB', 'ID', 'IN', 'IQ', 'IT', 'JP', 'KE',
-    'KR', 'MA', 'MX', 'MY', 'NG', 'NL', 'PE', 'PH', 'PK', 'PL', 'PT', 'RO', 'SA', 'TH', 'TR', 'TW', 'UA', 'US', 'VN', 'ZA'];
+  const COUNTRIES = ['AR', 'AU', 'BD', 'BE', 'BR', 'CA', 'CL', 'CO', 'DE', 'DZ', 'EC', 'EG', 'ES', 'FR', 'GB', 'ID', 'IE', 'IN', 'IQ', 'IT', 'JP', 'KE',
+    'KR', 'MA', 'MX', 'MY', 'NG', 'NL', 'PE', 'PH', 'PK', 'PL', 'PT', 'SA', 'TH', 'TR', 'TW', 'UA', 'US', 'VN', 'ZA'];
   const LANGS = ['en', 'pt', 'pt-PT', 'es', 'de', 'ru', 'uk', 'ko', 'ja'];
   const LOCALE = { en: 'en-US', pt: 'pt-BR', 'pt-PT': 'pt-PT', es: 'es', de: 'de-DE', ru: 'ru-RU', uk: 'uk-UA', ko: 'ko-KR', ja: 'ja-JP' };
   const HOME_COUNTRY = { en: 'US', pt: 'BR', 'pt-PT': 'PT', es: 'MX', de: 'DE', ru: 'US', uk: 'UA', ko: 'KR', ja: 'JP' };

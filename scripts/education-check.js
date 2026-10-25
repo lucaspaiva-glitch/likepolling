@@ -5,8 +5,7 @@ const CANDIDATES = require('./education-candidates.json');
 const YT = 'https://www.googleapis.com/youtube/v3';
 
 const SEARCHES = {
-  PT: 'explicações aulas matemática exames nacionais', UA: 'уроки НМТ ЗНО освіта', BD: 'শিক্ষা ক্লাস HSC SSC',
-  MY: 'pendidikan cikgu SPM tuisyen', NG: 'WAEC JAMB lessons tutorial', CO: 'clases ICFES educación Colombia'
+  IE: 'Leaving Cert revision lessons Ireland'
 };
 
 const get = async (path) => (await fetch(`${YT}/${path}&key=${process.env.YOUTUBE_API_KEY}`)).json();
