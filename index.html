@@ -265,8 +265,8 @@
     .mpe-pop[hidden] { display: none; }
     body.lp-drawer-open { overflow: hidden; }
     body.lp-drawer-open .lp-rail, body.lp-drawer-open .mpe-pop { opacity: 0; pointer-events: none; }
-    .lp-scrim { position: fixed; inset: 0; z-index: 70; background: rgba(20,0,4,.42); -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px); opacity: 0; pointer-events: none; transition: opacity .25s; }
-    .lp-scrim.on { opacity: 1; pointer-events: auto; }
+    .lp-scrim { position: fixed; inset: 0; z-index: 70; background: rgba(20,0,4,.42); opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .25s, visibility 0s .25s; }
+    .lp-scrim.on { opacity: 1; visibility: visible; pointer-events: auto; -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px); transition: opacity .25s; }
     .lp-drawer { position: fixed; top: 0; bottom: 0; left: 0; z-index: 80; width: min(820px, calc(100vw - 36px)); box-sizing: border-box; padding: 0 32px 32px; overflow-y: auto; overscroll-behavior: contain; background: #fff; border-right: 3px solid var(--red-dark); box-shadow: 24px 0 60px -20px rgba(60,0,6,.45); transform: translateX(-105%); visibility: hidden; transition: transform .32s cubic-bezier(.2,.8,.2,1), visibility 0s .32s; }
     .lp-drawer.open { transform: none; visibility: visible; transition: transform .32s cubic-bezier(.2,.8,.2,1); }
     .lp-drawer-x { position: sticky; top: 14px; z-index: 2; float: right; margin: 14px -14px 0 0; width: 36px; height: 36px; border: 1px solid var(--line); border-radius: 50%; background: #fff; color: #525252; font-size: 22px; line-height: 1; cursor: pointer; }
