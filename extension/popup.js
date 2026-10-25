@@ -1,8 +1,9 @@
 // Toolbar popup: on a YouTube channel/video it shows that channel (Creators); anywhere else
 // it opens on Trending. It never reads the page; on YouTube it asks our own content script.
 (async function () {
-  const lang = CP.detectLang(navigator.languages || navigator.language);
-  const s = await chrome.storage.local.get(['country', 'showPill']);
+  let lang = CP.detectLang(navigator.languages || navigator.language);
+  const s = await chrome.storage.local.get(['country', 'showPill', 'lang']);
+  if (CP.LANGS.includes(s.lang)) lang = s.lang;
   const request = (path, opt = {}) => chrome.runtime.sendMessage({ type: 'api', path, refresh: !!opt.refresh });
   let ref = null, tabId = null, onYT = false;
   try {
@@ -20,6 +21,7 @@
     country: s.country || CP.HOME_COUNTRY[lang] || 'US', showPill: s.showPill !== false, canShowOnPage: onYT, where: !onYT,
     onAction: (act, value) => {
       if (act === 'country') chrome.storage.local.set({ country: value });
+      if (act === 'lang') chrome.storage.local.set({ lang: value });
       if (act === 'pill') chrome.storage.local.set({ showPill: value });
       if (act === 'show-on-page' && tabId) chrome.tabs.sendMessage(tabId, { type: 'showPanel' }).then(() => window.close()).catch(() => {});
     },

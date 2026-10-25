@@ -17,13 +17,14 @@
   const TAPE_T0 = Date.now(), TAPE_S = 80;
 
   function Dashboard(container, opts) {
-    const t = CP.translator(opts.lang);
-    const f = CP.formatter(opts.lang);
+    let t = CP.translator(opts.lang);
+    let f = CP.formatter(opts.lang);
     const st = {
       tab: opts.tab || 'creators', full: false, active: false, settings: false,
       country: opts.country || 'US', scope: 'country', ref: null, ch: null, sel: null,
-      charts: {}, refreshTried: {},
+      charts: {}, refreshTried: {}, showPill: opts.showPill !== false,
     };
+    function setLang(l) { opts.lang = l; t = CP.translator(l); f = CP.formatter(l); render(); }
 
     // ---------- data ----------
     async function load(key, path, opt = {}) {
@@ -190,9 +191,11 @@
       return `<div class="cp-tape" title="${esc(t('worldwide'))}"><div class="cp-tape-in" style="animation-delay:-${(((Date.now() - TAPE_T0) / 1000) % TAPE_S).toFixed(2)}s">${items}${items}</div></div>`;
     }
 
+    const LANG_NAMES = { en: 'English', pt: 'Português (Brasil)', 'pt-PT': 'Português (Portugal)', es: 'Español', de: 'Deutsch', ru: 'Русский', uk: 'Українська', ko: '한국어', ja: '日本語' };
     function settingsView() {
-      return `<div class="cp-settings"><label>${t('country')}<select data-act="country">${CP.COUNTRIES.map((k) => `<option value="${k}"${k === st.country ? ' selected' : ''}>${esc(f.country(k))}</option>`).join('')}</select></label>
-        <label class="cp-check"><input type="checkbox" data-act="pill"${opts.showPill !== false ? ' checked' : ''}> ${t('show_pill')}</label></div>`;
+      return `<div class="cp-settings"><label>${t('language')}<select data-act="lang">${CP.LANGS.map((k) => `<option value="${k}"${k === opts.lang ? ' selected' : ''}>${LANG_NAMES[k]}</option>`).join('')}</select></label>
+        <label>${t('country')}<select data-act="country">${CP.COUNTRIES.map((k) => `<option value="${k}"${k === st.country ? ' selected' : ''}>${esc(f.country(k))}</option>`).join('')}</select></label>
+        <label class="cp-check"><input type="checkbox" data-act="pill"${st.showPill ? ' checked' : ''}> ${t('show_pill')}</label></div>`;
     }
 
     function render() {
@@ -200,9 +203,10 @@
       const hud = opts.mode === 'hud';
       const tabs = ['creators', 'trending', 'music', 'education'].map((k) => `<button role="tab" aria-selected="${st.tab === k}" data-act="tab" data-v="${k}">${t(k)}</button>`).join('');
       const tools = hud
-        ? `<button class="cp-ico" data-act="min" title="${t('minimize')}" aria-label="${t('minimize')}">${ICON.min}</button>
+        ? `<button class="cp-ico" data-act="settings" title="${t('lang_country')}" aria-label="${t('lang_country')}">${ICON.gear}</button>
+           <button class="cp-ico" data-act="min" title="${t('minimize')}" aria-label="${t('minimize')}">${ICON.min}</button>
            <button class="cp-ico" data-act="full" title="${t(st.full ? 'exit_full' : 'full')}" aria-label="${t(st.full ? 'exit_full' : 'full')}">${st.full ? ICON.exit : ICON.full}</button>`
-        : `${opts.canShowOnPage ? `<button class="cp-btn small" data-act="show-on-page">${t('show_on_page')}</button>` : ''}<button class="cp-ico" data-act="settings" title="${t('settings')}" aria-label="${t('settings')}">${ICON.gear}</button>`;
+        : `${opts.canShowOnPage ? `<button class="cp-btn small" data-act="show-on-page">${t('show_on_page')}</button>` : ''}<button class="cp-ico" data-act="settings" title="${t('lang_country')}" aria-label="${t('lang_country')}">${ICON.gear}</button>`;
       const view = st.settings ? settingsView() : st.tab === 'creators' ? creators() : st.tab === 'education' ? education() : chart(st.tab);
       const report = st.tab === 'creators' && st.ch?.body ? st.ch.body.channel.report_url : SITE;
       const scrollTop = container.querySelector('.cp-body')?.scrollTop || 0;
@@ -242,7 +246,8 @@
       const el = e.target;
       if (el.dataset.act === 'country') { st.country = el.value; opts.onAction && opts.onAction('country', el.value); ensureTabData(); render(); }
       if (el.dataset.act === 'edu-country') { st.eduCountry = el.value; ensureTabData(); render(); }
-      if (el.dataset.act === 'pill') opts.onAction && opts.onAction('pill', el.checked);
+      if (el.dataset.act === 'pill') { st.showPill = el.checked; opts.onAction && opts.onAction('pill', el.checked); }
+      if (el.dataset.act === 'lang') { setLang(el.value); opts.onAction && opts.onAction('lang', el.value); }
     });
 
     return {
@@ -252,6 +257,7 @@
         if (ref) loadChannel(false); else render();
       },
       setTab(tab) { st.tab = tab; st.settings = false; ensureTabData(); render(); },
+      setLang,
       setFull(on) { st.full = !!on; render(); },
       activate(on = true) { st.active = on; if (on) { ensureTabData(); maybeRefresh(); render(); } },
       get state() { return st; },

@@ -5,9 +5,9 @@
   'use strict';
   if (window.top !== window || document.getElementById('creators-plus-root')) return;
   const CP = globalThis.CP;
-  const lang = CP.detectLang(navigator.languages || navigator.language);
-  const t = CP.translator(lang);
-  const f = CP.formatter(lang);
+  let lang = CP.detectLang(navigator.languages || navigator.language);
+  let t = CP.translator(lang);
+  let f = CP.formatter(lang);
   const request = (path, opt = {}) => chrome.runtime.sendMessage({ type: 'api', path, refresh: !!opt.refresh });
 
   for (const [family, file, weight] of [['CP Inter', 'inter-var-latin.woff2', '100 900'], ['CP Chakra', 'chakra-petch-bold-latin.woff2', '700']]) {
@@ -39,9 +39,19 @@
       else if (act === 'close') setState('pill');
       else if (act === 'full') setState('full');
       else if (act === 'panel') setState('panel');
+      else if (act === 'lang') applyLang(value, true);
+      else if (act === 'pill') chrome.storage.local.set({ showPill: value });
       else if (act === 'country') { settings.country = value; chrome.storage.local.set({ country: value }); }
     },
   });
+
+  // Language chosen in the extension (gear) overrides the browser language.
+  function applyLang(l, fromDash) {
+    if (!CP.LANGS.includes(l)) return;
+    lang = l; t = CP.translator(l); f = CP.formatter(l);
+    if (fromDash) chrome.storage.local.set({ lang: l }); else dash.setLang(l);
+    drawPill();
+  }
 
   function drawPill() {
     const b = summary?.body;
@@ -160,12 +170,15 @@
   });
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area !== 'local') return;
+    if (changes.lang?.newValue && changes.lang.newValue !== lang) applyLang(changes.lang.newValue, false);
     if (changes.showPill) { settings.showPill = changes.showPill.newValue !== false; if (!settings.showPill && state === 'pill') setState('hidden'); else if (settings.showPill && state === 'hidden') setState('pill'); }
   });
 
-  chrome.storage.local.get(['country', 'showPill', 'pos']).then((s) => {
+  chrome.storage.local.get(['country', 'showPill', 'pos', 'lang']).then((s) => {
     settings = { ...settings, ...s, showPill: s.showPill !== false };
     if (s.country) dash.state.country = s.country;
+    dash.state.showPill = settings.showPill;
+    if (s.lang && s.lang !== lang) applyLang(s.lang, false);
     document.addEventListener('yt-navigate-finish', onNavigate);
     addEventListener('popstate', onNavigate);
     setInterval(onNavigate, 1000);
