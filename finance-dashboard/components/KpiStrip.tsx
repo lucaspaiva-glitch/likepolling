@@ -22,7 +22,7 @@ export default function KpiStrip({ kpis }: { kpis: DashboardData["kpis"] }) {
         label="Credit card owed"
         value={fmtUsd(kpis.cardOwed)}
         tone={kpis.cardOwed > 0 ? "neg" : undefined}
-        sub={`${fmtUsd(kpis.cardSpentSincePayment)} spent ${kpis.lastCardPayment ? `since last payment ${kpis.lastCardPayment}` : "so far"}`}
+        sub={`${fmtUsd(kpis.cardSpentSincePayment)} spent ${kpis.lastCardPayment ? `since last payment ${kpis.lastCardPayment}` : "so far"}${kpis.cardPending ? ` · incl. ${fmtUsd(kpis.cardPending)} pending` : ""}`}
       />
       <Kpi
         label="Money to Spend"

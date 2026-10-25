@@ -24,6 +24,7 @@ export interface DashboardData {
   kpis: {
     checking: number;
     cardOwed: number;
+    cardPending: number;
     estimatedTaxes: number;
     moneyToSpend: number;
     cardSpentSincePayment: number;
@@ -58,6 +59,7 @@ function emptyData(configured: boolean, error: string | null): DashboardData {
     kpis: {
       checking: 0,
       cardOwed: 0,
+      cardPending: 0,
       estimatedTaxes: 0,
       moneyToSpend: 0,
       cardSpentSincePayment: 0,
@@ -233,6 +235,10 @@ export async function getDashboardData(): Promise<DashboardData> {
   // Card: amount owed comes from the bank; spending is everything charged since the last payment.
   const creditIds = new Set(accounts.filter((a) => a.type === "credit").map((a) => a.id));
   const cardTx = transactions.filter((t) => t.account_id && creditIds.has(t.account_id));
+  // The bank's card balance only has posted charges; add pending ones so owed matches spending.
+  const cardPending = Math.round(-cardTx.filter((t) => t.pending).reduce((s, t) => s + t.amount, 0) * 100) / 100;
+  cardOwed += cardPending;
+  liabilities += cardPending;
   const lastCardPayment = cardTx.filter(isCardPayment).reduce<string | null>((max, t) => (!max || t.date > max ? t.date : max), null);
   const cardSpentSincePayment = cardTx
     .filter((t) => !lastCardPayment || t.date > lastCardPayment)
@@ -278,6 +284,7 @@ export async function getDashboardData(): Promise<DashboardData> {
     kpis: {
       checking,
       cardOwed,
+      cardPending,
       estimatedTaxes,
       moneyToSpend: checking - cardOwed - estimatedTaxes,
       cardSpentSincePayment,
