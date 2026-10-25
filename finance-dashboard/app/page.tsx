@@ -17,7 +17,7 @@ export default async function Page() {
     <main className="mx-auto max-w-[1680px] space-y-2 p-3">
       <header className="flex items-center justify-between">
         <div className="flex items-baseline gap-3">
-          <h1 className="text-base font-semibold text-dark-tremor-content-strong">Personal Wealth and Life Management <span className="font-normal text-dark-tremor-content">by havenoinsta</span></h1>
+          <h1 className="text-base font-semibold text-dark-tremor-content-strong">Vault</h1>
           <span className="text-[11px] text-dark-tremor-content-subtle">
             {data.lastUpdated ? `Balances as of ${new Date(data.lastUpdated).toLocaleString("en-US")}` : "No data yet"}
           </span>
