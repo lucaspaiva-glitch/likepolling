@@ -60,14 +60,14 @@ function findHeaderLine(lines: string[]): number {
 }
 
 // Merrill activity exports carry a "Type" column (e.g. FundTransfers, DividendAndInterest).
-export function merrillTypeCategory(type: string | undefined, amount: number): string | null {
+export function merrillTypeCategory(type: string | undefined): string | null {
   switch ((type ?? "").trim().toLowerCase()) {
     case "fundtransfers":
       return "Transfer";
     case "dividendandinterest":
-      return amount >= 0 ? "Income" : "Investments";
+      return "Income";
     default:
-      return null;
+      return /security|purchase|sale|buy|sell|trade|reinvest/i.test(type ?? "") ? "Trades" : null;
   }
 }
 
@@ -131,7 +131,7 @@ export function parseBankCsv(text: string, fileName = ""): ParsedCsv {
       }
     }
     if (!accountHint && accountCol && rec[accountCol]) accountHint = rec[accountCol].trim();
-    rows.push({ date: d, payee, amount: amt, category: categorize(payee, amt, merrillTypeCategory(rec.Type, amt)), type: txType(amt), raw: rec });
+    rows.push({ date: d, payee, amount: amt, category: categorize(payee, amt, merrillTypeCategory(rec.Type)), type: txType(amt), raw: rec });
   }
 
   return { institution, rows, skipped, columns: { date, payee: payeeCols, amount, debit, credit }, latestBalance, accountHint };

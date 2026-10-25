@@ -1,5 +1,5 @@
 import { Card } from "@tremor/react";
-import { fmtPct, fmtUsd } from "@/lib/format";
+import { fmtPct, fmtUsd, monthLabel } from "@/lib/format";
 import type { DashboardData } from "@/lib/data";
 
 function Kpi({ label, value, sub, tone }: { label: string; value: string; sub?: string; tone?: "pos" | "neg" }) {
@@ -26,6 +26,7 @@ export default function KpiStrip({ kpis }: { kpis: DashboardData["kpis"] }) {
         label="Savings rate · 12 mo"
         value={kpis.savingsRate12m != null ? fmtPct(kpis.savingsRate12m) : "—"}
         tone={kpis.savingsRate12m == null ? undefined : kpis.savingsRate12m >= 0 ? "pos" : "neg"}
+        sub={kpis.historyStart ? `data since ${monthLabel(kpis.historyStart.slice(0, 7))}` : undefined}
       />
     </div>
   );

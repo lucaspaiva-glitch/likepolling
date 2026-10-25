@@ -1,6 +1,7 @@
 export const DEFAULT_CATEGORIES = [
   "Income",
   "Investments",
+  "Trades",
   "Transfer",
   "Housing",
   "Utilities",

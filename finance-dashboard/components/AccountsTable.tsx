@@ -88,7 +88,10 @@ export default function AccountsTable({ accounts }: { accounts: Account[] }) {
             <li key={a.id} className="flex items-center justify-between gap-2 py-1.5">
               <div className="min-w-0">
                 <p className="truncate text-dark-tremor-content-emphasis">{a.name}</p>
-                <p className="truncate text-[11px] text-dark-tremor-content-subtle">{a.institution ?? "—"}</p>
+                <p className="truncate text-[11px] text-dark-tremor-content-subtle">
+                  {a.institution ?? "—"}
+                  {a.external_id?.startsWith("csv:") && ` · balance as of ${a.updated_at.slice(0, 10)}`}
+                </p>
               </div>
               <div className="flex shrink-0 items-center gap-2">
                 <Badge size="xs" color={TYPE_COLOR[a.type] ?? "slate"}>
