@@ -17,11 +17,16 @@
 .cp-ico:hover { background: var(--red-soft); }
 .cp-ico svg { width: 15px; height: 15px; fill: none; stroke: var(--ink); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .cp-tape { background: var(--red-dark); color: #fff; overflow: hidden; white-space: nowrap; font: 600 11px/24px 'CP Chakra', ui-monospace, monospace; letter-spacing: .02em; }
-.cp-tape-in { display: inline-block; padding-left: 100%; animation: cp-tape 60s linear infinite; }
+/* Bars never shrink: a long list used to squash the ticker to half its height. */
+.cp-bar, .cp-tape, .cp-where, .cp-tabs, .cp-foot { flex: none; }
+.cp-tape-in { display: inline-block; animation: cp-tape 80s linear infinite; }
+.cp-tape-in.still { animation: none; padding-left: 12px; }
 .cp-tape:hover .cp-tape-in { animation-play-state: paused; }
 .cp-tape span { margin-right: 26px; }
 .cp-tape em { font-style: normal; color: #7dffb0; }
-@keyframes cp-tape { to { transform: translateX(-100%); } }
+@keyframes cp-tape { to { transform: translateX(-50%); } }
+.cp-where { padding: 8px 12px; background: var(--red-soft); border-bottom: 1px solid var(--line); font-size: 11.5px; line-height: 1.35; }
+.cp-where a { color: var(--red); font-weight: 700; white-space: nowrap; }
 @media (prefers-reduced-motion: reduce) { .cp-tape-in { animation: none; padding-left: 12px; } }
 .cp-tabs { display: flex; gap: 4px; padding: 8px 10px 0; border-bottom: 1px solid var(--line); }
 .cp-tabs button { flex: 1; border: 0; background: none; padding: 7px 4px 9px; font-weight: 700; font-size: 12.5px; color: var(--mute); border-bottom: 2.5px solid transparent; }

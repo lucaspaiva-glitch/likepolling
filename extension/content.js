@@ -24,8 +24,8 @@
   document.documentElement.appendChild(host);
 
   let settings = { country: CP.HOME_COUNTRY[lang] || 'US', showPill: true, pos: null };
-  let state = 'hidden';   // hidden | pill | panel | full | closed
-  let ref = null, closedKey = null, summary = null;
+  let state = 'hidden';   // hidden | pill | panel | full
+  let ref = null, summary = null;
 
   const pill = document.createElement('div');
   const panel = document.createElement('div');
@@ -36,7 +36,7 @@
     onChannel: (ch) => { summary = ch; drawPill(); },
     onAction: (act, value) => {
       if (act === 'min') setState('pill');
-      else if (act === 'close') { closedKey = CP.refKey(ref); setState('closed'); }
+      else if (act === 'close') setState('pill');
       else if (act === 'full') setState('full');
       else if (act === 'panel') setState('panel');
       else if (act === 'country') { settings.country = value; chrome.storage.local.set({ country: value }); }
@@ -45,8 +45,8 @@
 
   function drawPill() {
     const b = summary?.body;
-    const name = b?.channel.handle || (ref ? (ref.handle ? '@' + ref.handle : 'YouTube') : '');
-    const stat = b?.metrics ? `<b>${f.num(b.metrics.views_30d)}</b><span>${t('views')} / 30d</span>` : `<span>${t('channel_hint')}</span>`;
+    const name = b?.channel.handle || (ref ? (ref.handle ? '@' + ref.handle : 'YouTube') : 'Creators +');
+    const stat = b?.metrics ? `<b>${f.num(b.metrics.views_30d)}</b><span>${t('views')} / 30d</span>` : `<span>${ref ? t('channel_hint') : `${t('trending')} · ${t('music')}`}</span>`;
     pill.innerHTML = `<div class="cp-pill" role="button" tabindex="0" aria-label="Creators +: ${CP.LOGO ? '' : ''}${name}">${CP.LOGO}<span style="color:#0d0d0d;font-weight:700">${name.replace(/[<>&]/g, '')}</span>${stat}</div>`;
   }
 
@@ -141,25 +141,26 @@
     }, 250);
   }
 
+  // The pill stays on every YouTube page; without a channel the panel opens on Trending.
+  let autoTab = false;
   function show(next) {
     ref = next;
     dash.setChannel(next);
-    if (!next) { if (state === 'pill') setState('hidden'); return; }
+    if (!next && dash.state.tab === 'creators') { autoTab = true; dash.setTab('trending'); }
+    else if (next && autoTab) { autoTab = false; dash.setTab('creators'); }
     summary = null;
     drawPill();
     if (state === 'panel' || state === 'full') return;
-    if (closedKey === CP.refKey(next)) return setState('closed');
-    closedKey = null;
     setState(settings.showPill ? 'pill' : 'hidden');
   }
 
   chrome.runtime.onMessage.addListener((msg, sender, reply) => {
     if (msg?.type === 'getChannel') reply({ ref });
-    if (msg?.type === 'showPanel' && ref) { closedKey = null; setState('panel'); reply({ ok: true }); }
+    if (msg?.type === 'showPanel') { setState('panel'); reply({ ok: true }); }
   });
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area !== 'local') return;
-    if (changes.showPill) { settings.showPill = changes.showPill.newValue !== false; if (!settings.showPill && state === 'pill') setState('hidden'); else if (settings.showPill && ref && state === 'hidden') setState('pill'); }
+    if (changes.showPill) { settings.showPill = changes.showPill.newValue !== false; if (!settings.showPill && state === 'pill') setState('hidden'); else if (settings.showPill && state === 'hidden') setState('pill'); }
   });
 
   chrome.storage.local.get(['country', 'showPill', 'pos']).then((s) => {

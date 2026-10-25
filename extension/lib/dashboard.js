@@ -13,6 +13,8 @@
     gear: '<svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="2.2"/><path d="M8 1.8v1.8M8 12.4v1.8M1.8 8h1.8M12.4 8h1.8M3.6 3.6l1.3 1.3M11.1 11.1l1.3 1.3M3.6 12.4l1.3-1.3M11.1 4.9l1.3-1.3"/></svg>',
   };
   const SITE = 'https://www.likepolling.com';
+  // Ticker keeps its place across re-renders (a re-render used to restart it off-screen).
+  const TAPE_T0 = Date.now(), TAPE_S = 80;
 
   function Dashboard(container, opts) {
     const t = CP.translator(opts.lang);
@@ -183,9 +185,9 @@
 
     function ticker() {
       const w = st.charts.worldwide?.body;
-      if (!w?.items?.length) return '<div class="cp-tape"><div class="cp-tape-in"><span>Like Polling · YouTube</span></div></div>';
+      if (!w?.items?.length) return '<div class="cp-tape"><div class="cp-tape-in still"><span>Like Polling · YouTube</span></div></div>';
       const items = w.items.slice(0, 10).map((r) => `<span><b>${esc(r.title.length > 42 ? r.title.slice(0, 40) + '…' : r.title)}</b> <em>${r.country_count}/${w.countries_total}</em></span>`).join('');
-      return `<div class="cp-tape" title="${esc(t('worldwide'))}"><div class="cp-tape-in">${items}${items}</div></div>`;
+      return `<div class="cp-tape" title="${esc(t('worldwide'))}"><div class="cp-tape-in" style="animation-delay:-${(((Date.now() - TAPE_T0) / 1000) % TAPE_S).toFixed(2)}s">${items}${items}</div></div>`;
     }
 
     function settingsView() {
@@ -199,8 +201,7 @@
       const tabs = ['creators', 'trending', 'music', 'education'].map((k) => `<button role="tab" aria-selected="${st.tab === k}" data-act="tab" data-v="${k}">${t(k)}</button>`).join('');
       const tools = hud
         ? `<button class="cp-ico" data-act="min" title="${t('minimize')}" aria-label="${t('minimize')}">${ICON.min}</button>
-           <button class="cp-ico" data-act="full" title="${t(st.full ? 'exit_full' : 'full')}" aria-label="${t(st.full ? 'exit_full' : 'full')}">${st.full ? ICON.exit : ICON.full}</button>
-           <button class="cp-ico" data-act="close" title="${t('close')}" aria-label="${t('close')}">${ICON.close}</button>`
+           <button class="cp-ico" data-act="full" title="${t(st.full ? 'exit_full' : 'full')}" aria-label="${t(st.full ? 'exit_full' : 'full')}">${st.full ? ICON.exit : ICON.full}</button>`
         : `${opts.canShowOnPage ? `<button class="cp-btn small" data-act="show-on-page">${t('show_on_page')}</button>` : ''}<button class="cp-ico" data-act="settings" title="${t('settings')}" aria-label="${t('settings')}">${ICON.gear}</button>`;
       const view = st.settings ? settingsView() : st.tab === 'creators' ? creators() : st.tab === 'education' ? education() : chart(st.tab);
       const report = st.tab === 'creators' && st.ch?.body ? st.ch.body.channel.report_url : SITE;
@@ -208,6 +209,7 @@
       container.innerHTML = `<div class="cp ${hud ? 'hud' : 'popup'}${st.full ? ' full' : ''}" lang="${esc(CP.LOCALE[opts.lang] || 'en')}">
         <header class="cp-bar" data-drag>${LOGO}<span class="cp-name">Creators <i>+</i></span><span class="cp-tools">${tools}</span></header>
         ${ticker()}
+        ${opts.where ? `<div class="cp-where">${esc(t('w_where'))} <a href="https://www.youtube.com/" target="_blank" rel="noopener">${esc(t('open_yt'))} ↗</a></div>` : ''}
         <nav class="cp-tabs" role="tablist">${tabs}</nav>
         <div class="cp-body">${view}</div>
         <footer class="cp-foot"><span>likepolling.com</span><a href="${esc(report)}" target="_blank" rel="noopener">${t('report')} ↗</a></footer>

@@ -21,6 +21,7 @@
     button { width: 100%; font: inherit; font-weight: 800; color: #fff; background: var(--red); border: 0; border-radius: 999px; padding: 12px; cursor: pointer; }
     .tip, .privacy { font-size: 13px; margin-top: 16px; padding: 10px 12px; border-radius: 10px; background: var(--red-soft); color: var(--ink); }
     .privacy { background: #f6f6f6; color: var(--mute); }
+    .where { margin: 0 0 16px; font-weight: 600; }
     .done { display: none; text-align: center; font-weight: 700; color: #0a8f4a; margin-top: 16px; }
   </style>
 </head>
@@ -32,6 +33,7 @@
     <label for="country" data-t="w_q"></label>
     <select id="country"></select>
     <div class="meta"><span id="lang"></span> · <span data-t="w_noacct"></span></div>
+    <div class="tip where" data-t="w_where"></div>
     <button id="start" data-t="w_start"></button>
     <div class="done" id="done" data-t="w_done"></div>
     <div class="tip" data-t="w_pin"></div>

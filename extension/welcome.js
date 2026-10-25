@@ -15,5 +15,6 @@
   document.getElementById('start').addEventListener('click', async () => {
     await chrome.storage.local.set({ country: sel.value, showPill: true });
     document.getElementById('done').style.display = 'block';
+    location.href = 'https://www.youtube.com/';
   });
 })();
