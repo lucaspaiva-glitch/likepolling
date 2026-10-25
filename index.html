@@ -604,32 +604,23 @@
     /* Three compartments: shorter labels so the truck still has room to drive. */
     .lp-tab .lp-mq { height: 118px; }
     @media (max-width: 560px) { .lp-tab .lp-mq { height: 92px; } }
-    /* Phones: title + 24/7 on the left, Chrome button + "Free Extension" on the right, flags centred below.
-       Nothing shares a line with the title, so larger text sizes can't make them overlap. */
+    /* Phones: logo + title on the left, 24/7 on the right, flags centred below.
+       Chrome extensions can't be installed on phones, so the extension button and card are desktop/tablet only. */
     @media (max-width: 520px) {
-      header.top { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "brand ext" "live ext" "lang lang"; column-gap: 12px; row-gap: 4px; align-items: center; }
+      header.top { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "brand live" "lang lang"; column-gap: 12px; row-gap: 14px; align-items: center; }
       header.top > .brand { grid-area: brand; min-width: 0; gap: 8px; white-space: nowrap; }
       header.top .brand-txt { overflow: hidden; }
       header.top .brand-txt > span:first-child { overflow: hidden; text-overflow: ellipsis; }
       header.top .tagline { display: none; }
-      header.top > .live { grid-area: live; justify-self: start; margin: 0 0 0 36px; padding: 3px 8px; }
+      header.top > .live { grid-area: live; margin: 0; padding: 4px 9px; }
       header.top > .live::after { font-size: 10px; }
-      header.top > .lp-ext-wrap { grid-area: ext; align-items: center; margin: 0; gap: 3px; }
-      header.top > .lp-lang { grid-area: lang; justify-self: center; min-width: 0; max-width: 100%; overflow-x: auto; scrollbar-width: none; margin: 10px 0 0; }
-      header.top .lp-ext { max-width: 112px; padding: 4px 9px; font-size: 10.5px; line-height: 1.15; gap: 4px; }
-      header.top .lp-ext svg { width: 11px; height: 11px; }
-      header.top .lp-ext-info { font-size: 9px; text-align: center; }
+      header.top > .lp-ext-wrap, #cp-pop { display: none !important; }
+      header.top > .lp-lang { grid-area: lang; justify-self: center; min-width: 0; max-width: 100%; overflow-x: auto; scrollbar-width: none; margin: 0; }
     }
-    /* Extreme zoom: the Chrome button shrinks to its icon. */
-    @media (max-width: 240px) {
-      header.top .lp-ext { width: 24px; height: 24px; padding: 0; justify-content: center; font-size: 0; gap: 0; }
-      header.top .lp-ext-info { font-size: 9px; max-width: 64px; white-space: normal; }
-    }
-    /* Strong zoom: the title gets its own line, 24/7 and the extension share the next one. */
-    @media (max-width: 340px) {
-      header.top { grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "brand brand" "live ext" "lang lang"; row-gap: 8px; }
-      header.top > .live { margin-left: 0; }
-      header.top > .lp-ext-wrap { justify-self: end; }
+    /* Strong zoom: 24/7 moves under the title so the two never collide. */
+    @media (max-width: 260px) {
+      header.top { grid-template-columns: minmax(0, 1fr); grid-template-areas: "brand" "live" "lang"; row-gap: 8px; }
+      header.top > .live { justify-self: start; margin-left: 36px; }
     }
     .earn-note { margin: 10px 0 0; font-size: 11.5px; line-height: 1.45; color: var(--muted); }
   </style>
