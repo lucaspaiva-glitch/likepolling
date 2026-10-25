@@ -59,6 +59,18 @@ function findHeaderLine(lines: string[]): number {
   return 0;
 }
 
+// Merrill activity exports carry a "Type" column (e.g. FundTransfers, DividendAndInterest).
+export function merrillTypeCategory(type: string | undefined, amount: number): string | null {
+  switch ((type ?? "").trim().toLowerCase()) {
+    case "fundtransfers":
+      return "Transfer";
+    case "dividendandinterest":
+      return amount >= 0 ? "Income" : "Investments";
+    default:
+      return null;
+  }
+}
+
 export function parseBankCsv(text: string, fileName = ""): ParsedCsv {
   const lines = text.replace(/\r\n?/g, "\n").split("\n");
   const start = findHeaderLine(lines);
@@ -119,7 +131,7 @@ export function parseBankCsv(text: string, fileName = ""): ParsedCsv {
       }
     }
     if (!accountHint && accountCol && rec[accountCol]) accountHint = rec[accountCol].trim();
-    rows.push({ date: d, payee, amount: amt, category: categorize(payee, amt), type: txType(amt), raw: rec });
+    rows.push({ date: d, payee, amount: amt, category: categorize(payee, amt, merrillTypeCategory(rec.Type, amt)), type: txType(amt), raw: rec });
   }
 
   return { institution, rows, skipped, columns: { date, payee: payeeCols, amount, debit, credit }, latestBalance, accountHint };
