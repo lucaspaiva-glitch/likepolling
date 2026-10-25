@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Finance Dashboard",
+  title: "Personal Wealth and Life Management by havenoinsta",
   description: "Private personal finance telemetry",
   robots: { index: false, follow: false },
 };
