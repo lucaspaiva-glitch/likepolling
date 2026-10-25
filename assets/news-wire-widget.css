@@ -103,7 +103,7 @@
   .nw-feed-wrap { --nw-h: calc(100svh - 34px - 24px); padding: 12px 14px 14px; }
   .nw-feed { gap: 12px; }
   .nw-short { width: 100%; }
-  .nw-card .nw-hl { font-size: clamp(18px, 5.6vw, 24px); }
+  .nw-card .nw-hl { font-size: clamp(16px, 4.6vw, 20px); }
 }
 @media (prefers-reduced-motion: reduce) {
   .nw-img, .nw-art { animation: none !important; }
