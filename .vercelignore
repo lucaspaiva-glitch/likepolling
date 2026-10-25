@@ -3,3 +3,4 @@ test/
 worker.py
 .github/
 supabase/
+finance-dashboard/
