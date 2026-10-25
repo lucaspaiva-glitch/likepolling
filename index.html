@@ -616,7 +616,7 @@
       header.top > .lp-lang { grid-column: 1 / -1; grid-row: 2; justify-self: center; margin: 0; }
       /* Phones can't install Chrome extensions: one red button opens the Creators + card (which links to the store). */
       header.top .lp-ext { display: none; }
-      header.top .lp-ext-info { display: inline-flex; align-items: center; gap: 5px; max-width: 90px; padding: 4px 8px; border-radius: 10px; background: var(--red); color: #fff; font: 600 10px/1.15 Inter, system-ui, sans-serif; letter-spacing: -.01em; text-decoration: none; text-align: left; white-space: normal; box-shadow: 0 0 0 1px rgba(255,42,60,.4), 0 4px 12px -6px rgba(176,0,14,.6); }
+      header.top .lp-ext-info { display: inline-flex; align-items: center; gap: 5px; max-width: 90px; height: 28px; box-sizing: border-box; padding: 0 8px; border-radius: 9px; background: var(--red); color: #fff; font: 600 10px/1.15 Inter, system-ui, sans-serif; letter-spacing: -.01em; text-decoration: none; text-align: left; white-space: normal; box-shadow: 0 0 0 1px rgba(255,42,60,.4), 0 4px 12px -6px rgba(176,0,14,.6); }
       header.top .lp-ext-info::before { content: ''; flex: none; width: 12px; height: 12px; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M8 2v8m0 0L4.8 6.8M8 10l3.2-3.2M3 13h10' fill='none' stroke='%23fff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat; }
       header.top .lp-ext-info:hover, header.top .lp-ext-info[aria-expanded="true"] { color: #fff; background: var(--red-dark); }
     }
