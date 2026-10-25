@@ -100,7 +100,9 @@ export async function syncItem(item: Item) {
     const { error } = await db.from("transactions").upsert(txRows.slice(i, i + 500), { onConflict: "external_id" });
     if (error) throw new Error(error.message);
   }
-  const removedIds = removed.map((r) => r.transaction_id).filter(Boolean) as string[];
+  // A posted transaction replaces its pending version; drop the pending row even if Plaid didn't list it as removed.
+  const replacedPending = changed.map((t) => t.pending_transaction_id).filter(Boolean) as string[];
+  const removedIds = [...removed.map((r) => r.transaction_id), ...replacedPending].filter(Boolean) as string[];
   for (let i = 0; i < removedIds.length; i += 500) {
     const { error } = await db.from("transactions").delete().in("external_id", removedIds.slice(i, i + 500));
     if (error) throw new Error(error.message);
