@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Card } from "@tremor/react";
 import { parseBankCsv, type ParsedCsv } from "@/lib/csv";
 import { fmtUsd2 } from "@/lib/format";
+import { TAX_ACCOUNT_EXTERNAL_ID } from "@/lib/br-tax";
 import type { Account } from "@/lib/types";
 
 const NEW = "__new__";
@@ -139,7 +140,7 @@ export default function CsvDropzone({ accounts }: { accounts: Account[] }) {
             className="w-full rounded border-dark-tremor-border bg-dark-tremor-background py-1 text-xs"
           >
             <option value={NEW}>+ New account…</option>
-            {accounts.map((a) => (
+            {accounts.filter((a) => a.external_id !== TAX_ACCOUNT_EXTERNAL_ID).map((a) => (
               <option key={a.id} value={a.id}>
                 {a.name} {a.institution ? `· ${a.institution}` : ""}
               </option>

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Badge, Card } from "@tremor/react";
 import { parseAmount } from "@/lib/csv";
+import { TAX_ACCOUNT_EXTERNAL_ID } from "@/lib/br-tax";
 import { fmtUsd } from "@/lib/format";
 import type { Account } from "@/lib/types";
 
@@ -15,7 +16,7 @@ function BalanceCell({ account }: { account: Account }) {
   const [value, setValue] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const manual = account.external_id?.startsWith("csv:") ?? false;
+  const manual = (account.external_id?.startsWith("csv:") && account.external_id !== TAX_ACCOUNT_EXTERNAL_ID) ?? false;
   const cls = `w-24 text-right tabular-nums ${account.balance < 0 ? "text-rose-400" : "text-dark-tremor-content-strong"}`;
 
   async function save() {
@@ -90,7 +91,7 @@ export default function AccountsTable({ accounts }: { accounts: Account[] }) {
                 <p className="truncate text-dark-tremor-content-emphasis">{a.name}</p>
                 <p className="truncate text-[11px] text-dark-tremor-content-subtle">
                   {a.institution ?? "—"}
-                  {a.external_id?.startsWith("csv:") && ` · balance as of ${a.updated_at.slice(0, 10)}`}
+                  {a.external_id?.startsWith("csv:") && a.external_id !== TAX_ACCOUNT_EXTERNAL_ID && ` · balance as of ${a.updated_at.slice(0, 10)}`}
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-2">

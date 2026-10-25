@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 export const TAX_ACCOUNT_EXTERNAL_ID = "csv:manual:estimated taxes";
+export const BR_FOREIGN_INVESTMENT_RATE = 0.15;
 const RECEITA_URL = "https://www.gov.br/receitafederal/pt-br/assuntos/meu-imposto-de-renda";
 const MONTHS = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
 const EN = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });

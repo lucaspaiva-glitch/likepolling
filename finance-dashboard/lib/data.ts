@@ -2,6 +2,8 @@ import "server-only";
 import { getServerSupabase, isSupabaseConfigured } from "@/lib/db/server";
 import { isLiability } from "@/lib/categorize";
 import { internalTransferIds } from "@/lib/transfers";
+import { BR_FOREIGN_INVESTMENT_RATE, TAX_ACCOUNT_EXTERNAL_ID, irpfFilingYear } from "@/lib/br-tax";
+import { fmtUsd } from "@/lib/format";
 import type { Account, Transaction } from "@/lib/types";
 
 export interface CategoryPoint {
@@ -167,7 +169,43 @@ export async function getDashboardData(): Promise<DashboardData> {
     return emptyData(true, err instanceof Error ? err.message : String(err));
   }
 
+
   const todayIso = isoDay(today);
+  const accountType = new Map(accounts.map((a) => [a.id, a.type]));
+  const investmentIds = new Set(accounts.filter((a) => a.type === "investment").map((a) => a.id));
+  const investmentHistoryStart = transactions.reduce<string | null>(
+    (min, t) => (t.account_id && investmentIds.has(t.account_id) && (!min || t.date < min) ? t.date : min),
+    null,
+  );
+  const internal = internalTransferIds(transactions);
+  const flows = new Map<string, Flow>();
+  for (const t of transactions) {
+    const f = flowOf(t, accountType, internal, investmentHistoryStart);
+    if (f) flows.set(t.id, f);
+  }
+
+  // Brazil taxes foreign investment income at 15% a year (Law 14.754/2023), declared the following May.
+  // Estimate: investment income received so far in the tax year, projected to Dec 31 at the same daily pace.
+  const taxYear = irpfFilingYear(today) - 1;
+  const taxYearEnd = `${taxYear}-12-31`;
+  const incomeFrom = [`${taxYear}-01-01`, investmentHistoryStart ?? todayIso].sort()[1];
+  const investmentIncome = transactions
+    .filter((t) => t.account_id && investmentIds.has(t.account_id) && t.date.startsWith(`${taxYear}-`))
+    .reduce((sum, t) => sum + (flows.get(t.id)?.income ?? 0), 0);
+  const dayCount = (from: string, to: string) => Math.max(1, Math.round((Date.parse(to) - Date.parse(from)) / 864e5) + 1);
+  const projectedIncome =
+    todayIso >= taxYearEnd ? investmentIncome : (investmentIncome * dayCount(incomeFrom, taxYearEnd)) / dayCount(incomeFrom, todayIso);
+  const taxEstimate = Math.round(projectedIncome * BR_FOREIGN_INVESTMENT_RATE);
+  accounts = accounts.map((a) =>
+    a.external_id === TAX_ACCOUNT_EXTERNAL_ID
+      ? {
+          ...a,
+          balance: -taxEstimate,
+          institution: `15% of ${fmtUsd(projectedIncome)} ${taxYear} investment income (${fmtUsd(investmentIncome)} so far${todayIso >= taxYearEnd ? "" : ", rest projected"})`,
+        }
+      : a,
+  );
+
   let assets = 0;
   let liabilities = 0;
   let checking = 0;
@@ -189,19 +227,6 @@ export async function getDashboardData(): Promise<DashboardData> {
     buckets.set(bucket, (buckets.get(bucket) ?? 0) + a.balance);
   }
   const allocation = Array.from(buckets, ([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
-
-  const accountType = new Map(accounts.map((a) => [a.id, a.type]));
-  const investmentIds = new Set(accounts.filter((a) => a.type === "investment").map((a) => a.id));
-  const investmentHistoryStart = transactions.reduce<string | null>(
-    (min, t) => (t.account_id && investmentIds.has(t.account_id) && (!min || t.date < min) ? t.date : min),
-    null,
-  );
-  const internal = internalTransferIds(transactions);
-  const flows = new Map<string, Flow>();
-  for (const t of transactions) {
-    const f = flowOf(t, accountType, internal, investmentHistoryStart);
-    if (f) flows.set(t.id, f);
-  }
 
   // Card: amount owed comes from the bank; spending is everything charged since the last payment.
   const creditIds = new Set(accounts.filter((a) => a.type === "credit").map((a) => a.id));
