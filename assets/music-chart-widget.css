@@ -22,11 +22,10 @@
 .ymu-vol-col { width: 150px; }
 .ymu-likes-col { width: 96px; }
 .ymu-rank { font-family: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace; font-variant-numeric: tabular-nums; font-size: 12px; font-weight: 600; color: var(--muted, #737373); }
-.ymu-video { display: flex; align-items: center; gap: 12px; min-width: 0; color: inherit; text-decoration: none; }
+.ymu-video { display: flex; align-items: center; gap: 14px; min-width: 0; color: inherit; text-decoration: none; }
 .ymu-video:focus-visible { outline: 2px solid var(--red, #b0000e); outline-offset: 2px; border-radius: 6px; }
-.ymu-thumb { flex: none; width: 64px; height: 36px; border-radius: 6px; object-fit: cover; background: #f2f2f2; }
 .ymu-text { display: block; flex: 1; min-width: 0; overflow: hidden; }
-.ymu-vt { display: block; font-size: 13px; font-weight: 550; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ymu-vt { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; font-size: 13px; font-weight: 550; line-height: 1.35; overflow: hidden; }
 .ymu-ch { display: block; margin-top: 2px; font-size: 11.5px; color: var(--muted, #737373); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ymu-num { font-family: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace; font-variant-numeric: tabular-nums; font-size: 12.5px; }
 .ymu-vol .ymu-num { font-weight: 650; color: var(--ink, #0d0d0d); }
@@ -35,7 +34,7 @@
 .ymu-empty { padding: 28px 18px; text-align: center; font-size: 13px; color: var(--muted, #737373); }
 .ymu-foot { padding: 10px 18px; border-top: 1px solid var(--line, #ebebeb); font-size: 11px; color: #8a8a8a; }
 /* Top 5 as thumbnail cards (same look as the channel search's Top 5), ranks 6-10 in the table below. */
-.ymu-cards { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(150px, 1fr); gap: 12px; overflow-x: auto; padding: 14px 18px 16px; border-bottom: 1px solid var(--line, #ebebeb); scroll-snap-type: x mandatory; scroll-padding-inline: 18px; scrollbar-width: thin; scrollbar-color: #e8c9cb transparent; }
+.ymu-cards { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(118px, 1fr); gap: 12px; overflow-x: auto; padding: 14px 18px 16px; border-bottom: 1px solid var(--line, #ebebeb); scroll-snap-type: x mandatory; scroll-padding-inline: 18px; scrollbar-width: thin; scrollbar-color: #e8c9cb transparent; }
 .ymu-card { display: flex; flex-direction: column; gap: 5px; min-width: 0; color: inherit; text-decoration: none; scroll-snap-align: start; }
 .ymu-card:focus-visible { outline: 2px solid var(--red, #b0000e); outline-offset: 3px; border-radius: 8px; }
 .ymu-cth { position: relative; display: block; }
@@ -47,14 +46,25 @@
 .ymu-ctt { font-size: 12.5px; font-weight: 600; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .ymu-card:hover .ymu-ctt { color: var(--red, #b0000e); }
 .ymu-cch { font-size: 11.5px; color: var(--muted, #737373); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-@container (max-width: 560px) { .ymu-cards { padding: 12px 14px 14px; scroll-padding-inline: 14px; grid-auto-columns: minmax(148px, 46%); } }
+@container (max-width: 560px) {
+  .ymu-cards { grid-auto-flow: row; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 12px; overflow: visible; padding: 14px 14px 16px; }
+  .ymu-cards > :first-child { grid-column: 1 / -1; }
+  .ymu-cards > :first-child .ymu-ctt { font-size: 14px; }
+  .ymu-rank-col { width: 0; }
+  .ymu-table tr > :first-child { padding: 0; font-size: 0; }
+  .ymu-table tr > :first-child > * { display: none; }
+  .ymu-table .lp-rth { width: 132px; }
+  .ymu-table .lp-rth > b { display: block; }
+}
+@container (max-width: 400px) {
+  .ymu-table .lp-rth { width: 112px; }
+  .ymu-video { gap: 10px; }
+}
 @container (max-width: 560px) {
   .ymu-head { padding: 12px 14px; }
   .ymu-table th, .ymu-table td { padding: 9px 12px; }
-  .ymu-rank-col { width: 38px; }
   .ymu-vol-col { width: 84px; }
   .ymu-likes-col, .ymu-likes { display: none; }
-  .ymu-thumb { width: 48px; height: 27px; }
   .ymu-asof { width: 100%; order: 3; }
 }
 

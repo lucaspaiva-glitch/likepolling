@@ -2,7 +2,7 @@
 // Hovering a thumbnail with a mouse plays the video muted inside it (YouTube's own
 // player); touch screens keep tap-to-open. Only one preview plays at a time.
 (function () {
-  const SEL = '.ytt-cth, .ymu-cth, .ysh-cth, .ci-th';
+  const SEL = '.ytt-cth, .ymu-cth, .ysh-cth, .ci-th, .lp-rth';
 
   window.lpVph = (views, publishedAt, asOf) => {
     const h = (Date.parse(asOf || Date.now()) - Date.parse(publishedAt)) / 3600000;
@@ -57,7 +57,16 @@
 .lp-pvc button[aria-pressed="true"] { border-color: rgba(255,42,60,.8); background: #b0000e; }
 .lp-pvc svg { width: 12px; height: 12px; }
 ${SEL.split(', ').map((s) => `${s} > b, ${s} > i:not(.lp-vph)`).join(', ')} { z-index: 2; }
-.ci-th { overflow: hidden; border-radius: 8px; }`;
+.ci-th { overflow: hidden; border-radius: 8px; }
+/* Lower-ranked rows: a smaller screen with the same preview. Rank badge shows only where the rank column is hidden. */
+.lp-rth { position: relative; flex: none; display: block; width: 144px; aspect-ratio: 16 / 9; overflow: hidden; border-radius: 7px; background: #f2f2f2; }
+.lp-rth img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform .2s; }
+a:hover > .lp-rth img { transform: scale(1.04); }
+.lp-rth > b { display: none; position: absolute; left: 5px; top: 5px; padding: 3px 4px; border: 1px solid rgba(255,42,60,.6); border-radius: 3px; background: #7f000a; color: #fff; font: 700 10px/1 ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace; }
+.lp-rth-s { width: 63px; aspect-ratio: 9 / 16; background: #111; }
+.lp-rth .lp-pvc { left: auto; right: 5px; top: 5px; }
+.lp-rth .lp-pvc button { width: 20px; height: 20px; }
+@media (max-width: 560px) { .lp-rth-s { width: 50px; } }`;
   document.head.appendChild(css);
 
   if (!matchMedia('(hover: hover) and (pointer: fine)').matches) return;
