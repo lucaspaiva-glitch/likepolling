@@ -7,12 +7,12 @@
 // and announced with a "lp:lang" event ({ detail: { lang } }) on document.
 (function () {
   'use strict';
-  const LANGS = ['en', 'pt', 'pt-PT', 'es', 'de', 'ru', 'uk', 'ko', 'ja'];
+  const LANGS = ['en', 'en-GB', 'pt', 'pt-PT', 'es', 'de', 'ru', 'uk', 'ko', 'ja'];
   // Dictionary columns. European Portuguese ('pt-PT') uses the 'pt' column plus the PT_PT overrides below.
   const COLS = ['pt', 'es', 'de', 'ru', 'uk', 'ko', 'ja'];
   // Button label, flag (assets/flags) and native name. Ukrainian shows "UA" so it isn't read as United Kingdom.
   const META = {
-    en: ['EN', 'us', 'English'], pt: ['BR', 'br', 'Português (Brasil)'], 'pt-PT': ['PT', 'pt', 'Português (Portugal)'], es: ['ES', 'es', 'Español'], de: ['DE', 'de', 'Deutsch'],
+    en: ['EN', 'us', 'English'], 'en-GB': ['UK', 'gb', 'English (UK)'], pt: ['BR', 'br', 'Português (Brasil)'], 'pt-PT': ['PT', 'pt', 'Português (Portugal)'], es: ['ES', 'es', 'Español'], de: ['DE', 'de', 'Deutsch'],
     ru: ['RU', 'ru', 'Русский'], uk: ['UA', 'ua', 'Українська'], ko: ['KO', 'kr', '한국어'], ja: ['JA', 'jp', '日本語'],
   };
   const STORE = 'lp-lang';
@@ -297,7 +297,10 @@
   };
   const ATTRS = ['placeholder', 'aria-label', 'title'];
   const idx = (l) => COLS.indexOf(l === 'pt-PT' ? 'pt' : l);
-  const col = (row, key, l) => (l === 'pt-PT' && PT_PT[key] != null ? PT_PT[key] : row[idx(l)]);
+  // British English: the English text with British spellings.
+  const gb = (s) => s.replace(/\b(analy|organi|recogni|prioriti|categori|summari|personali|optimi|reali|speciali|monetiz)z/gi, (m, a) => a + (m.slice(-1) === 'Z' ? 'S' : 's'))
+    .replace(/\b(colo|favo|behavio|neighbo|labo|hono)r/gi, '$1ur').replace(/\bcenter/gi, (m) => (m[0] === 'C' ? 'Centre' : 'centre'));
+  const col = (row, key, l) => (l === 'en-GB' ? gb(key) : l === 'pt-PT' && PT_PT[key] != null ? PT_PT[key] : row[idx(l)]);
   const locale = (l) => (l === 'pt' ? 'pt-BR' : l);
   function localDate(s, lang) {
     const d = Date.parse(s);
@@ -342,7 +345,7 @@
   let stored = null;
   try { stored = localStorage.getItem(STORE); } catch (e) { /* storage blocked */ }
   const nav = (navigator.language || '').toLowerCase();
-  const browser = nav === 'pt-pt' ? 'pt-PT' : nav.slice(0, 2);
+  const browser = nav === 'pt-pt' ? 'pt-PT' : /^en-(gb|ie)$/.test(nav) ? 'en-GB' : nav.slice(0, 2);
   let lang = LANGS.includes(stored) ? stored : LANGS.includes(browser) ? browser : 'en';
 
   const textEn = new WeakMap(), textOut = new WeakMap();

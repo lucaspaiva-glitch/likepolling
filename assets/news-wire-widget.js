@@ -22,8 +22,10 @@
   if (!document.querySelector('link[href="/assets/news-wire-widget.css"]')) document.head.appendChild(css);
 
   const FEED_PAGE = 8;
-  const LANGS = ['en', 'pt', 'pt-PT', 'es', 'de', 'ru', 'uk', 'ko', 'ja'];
-  const FLAG = { en: 'us', pt: 'br', 'pt-PT': 'pt', es: 'es', de: 'de', ru: 'ru', uk: 'ua', ko: 'kr', ja: 'jp' };
+  // British English reads the English Shorts, Creator News and headline translations.
+  const dataLang = (l) => (l === 'en-GB' ? 'en' : l);
+  const LANGS = ['en', 'en-GB', 'pt', 'pt-PT', 'es', 'de', 'ru', 'uk', 'ko', 'ja'];
+  const FLAG = { en: 'us', 'en-GB': 'gb', pt: 'br', 'pt-PT': 'pt', es: 'es', de: 'de', ru: 'ru', uk: 'ua', ko: 'kr', ja: 'jp' };
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const headers = { apikey: key, Authorization: `Bearer ${key}` };
   const siteLang = () => (window.LP_I18N && window.LP_I18N.lang) || 'en';
@@ -36,7 +38,7 @@
   const shortsCache = {};
   function loadShorts(lang) {
     if (!shortsCache[lang]) {
-      shortsCache[lang] = fetch(`${base}/rest/v1/news_shorts?select=*&lang=eq.${encodeURIComponent(lang)}&order=rank.asc&limit=30`, { headers })
+      shortsCache[lang] = fetch(`${base}/rest/v1/news_shorts?select=*&lang=eq.${encodeURIComponent(dataLang(lang))}&order=rank.asc&limit=30`, { headers })
         .then((r) => (r.ok ? r.json() : []))
         .catch(() => []);
     }
@@ -44,7 +46,7 @@
   }
   // Country whose Shorts are shown (each country is searched in its own language).
   // Defaults to the site language's country; a dropdown choice is kept until the site language changes.
-  const SHORT_CC = { en: 'US', pt: 'BR', 'pt-PT': 'PT', es: 'MX', de: 'DE', ru: 'RU', uk: 'UA', ko: 'KR', ja: 'JP' };
+  const SHORT_CC = { en: 'US', 'en-GB': 'GB', pt: 'BR', 'pt-PT': 'PT', es: 'MX', de: 'DE', ru: 'RU', uk: 'UA', ko: 'KR', ja: 'JP' };
   const PICK = 'lp-shorts-lang';
   let shortsPick = null;
   try { const v = localStorage.getItem(PICK); if (LANGS.includes(v)) shortsPick = v; } catch (e) { /* no storage */ }
@@ -74,7 +76,7 @@
 
   async function load(lang) {
     if (!cache[lang]) {
-      const res = await fetch(`${base}/rest/v1/news_wire?select=*&lang=eq.${encodeURIComponent(lang)}&category=eq.creators&order=published_at.desc&limit=200`, { headers });
+      const res = await fetch(`${base}/rest/v1/news_wire?select=*&lang=eq.${encodeURIComponent(dataLang(lang))}&category=eq.creators&order=published_at.desc&limit=200`, { headers });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       cache[lang] = await res.json();
     }
@@ -581,8 +583,8 @@
     try {
       const counts = await worldCounts;
       const world = Object.values(counts).some(Boolean);
-      let cc = worldPick || ({ en: 'US', pt: 'BR', 'pt-PT': 'PT', es: 'MX', de: 'DE', ru: 'RU', uk: 'UA', ko: 'KR', ja: 'JP' })[lang] || 'US';
-      const inLang = (rs) => rs.map((r) => (r.title_tr && r.title_tr[lang] && r.title_tr[lang] !== r.title ? { ...r, title: r.title_tr[lang], title_orig: r.title } : r));
+      let cc = worldPick || ({ en: 'US', 'en-GB': 'GB', pt: 'BR', 'pt-PT': 'PT', es: 'MX', de: 'DE', ru: 'RU', uk: 'UA', ko: 'KR', ja: 'JP' })[lang] || 'US';
+      const inLang = (rs) => rs.map((r) => (r.title_tr && r.title_tr[dataLang(lang)] && r.title_tr[dataLang(lang)] !== r.title ? { ...r, title: r.title_tr[dataLang(lang)], title_orig: r.title } : r));
       let rows;
       if (world) {
         rows = inLang(await loadWorld(cc));
