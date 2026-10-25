@@ -55,7 +55,7 @@ const ABOUT = [
   'All data is free to read and cite. Please credit "Like Polling (likepolling.com)".',
 ];
 const METHOD = [
-  'Estimated live viewers are modelled, not measured: YouTube users per country (Google ad reach, late 2025, via DataReportal) × about 80 minutes of viewing per person per day, spread over the day by a typical hourly pattern. Recalculated at 03:00 and 15:00 UTC. Read them as an order of magnitude.',
+  'Estimated live viewers are modelled, not measured: YouTube users per country (Google ad reach, late 2025, via DataReportal) × about 80 minutes of viewing per person per day, spread over the day by a typical hourly pattern. Recalculated every 15 minutes; large countries (US, Canada, Brazil, Mexico, Australia, Indonesia) are split across their time zones by population. Read them as an order of magnitude.',
   'Trending and Music: YouTube Data API "most popular" charts per country, refreshed hourly. Views are YouTube\'s public counts at fetch time.',
   'World News: top stories from each country\'s Google News edition. Education topics: recent videos from education channels plus local news, grouped into subjects with Google Gemini (AI).',
 ];
