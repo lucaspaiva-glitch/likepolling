@@ -1,10 +1,10 @@
 import AccountsTable from "@/components/AccountsTable";
 import AllocationChart from "@/components/AllocationChart";
-import CashFlowChart from "@/components/CashFlowChart";
 import CategoryBreakdown from "@/components/CategoryBreakdown";
 import CsvDropzone from "@/components/CsvDropzone";
 import KpiStrip from "@/components/KpiStrip";
 import PlaidConnect from "@/components/PlaidConnect";
+import PortfolioChart from "@/components/PortfolioChart";
 import TransactionsTable from "@/components/TransactionsTable";
 import { getDashboardData } from "@/lib/data";
 
@@ -44,7 +44,7 @@ export default async function Page() {
           <AllocationChart data={data.allocation} netWorth={data.kpis.netWorth} />
         </div>
         <div className="col-span-6">
-          <CashFlowChart data={data.cashFlow} />
+          <PortfolioChart data={data.portfolioSeries} ready={data.snapshotsReady} />
         </div>
         <div className="col-span-3">
           <AccountsTable accounts={data.accounts} />

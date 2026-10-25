@@ -1,5 +1,5 @@
 import { Card } from "@tremor/react";
-import { fmtPct, fmtUsd, monthLabel } from "@/lib/format";
+import { fmtSignedPct, fmtUsd } from "@/lib/format";
 import type { DashboardData } from "@/lib/data";
 
 function Kpi({ label, value, sub, tone }: { label: string; value: string; sub?: string; tone?: "pos" | "neg" }) {
@@ -14,19 +14,33 @@ function Kpi({ label, value, sub, tone }: { label: string; value: string; sub?: 
 }
 
 export default function KpiStrip({ kpis }: { kpis: DashboardData["kpis"] }) {
-  const net30 = kpis.income30 - kpis.burn30;
+  const change = kpis.portfolioChangePct;
   return (
-    <div className="grid grid-cols-6 gap-2">
-      <Kpi label="Net worth" value={fmtUsd(kpis.netWorth)} sub={`${fmtUsd(kpis.assets)} assets`} />
-      <Kpi label="Liabilities" value={fmtUsd(kpis.liabilities)} tone={kpis.liabilities > 0 ? "neg" : undefined} />
-      <Kpi label="Income · 30d" value={fmtUsd(kpis.income30)} tone="pos" />
-      <Kpi label="Burn · 30d" value={fmtUsd(kpis.burn30)} tone="neg" sub={`Net ${fmtUsd(net30)}`} />
-      <Kpi label="Avg burn · 3 mo" value={fmtUsd(kpis.avgBurn3m)} sub={kpis.runwayMonths != null ? `${kpis.runwayMonths.toFixed(1)} mo cash runway` : undefined} />
+    <div className="grid grid-cols-5 gap-2">
+      <Kpi label="Checking" value={fmtUsd(kpis.checking)} />
       <Kpi
-        label="Savings rate · 12 mo"
-        value={kpis.savingsRate12m != null ? fmtPct(kpis.savingsRate12m) : "—"}
-        tone={kpis.savingsRate12m == null ? undefined : kpis.savingsRate12m >= 0 ? "pos" : "neg"}
-        sub={kpis.historyStart ? `data since ${monthLabel(kpis.historyStart.slice(0, 7))}` : undefined}
+        label="Credit card owed"
+        value={fmtUsd(kpis.cardOwed)}
+        tone={kpis.cardOwed > 0 ? "neg" : undefined}
+        sub={`${fmtUsd(kpis.cardSpentSincePayment)} spent ${kpis.lastCardPayment ? `since last payment ${kpis.lastCardPayment}` : "so far"}`}
+      />
+      <Kpi label="Net worth" value={fmtUsd(kpis.netWorth)} sub="investments + checking − card" />
+      <Kpi
+        label="Portfolio value"
+        value={fmtUsd(kpis.portfolio)}
+        sub={kpis.portfolioStart != null ? `${fmtUsd(kpis.portfolioStart)} at start, ${kpis.portfolioStartDate}` : undefined}
+      />
+      <Kpi
+        label="Portfolio since start"
+        value={change != null ? fmtSignedPct(change) : "—"}
+        tone={change == null || change === 0 ? undefined : change > 0 ? "pos" : "neg"}
+        sub={
+          kpis.portfolioChangeExWithdrawalsPct != null
+            ? `${fmtSignedPct(kpis.portfolioChangeExWithdrawalsPct)} with withdrawals added back`
+            : kpis.portfolioStartDate
+              ? `tracking since ${kpis.portfolioStartDate}`
+              : undefined
+        }
       />
     </div>
   );

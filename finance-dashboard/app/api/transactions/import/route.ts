@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { recordSnapshots } from "@/lib/snapshots";
 import { NextResponse } from "next/server";
 import { getServerSupabase, isSupabaseConfigured } from "@/lib/db/server";
 import { categorize, txType } from "@/lib/categorize";
@@ -40,12 +41,14 @@ export async function POST(req: Request) {
         },
         { onConflict: "external_id" },
       )
-      .select("id")
+      .select("id, balance")
       .single();
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     accountId = data.id as string;
+    await recordSnapshots(db, [data]);
   } else if (body.latestBalance != null && Number.isFinite(body.latestBalance)) {
     await db.from("accounts").update({ balance: body.latestBalance, updated_at: new Date().toISOString() }).eq("id", accountId);
+    await recordSnapshots(db, [{ id: accountId, balance: body.latestBalance }]);
   }
 
   // Stable ids so re-importing the same export does not create duplicates;

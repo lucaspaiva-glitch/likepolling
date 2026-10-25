@@ -2,19 +2,16 @@ import "server-only";
 import { getServerSupabase, isSupabaseConfigured } from "@/lib/db/server";
 import { isLiability } from "@/lib/categorize";
 import { internalTransferIds } from "@/lib/transfers";
-import { monthLabel } from "@/lib/format";
 import type { Account, Transaction } from "@/lib/types";
-
-export interface CashFlowPoint {
-  month: string;
-  Income: number;
-  Burn: number;
-  Net: number;
-}
 
 export interface CategoryPoint {
   name: string;
   value: number;
+}
+
+export interface PortfolioPoint {
+  date: string;
+  Value: number;
 }
 
 export interface DashboardData {
@@ -23,18 +20,20 @@ export interface DashboardData {
   accounts: Account[];
   transactions: Transaction[];
   kpis: {
+    checking: number;
+    cardOwed: number;
+    cardSpentSincePayment: number;
+    lastCardPayment: string | null;
     netWorth: number;
-    assets: number;
-    liabilities: number;
-    income30: number;
-    burn30: number;
-    avgBurn3m: number;
-    savingsRate12m: number | null;
-    runwayMonths: number | null;
-    historyStart: string | null;
+    portfolio: number;
+    portfolioStart: number | null;
+    portfolioStartDate: string | null;
+    portfolioChangePct: number | null;
+    portfolioChangeExWithdrawalsPct: number | null;
   };
   allocation: CategoryPoint[];
-  cashFlow: CashFlowPoint[];
+  portfolioSeries: PortfolioPoint[];
+  snapshotsReady: boolean;
   categories: { d30: CategoryPoint[]; d90: CategoryPoint[]; m12: CategoryPoint[] };
   lastUpdated: string | null;
 }
@@ -45,10 +44,6 @@ function isoDay(d: Date) {
   return d.toISOString().slice(0, 10);
 }
 
-function monthKey(date: string) {
-  return date.slice(0, 7);
-}
-
 
 function emptyData(configured: boolean, error: string | null): DashboardData {
   return {
@@ -56,9 +51,21 @@ function emptyData(configured: boolean, error: string | null): DashboardData {
     error,
     accounts: [],
     transactions: [],
-    kpis: { netWorth: 0, assets: 0, liabilities: 0, income30: 0, burn30: 0, avgBurn3m: 0, savingsRate12m: null, runwayMonths: null, historyStart: null },
+    kpis: {
+      checking: 0,
+      cardOwed: 0,
+      cardSpentSincePayment: 0,
+      lastCardPayment: null,
+      netWorth: 0,
+      portfolio: 0,
+      portfolioStart: null,
+      portfolioStartDate: null,
+      portfolioChangePct: null,
+      portfolioChangeExWithdrawalsPct: null,
+    },
     allocation: [],
-    cashFlow: [],
+    portfolioSeries: [],
+    snapshotsReady: false,
     categories: { d30: [], d90: [], m12: [] },
     lastUpdated: null,
   };
@@ -84,6 +91,26 @@ async function loadTransactions(since: string): Promise<Transaction[]> {
 
 type Flow = { income: number; burn: number };
 
+const isCardPayment = (t: Transaction) =>
+  t.amount > 0 && (t.category === "Transfer" || t.category === "Loan payments" || /\bpayment\b/i.test(t.payee ?? ""));
+
+async function loadSnapshots(accountIds: string[]): Promise<{ rows: Array<{ account_id: string; date: string; balance: number }>; ok: boolean }> {
+  if (accountIds.length === 0) return { rows: [], ok: true };
+  const rows: Array<{ account_id: string; date: string; balance: number }> = [];
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await getServerSupabase()
+      .from("balance_snapshots")
+      .select("account_id, date, balance")
+      .in("account_id", accountIds)
+      .order("date", { ascending: true })
+      .order("account_id", { ascending: true })
+      .range(from, from + PAGE - 1);
+    if (error) return { rows: [], ok: false };
+    rows.push(...(data ?? []).map((r) => ({ account_id: r.account_id as string, date: r.date as string, balance: Number(r.balance) })));
+    if (!data || data.length < PAGE) return { rows, ok: true };
+  }
+}
+
 // How a transaction moves income/spending. Transfers between your accounts and securities trades move
 // neither; credit-card refunds reduce spending; negative investment income (e.g. accrued bond interest
 // paid on purchase) reduces income.
@@ -93,7 +120,7 @@ function flowOf(t: Transaction, accountType: Map<string, string>, internal: Set<
   if (t.amount >= 0) {
     if (isLiability(type)) {
       // Card payments whose other side isn't tracked are still transfers, not refunds.
-      if (t.category === "Transfer" || t.category === "Loan payments" || /\bpayment\b/i.test(t.payee ?? "")) return null;
+      if (isCardPayment(t)) return null;
       return { income: 0, burn: -t.amount };
     }
     // Brokerage → bank transfers from before the brokerage history begins have no counterpart to pair with.
@@ -138,21 +165,27 @@ export async function getDashboardData(): Promise<DashboardData> {
     return emptyData(true, err instanceof Error ? err.message : String(err));
   }
 
+  const todayIso = isoDay(today);
   let assets = 0;
   let liabilities = 0;
+  let checking = 0;
+  let cardOwed = 0;
+  let portfolio = 0;
   const buckets = new Map<string, number>();
   for (const a of accounts) {
     if (isLiability(a.type) || a.balance < 0) {
       liabilities += Math.abs(a.balance);
+      if (a.type === "credit") cardOwed += Math.abs(a.balance);
       continue;
     }
     assets += a.balance;
+    if (a.type === "cash") checking += a.balance;
+    if (a.type === "investment") portfolio += a.balance;
     const bucket = a.type === "investment" ? "Investments" : a.type === "cash" ? "Cash" : "Other";
     buckets.set(bucket, (buckets.get(bucket) ?? 0) + a.balance);
   }
   const allocation = Array.from(buckets, ([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
 
-  const historyStart = transactions.reduce<string | null>((min, t) => (!min || t.date < min ? t.date : min), null);
   const accountType = new Map(accounts.map((a) => [a.id, a.type]));
   const investmentIds = new Set(accounts.filter((a) => a.type === "investment").map((a) => a.id));
   const investmentHistoryStart = transactions.reduce<string | null>(
@@ -166,41 +199,44 @@ export async function getDashboardData(): Promise<DashboardData> {
     if (f) flows.set(t.id, f);
   }
 
-  // Chart starts at the first month with data; months before that would read as zero income/spending.
-  const months: string[] = [];
-  for (let i = 0; i < 12; i++) months.push(isoDay(new Date(Date.UTC(start12.getUTCFullYear(), start12.getUTCMonth() + i, 1))).slice(0, 7));
-  if (historyStart) months.splice(0, months.filter((m) => m < monthKey(historyStart)).length);
-  const byMonth = new Map(months.map((m) => [m, { income: 0, burn: 0 }]));
+  // Card: amount owed comes from the bank; spending is everything charged since the last payment.
+  const creditIds = new Set(accounts.filter((a) => a.type === "credit").map((a) => a.id));
+  const cardTx = transactions.filter((t) => t.account_id && creditIds.has(t.account_id));
+  const lastCardPayment = cardTx.filter(isCardPayment).reduce<string | null>((max, t) => (!max || t.date > max ? t.date : max), null);
+  const cardSpentSincePayment = cardTx
+    .filter((t) => !lastCardPayment || t.date > lastCardPayment)
+    .reduce((sum, t) => sum + (flows.get(t.id)?.burn ?? 0), 0);
+
+  // Portfolio history: carry each investment account's last known balance forward day by day.
+  const snaps = await loadSnapshots(Array.from(investmentIds));
+  const lastKnown = new Map<string, number>();
+  const portfolioSeries: PortfolioPoint[] = [];
+  for (const r of snaps.rows) {
+    lastKnown.set(r.account_id, r.balance);
+    const value = Math.round(Array.from(lastKnown.values()).reduce((s, v) => s + v, 0) * 100) / 100;
+    const last = portfolioSeries[portfolioSeries.length - 1];
+    if (last?.date === r.date) last.Value = value;
+    else portfolioSeries.push({ date: r.date, Value: value });
+  }
+  const current = Math.round(portfolio * 100) / 100;
+  const tail = portfolioSeries[portfolioSeries.length - 1];
+  if (investmentIds.size > 0 && (!tail || tail.Value !== current)) {
+    if (tail?.date === todayIso) tail.Value = current;
+    else portfolioSeries.push({ date: todayIso, Value: current });
+  }
+  const startPoint = portfolioSeries[0] ?? null;
+  // Withdrawals to your own accounts lower the balance without being a loss; add them back for the return.
+  const netTransfers = startPoint
+    ? transactions
+        .filter((t) => t.account_id && investmentIds.has(t.account_id) && t.category === "Transfer" && t.date > startPoint.date)
+        .reduce((s, t) => s + t.amount, 0)
+    : 0;
+  const portfolioChangePct = startPoint && startPoint.Value > 0 ? (current - startPoint.Value) / startPoint.Value : null;
+  const portfolioChangeExWithdrawalsPct =
+    startPoint && startPoint.Value > 0 && netTransfers !== 0 ? (current - startPoint.Value - netTransfers) / startPoint.Value : null;
+
   const since30 = isoDay(new Date(today.getTime() - 30 * 864e5));
   const since90 = isoDay(new Date(today.getTime() - 90 * 864e5));
-  let income30 = 0;
-  let burn30 = 0;
-  for (const t of transactions) {
-    const f = flows.get(t.id);
-    if (!f) continue;
-    const m = byMonth.get(monthKey(t.date));
-    if (m) {
-      m.income += f.income;
-      m.burn += f.burn;
-    }
-    if (t.date >= since30) {
-      income30 += f.income;
-      burn30 += f.burn;
-    }
-  }
-  const cashFlow = months.map((key) => {
-    const v = byMonth.get(key)!;
-    return { month: monthLabel(key), Income: Math.round(v.income), Burn: Math.round(v.burn), Net: Math.round(v.income - v.burn) };
-  });
-
-  // Last 3 full months: skip the current month and a first month whose history starts mid-month.
-  const full = months.slice(0, -1).filter((k, i) => i > 0 || !historyStart || historyStart.endsWith("-01"));
-  const completed = full.slice(-3).map((k) => byMonth.get(k)!.burn);
-  const avgBurn3m = completed.reduce((s, v) => s + v, 0) / (completed.length || 1);
-  const inc12 = cashFlow.reduce((s, p) => s + p.Income, 0);
-  const burn12 = cashFlow.reduce((s, p) => s + p.Burn, 0);
-  const cash = buckets.get("Cash") ?? 0;
-
   const lastUpdated = accounts.reduce<string | null>((max, a) => (!max || a.updated_at > max ? a.updated_at : max), null);
 
   return {
@@ -209,18 +245,20 @@ export async function getDashboardData(): Promise<DashboardData> {
     accounts,
     transactions,
     kpis: {
+      checking,
+      cardOwed,
+      cardSpentSincePayment,
+      lastCardPayment,
       netWorth: assets - liabilities,
-      assets,
-      liabilities,
-      income30,
-      burn30,
-      avgBurn3m,
-      savingsRate12m: inc12 > 0 ? (inc12 - burn12) / inc12 : null,
-      runwayMonths: avgBurn3m > 0 ? cash / avgBurn3m : null,
-      historyStart,
+      portfolio,
+      portfolioStart: startPoint?.Value ?? null,
+      portfolioStartDate: startPoint?.date ?? null,
+      portfolioChangePct,
+      portfolioChangeExWithdrawalsPct,
     },
     allocation,
-    cashFlow,
+    portfolioSeries,
+    snapshotsReady: snaps.ok,
     categories: {
       d30: categoryTotals(transactions, since30, flows),
       d90: categoryTotals(transactions, since90, flows),

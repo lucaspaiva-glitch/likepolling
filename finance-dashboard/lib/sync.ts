@@ -2,6 +2,7 @@ import "server-only";
 import type { RemovedTransaction, Transaction as PlaidTransaction } from "plaid";
 import { getPlaid, plaidErrorMessage } from "@/lib/plaid";
 import { getServerSupabase } from "@/lib/db/server";
+import { recordSnapshots } from "@/lib/snapshots";
 import { categorize, isLiability, plaidAccountType, prettyPlaidCategory, txType } from "@/lib/categorize";
 
 export type Item = { id: string; item_id: string; access_token: string; institution: string | null; cursor: string | null };
@@ -29,8 +30,9 @@ export async function syncItem(item: Item) {
   const { data: savedAccounts, error: accErr } = await db
     .from("accounts")
     .upsert(accountRows, { onConflict: "external_id" })
-    .select("id, external_id");
+    .select("id, external_id, balance");
   if (accErr) throw new Error(accErr.message);
+  await recordSnapshots(db, savedAccounts ?? []);
   const accountIdByPlaid = new Map((savedAccounts ?? []).map((a) => [a.external_id as string, a.id as string]));
 
   // /transactions/sync pagination; restart from the original cursor if data changes mid-pagination.

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getServerSupabase, isSupabaseConfigured } from "@/lib/db/server";
+import { recordSnapshots } from "@/lib/snapshots";
 
 export const dynamic = "force-dynamic";
 
@@ -19,5 +20,6 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     .maybeSingle();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   if (!data) return NextResponse.json({ error: "Only CSV-imported accounts can be edited" }, { status: 404 });
+  await recordSnapshots(getServerSupabase(), [data]);
   return NextResponse.json(data);
 }
