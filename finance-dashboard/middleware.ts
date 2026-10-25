@@ -1,9 +1,16 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-// Optional HTTP Basic Auth: set DASHBOARD_BASIC_AUTH="user:password" to require it.
+// HTTP Basic Auth with DASHBOARD_BASIC_AUTH="user:password". Optional locally; on Vercel the
+// app refuses to serve without it. The cron and Plaid webhook routes carry their own auth.
+const SELF_AUTHENTICATED = ["/api/cron/", "/api/plaid/webhook"];
+
 export function middleware(req: NextRequest) {
+  if (SELF_AUTHENTICATED.some((p) => req.nextUrl.pathname.startsWith(p))) return NextResponse.next();
   const expected = process.env.DASHBOARD_BASIC_AUTH;
-  if (!expected) return NextResponse.next();
+  if (!expected) {
+    if (process.env.VERCEL) return new NextResponse("Set DASHBOARD_BASIC_AUTH to enable this deployment", { status: 503 });
+    return NextResponse.next();
+  }
   const header = req.headers.get("authorization") ?? "";
   if (header.startsWith("Basic ")) {
     try {

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { CountryCode, Products } from "plaid";
 import { getPlaid, isPlaidConfigured, plaidErrorMessage } from "@/lib/plaid";
+import { plaidWebhookUrl } from "@/lib/webhook-url";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +20,7 @@ export async function POST() {
       products: [Products.Transactions],
       optional_products: [Products.Investments],
       transactions: { days_requested: 730 },
+      webhook: plaidWebhookUrl(),
     });
     return NextResponse.json({ link_token: res.data.link_token });
   } catch (err) {

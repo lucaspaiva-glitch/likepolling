@@ -23,7 +23,9 @@ cp .env.local.example .env.local   # then fill in the values
 | `PLAID_CLIENT_ID` | dashboard.plaid.com → Developers → Keys | server only |
 | `PLAID_SECRET` | same page, secret for the chosen environment | server only |
 | `PLAID_ENV` | `sandbox` (default) or `production` | server only |
-| `DASHBOARD_BASIC_AUTH` | optional, `user:password`; enables HTTP Basic Auth on every route | middleware |
+| `DASHBOARD_BASIC_AUTH` | `user:password` for HTTP Basic Auth. Optional locally, **required on Vercel** (the deployment returns 503 without it) | middleware |
+| `CRON_SECRET` | any long random string (Vercel only) | `/api/cron/sync` |
+| `PLAID_WEBHOOK_URL` | optional override; defaults to `https://$VERCEL_PROJECT_PRODUCTION_URL/api/plaid/webhook` | Link token |
 
 `.env.local` is git-ignored. Never commit real keys.
 
@@ -46,6 +48,25 @@ npm install
 npm run dev      # http://localhost:3000
 npm run build    # production build check
 ```
+
+## Deploy on Vercel (automatic sync)
+
+1. Vercel → Add New → Project → import `likepolling`, set **Root Directory** to `finance-dashboard`
+   (framework is detected as Next.js). This is a separate project from the Like Polling site.
+2. Add every variable from the table above (Production), with `PLAID_ENV=production` once Plaid
+   approves you, a strong `DASHBOARD_BASIC_AUTH`, and a random `CRON_SECRET`
+   (`openssl rand -hex 32`). Deploy.
+3. Open the production URL, log in with the Basic Auth credentials, click **Connect BofA / Merrill**.
+
+After that, sync is automatic:
+- **Plaid webhook** (`/api/plaid/webhook`): Link tokens are created with the deployment's webhook
+  URL, so Plaid notifies the app (`SYNC_UPDATES_AVAILABLE`) whenever new transactions exist. The
+  route verifies Plaid's signed `Plaid-Verification` JWT before syncing that item.
+- **Daily cron** (`vercel.json`, 11:00 UTC) calls `/api/cron/sync` as a safety net and to refresh
+  balances.
+
+Banks linked before the deployment existed (e.g. from localhost) have no webhook; remove and
+re-link them from the deployed URL, or rely on the daily cron.
 
 ## Ingestion
 
