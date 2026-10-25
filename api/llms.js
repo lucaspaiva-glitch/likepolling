@@ -126,7 +126,7 @@ function createHandler(deps = {}) {
     try {
       if (!env.SUPABASE_URL || !env.SUPABASE_KEY) throw new Error('Server is missing SUPABASE_URL/SUPABASE_KEY');
       const d = await load(rest(env, deps.fetch || fetch));
-      res.setHeader('Content-Type', format === 'html' ? 'text/html; charset=utf-8' : 'text/markdown; charset=utf-8');
+      res.setHeader('Content-Type', format === 'html' ? 'text/html; charset=utf-8' : 'text/plain; charset=utf-8');
       res.setHeader('Cache-Control', CACHE);
       res.status(200).end(format === 'html' ? html(d) : markdown(d, format === 'full'));
     } catch (err) {

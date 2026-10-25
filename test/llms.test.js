@@ -35,7 +35,7 @@ async function run(format, fetchImpl = mockFetch()) {
 test('summary lists live estimates and videos trending in several countries', async () => {
   const res = await run('summary');
   assert.equal(res.code, 200);
-  assert.match(res.headers['content-type'], /text\/markdown/);
+  assert.match(res.headers['content-type'], /text\/plain/);
   assert.match(res.headers['cache-control'], /s-maxage=900/);
   assert.match(res.body, /\| Ireland \| IE \| 159,682 \|/);
   assert.match(res.body, /Big \\\| trailer.*trending in 2 countries \(IE, PT\)/);
