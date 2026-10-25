@@ -49,7 +49,10 @@
     .yt-note .yt-note-ad { cursor: default; padding-bottom: 14px; background: linear-gradient(160deg, #1c0004, #2c0007); }
     /* Scanlines and grain only behind the title, so the explanation stays easy to read. */
     .yt-note .yt-note-ad::before, .yt-note .yt-note-ad::after { bottom: auto; height: 74px; -webkit-mask-image: linear-gradient(#000 70%, transparent); mask-image: linear-gradient(#000 70%, transparent); }
-    .yt-note .mpe-name { margin: 12px 14px 0; font-size: 18px; line-height: 1.1; white-space: normal; color: #ff4a5c; text-shadow: 1px 0 0 rgba(255,255,255,.95), -1px 0 0 rgba(255,255,255,.95), 0 1px 0 rgba(255,255,255,.95), 0 -1px 0 rgba(255,255,255,.95), 0 0 10px rgba(255,42,60,.7); }
+    .yt-note .mpe-name { margin: 12px 14px 0; font: 700 15px/1.25 ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace; letter-spacing: .08em; text-transform: uppercase; white-space: normal; color: #7df9ff; text-shadow: 0 0 2px rgba(125,249,255,.9), 0 0 10px rgba(0,229,255,.55); }
+    .yt-note .mpe-name::after { content: '\258D'; margin-left: 4px; color: #7df9ff; animation: yt-caret 1s steps(1) infinite; }
+    @keyframes yt-caret { 50% { opacity: 0; } }
+    @media (prefers-reduced-motion: reduce) { .yt-note .mpe-name::after { animation: none; } }
     .yt-note .mpe-bar { margin: 10px 14px 4px; }
     .yt-note-in { padding: 0 14px; }
     .yt-note[hidden] { display: none; }
