@@ -105,7 +105,7 @@ export async function getDashboardData(): Promise<DashboardData> {
   let transactions: Transaction[];
   try {
     const [accRes, txs] = await Promise.all([
-      getServerSupabase().from("accounts").select("id, name, type, institution, balance, currency, updated_at").order("balance", { ascending: false }),
+      getServerSupabase().from("accounts").select("id, name, type, institution, balance, currency, updated_at, external_id").order("balance", { ascending: false }),
       loadTransactions(since12),
     ]);
     if (accRes.error) throw new Error(accRes.error.message);

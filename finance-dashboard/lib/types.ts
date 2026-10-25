@@ -8,6 +8,7 @@ export interface Account {
   balance: number;
   currency: string;
   updated_at: string;
+  external_id?: string | null;
 }
 
 export interface Transaction {
