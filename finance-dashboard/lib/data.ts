@@ -1,6 +1,7 @@
 import "server-only";
 import { getServerSupabase, isSupabaseConfigured } from "@/lib/db/server";
 import { isLiability } from "@/lib/categorize";
+import { internalTransferIds } from "@/lib/transfers";
 import type { Account, Transaction } from "@/lib/types";
 
 export interface CashFlowPoint {
@@ -83,10 +84,10 @@ async function loadTransactions(since: string): Promise<Transaction[]> {
   return out;
 }
 
-function categoryTotals(txs: Transaction[], since: string): CategoryPoint[] {
+function categoryTotals(txs: Transaction[], since: string, internal: Set<string>): CategoryPoint[] {
   const totals = new Map<string, number>();
   for (const t of txs) {
-    if (t.amount >= 0 || t.date < since) continue;
+    if (t.amount >= 0 || t.date < since || internal.has(t.id)) continue;
     const c = t.category || "Uncategorized";
     totals.set(c, (totals.get(c) ?? 0) - t.amount);
   }
@@ -135,7 +136,9 @@ export async function getDashboardData(): Promise<DashboardData> {
   const since90 = isoDay(new Date(today.getTime() - 90 * 864e5));
   let income30 = 0;
   let burn30 = 0;
+  const internal = internalTransferIds(transactions);
   for (const t of transactions) {
+    if (internal.has(t.id)) continue;
     const m = byMonth.get(monthKey(t.date));
     if (m) {
       if (t.amount >= 0) m.income += t.amount;
@@ -177,9 +180,9 @@ export async function getDashboardData(): Promise<DashboardData> {
     allocation,
     cashFlow,
     categories: {
-      d30: categoryTotals(transactions, since30),
-      d90: categoryTotals(transactions, since90),
-      m12: categoryTotals(transactions, since12),
+      d30: categoryTotals(transactions, since30, internal),
+      d90: categoryTotals(transactions, since90, internal),
+      m12: categoryTotals(transactions, since12, internal),
     },
     lastUpdated,
   };
