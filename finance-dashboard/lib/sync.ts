@@ -69,11 +69,12 @@ export async function syncItem(item: Item) {
     }
   }
 
-  const changed = [...added, ...modified].filter((t) => !t.pending);
-  // Keep categories the user already edited in the dashboard.
+  const changed = [...added, ...modified];
+  // Keep categories the user already edited, including on the pending row a posted transaction replaces.
+  const lookupIds = changed.flatMap((t) => [t.transaction_id, t.pending_transaction_id].filter(Boolean) as string[]);
   const existing = new Map<string, string | null>();
-  for (let i = 0; i < changed.length; i += 500) {
-    const ids = changed.slice(i, i + 500).map((t) => t.transaction_id);
+  for (let i = 0; i < lookupIds.length; i += 500) {
+    const ids = lookupIds.slice(i, i + 500);
     const { data } = await db.from("transactions").select("external_id, category").in("external_id", ids);
     for (const r of data ?? []) existing.set(r.external_id as string, r.category as string | null);
   }
@@ -87,7 +88,10 @@ export async function syncItem(item: Item) {
       date: t.authorized_date ?? t.date,
       payee,
       amount,
-      category: existing.get(t.transaction_id) ?? categorize(payee, amount, prettyPlaidCategory(t.personal_finance_category?.primary)),
+      category:
+        existing.get(t.transaction_id) ??
+        (t.pending_transaction_id ? existing.get(t.pending_transaction_id) : undefined) ??
+        categorize(payee, amount, prettyPlaidCategory(t.personal_finance_category?.primary)),
       type: txType(amount),
       raw_data: t as unknown as Record<string, unknown>,
     };

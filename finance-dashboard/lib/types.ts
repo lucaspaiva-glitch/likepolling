@@ -19,6 +19,7 @@ export interface Transaction {
   amount: number;
   category: string | null;
   type: string | null;
+  pending?: boolean;
 }
 
 export interface ImportRow {

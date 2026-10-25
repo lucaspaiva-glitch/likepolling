@@ -203,7 +203,7 @@ export default function TransactionsTable({ transactions, accounts }: { transact
                   }}
                 />
               </TableCell>
-              <TableCell className="py-1 text-xs">{t.type}</TableCell>
+              <TableCell className="py-1 text-xs">{t.pending ? <span className="text-amber-400">pending</span> : t.type}</TableCell>
               <TableCell className={`py-1 text-right text-xs tabular-nums ${t.amount >= 0 ? "text-emerald-400" : "text-dark-tremor-content-strong"}`}>
                 {fmtUsd2(t.amount)}
               </TableCell>

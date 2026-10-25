@@ -83,13 +83,13 @@ async function loadTransactions(since: string): Promise<Transaction[]> {
   for (let from = 0; ; from += PAGE) {
     const { data, error } = await db
       .from("transactions")
-      .select("id, account_id, date, payee, amount, category, type")
+      .select("id, account_id, date, payee, amount, category, type, pending:raw_data->pending")
       .gte("date", since)
       .order("date", { ascending: false })
       .order("id", { ascending: true })
       .range(from, from + PAGE - 1);
     if (error) throw new Error(error.message);
-    out.push(...((data ?? []) as Transaction[]).map((t) => ({ ...t, amount: Number(t.amount) })));
+    out.push(...((data ?? []) as Transaction[]).map((t) => ({ ...t, amount: Number(t.amount), pending: t.pending === true })));
     if (!data || data.length < PAGE) break;
   }
   return out;
