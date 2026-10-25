@@ -537,13 +537,6 @@
     .lp-sp-stats b { display: block; margin-top: 3px; font: 700 13.5px/1.1 'Chakra Petch', Inter, system-ui, sans-serif; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .lp-sp-full { display: block; width: 100%; margin-top: 10px; padding: 8px; border: 0; border-radius: 999px; background: #fff; color: #b0000e; font: 650 12.5px Inter, system-ui, sans-serif; cursor: pointer; }
     .lp-sp-full:hover { background: #ffe3e6; }
-    #cp-tab, #cp-tab:hover, #cp-tab:focus-visible, #cp-tab[aria-expanded="true"] { background: linear-gradient(90deg, #5a0007, #6e0009 60%, #7f000a); color: #ff4a5c; border-color: rgba(255,42,60,.7); box-shadow: inset 0 0 0 2px #630008, inset 0 0 0 2.5px rgba(255,42,60,.25), inset 0 0 6px rgba(255,42,60,.2), 0 0 8px -3px rgba(255,42,60,.6); }
-    #cp-tab:hover, #cp-tab:focus-visible, #cp-tab[aria-expanded="true"] { background: linear-gradient(90deg, #6a0008, #7f000a 60%, #94000c); border-color: #ff2a3c; box-shadow: inset 0 0 0 2px #7f000a, inset 0 0 0 2.5px rgba(255,42,60,.35), inset 0 0 8px rgba(255,42,60,.28), 0 0 10px -3px rgba(255,42,60,.75); }
-    #cp-tab::before { background: #ff2a3c; opacity: .8; box-shadow: 0 0 3px rgba(255,42,60,.55); }
-    #cp-tab > svg { color: #fff; filter: drop-shadow(0 0 2px rgba(255,42,60,.9)); }
-    #cp-tab .lp-mq, #cp-tab .lp-mq span, #cp-tab .lp-mq i { color: #ffe3e6; text-shadow: 0 0 2px #ff2a3c, 0 0 6px rgba(255,42,60,.7); }
-    #cp-tab:focus-visible { outline-color: #ff2a3c; }
-    #cp-tab > svg { filter: drop-shadow(0 0 2px rgba(255,42,60,.9)); }
     .lp-cpp { width: min(300px, calc(100vw - 56px)); }
     .lp-cpp-in { padding: 10px 12px 0; }
     .lp-cpp h3 { display: flex; align-items: center; gap: 8px; margin: 0; color: #fff; font-size: 19px; font-weight: 750; letter-spacing: -.02em; }
@@ -581,6 +574,13 @@
     @media (max-width: 560px) { #lp-rail .lp-tab .lp-mq { height: clamp(40px, calc((100vh - 310px) / 4 - 32px), 96px); } }
     .lp-ext { flex: none; display: inline-flex; align-items: center; gap: 6px; margin-left: 10px; padding: 6px 12px; border-radius: 999px; background: var(--red); color: #fff; font-size: 12px; font-weight: 600; text-decoration: none; box-shadow: 0 0 0 1px rgba(255,42,60,.4), 0 4px 12px -6px rgba(176,0,14,.7); transition: background .15s; }
     .lp-ext:hover { background: var(--red-dark); }
+    /* "What is Creators +?" link under the Chrome button; opens the Creators + card below it. */
+    .lp-ext-wrap { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 5px; margin-left: 10px; }
+    .lp-ext-wrap .lp-ext { margin-left: 0; }
+    .lp-ext-info { padding: 0; border: 0; background: none; color: var(--muted); font: 500 11px/1.2 Inter, system-ui, sans-serif; text-decoration: underline; text-decoration-color: rgba(176,0,14,.35); text-underline-offset: 2px; cursor: pointer; white-space: nowrap; }
+    .lp-ext-info:hover, .lp-ext-info[aria-expanded="true"] { color: var(--red); text-decoration-color: currentColor; }
+    .lp-ext-info:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; border-radius: 3px; }
+    #cp-pop { left: auto; right: var(--pop-r, 16px); }
     .lp-ext:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
     /* Three compartments: shorter labels so the truck still has room to drive. */
     .lp-tab .lp-mq { height: 118px; }
@@ -589,8 +589,10 @@
     @media (max-width: 520px) {
       header.top > .brand { flex: 1 1 0; min-width: 0; white-space: normal; }
       header.top > .live { margin-left: 8px; }
-      header.top > .lp-ext { order: 2; margin-left: 6px; width: 30px; height: 30px; padding: 0; justify-content: center; font-size: 0; gap: 0; }
-      header.top > .lp-ext svg { width: 14px; height: 14px; }
+      header.top > .lp-ext-wrap { order: 2; margin-left: 6px; gap: 3px; }
+      header.top .lp-ext-info { font-size: 9.5px; max-width: 62px; white-space: normal; text-align: right; }
+      header.top .lp-ext { width: 30px; height: 30px; padding: 0; justify-content: center; font-size: 0; gap: 0; }
+      header.top .lp-ext svg { width: 14px; height: 14px; }
     }
   </style>
 </head>
@@ -611,7 +613,7 @@
     <header class="top">
       <a class="brand" href="/" aria-label="Like Polling home"><svg class="brand-mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="var(--red)"/><polyline points="5,21 8,19 10.5,20.2 13.5,16.5 15.5,17.6 18.5,12.5 20.5,13.6 23,6" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="23" cy="6" r="1.9" fill="#fff"/></svg><span class="brand-txt"><span data-no-i18n>Like Polling</span><small class="tagline">Human + AI analytics for what the world watches</small></span></a>
       <div class="live">Live data, 24/7</div>
-      <a class="lp-ext" href="https://chromewebstore.google.com/detail/creators-+/ibajjhdapncbacoinjjcagimpcjpahbn" target="_blank" rel="noopener" aria-label="Add to Chrome"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path d="M8 2v8m0 0L4.8 6.8M8 10l3.2-3.2M3 13h10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Add to Chrome</span></a>
+      <div class="lp-ext-wrap"><a class="lp-ext" href="https://chromewebstore.google.com/detail/creators-+/ibajjhdapncbacoinjjcagimpcjpahbn" target="_blank" rel="noopener" aria-label="Add to Chrome"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path d="M8 2v8m0 0L4.8 6.8M8 10l3.2-3.2M3 13h10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Add to Chrome</span></a><button type="button" class="lp-ext-info" id="cp-link" aria-controls="cp-pop" aria-expanded="false">What is Creators +?</button></div>
     </header>
 
     <section class="nw nw-front" id="news-front" aria-label="World news"></section>
@@ -625,7 +627,6 @@
   <div class="lp-rail" id="lp-rail">
     <button type="button" class="lp-tab lp-ad-tab" id="ad-tab" aria-controls="ad-pop" aria-expanded="false" aria-label="Sponsored: Machu Picchu Energy"><svg class="mpe-can" viewBox="0 -7 20 39" width="14" height="27" aria-hidden="true"><defs><linearGradient id="mpe-can-body" x1="0" x2="1"><stop offset="0" stop-color="#b87800"/><stop offset=".3" stop-color="#ffd84a"/><stop offset=".55" stop-color="#f5b400"/><stop offset="1" stop-color="#9a6200"/></linearGradient><linearGradient id="mpe-can-band" x1="0" x2="1"><stop offset="0" stop-color="#8f0f18"/><stop offset=".32" stop-color="#ff4a55"/><stop offset=".55" stop-color="#e0232f"/><stop offset="1" stop-color="#7a0a12"/></linearGradient><linearGradient id="mpe-can-metal" x1="0" x2="1"><stop offset="0" stop-color="#7a7a7a"/><stop offset=".42" stop-color="#f4f4f4"/><stop offset="1" stop-color="#6a6a6a"/></linearGradient></defs><g class="mpe-can-shake"><path d="M4.2 6 5.3 3.4h9.4L15.8 6Z" fill="url(#mpe-can-metal)"/><rect x="3" y="6" width="14" height="22.5" rx="2" fill="url(#mpe-can-body)"/><rect x="3" y="6" width="14" height="4" fill="url(#mpe-can-band)"/><path d="M5 11.6h10M5 13.2h10" stroke="#1d1d1b" stroke-width=".9"/><circle cx="10" cy="19.4" r="3.6" fill="none" stroke="#1d1d1b" stroke-width=".7"/><path d="M7.2 21 9.4 17.4l1 1.4.9-1 1.6 3.2Z" fill="#1d1d1b"/><rect x="3.4" y="27.6" width="13.2" height="2.4" rx="1.2" fill="url(#mpe-can-metal)"/><g class="mpe-can-pull"><path d="M8.2 3.5h3.6" stroke="#d9d9d9" stroke-width="1.1" stroke-linecap="round"/><circle cx="12.2" cy="3.5" r=".9" fill="none" stroke="#bdbdbd" stroke-width=".6"/></g><g class="mpe-can-fizz" fill="#f7b500"><circle cx="9" cy="1.5" r=".9"/><circle cx="11.6" cy=".5" r=".65"/><circle cx="10.2" cy="-1" r=".55"/></g></g></svg><span class="lp-mq" data-no-i18n><span class="lp-mq-t"><span>Machu Picchu Energy</span><i aria-hidden="true">&bull;</i><span aria-hidden="true">Machu Picchu Energy</span><i aria-hidden="true">&bull;</i></span></span><small data-no-i18n>AD</small></button>
     <button type="button" class="lp-tab" id="search-tab" aria-controls="search-drawer" aria-expanded="false"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span class="lp-mq"><span class="lp-mq-t"><span>Search any YouTube Channel</span><i aria-hidden="true">&bull;</i><span aria-hidden="true">Search any YouTube Channel</span><i aria-hidden="true">&bull;</i></span></span></button>
-    <button type="button" class="lp-tab lp-cp-tab" id="cp-tab" aria-controls="cp-pop" aria-label="Creators +: Chrome Extension" aria-expanded="false"><svg viewBox="0 0 28 28" width="14" height="14" aria-hidden="true"><rect width="28" height="28" rx="7" fill="#b0000e"/><polyline points="5,21 8,19 10.5,20.2 13.5,16.5 15.5,17.6 18.5,12.5 20.5,13.6 23,6" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="23" cy="6" r="1.9" fill="#fff"/></svg><span class="lp-mq" data-no-i18n><span class="lp-mq-t"><span>Creators +</span><i aria-hidden="true">&bull;</i><span aria-hidden="true">Creators +</span><i aria-hidden="true">&bull;</i></span></span></button>
     <button type="button" class="lp-tab lp-tr-tab" id="tr-tab" aria-controls="tr-pop" aria-expanded="false"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.5 3.9 5.5 3.9 9s-1.3 6.5-3.9 9c-2.6-2.5-3.9-5.5-3.9-9S9.4 5.5 12 3Z"/></svg><span class="lp-mq"><span class="lp-mq-t"><span>Trending in the most countries</span><i aria-hidden="true">&bull;</i><span aria-hidden="true">Trending in the most countries</span><i aria-hidden="true">&bull;</i></span></span></button>
     <span class="lp-truck-papers" aria-hidden="true"><svg viewBox="0 0 18 11" preserveAspectRatio="none"><rect class="p" x="1" y="7" width="16" height="3.4" rx=".6"/><rect class="p" x="2" y="3.6" width="15" height="3.4" rx=".6"/><rect class="p" x=".5" y=".4" width="15.5" height="3.2" rx=".6"/><path class="t" d="M3 2H9M3 5.3H8M4 8.7H11"/><path class="s" d="M12.6 0V11M12.6 5.4H17.4"/></svg></span>
     <span class="lp-truck-back" aria-hidden="true"></span>
@@ -1024,7 +1025,7 @@ ENERGY</div>
       const rail = $('lp-rail'), tab = $('search-tab'), drawer = $('search-drawer'), scrim = $('search-scrim');
       const adTab = $('ad-tab'), adPop = $('ad-pop');
       const sPop = $('search-pop'), sIn = $('sp-input'), sOut = $('sp-out');
-      const cpTab = $('cp-tab'), cpPop = $('cp-pop');
+      const cpTab = $('cp-link'), cpPop = $('cp-pop');
       const trTab = $('tr-tab'), trPop = $('tr-pop');
       let raf = 0, idle = 0, cur = null, target = 0, glide = 0, spin = 0;
       const still = matchMedia('(prefers-reduced-motion: reduce)');
@@ -1056,7 +1057,8 @@ ENERGY</div>
       function placeCpPop() {
         if (cpPop.hidden) return;
         const r = cpTab.getBoundingClientRect();
-        cpPop.style.setProperty('--pop-y', Math.round(Math.max(8, Math.min(r.top, innerHeight - cpPop.offsetHeight - 8))) + 'px');
+        cpPop.style.setProperty('--pop-y', Math.round(Math.max(8, Math.min(r.bottom + 6, innerHeight - cpPop.offsetHeight - 8))) + 'px');
+        cpPop.style.setProperty('--pop-r', Math.round(Math.max(8, document.documentElement.clientWidth - r.right)) + 'px');
       }
       function placeTrPop() {
         if (trPop.hidden) return;
@@ -1189,7 +1191,7 @@ ENERGY</div>
         }
         placeSearchPop();
       });
-      // Creators + compartment: same hover / click / tap rules as the sponsor and search cards.
+      // Creators + link (under Add to Chrome): same hover / click / tap rules as the sponsor and search cards.
       let cHover = false, cT = 0;
       function setCp(on) {
         if (!on) { cHover = false; clearTimeout(cT); }
