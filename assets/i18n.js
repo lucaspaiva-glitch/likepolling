@@ -388,7 +388,7 @@
   function apply() {
     observer.disconnect();
     walk(document.body);
-    document.title = (TITLES[titleEn] && lang !== 'en') ? col(TITLES[titleEn], titleEn, lang) : titleEn;
+    document.title = lang === 'en-GB' ? gb(titleEn) : (TITLES[titleEn] && lang !== 'en') ? col(TITLES[titleEn], titleEn, lang) : titleEn;
     document.documentElement.lang = locale(lang);
     switcher.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.lang === lang)));
     observe();
