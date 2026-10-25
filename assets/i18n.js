@@ -300,7 +300,7 @@
   // British English: the English text with British spellings.
   const gb = (s) => s.replace(/\b(analy|organi|recogni|prioriti|categori|summari|personali|optimi|reali|speciali|monetiz)z/gi, (m, a) => a + (m.slice(-1) === 'Z' ? 'S' : 's'))
     .replace(/\b(colo|favo|behavio|neighbo|labo|hono)r/gi, '$1ur').replace(/\bcenter/gi, (m) => (m[0] === 'C' ? 'Centre' : 'centre'));
-  const col = (row, key, l) => (l === 'en-GB' ? gb(key) : l === 'pt-PT' && PT_PT[key] != null ? PT_PT[key] : row[idx(l)]);
+  const col = (row, key, l) => (l === 'pt-PT' && PT_PT[key] != null ? PT_PT[key] : row[idx(l)]);
   const locale = (l) => (l === 'pt' ? 'pt-BR' : l);
   function localDate(s, lang) {
     const d = Date.parse(s);
@@ -327,6 +327,7 @@
 
   function translate(en, lang, el) {
     if (lang === 'en' || !en) return null;
+    if (lang === 'en-GB') { const g = gb(en); return g === en ? null : g; }
     if (el) for (const [sel, map] of CONTEXT) if (map[en.trim()] && el.closest(sel)) return en.replace(en.trim(), col(map[en.trim()], en.trim(), lang));
     if (RAW[en]) return col(RAW[en], en, lang);
     const core = en.trim();
