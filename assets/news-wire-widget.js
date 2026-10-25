@@ -820,6 +820,9 @@
   // Ties: better average chart position, then name.
   const rankBox = mount.querySelector('.nw-rank');
   const rankList = mount.querySelector('.nw-rank-list');
+  // Shown in the truck's "Trending in the most countries" compartment (index.html) rather than on the page.
+  const rankHome = document.getElementById('tr-pop-body');
+  if (rankHome) rankHome.append(rankBox);
   const flagImg = (code, names) => `<img src="/assets/flags/${code.toLowerCase()}.svg" alt="" width="16" height="12" loading="lazy" title="${esc(names ? names.of(code) : code)}">`;
 
   async function loadRanking() {

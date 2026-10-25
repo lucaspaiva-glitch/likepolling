@@ -555,6 +555,30 @@
     .lp-cpp li span { display: block; margin-top: 4px; font: 600 9px/1.2 ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: .04em; text-transform: uppercase; color: rgba(255,190,195,.85); }
     .lp-cpp a.lp-sp-full { text-align: center; text-decoration: none; box-sizing: border-box; }
     .lp-cpp small { display: block; margin-top: 8px; font-size: 10.5px; line-height: 1.35; color: rgba(255,190,195,.75); }
+    #tr-tab, #tr-tab:hover, #tr-tab:focus-visible, #tr-tab[aria-expanded="true"] { background: linear-gradient(90deg, #5a0007, #6e0009 60%, #7f000a); color: #ff4a5c; border-color: rgba(255,42,60,.7); box-shadow: inset 0 0 0 2px #630008, inset 0 0 0 2.5px rgba(255,42,60,.25), inset 0 0 6px rgba(255,42,60,.2), 0 0 8px -3px rgba(255,42,60,.6); }
+    #tr-tab:hover, #tr-tab:focus-visible, #tr-tab[aria-expanded="true"] { background: linear-gradient(90deg, #6a0008, #7f000a 60%, #94000c); border-color: #ff2a3c; box-shadow: inset 0 0 0 2px #7f000a, inset 0 0 0 2.5px rgba(255,42,60,.35), inset 0 0 8px rgba(255,42,60,.28), 0 0 10px -3px rgba(255,42,60,.75); }
+    #tr-tab::before { background: #ff2a3c; opacity: .8; box-shadow: 0 0 3px rgba(255,42,60,.55); }
+    #tr-tab > svg { color: #fff; filter: drop-shadow(0 0 2px rgba(255,42,60,.9)); }
+    #tr-tab .lp-mq, #tr-tab .lp-mq span, #tr-tab .lp-mq i { color: #ffe3e6; text-shadow: 0 0 2px #ff2a3c, 0 0 6px rgba(255,42,60,.7); }
+    #tr-tab:focus-visible { outline-color: #ff2a3c; }
+    /* "Trending in the most countries" card (the list itself is built by news-wire-widget.js). */
+    .lp-trp { width: min(330px, calc(100vw - 56px)); }
+    .lp-trp .nw-rank { max-height: calc(100vh - 80px); max-height: calc(100dvh - 80px); overflow-y: auto; overscroll-behavior: contain; padding: 2px 12px 0; border: 0; scrollbar-width: thin; scrollbar-color: rgba(255,42,60,.5) transparent; }
+    .lp-trp .nw-rank-title { display: none; }
+    .lp-trp .nw-rank-list { grid-template-columns: none; grid-template-rows: none; grid-auto-flow: row; }
+    .lp-trp .nw-rank-list a { gap: 10px; padding: 7px 0 9px; border-bottom-color: rgba(255,42,60,.22); }
+    .lp-trp .nw-rank-list a:hover .nw-rname { color: #ffb3ba; }
+    .lp-trp .nw-rank-list a:focus-visible { outline-color: #ff2a3c; }
+    .lp-trp .nw-rk { color: #ff6a78; }
+    .lp-trp .nw-rname { color: #fff; font-size: 13px; }
+    .lp-trp .nw-rflags img { box-shadow: 0 0 0 1px rgba(255,255,255,.18); }
+    .lp-trp .nw-rmore, .lp-trp .nw-rcount { color: rgba(255,190,195,.8); }
+    .lp-trp .nw-rcount b { color: #fff; }
+    .lp-trp .nw-rbar { background: #ff2a3c; box-shadow: 0 0 4px rgba(255,42,60,.7); }
+    .lp-trp .nw-rank-note { margin: 8px 0 0; font-size: 10.5px; line-height: 1.4; color: rgba(255,190,195,.75); }
+    /* Four compartments: label windows shrink with the screen height so the whole truck always fits on screen. */
+    #lp-rail .lp-tab .lp-mq { height: clamp(40px, calc((100vh - 330px) / 4 - 40px), 104px); }
+    @media (max-width: 560px) { #lp-rail .lp-tab .lp-mq { height: clamp(40px, calc((100vh - 310px) / 4 - 32px), 96px); } }
     .lp-ext { flex: none; display: inline-flex; align-items: center; gap: 6px; margin-left: 10px; padding: 6px 12px; border-radius: 999px; background: var(--red); color: #fff; font-size: 12px; font-weight: 600; text-decoration: none; box-shadow: 0 0 0 1px rgba(255,42,60,.4), 0 4px 12px -6px rgba(176,0,14,.7); transition: background .15s; }
     .lp-ext:hover { background: var(--red-dark); }
     .lp-ext:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
@@ -602,6 +626,7 @@
     <button type="button" class="lp-tab" id="search-tab" aria-controls="search-drawer" aria-expanded="false"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span class="lp-mq"><span class="lp-mq-t"><span>Search any YouTube Channel</span><i aria-hidden="true">&bull;</i><span aria-hidden="true">Search any YouTube Channel</span><i aria-hidden="true">&bull;</i></span></span></button>
     <button type="button" class="lp-tab lp-ad-tab" id="ad-tab" aria-controls="ad-pop" aria-expanded="false" aria-label="Sponsored: Machu Picchu Energy"><svg class="mpe-can" viewBox="0 -7 20 39" width="14" height="27" aria-hidden="true"><defs><linearGradient id="mpe-can-body" x1="0" x2="1"><stop offset="0" stop-color="#b87800"/><stop offset=".3" stop-color="#ffd84a"/><stop offset=".55" stop-color="#f5b400"/><stop offset="1" stop-color="#9a6200"/></linearGradient><linearGradient id="mpe-can-band" x1="0" x2="1"><stop offset="0" stop-color="#8f0f18"/><stop offset=".32" stop-color="#ff4a55"/><stop offset=".55" stop-color="#e0232f"/><stop offset="1" stop-color="#7a0a12"/></linearGradient><linearGradient id="mpe-can-metal" x1="0" x2="1"><stop offset="0" stop-color="#7a7a7a"/><stop offset=".42" stop-color="#f4f4f4"/><stop offset="1" stop-color="#6a6a6a"/></linearGradient></defs><g class="mpe-can-shake"><path d="M4.2 6 5.3 3.4h9.4L15.8 6Z" fill="url(#mpe-can-metal)"/><rect x="3" y="6" width="14" height="22.5" rx="2" fill="url(#mpe-can-body)"/><rect x="3" y="6" width="14" height="4" fill="url(#mpe-can-band)"/><path d="M5 11.6h10M5 13.2h10" stroke="#1d1d1b" stroke-width=".9"/><circle cx="10" cy="19.4" r="3.6" fill="none" stroke="#1d1d1b" stroke-width=".7"/><path d="M7.2 21 9.4 17.4l1 1.4.9-1 1.6 3.2Z" fill="#1d1d1b"/><rect x="3.4" y="27.6" width="13.2" height="2.4" rx="1.2" fill="url(#mpe-can-metal)"/><g class="mpe-can-pull"><path d="M8.2 3.5h3.6" stroke="#d9d9d9" stroke-width="1.1" stroke-linecap="round"/><circle cx="12.2" cy="3.5" r=".9" fill="none" stroke="#bdbdbd" stroke-width=".6"/></g><g class="mpe-can-fizz" fill="#f7b500"><circle cx="9" cy="1.5" r=".9"/><circle cx="11.6" cy=".5" r=".65"/><circle cx="10.2" cy="-1" r=".55"/></g></g></svg><span class="lp-mq" data-no-i18n><span class="lp-mq-t"><span>Machu Picchu Energy</span><i aria-hidden="true">&bull;</i><span aria-hidden="true">Machu Picchu Energy</span><i aria-hidden="true">&bull;</i></span></span><small data-no-i18n>AD</small></button>
     <button type="button" class="lp-tab lp-cp-tab" id="cp-tab" aria-controls="cp-pop" aria-label="Creators +: Chrome Extension" aria-expanded="false"><svg viewBox="0 0 28 28" width="14" height="14" aria-hidden="true"><rect width="28" height="28" rx="7" fill="#b0000e"/><polyline points="5,21 8,19 10.5,20.2 13.5,16.5 15.5,17.6 18.5,12.5 20.5,13.6 23,6" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="23" cy="6" r="1.9" fill="#fff"/></svg><span class="lp-mq" data-no-i18n><span class="lp-mq-t"><span>Creators +</span><i aria-hidden="true">&bull;</i><span aria-hidden="true">Creators +</span><i aria-hidden="true">&bull;</i></span></span></button>
+    <button type="button" class="lp-tab lp-tr-tab" id="tr-tab" aria-controls="tr-pop" aria-expanded="false"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.5 3.9 5.5 3.9 9s-1.3 6.5-3.9 9c-2.6-2.5-3.9-5.5-3.9-9S9.4 5.5 12 3Z"/></svg><span class="lp-mq"><span class="lp-mq-t"><span>Trending in the most countries</span><i aria-hidden="true">&bull;</i><span aria-hidden="true">Trending in the most countries</span><i aria-hidden="true">&bull;</i></span></span></button>
     <span class="lp-truck-papers" aria-hidden="true"><svg viewBox="0 0 18 11" preserveAspectRatio="none"><rect class="p" x="1" y="7" width="16" height="3.4" rx=".6"/><rect class="p" x="2" y="3.6" width="15" height="3.4" rx=".6"/><rect class="p" x=".5" y=".4" width="15.5" height="3.2" rx=".6"/><path class="t" d="M3 2H9M3 5.3H8M4 8.7H11"/><path class="s" d="M12.6 0V11M12.6 5.4H17.4"/></svg></span>
     <span class="lp-truck-back" aria-hidden="true"></span>
     <span class="lp-truck-cab" aria-hidden="true"><svg viewBox="0 0 20 40" preserveAspectRatio="none">
@@ -644,6 +669,12 @@ ENERGY</div>
         <a class="lp-sp-full" href="https://chromewebstore.google.com/detail/creators-+/ibajjhdapncbacoinjjcagimpcjpahbn" target="_blank" rel="noopener">Add to Chrome · it's free</a>
         <small>Also works in Edge, Brave, Arc and Opera on computers. No account needed.</small>
       </div>
+    </div>
+  </div>
+  <div class="mpe-pop lp-sp lp-trp" id="tr-pop" hidden>
+    <div class="lp-sp-card">
+      <div class="mpe-top"><span class="mpe-sym" data-no-i18n>TOP</span><span>Trending in the most countries</span></div>
+      <div class="lp-trp-body" id="tr-pop-body"></div>
     </div>
   </div>
   <div class="lp-scrim" id="search-scrim"></div>
@@ -994,6 +1025,7 @@ ENERGY</div>
       const adTab = $('ad-tab'), adPop = $('ad-pop');
       const sPop = $('search-pop'), sIn = $('sp-input'), sOut = $('sp-out');
       const cpTab = $('cp-tab'), cpPop = $('cp-pop');
+      const trTab = $('tr-tab'), trPop = $('tr-pop');
       let raf = 0, idle = 0, cur = null, target = 0, glide = 0, spin = 0;
       const still = matchMedia('(prefers-reduced-motion: reduce)');
       const cab = rail.querySelector('.lp-truck-cab');
@@ -1013,6 +1045,7 @@ ENERGY</div>
         placePop();
         placeSearchPop();
         placeCpPop();
+        placeTrPop();
         if (cur !== target) glide = requestAnimationFrame(step); else last = 0;
       }
       function placePop() {
@@ -1024,6 +1057,11 @@ ENERGY</div>
         if (cpPop.hidden) return;
         const r = cpTab.getBoundingClientRect();
         cpPop.style.setProperty('--pop-y', Math.round(Math.max(8, Math.min(r.top, innerHeight - cpPop.offsetHeight - 8))) + 'px');
+      }
+      function placeTrPop() {
+        if (trPop.hidden) return;
+        const r = trTab.getBoundingClientRect();
+        trPop.style.setProperty('--pop-y', Math.round(Math.max(8, Math.min(r.top, innerHeight - trPop.offsetHeight - 8))) + 'px');
       }
       function placeSearchPop() {
         if (sPop.hidden) return;
@@ -1038,8 +1076,9 @@ ENERGY</div>
         // so the Like Polling title stands alone at the top. Until the news loads, the usual spot (same as the CSS default).
         const lead = document.querySelector('#news-front:not([hidden]) .nw-lead');
         const anchor = lead && lead.offsetHeight ? lead.getBoundingClientRect().top + scrollY + 18 : innerWidth <= 560 ? 299 : 239;
-        const top = Math.round(Math.max(52, Math.min(anchor, vh() * 0.45)));
-        const room = Math.max(0, vh() - rail.offsetHeight - top - 16 - (cab ? cab.offsetHeight + 3 : 0));
+        const cabH = cab ? cab.offsetHeight + 3 : 0;
+        const top = Math.round(Math.max(52, Math.min(anchor, vh() * 0.45, vh() - rail.offsetHeight - 16 - cabH)));
+        const room = Math.max(0, vh() - rail.offsetHeight - top - 16 - cabH);
         target = Math.round(top + p * room);
         if (!glide) glide = requestAnimationFrame(step);
       }
@@ -1055,7 +1094,7 @@ ENERGY</div>
       place();
       function setAd(on) {
         if (!on) hoverOpen = false;
-        if (on) { setSearch(false); setCp(false); }
+        if (on) { setSearch(false); setCp(false); setTr(false); }
         adPop.hidden = !on;
         adTab.setAttribute('aria-expanded', String(on));
         placePop();
@@ -1088,7 +1127,7 @@ ENERGY</div>
       let sHover = false, sT = 0, sToken = 0;
       function setSearch(on) {
         if (!on) { sHover = false; clearTimeout(sT); }
-        if (on) { setAd(false); setCp(false); }
+        if (on) { setAd(false); setCp(false); setTr(false); }
         sPop.hidden = !on;
         tab.setAttribute('aria-expanded', String(on));
         placeSearchPop();
@@ -1154,7 +1193,7 @@ ENERGY</div>
       let cHover = false, cT = 0;
       function setCp(on) {
         if (!on) { cHover = false; clearTimeout(cT); }
-        if (on) { setAd(false); setSearch(false); }
+        if (on) { setAd(false); setSearch(false); setTr(false); }
         cpPop.hidden = !on;
         cpTab.setAttribute('aria-expanded', String(on));
         placeCpPop();
@@ -1167,7 +1206,26 @@ ENERGY</div>
       }
       cpTab.addEventListener('click', (e) => { e.stopPropagation(); if (cHover) { cHover = false; clearTimeout(cT); return; } setCp(cpPop.hidden); });
       document.addEventListener('click', (e) => { if (!cpPop.hidden && !cpPop.contains(e.target)) setCp(false); });
+      // "Trending in the most countries" compartment: same rules again.
+      let tHover = false, tT = 0;
+      function setTr(on) {
+        if (!on) { tHover = false; clearTimeout(tT); }
+        if (on) { setAd(false); setSearch(false); setCp(false); }
+        trPop.hidden = !on;
+        trTab.setAttribute('aria-expanded', String(on));
+        placeTrPop();
+      }
+      if (matchMedia('(hover: hover) and (pointer: fine)').matches) {
+        [trTab, trPop].forEach((el) => {
+          el.addEventListener('pointerenter', (e) => { if (e.pointerType !== 'mouse') return; clearTimeout(tT); if (trPop.hidden) tT = setTimeout(() => { setTr(true); tHover = true; }, 150); });
+          el.addEventListener('pointerleave', (e) => { if (e.pointerType !== 'mouse') return; clearTimeout(tT); if (tHover) tT = setTimeout(() => { if (tHover) setTr(false); }, 350); });
+        });
+      }
+      ['pointerdown', 'wheel', 'touchmove'].forEach((ev) => trPop.addEventListener(ev, () => { tHover = false; clearTimeout(tT); }, { passive: true }));
+      trTab.addEventListener('click', (e) => { e.stopPropagation(); if (tHover) { tHover = false; clearTimeout(tT); return; } setTr(trPop.hidden); });
+      document.addEventListener('click', (e) => { if (!trPop.hidden && !trPop.contains(e.target)) setTr(false); });
       function setOpen(on) {
+        setTr(false);
         setCp(false);
         setSearch(false);
         setAd(false);
@@ -1187,6 +1245,7 @@ ENERGY</div>
         if (!adPop.hidden) { setAd(false); adTab.focus({ preventScroll: true }); }
         else if (!sPop.hidden) { setSearch(false); tab.focus({ preventScroll: true }); }
         else if (!cpPop.hidden) { setCp(false); cpTab.focus({ preventScroll: true }); }
+        else if (!trPop.hidden) { setTr(false); trTab.focus({ preventScroll: true }); }
         else if (drawer.classList.contains('open')) setOpen(false);
       });
       if (new URLSearchParams(location.search).get('q')) setOpen(true);

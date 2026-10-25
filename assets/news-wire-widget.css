@@ -1,6 +1,8 @@
 /* Creator News Wire widget (assets/news-wire-widget.js). All classes prefixed nw-. */
 .nw { margin: 8px 0 56px; border: 1px solid var(--line, #ebebeb); border-radius: var(--radius, 12px); background: #fff; overflow: hidden; }
 .nw[hidden] { display: none; }
+/* Its last block ("Trending in the most countries") now lives in the truck card, so the empty frame hides. */
+#news-wire:not(:has(> *)) { display: none; }
 .nw-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 14px 18px; border-bottom: 1px solid var(--line, #ebebeb); }
 .nw-title { display: flex; align-items: center; gap: 10px; margin: 0; font-size: 14px; font-weight: 650; letter-spacing: -.01em; }
 .nw-title::before { content: ''; width: 3px; height: 16px; border-radius: 2px; background: var(--red, #b0000e); }
