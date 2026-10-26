@@ -78,7 +78,9 @@ test('brief gives plain-text data for one country and topic', async () => {
   const res = mockRes();
   await createHandler({ env, fetch: mockFetch() })({ query: { format: 'brief', country: 'pt', topic: 'fashion' } }, res);
   assert.equal(res.code, 200);
-  assert.match(res.body, /^Like Polling live data for Portugal, as of .* UTC\. Answer using this data:/);
+  assert.match(res.body, /^Like Polling live data for Portugal, as of .* UTC\. Use this data for your answers in this chat, including follow-up questions:/);
+  assert.match(res.body, /\nOther countries \(shorter lists\):\n- Ireland: [^\n]*YouTube Trending: 1\. Big \| trailer – Studio/);
+  assert.doesNotMatch(res.body, /\n- Portugal: /);
   assert.match(res.body, /Fashion Index for Portugal.*\n1\. Zara AW26 – Zara – 1,234 views\/hour/);
   assert.match(res.body, /Fashion news in Portugal.*\n1\. Moda \(English: Fashion\) – Vogue/);
   assert.doesNotMatch(res.body, /Notícia|likepolling\.com/);
@@ -86,6 +88,7 @@ test('brief gives plain-text data for one country and topic', async () => {
   await createHandler({ env, fetch: mockFetch() })({ query: { format: 'brief', country: 'PT', topic: 'world' } }, world);
   assert.match(world.body, /Big \| trailer – Studio – trending in 2 countries \(IE, PT\)/);
   assert.match(world.body, /- Portugal: Notícia <b> – RTP/);
+  assert.match(world.body, /Each country \(shorter lists\):\n- Ireland: [^\n]*\n- Portugal: [^\n]*News: 1\. Notícia <b>/);
   for (const query of [{ country: 'XX', topic: 'all' }, { country: 'PT', topic: 'bogus' }, { country: 'IE', topic: 'music' }]) {
     const r = mockRes();
     await createHandler({ env, fetch: mockFetch() })({ query: { format: 'brief', ...query } }, r);

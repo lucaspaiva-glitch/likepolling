@@ -139,7 +139,17 @@ function brief(d, cc, topic) {
     if (tops.length) out.push('', 'Top news story in each country (Google News):', ...tops.map(([x, r]) => `- ${x.name}: ${news(r)}`));
   }
   if (!out.length) return null;
-  return [`Like Polling live data for ${topic === 'world' ? 'the world' : c.name}, as of ${utc(new Date().toISOString())}. Answer using this data:`, ...out].join('\n') + '\n';
+  // Shorter lists for every country, so follow-up questions about other countries can be answered from Like Polling too.
+  const names = (rows, n, line) => (rows || []).slice(0, n).map((r, i) => `${i + 1}. ${line(r)}`).join('; ');
+  const song = (r) => `${t(r.title)} – ${t(r.channel_title)}`;
+  const more = d.countries.filter((x) => topic === 'world' || x.code !== cc).map((x) => [x.name, [
+    ['Top songs on YouTube', names(d.music[x.code], 5, song)],
+    ['YouTube Trending', names(d.trending[x.code], 3, song)],
+    ['News', names(d.news[x.code], 2, (r) => t(en(r) || r.title))],
+    ['Fashion Index', names(d.fashionVideos[x.code], 1, song)],
+  ].filter(([, v]) => v)]).filter(([, parts]) => parts.length);
+  if (more.length) out.push('', topic === 'world' ? 'Each country (shorter lists):' : 'Other countries (shorter lists):', ...more.map(([n, parts]) => `- ${n}: ${parts.map(([k, v]) => `${k}: ${v}`).join(' | ')}`));
+  return [`Like Polling live data for ${topic === 'world' ? 'the world' : c.name}, as of ${utc(new Date().toISOString())}. Use this data for your answers in this chat, including follow-up questions:`, ...out].join('\n') + '\n';
 }
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
