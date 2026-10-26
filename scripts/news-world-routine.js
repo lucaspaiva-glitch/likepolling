@@ -2,7 +2,7 @@
 // Google News' own order and the country's language, with each article's own
 // preview image. Writes public.news_world through the service-role RPC
 // replace_news_world. Run hourly by .github/workflows/news-world.yml.
-const { parseItems, fetchText, imageFor } = require('./news-wire-routine');
+const { parseItems, fetchText, imageFor, descriptionFor } = require('./news-wire-routine');
 
 const TOP_N = 30;
 const FEED_CONCURRENCY = 6;
@@ -21,6 +21,11 @@ const SITE_LANGS = ['en', 'pt', 'pt-PT', 'es', 'de', 'ru', 'uk', 'ko', 'ja'];
 const GEMINI_MODELS = ['gemini-3.1-flash-lite', 'gemini-3.5-flash-lite'];
 const TRANSLATE_BATCH = 40;
 const TRANSLATIONS_PER_RUN = 800;
+// Short summaries shown over each photo, written from the publisher's own article description.
+const SUMMARY_LOOKUPS_PER_RUN = 300;
+const SUMMARY_CONCURRENCY = 6;
+const SUMMARY_BATCH = 20;
+const SUMMARY_WORDS = 15;
 
 // Google News edition per country: [hl, ceid].
 const EDITIONS = {
@@ -71,7 +76,7 @@ function uniqueItems(items, seen) {
 // The World News defaults; scripts/news-fashion-routine.js passes its own.
 const WORLD = {
   table: 'news_world', rpc: 'replace_news_world', feed: feedUrl, searchTopUp: (cc) => !!SEARCH[cc],
-  photoTarget: PHOTO_TARGET, imageLookups: IMAGE_LOOKUPS_PER_RUN, translations: TRANSLATIONS_PER_RUN, classify: false,
+  photoTarget: PHOTO_TARGET, imageLookups: IMAGE_LOOKUPS_PER_RUN, translations: TRANSLATIONS_PER_RUN, classify: false, summaries: true,
 };
 
 async function fetchCountry(cc, deps, cfg = WORLD) {
@@ -152,20 +157,17 @@ async function addImages(rows, stored, deps, limit = IMAGE_LOOKUPS_PER_RUN) {
   return { looked, with_image: rows.filter((r) => r.image_url).length };
 }
 
-// classify: also asks whether each headline is really about fashion (key "fashion").
-function geminiTranslator(apiKey, classify = false) {
+// Sends a prompt to Gemini and returns its JSON reply; moves to the next model if one is retired.
+function geminiJson(apiKey) {
   const { GoogleGenAI } = require('@google/genai');
   const ai = new GoogleGenAI({ apiKey: apiKey.trim() });
   let m = 0;
   let thinking = true;
-  return async (titles) => {
-    const prompt = `Translate each news headline below into these languages: en (English), pt (Brazilian Portuguese), pt-PT (European Portuguese), es (Spanish), de (German), ru (Russian), uk (Ukrainian), ko (Korean), ja (Japanese). Keep names, numbers and meaning exact; do not add or drop information. Reply with only a JSON array with one object per headline, in the same order, each with exactly the keys ${SITE_LANGS.map((l) => `"${l}"`).join(', ')}${classify ? ', "fashion"' : ''}.${classify ? ' "fashion" is true only if the headline is mainly about fashion: clothing, shoes, accessories, designers, fashion brands, models, fashion shows or style trends; otherwise false (for example sport, politics, food, or the word only used as in "in dramatic fashion").' : ''}\n\n${JSON.stringify(titles)}`;
-    let res;
+  return async (prompt) => {
     for (;;) {
       const config = { responseMimeType: 'application/json', ...(thinking ? { thinkingConfig: { thinkingLevel: 'MINIMAL' } } : {}) };
       try {
-        res = await ai.models.generateContent({ model: GEMINI_MODELS[m], contents: prompt, config });
-        break;
+        return JSON.parse((await ai.models.generateContent({ model: GEMINI_MODELS[m], contents: prompt, config })).text);
       } catch (err) {
         const msg = String(err && err.message);
         if (thinking && /thinking/i.test(msg)) thinking = false;
@@ -173,8 +175,29 @@ function geminiTranslator(apiKey, classify = false) {
         else throw err;
       }
     }
-    const out = JSON.parse(res.text);
+  };
+}
+
+const LANG_LIST = 'en (English), pt (Brazilian Portuguese), pt-PT (European Portuguese), es (Spanish), de (German), ru (Russian), uk (Ukrainian), ko (Korean), ja (Japanese)';
+const LANG_KEYS = SITE_LANGS.map((l) => `"${l}"`).join(', ');
+
+// classify: also asks whether each headline is really about fashion (key "fashion").
+function geminiTranslator(apiKey, classify = false) {
+  const ask = geminiJson(apiKey);
+  return async (titles) => {
+    const prompt = `Translate each news headline below into these languages: ${LANG_LIST}. Keep names, numbers and meaning exact; do not add or drop information. Reply with only a JSON array with one object per headline, in the same order, each with exactly the keys ${LANG_KEYS}${classify ? ', "fashion"' : ''}.${classify ? ' "fashion" is true only if the headline is mainly about fashion: clothing, shoes, accessories, designers, fashion brands, models, fashion shows or style trends; otherwise false (for example sport, politics, food, or the word only used as in "in dramatic fashion").' : ''}\n\n${JSON.stringify(titles)}`;
+    const out = await ask(prompt);
     if (!Array.isArray(out) || out.length !== titles.length) throw new Error('translation count mismatch');
+    return out;
+  };
+}
+
+function geminiSummarizer(apiKey) {
+  const ask = geminiJson(apiKey);
+  return async (stories) => {
+    const prompt = `For each news story below (its headline and the publisher's own description), write one short summary of at most ${SUMMARY_WORDS} words in each of these languages: ${LANG_LIST}. Use only facts stated in the headline or description; do not add facts, opinions or names that are not there. Prefer details the headline doesn't already say. No quotation marks, no hashtags. Reply with only a JSON array with one object per story, in the same order, each with exactly the keys ${LANG_KEYS}.\n\n${JSON.stringify(stories)}`;
+    const out = await ask(prompt);
+    if (!Array.isArray(out) || out.length !== stories.length) throw new Error('summary count mismatch');
     return out;
   };
 }
@@ -218,10 +241,58 @@ async function addTranslations(rows, env, deps, cfg = WORLD) {
   return { translated, pending: todo.length - translated, errors: errors.slice(0, 3) };
 }
 
+// Each country's first photoTarget translated photo stories get a summary (title_tr.sum, one per
+// site language), stored with the translations so it's written once. Stories whose article has
+// no description get sum '' and aren't looked up again.
+async function addSummaries(rows, deps, cfg = WORLD) {
+  if (!cfg.summaries) return null;
+  const todo = [];
+  const pos = {};
+  for (const r of [...rows].sort((a, b) => a.rank - b.rank)) {
+    if (!r.image_url) continue;
+    pos[r.country_code] = (pos[r.country_code] || 0) + 1;
+    if (pos[r.country_code] <= cfg.photoTarget && r.title_tr && r.title_tr.sum === undefined) todo.push(r);
+  }
+  if (!deps.summarize) return { summarized: 0, pending: todo.length };
+  const queue = todo.slice(0, SUMMARY_LOOKUPS_PER_RUN);
+  const ready = [];
+  let noDescription = 0;
+  await Promise.all(Array.from({ length: SUMMARY_CONCURRENCY }, async () => {
+    while (queue.length) {
+      const r = queue.shift();
+      const d = await descriptionFor(r.link, deps);
+      if (d === null) continue;
+      if (d) ready.push([r, d]);
+      else { r.title_tr = { ...r.title_tr, sum: '' }; noDescription++; }
+    }
+  }));
+  const batches = [];
+  for (let i = 0; i < ready.length; i += SUMMARY_BATCH) batches.push(ready.slice(i, i + SUMMARY_BATCH));
+  let summarized = 0;
+  const errors = [];
+  await Promise.all(Array.from({ length: 4 }, async () => { while (batches.length) {
+    const batch = batches.shift();
+    try {
+      const out = await deps.summarize(batch.map(([r, d]) => ({ headline: r.title, description: d })));
+      batch.forEach(([r], k) => {
+        const t = out[k] || {};
+        if (SITE_LANGS.every((l) => typeof t[l] === 'string' && t[l].trim())) {
+          r.title_tr = { ...r.title_tr, sum: Object.fromEntries(SITE_LANGS.map((l) => [l, t[l].trim().slice(0, 200)])) };
+          summarized++;
+        }
+      });
+    } catch (err) { errors.push(err.message); }
+  } }));
+  return { summarized, no_description: noDescription, pending: todo.length - summarized - noDescription, errors: errors.slice(0, 3) };
+}
+
 async function run(env = process.env, deps = {}, cfg = WORLD) {
-  deps = { fetch: deps.fetch || fetch, sleep: deps.sleep || defaultSleep, log: deps.log || console.log, translate: deps.translate || null };
+  deps = { fetch: deps.fetch || fetch, sleep: deps.sleep || defaultSleep, log: deps.log || console.log, translate: deps.translate || null, summarize: deps.summarize || null };
   if (!deps.translate && env.GEMINI_API_KEY) {
     try { deps.translate = geminiTranslator(env.GEMINI_API_KEY, cfg.classify); } catch (err) { deps.log(`Translations skipped: ${err.message.split('\n')[0]}`); }
+  }
+  if (!deps.summarize && env.GEMINI_API_KEY && cfg.summaries) {
+    try { deps.summarize = geminiSummarizer(env.GEMINI_API_KEY); } catch (err) { deps.log(`Summaries skipped: ${err.message.split('\n')[0]}`); }
   }
   const missing = ['SUPABASE_URL', 'SUPABASE_KEY'].filter((k) => !env[k]);
   if (missing.length) throw new Error(`Missing env vars: ${missing.join(', ')}`);
@@ -254,6 +325,7 @@ async function run(env = process.env, deps = {}, cfg = WORLD) {
   }));
   images.topped_up = await topUp(rows, extras, stored, deps, cfg.photoTarget);
   const translations = await addTranslations(rows, env, deps, cfg);
+  const summaries = await addSummaries(rows, deps, cfg);
 
   const res = await deps.fetch(`${env.SUPABASE_URL}/rest/v1/rpc/${cfg.rpc}`, {
     method: 'POST',
@@ -265,7 +337,7 @@ async function run(env = process.env, deps = {}, cfg = WORLD) {
 
   const perCountry = {};
   for (const r of rows) if (r.image_url) perCountry[r.country_code] = (perCountry[r.country_code] || 0) + 1;
-  const summary = { countries: countries.length, rows: written, perCountry, images, translations, failed };
+  const summary = { countries: countries.length, rows: written, perCountry, images, translations, ...(summaries ? { summaries } : {}), failed };
   deps.log(JSON.stringify(summary));
   return summary;
 }

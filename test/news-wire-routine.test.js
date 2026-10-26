@@ -120,3 +120,10 @@ test('drops preview images that browsers would block', async () => {
   await run(env, deps(f));
   assert.deepEqual(Object.fromEntries(payload.map((r) => [r.title, r.image_url])), { 'Story A': '', 'Story B': '', 'Story C': 'https://img.test/C.jpg' });
 });
+
+test("ogDescription reads the publisher's preview description", () => {
+  const { ogDescription } = require('../scripts/news-wire-routine');
+  assert.equal(ogDescription('<meta name="description" content="Too short"><meta content="The minister said on Sunday that &quot;talks&quot; will continue next week." property="og:description">'), 'The minister said on Sunday that "talks" will continue next week.');
+  assert.equal(ogDescription('<meta name="description" content="Short">'), '');
+  assert.equal(ogDescription("<meta name='description' content='It\u2019s a description with an apostrophe in single quotes, long enough.'>"), 'It\u2019s a description with an apostrophe in single quotes, long enough.');
+});

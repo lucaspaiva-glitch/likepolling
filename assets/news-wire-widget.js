@@ -245,6 +245,41 @@
   const langName = (l, ui) => {
     try { return new Intl.DisplayNames([ui], { type: 'language' }).of(l === 'pt' ? 'pt-BR' : l); } catch { return l; }
   };
+  // World News summary: plays over the photo a few words at a time, like video subtitles.
+  const capHtml = (sum) => (sum ? `<p class="nw-cap" aria-hidden="true" data-cap="${esc(sum)}"><span></span></p>` : '');
+  const capChunks = (text, max) => {
+    // Even chunk lengths, so the last one isn't a lone word.
+    max = Math.ceil(text.length / Math.ceil(text.length / max)) + 4;
+    let words;
+    try { words = [...new Intl.Segmenter(siteLang(), { granularity: 'word' }).segment(text)].map((x) => x.segment); } catch { words = text.split(/(\s+)/); }
+    const out = [];
+    let cur = '';
+    for (const w of words) {
+      if (cur.trim() && w.trim() && (cur + w).trim().length > max) { out.push(cur.trim()); cur = ''; }
+      cur += w;
+    }
+    if (cur.trim()) out.push(cur.trim());
+    return out;
+  };
+  const CAP_STEP = 1500;
+  const capTick = () => {
+    document.querySelectorAll('.nw-cap').forEach((cap) => {
+      const card = cap.closest('.nw-card');
+      const span = cap.firstElementChild;
+      if (calm.matches) { span.textContent = cap.dataset.cap; cap.classList.add('nw-cap-all'); return; }
+      if (!card || !card.classList.contains('nw-on') || card.classList.contains('nw-paused')) return;
+      if (!cap.nwChunks) { cap.nwChunks = capChunks(cap.dataset.cap, cap.closest('.nw-lead') ? 44 : 26); cap.nwAt = -1; }
+      // One blank beat after the last chunk, then the summary starts again.
+      cap.nwAt = (cap.nwAt + 1) % (cap.nwChunks.length + 1);
+      const chunk = cap.nwChunks[cap.nwAt] || '';
+      cap.classList.toggle('nw-cap-gap', !chunk);
+      if (!chunk) return;
+      span.textContent = chunk;
+      span.classList.remove('nw-cap-in');
+      void span.offsetWidth;
+      span.classList.add('nw-cap-in');
+    });
+  };
   function cardHtml(r, lang, i, kind, note) {
     const foreign = r.lang && r.lang !== lang;
     const link = /^https:\/\//.test(r.link) ? esc(r.link) : '#';
@@ -267,8 +302,9 @@
         </div>
         <div class="nw-low">
           <div class="nw-bottom">
+            ${capHtml(r.summary)}
             <div class="nw-pub"><span class="nw-mono" aria-hidden="true">${initial}</span><span class="nw-src">${esc(src)}</span></div>
-            <a class="nw-hl" href="${link}" target="_blank" rel="noopener"${r.title_orig ? ` title="${esc(r.title_orig)}"` : ''}>${esc(r.title)}</a>
+            <a class="nw-hl" href="${link}" target="_blank" rel="noopener"${r.title_orig ? ` title="${esc(r.title_orig)}"` : ''}>${esc(r.title)}</a>${r.summary ? `<span class="nw-sr">${esc(r.summary)}</span>` : ''}
             <a class="nw-read" href="${link}" target="_blank" rel="noopener" tabindex="-1">${esc(tr('Read story'))} ↗</a>
           </div>
           <div class="nw-rail">
@@ -292,6 +328,7 @@
         <a class="nw-row-media" href="${link}" target="_blank" rel="noopener" tabindex="-1" aria-hidden="true">
           ${img ? `<img class="nw-img nw-kb${i % 4}" src="${img}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">` : ''}
           <div class="nw-art"><span>${initial}</span></div>
+          ${capHtml(r.summary)}
         </a>
         <div class="nw-row-body">
           <div class="nw-row-meta">
@@ -300,7 +337,7 @@
             <span class="nw-row-age">${esc(ago(r.published_at, lang))}</span>
             ${foreign && FLAG[r.lang] ? `<img class="nw-flag" src="/assets/flags/${FLAG[r.lang]}.svg" alt="${esc(langName(r.lang, lang))}" title="${esc(langName(r.lang, lang))}" width="18" height="13">` : ''}
           </div>
-          <a class="nw-hl" href="${link}" target="_blank" rel="noopener"${r.title_orig ? ` title="${esc(r.title_orig)}"` : ''}>${esc(r.title)}</a>
+          <a class="nw-hl" href="${link}" target="_blank" rel="noopener"${r.title_orig ? ` title="${esc(r.title_orig)}"` : ''}>${esc(r.title)}</a>${r.summary ? `<span class="nw-sr">${esc(r.summary)}</span>` : ''}
         </div>
       </article>`;
   }
@@ -342,6 +379,7 @@
       </article>`;
   }
   const calm = matchMedia('(prefers-reduced-motion: reduce)');
+  setInterval(capTick, CAP_STEP);
   const YT_ORIGIN = 'https://www.youtube-nocookie.com';
   const ytCmd = (f, func) => { if (f.contentWindow) f.contentWindow.postMessage(JSON.stringify({ event: 'command', func, args: [] }), YT_ORIGIN); };
   function playShort(card, muted) {
@@ -557,7 +595,8 @@
 
   const W_NONE = 'No top stories for this country right now.';
   const W_TR = 'Headlines are translated into the site language by AI (Gemini); hover over a headline to see the original.';
-  const W_FOOT = "The chosen country's 10 top stories from Google News, ranked 1–10 in Google News' order, in the country's language. Only stories with the article's own photo are shown; when a country has fewer than 10, its most recent stories from other Google News sections fill the remaining places. Algeria, Ecuador and Iraq have no Google News edition, so they show Google News search results for the country's name. Refreshed twice a day (00:00 and 12:00 UTC).";
+  const W_SUM = "Summaries over the photos are written by AI (Gemini) from each publisher's own article description.";
+  const W_FOOT = "The chosen country's 10 top stories from Google News, ranked 1–10 in Google News' order, in the country's language. Only stories with the article's own photo are shown; when a country has fewer than 10, its most recent stories from other Google News sections fill the remaining places. Algeria, Ecuador and Iraq have no Google News edition, so they show Google News search results for the country's name. Refreshed every 3 hours.";
   const W_SHOWN = 10;
   function setFrontLabels(world, cc, ui, counts) {
     let names = null;
@@ -566,7 +605,7 @@
     fLabel.title.el.textContent = world ? tr('World News Wire') : tr(fLabel.title.creators);
     fLabel.sym.el.textContent = world ? 'WORLD·WIRE' : fLabel.sym.creators;
     fLabel.sub.el.textContent = world ? `${tr('Top 10')} · ${name(cc)}` : tr(fLabel.sub.creators);
-    fLabel.foot.el.textContent = world ? `${tr(W_FOOT)} ${tr(W_TR)}` : tr(fLabel.foot.creators);
+    fLabel.foot.el.textContent = world ? `${tr(W_FOOT)} ${tr(W_TR)} ${tr(W_SUM)}` : tr(fLabel.foot.creators);
     wPick.hidden = !world;
     front.classList.toggle('nw-ranked', world);
     if (!world) return;
@@ -584,7 +623,12 @@
       const counts = await worldCounts;
       const world = Object.values(counts).some(Boolean);
       let cc = worldPick || ({ en: 'US', 'en-GB': 'GB', pt: 'BR', 'pt-PT': 'PT', es: 'MX', de: 'DE', ru: 'RU', uk: 'UA', ko: 'KR', ja: 'JP' })[lang] || 'US';
-      const inLang = (rs) => rs.map((r) => (r.title_tr && r.title_tr[dataLang(lang)] && r.title_tr[dataLang(lang)] !== r.title ? { ...r, title: r.title_tr[dataLang(lang)], title_orig: r.title } : r));
+      const inLang = (rs) => rs.map((r) => {
+        const t = r.title_tr || {};
+        const summary = (t.sum && (t.sum[dataLang(lang)] || t.sum.en)) || '';
+        const out = summary ? { ...r, summary } : r;
+        return t[dataLang(lang)] && t[dataLang(lang)] !== r.title ? { ...out, title: t[dataLang(lang)], title_orig: r.title } : out;
+      });
       let rows;
       if (world) {
         rows = inLang(await loadWorld(cc));

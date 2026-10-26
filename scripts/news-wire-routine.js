@@ -118,7 +118,14 @@ const IMAGE_CONCURRENCY = 4;
 const IMAGE_TIMEOUT_MS = 8000;
 const BROWSER_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0 Safari/537.36';
 
+// Remembered for the run, so the photo and the description lookups decode each link once.
 async function articleUrl(link, deps) {
+  const memo = deps.articleUrls || (deps.articleUrls = new Map());
+  if (!memo.has(link)) memo.set(link, decodeArticleUrl(link, deps).catch((err) => { memo.delete(link); throw err; }));
+  return memo.get(link);
+}
+
+async function decodeArticleUrl(link, deps) {
   const id = new URL(link).pathname.split('/').pop();
   if (!/^[\w-]+$/.test(id)) return null;
   const page = await deps.fetch(`https://news.google.com/rss/articles/${id}`, { headers: { 'User-Agent': BROWSER_UA }, signal: AbortSignal.timeout(IMAGE_TIMEOUT_MS) });
@@ -164,6 +171,32 @@ async function imageFor(link, deps) {
     if (!res.ok) return '';
     const img = ogImage((await res.text()).slice(0, 400000), res.url || url);
     return img && (await imageLoads(img, deps)) ? img : '';
+  } catch { return ''; }
+}
+
+// The publisher's own short description (the text sites provide for link previews).
+function ogDescription(html) {
+  const metas = html.match(/<meta\b[^>]*>/gi) || [];
+  for (const want of ['og:description', 'twitter:description', 'description']) {
+    for (const m of metas) {
+      if (m.match(/\b(?:property|name)\s*=\s*["']([^"']+)["']/i)?.[1]?.toLowerCase() !== want) continue;
+      const c = m.match(/\bcontent\s*=\s*"([^"]*)"/i)?.[1] ?? m.match(/\bcontent\s*=\s*'([^']*)'/i)?.[1];
+      const d = decode(c || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+      if (d.length >= 40) return d.slice(0, 600);
+    }
+  }
+  return '';
+}
+
+// null: lookup failed, try again next run; '': article reached, no usable description.
+async function descriptionFor(link, deps) {
+  let url;
+  try { url = await articleUrl(link, deps); } catch { return null; }
+  if (!url) return null;
+  try {
+    const res = await deps.fetch(url, { headers: { 'User-Agent': BROWSER_UA, Accept: 'text/html' }, redirect: 'follow', signal: AbortSignal.timeout(IMAGE_TIMEOUT_MS) });
+    if (!res.ok) return '';
+    return ogDescription((await res.text()).slice(0, 400000));
   } catch { return ''; }
 }
 
@@ -230,7 +263,7 @@ async function run(env = process.env, deps = {}) {
   return summary;
 }
 
-module.exports = { run, parseItems, ogImage, FEEDS, fetchText, imageFor };
+module.exports = { run, parseItems, ogImage, ogDescription, FEEDS, fetchText, imageFor, descriptionFor };
 
 if (require.main === module) {
   run().catch((err) => {

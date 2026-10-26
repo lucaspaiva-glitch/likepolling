@@ -24,7 +24,7 @@ function fashionUrl(cc, days = 2) {
 const FASHION = {
   ...WORLD,
   table: 'news_fashion', rpc: 'replace_news_fashion', feed: fashionUrl, searchTopUp: () => true,
-  photoTarget: 20, imageLookups: 1000, translations: 1000, classify: true,
+  photoTarget: 20, imageLookups: 1000, translations: 1000, classify: true, summaries: false,
 };
 
 const run = (env, deps) => runNews(env, deps, FASHION);

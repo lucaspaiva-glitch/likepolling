@@ -1,6 +1,7 @@
 // Shared by every video section: the views/hour badge and the hover preview.
 // Hovering a thumbnail with a mouse plays the video muted inside it (YouTube's own
-// player); touch screens keep tap-to-open. Only one preview plays at a time.
+// player); on touch screens the thumbnail in the middle of the screen plays once
+// scrolling stops, and a tap opens the video. Only one preview plays at a time.
 (function () {
   const SEL = '.ytt-cth, .ymu-cth, .ysh-cth, .ci-th, .lp-rth';
 
@@ -71,7 +72,7 @@ a:hover > .lp-rth img { transform: scale(1.04); }
 @media (max-width: 560px) { .lp-rth-s { width: 50px; } }`;
   document.head.appendChild(css);
 
-  if (!matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+  const mouse = matchMedia('(hover: hover) and (pointer: fine)').matches;
   // Long enough that sweeping the mouse across thumbnails doesn't load a YouTube player for each one.
   const DELAY = 250;
   const ICON_MUTED = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 4V5L7 9H3z"/><path d="M16 9l5 6m0-6l-5 6" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"/></svg>';
@@ -148,14 +149,50 @@ a:hover > .lp-rth img { transform: scale(1.04); }
       el.querySelector('img').after(f, veil, ctl);
     }, DELAY);
   }
-  document.addEventListener('mouseover', (e) => {
-    const el = e.target.closest?.(SEL);
-    if (el === box) return;
+  if (mouse) {
+    document.addEventListener('mouseover', (e) => {
+      const el = e.target.closest?.(SEL);
+      if (el === box) return;
+      stop();
+      if (el) start(el);
+    });
+    document.addEventListener('mouseout', (e) => {
+      if (box && !box.contains(e.relatedTarget)) stop();
+    });
+    addEventListener('blur', stop);
+    return;
+  }
+  // Touch screens: when scrolling stops, the thumbnail nearest the middle of the screen plays
+  // muted inside itself; a tap still opens the video. Skipped with reduced motion or Data Saver.
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches || navigator.connection?.saveData || !('IntersectionObserver' in window)) return;
+  const seen = new Map();
+  const io = new IntersectionObserver((entries) => {
+    for (const e of entries) if (e.intersectionRatio >= 0.75) seen.set(e.target, true); else seen.delete(e.target);
+    settle();
+  }, { threshold: [0, 0.75, 1] });
+  const known = new WeakSet();
+  const scan = () => document.querySelectorAll(SEL).forEach((el) => { if (!known.has(el)) { known.add(el); io.observe(el); } });
+  let scanT = 0;
+  new MutationObserver(() => { clearTimeout(scanT); scanT = setTimeout(scan, 200); }).observe(document.body, { childList: true, subtree: true });
+  scan();
+  let idle = 0;
+  function pick() {
+    if (document.hidden) return stop();
+    const mid = innerHeight / 2;
+    let best = null, bestD = Infinity;
+    for (const el of seen.keys()) {
+      if (!el.isConnected) { seen.delete(el); continue; }
+      const r = el.getBoundingClientRect();
+      if (r.width < 40 || r.right <= 0 || r.left >= innerWidth) continue;
+      if (el.querySelector('iframe:not(.lp-prev)')) continue; // the section's own player is already showing it
+      const d = Math.abs(r.top + r.height / 2 - mid);
+      if (d < bestD) { best = el; bestD = d; }
+    }
+    if (best === box) return;
     stop();
-    if (el) start(el);
-  });
-  document.addEventListener('mouseout', (e) => {
-    if (box && !box.contains(e.relatedTarget)) stop();
-  });
-  addEventListener('blur', stop);
+    if (best) start(best);
+  }
+  function settle() { clearTimeout(idle); idle = setTimeout(pick, 500); }
+  addEventListener('scroll', settle, { passive: true, capture: true });
+  document.addEventListener('visibilitychange', () => { if (document.hidden) stop(); else settle(); });
 })();
