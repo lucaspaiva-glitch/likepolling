@@ -91,9 +91,9 @@ export default function PlaidConnect() {
   const color = status?.tone === "err" ? "text-rose-400" : status?.tone === "ok" ? "text-emerald-400" : "text-dark-tremor-content";
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex flex-wrap items-center gap-2">
       {status && (
-        <span className={`max-w-md truncate text-xs ${color}`} title={status.text}>
+        <span className={`w-full truncate text-xs sm:w-auto sm:max-w-md ${color}`} title={status.text}>
           {status.text}
         </span>
       )}
@@ -101,7 +101,7 @@ export default function PlaidConnect() {
         type="button"
         onClick={sync}
         disabled={busy}
-        className="rounded border border-dark-tremor-border px-2.5 py-1 text-xs text-dark-tremor-content-emphasis hover:bg-dark-tremor-background-subtle disabled:opacity-50"
+        className="flex-1 rounded border border-dark-tremor-border px-2.5 py-2 text-xs sm:flex-none sm:py-1 text-dark-tremor-content-emphasis hover:bg-dark-tremor-background-subtle disabled:opacity-50"
       >
         Sync now
       </button>
@@ -110,7 +110,7 @@ export default function PlaidConnect() {
         onClick={connect}
         disabled={busy}
         title="Bank of America, Merrill Lynch, or any Plaid institution"
-        className="rounded bg-blue-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-blue-500 disabled:opacity-50"
+        className="flex-[2] rounded bg-blue-600 px-2.5 py-2 text-xs sm:flex-none sm:py-1 font-medium text-white hover:bg-blue-500 disabled:opacity-50"
       >
         Connect BofA / Merrill
       </button>

@@ -14,10 +14,10 @@ export default async function Page() {
   const data = await getDashboardData();
 
   return (
-    <main className="mx-auto max-w-[1680px] space-y-2 p-3">
-      <header className="flex items-center justify-between">
+    <main className="mx-auto max-w-[1680px] space-y-2 p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] sm:p-3">
+      <header className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-baseline gap-3">
-          <h1 className="text-base font-semibold text-dark-tremor-content-strong">Vault</h1>
+          <h1 className="text-lg font-semibold text-dark-tremor-content-strong sm:text-base">Vault</h1>
           <span className="text-[11px] text-dark-tremor-content-subtle">
             {data.lastUpdated ? `Balances as of ${new Date(data.lastUpdated).toLocaleString("en-US")}` : "No data yet"}
           </span>
@@ -39,23 +39,23 @@ export default async function Page() {
 
       <KpiStrip kpis={data.kpis} />
 
-      <div className="grid grid-cols-12 gap-2">
-        <div className="col-span-3">
+      <div className="grid grid-cols-1 gap-2 lg:grid-cols-12">
+        <div className="order-3 lg:order-1 lg:col-span-3">
           <AllocationChart data={data.allocation} netWorth={data.kpis.netWorth} />
         </div>
-        <div className="col-span-6">
+        <div className="order-2 lg:col-span-6">
           <PortfolioChart data={data.portfolioSeries} ready={data.snapshotsReady} />
         </div>
-        <div className="col-span-3">
+        <div className="order-1 lg:order-3 lg:col-span-3">
           <AccountsTable accounts={data.accounts} />
         </div>
       </div>
 
-      <div className="grid grid-cols-12 gap-2">
-        <div className="col-span-9">
+      <div className="grid grid-cols-1 gap-2 lg:grid-cols-12">
+        <div className="lg:col-span-9">
           <CategoryBreakdown categories={data.categories} />
         </div>
-        <div className="col-span-3">
+        <div className="lg:col-span-3">
           <CsvDropzone accounts={data.accounts} />
         </div>
       </div>

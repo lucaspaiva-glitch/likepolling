@@ -124,7 +124,7 @@ export default function TransactionsTable({ transactions, accounts }: { transact
   return (
     <Card className="p-3">
       <div className="flex flex-wrap items-center gap-2">
-        <div className="mr-auto">
+        <div className="mr-auto w-full sm:w-auto">
           <h3 className="text-sm font-medium text-dark-tremor-content-strong">Transactions</h3>
           <p className="text-[11px] text-dark-tremor-content">
             {filtered.length.toLocaleString()} of {rows.length.toLocaleString()} · net {fmtUsd2(sum)} · click a category to edit
@@ -142,20 +142,20 @@ export default function TransactionsTable({ transactions, accounts }: { transact
             Refresh charts
           </button>
         )}
-        <TextInput className="w-56" placeholder="Search payee, category, amount" value={query} onValueChange={setQuery} />
-        <MultiSelect className="w-48" placeholder="All categories" value={cats} onValueChange={setCats}>
+        <TextInput className="w-full sm:w-56" placeholder="Search payee, category, amount" value={query} onValueChange={setQuery} />
+        <MultiSelect className="w-full sm:w-48" placeholder="All categories" value={cats} onValueChange={setCats}>
           {categoryOptions.concat("Uncategorized").filter((c, i, a) => a.indexOf(c) === i).map((c) => (
             <MultiSelectItem key={c} value={c}>
               {c}
             </MultiSelectItem>
           ))}
         </MultiSelect>
-        <Select className="w-32" value={type} onValueChange={setType} enableClear={false}>
+        <Select className="min-w-0 flex-1 sm:w-32 sm:flex-none" value={type} onValueChange={setType} enableClear={false}>
           <SelectItem value="all">All types</SelectItem>
           <SelectItem value="income">Income</SelectItem>
           <SelectItem value="expense">Expense</SelectItem>
         </Select>
-        <Select className="w-44" value={accountId} onValueChange={setAccountId} enableClear={false}>
+        <Select className="min-w-0 flex-1 sm:w-44 sm:flex-none" value={accountId} onValueChange={setAccountId} enableClear={false}>
           {[
             <SelectItem key="all" value="all">
               All accounts
@@ -178,12 +178,12 @@ export default function TransactionsTable({ transactions, accounts }: { transact
       <Table className="mt-2 max-h-[560px] overflow-auto">
         <TableHead className="sticky top-0 z-10 bg-dark-tremor-background">
           <TableRow>
-            <TableHeaderCell className="w-24 py-1.5 text-xs">Date</TableHeaderCell>
+            <TableHeaderCell className="w-20 py-1.5 text-xs sm:w-24">Date</TableHeaderCell>
             <TableHeaderCell className="py-1.5 text-xs">Payee</TableHeaderCell>
-            <TableHeaderCell className="w-44 py-1.5 text-xs">Account</TableHeaderCell>
-            <TableHeaderCell className="w-48 py-1.5 text-xs">Category</TableHeaderCell>
-            <TableHeaderCell className="w-20 py-1.5 text-xs">Type</TableHeaderCell>
-            <TableHeaderCell className="w-28 py-1.5 text-right text-xs">Amount</TableHeaderCell>
+            <TableHeaderCell className="hidden w-44 py-1.5 text-xs md:table-cell">Account</TableHeaderCell>
+            <TableHeaderCell className="w-32 py-1.5 text-xs sm:w-48">Category</TableHeaderCell>
+            <TableHeaderCell className="hidden w-20 py-1.5 text-xs md:table-cell">Type</TableHeaderCell>
+            <TableHeaderCell className="w-24 py-1.5 text-right text-xs sm:w-28">Amount</TableHeaderCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -192,8 +192,9 @@ export default function TransactionsTable({ transactions, accounts }: { transact
               <TableCell className="py-1 text-xs tabular-nums">{t.date}</TableCell>
               <TableCell className="max-w-0 truncate py-1 text-xs text-dark-tremor-content-emphasis" title={t.payee ?? ""}>
                 {t.payee}
+                {t.pending && <span className="text-amber-400 md:hidden"> · pending</span>}
               </TableCell>
-              <TableCell className="truncate py-1 text-xs">{(t.account_id && accountName.get(t.account_id)) || "—"}</TableCell>
+              <TableCell className="hidden truncate py-1 text-xs md:table-cell">{(t.account_id && accountName.get(t.account_id)) || "—"}</TableCell>
               <TableCell className="py-0.5">
                 <CategoryCell
                   tx={t}
@@ -203,7 +204,7 @@ export default function TransactionsTable({ transactions, accounts }: { transact
                   }}
                 />
               </TableCell>
-              <TableCell className="py-1 text-xs">{t.pending ? <span className="text-amber-400">pending</span> : t.type}</TableCell>
+              <TableCell className="hidden py-1 text-xs md:table-cell">{t.pending ? <span className="text-amber-400">pending</span> : t.type}</TableCell>
               <TableCell className={`py-1 text-right text-xs tabular-nums ${t.amount >= 0 ? "text-emerald-400" : "text-dark-tremor-content-strong"}`}>
                 {fmtUsd2(t.amount)}
               </TableCell>

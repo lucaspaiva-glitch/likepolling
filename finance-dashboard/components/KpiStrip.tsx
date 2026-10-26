@@ -5,9 +5,9 @@ import type { DashboardData } from "@/lib/data";
 function Kpi({ label, value, sub, tone }: { label: string; value: string; sub?: string; tone?: "pos" | "neg" }) {
   const color = tone === "pos" ? "text-emerald-400" : tone === "neg" ? "text-rose-400" : "text-dark-tremor-content-strong";
   return (
-    <Card className="p-3">
+    <Card className="min-w-0 p-3">
       <p className="text-[11px] uppercase tracking-wide text-dark-tremor-content">{label}</p>
-      <p className={`mt-0.5 text-xl font-semibold tabular-nums ${color}`}>{value}</p>
+      <p className={`mt-0.5 truncate text-lg font-semibold tabular-nums sm:text-xl ${color}`}>{value}</p>
       {sub && <p className="text-[11px] text-dark-tremor-content-subtle">{sub}</p>}
     </Card>
   );
@@ -16,7 +16,7 @@ function Kpi({ label, value, sub, tone }: { label: string; value: string; sub?: 
 export default function KpiStrip({ kpis }: { kpis: DashboardData["kpis"] }) {
   const change = kpis.portfolioChangePct;
   return (
-    <div className="grid grid-cols-6 gap-2">
+    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6">
       <Kpi label="Checking" value={fmtUsd(kpis.checking)} />
       <Kpi
         label="Credit card owed"

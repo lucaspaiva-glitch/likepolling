@@ -23,7 +23,7 @@ export default function CategoryBreakdown({ categories }: { categories: Dashboar
 
   return (
     <Card className="p-3">
-      <div className="flex items-start justify-between">
+      <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
           <h3 className="text-sm font-medium text-dark-tremor-content-strong">Spending by category</h3>
           <p className="text-[11px] text-dark-tremor-content">Outflows · total {fmtUsd(total)}</p>
@@ -41,9 +41,9 @@ export default function CategoryBreakdown({ categories }: { categories: Dashboar
       {all.length === 0 ? (
         <p className="py-16 text-center text-xs text-dark-tremor-content-subtle">No outflows in this range</p>
       ) : (
-        <div className="mt-3 grid grid-cols-5 gap-3">
+        <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-5">
           <BarChart
-            className="col-span-3 h-72"
+            className="h-72 md:col-span-3"
             data={top}
             index="name"
             categories={["value"]}
@@ -55,7 +55,7 @@ export default function CategoryBreakdown({ categories }: { categories: Dashboar
             showAnimation={false}
           />
           <DonutChart
-            className="col-span-2 h-72"
+            className="h-56 md:col-span-2 md:h-72"
             data={donut}
             index="name"
             category="value"
