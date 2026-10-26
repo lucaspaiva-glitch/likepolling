@@ -74,7 +74,7 @@ export default function CsvDropzone({ accounts }: { accounts: Account[] }) {
     : "";
 
   return (
-    <Card className="p-3">
+    <Card className="h-full p-3">
       <h3 className="text-sm font-medium text-dark-tremor-content-strong">CSV import</h3>
       <p className="text-[11px] text-dark-tremor-content">Bank of America / Merrill Lynch exports · fallback when Plaid is unavailable</p>
 

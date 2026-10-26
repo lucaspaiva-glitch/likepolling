@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Badge, Card } from "@tremor/react";
 import { parseAmount } from "@/lib/csv";
 import { TAX_ACCOUNT_EXTERNAL_ID } from "@/lib/br-tax";
-import { fmtUsd } from "@/lib/format";
+import { fmtDate, fmtUsd } from "@/lib/format";
 import type { Account } from "@/lib/types";
 
 const TYPE_COLOR: Record<string, string> = { cash: "emerald", investment: "blue", credit: "rose", loan: "orange" };
@@ -79,7 +79,7 @@ function BalanceCell({ account }: { account: Account }) {
 
 export default function AccountsTable({ accounts }: { accounts: Account[] }) {
   return (
-    <Card className="p-3">
+    <Card className="h-full p-3">
       <h3 className="text-sm font-medium text-dark-tremor-content-strong">Accounts</h3>
       {accounts.length === 0 ? (
         <p className="py-8 text-center text-xs text-dark-tremor-content-subtle">Connect a bank or import a CSV</p>
@@ -88,10 +88,10 @@ export default function AccountsTable({ accounts }: { accounts: Account[] }) {
           {accounts.map((a) => (
             <li key={a.id} className="flex items-center justify-between gap-2 py-1.5">
               <div className="min-w-0">
-                <p className="truncate text-dark-tremor-content-emphasis">{a.name}</p>
-                <p className="truncate text-[11px] text-dark-tremor-content-subtle">
+                <p className="leading-snug text-dark-tremor-content-emphasis">{a.name}</p>
+                <p className="text-[11px] leading-snug text-dark-tremor-content-subtle">
                   {a.institution ?? "—"}
-                  {a.external_id?.startsWith("csv:") && a.external_id !== TAX_ACCOUNT_EXTERNAL_ID && ` · balance as of ${a.updated_at.slice(0, 10)}`}
+                  {a.external_id?.startsWith("csv:") && a.external_id !== TAX_ACCOUNT_EXTERNAL_ID && ` · as of ${fmtDate(a.updated_at)}`}
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-2">

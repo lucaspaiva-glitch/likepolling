@@ -1,11 +1,11 @@
 import { Card } from "@tremor/react";
-import { fmtSignedPct, fmtUsd } from "@/lib/format";
+import { fmtDate, fmtSignedPct, fmtUsd } from "@/lib/format";
 import type { DashboardData } from "@/lib/data";
 
 function Kpi({ label, value, sub, tone }: { label: string; value: string; sub?: string; tone?: "pos" | "neg" }) {
   const color = tone === "pos" ? "text-emerald-400" : tone === "neg" ? "text-rose-400" : "text-dark-tremor-content-strong";
   return (
-    <Card className="min-w-0 p-3">
+    <Card className="h-full min-w-0 p-3">
       <p className="text-[11px] uppercase tracking-wide text-dark-tremor-content">{label}</p>
       <p className={`mt-0.5 truncate text-lg font-semibold tabular-nums sm:text-xl ${color}`}>{value}</p>
       {sub && <p className="text-[11px] text-dark-tremor-content-subtle">{sub}</p>}
@@ -22,19 +22,19 @@ export default function KpiStrip({ kpis }: { kpis: DashboardData["kpis"] }) {
         label="Credit card owed"
         value={fmtUsd(kpis.cardOwed)}
         tone={kpis.cardOwed > 0 ? "neg" : undefined}
-        sub={`${fmtUsd(kpis.cardSpentSincePayment)} spent ${kpis.lastCardPayment ? `since last payment ${kpis.lastCardPayment}` : "so far"}${kpis.cardPending ? ` · incl. ${fmtUsd(kpis.cardPending)} pending` : ""}`}
+        sub={`${fmtUsd(kpis.cardSpentSincePayment)} spent ${kpis.lastCardPayment ? `since ${fmtDate(kpis.lastCardPayment)} payment` : "so far"}${kpis.cardPending ? ` · ${fmtUsd(kpis.cardPending)} pending` : ""}`}
       />
       <Kpi
         label="Money to Spend"
         value={fmtUsd(kpis.moneyToSpend)}
         tone={kpis.moneyToSpend < 0 ? "neg" : "pos"}
-        sub={`checking − card − est. taxes ${fmtUsd(kpis.estimatedTaxes)}`}
+        sub={`after ${fmtUsd(kpis.estimatedTaxes)} est. taxes`}
       />
       <Kpi label="Net worth" value={fmtUsd(kpis.netWorth)} sub="investments + checking − card" />
       <Kpi
         label="Portfolio value"
         value={fmtUsd(kpis.portfolio)}
-        sub={kpis.portfolioStart != null ? `${fmtUsd(kpis.portfolioStart)} at start, ${kpis.portfolioStartDate}` : undefined}
+        sub={kpis.portfolioStart != null && kpis.portfolioStartDate ? `${fmtUsd(kpis.portfolioStart)} on ${fmtDate(kpis.portfolioStartDate, true)}` : undefined}
       />
       <Kpi
         label="Portfolio since start"
@@ -42,9 +42,9 @@ export default function KpiStrip({ kpis }: { kpis: DashboardData["kpis"] }) {
         tone={change == null || change === 0 ? undefined : change > 0 ? "pos" : "neg"}
         sub={
           kpis.portfolioChangeExWithdrawalsPct != null
-            ? `${fmtSignedPct(kpis.portfolioChangeExWithdrawalsPct)} with withdrawals added back`
+            ? `${fmtSignedPct(kpis.portfolioChangeExWithdrawalsPct)} excl. withdrawals`
             : kpis.portfolioStartDate
-              ? `tracking since ${kpis.portfolioStartDate}`
+              ? `tracking since ${fmtDate(kpis.portfolioStartDate, true)}`
               : undefined
         }
       />

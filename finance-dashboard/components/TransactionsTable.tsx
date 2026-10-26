@@ -17,7 +17,7 @@ import {
   TextInput,
 } from "@tremor/react";
 import { DEFAULT_CATEGORIES } from "@/lib/categorize";
-import { fmtUsd2 } from "@/lib/format";
+import { fmtDate, fmtUsd2 } from "@/lib/format";
 import type { Account, Transaction } from "@/lib/types";
 
 const PAGE = 150;
@@ -189,7 +189,7 @@ export default function TransactionsTable({ transactions, accounts }: { transact
         <TableBody>
           {filtered.slice(0, limit).map((t) => (
             <TableRow key={t.id} className="hover:bg-dark-tremor-background-subtle/40">
-              <TableCell className="px-1.5 sm:px-4 py-1 text-xs tabular-nums">{t.date}</TableCell>
+              <TableCell className="whitespace-nowrap px-1.5 sm:px-4 py-1 text-xs tabular-nums"><span className="sm:hidden">{fmtDate(t.date)}</span><span className="hidden sm:inline">{fmtDate(t.date, true)}</span></TableCell>
               <TableCell className="px-1.5 sm:px-4 max-w-0 truncate py-1 text-xs text-dark-tremor-content-emphasis" title={t.payee ?? ""}>
                 <span className="block truncate">
                   {t.payee}

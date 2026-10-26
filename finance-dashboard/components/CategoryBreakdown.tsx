@@ -22,7 +22,7 @@ export default function CategoryBreakdown({ categories }: { categories: Dashboar
   const total = all.reduce((s, c) => s + c.value, 0);
 
   return (
-    <Card className="p-3">
+    <Card className="h-full p-3">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
           <h3 className="text-sm font-medium text-dark-tremor-content-strong">Spending by category</h3>
@@ -55,7 +55,7 @@ export default function CategoryBreakdown({ categories }: { categories: Dashboar
             showAnimation={false}
           />
           <DonutChart
-            className="h-56 md:col-span-2 md:h-72"
+            className="hidden md:col-span-2 md:block md:h-72"
             data={donut}
             index="name"
             category="value"

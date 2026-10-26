@@ -19,7 +19,7 @@ export default async function Page() {
         <div className="flex items-baseline gap-3">
           <h1 className="text-lg font-semibold text-dark-tremor-content-strong sm:text-base">Vault</h1>
           <span className="text-[11px] text-dark-tremor-content-subtle">
-            {data.lastUpdated ? `Balances as of ${new Date(data.lastUpdated).toLocaleString("en-US")}` : "No data yet"}
+            {data.lastUpdated ? `Balances as of ${new Date(data.lastUpdated).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "Europe/Lisbon" })}` : "No data yet"}
           </span>
         </div>
         <PlaidConnect />

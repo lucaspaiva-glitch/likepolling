@@ -9,7 +9,7 @@ const COLORS = ["emerald", "blue", "slate"];
 export default function AllocationChart({ data, netWorth }: { data: CategoryPoint[]; netWorth: number }) {
   const total = data.reduce((s, d) => s + d.value, 0);
   return (
-    <Card className="p-3">
+    <Card className="h-full p-3">
       <h3 className="text-sm font-medium text-dark-tremor-content-strong">Asset allocation</h3>
       <p className="text-[11px] text-dark-tremor-content">Cash vs. investments · net worth {fmtUsd(netWorth)}</p>
       {data.length === 0 ? (

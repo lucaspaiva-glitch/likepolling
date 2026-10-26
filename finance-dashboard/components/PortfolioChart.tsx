@@ -1,15 +1,15 @@
 "use client";
 
 import { AreaChart, Card } from "@tremor/react";
-import { fmtCompact } from "@/lib/format";
+import { fmtDate, fmtMillions } from "@/lib/format";
 import type { PortfolioPoint } from "@/lib/data";
 
 export default function PortfolioChart({ data, ready }: { data: PortfolioPoint[]; ready: boolean }) {
   return (
-    <Card className="p-3">
+    <Card className="h-full p-3">
       <h3 className="text-sm font-medium text-dark-tremor-content-strong">Portfolio value</h3>
       <p className="text-[11px] text-dark-tremor-content">
-        Investment accounts · {data[0] ? `since ${data[0].date}` : "no history yet"}
+        Investment accounts · {data[0] ? `since ${fmtDate(data[0].date, true)}` : "no history yet"}
       </p>
       {!ready ? (
         <p className="py-16 text-center text-xs text-amber-200">
@@ -17,17 +17,17 @@ export default function PortfolioChart({ data, ready }: { data: PortfolioPoint[]
         </p>
       ) : data.length < 2 ? (
         <p className="py-16 text-center text-xs text-dark-tremor-content-subtle">
-          Tracking started{data[0] ? ` ${data[0].date}` : ""}. The chart fills in each time the balance changes.
+          Tracking started{data[0] ? ` ${fmtDate(data[0].date, true)}` : ""}. The chart fills in each time the balance changes.
         </p>
       ) : (
         <AreaChart
           className="mt-3 h-56"
-          data={data}
+          data={data.map((p) => ({ ...p, date: fmtDate(p.date) }))}
           index="date"
           categories={["Value"]}
           colors={["emerald"]}
-          valueFormatter={fmtCompact}
-          yAxisWidth={64}
+          valueFormatter={fmtMillions}
+          yAxisWidth={60}
           autoMinValue
           showLegend={false}
           showAnimation={false}
