@@ -80,7 +80,7 @@ function emptyData(configured: boolean, error: string | null): DashboardData {
   };
 }
 
-type LoadedTransaction = Transaction & { channel: string | null; descriptor: string | null; locked: boolean | null };
+type LoadedTransaction = Transaction & { external_id: string | null; channel: string | null; descriptor: string | null; locked: boolean | null };
 
 async function loadTransactions(since: string): Promise<LoadedTransaction[]> {
   const db = getServerSupabase();
@@ -89,7 +89,7 @@ async function loadTransactions(since: string): Promise<LoadedTransaction[]> {
     const { data, error } = await db
       .from("transactions")
       .select(
-        "id, account_id, date, payee, amount, category, type, pending:raw_data->pending, channel:raw_data->>payment_channel, descriptor:raw_data->>name, locked:raw_data->category_locked",
+        "id, account_id, date, payee, amount, category, type, external_id, pending:raw_data->pending, channel:raw_data->>payment_channel, descriptor:raw_data->>name, locked:raw_data->category_locked",
       )
       .gte("date", since)
       .order("date", { ascending: false })
@@ -166,6 +166,7 @@ export async function getDashboardData(): Promise<DashboardData> {
 
   let accounts: Account[];
   let transactions: Transaction[];
+  let statementIds = new Set<string>();
   try {
     const [accRes, txs] = await Promise.all([
       getServerSupabase().from("accounts").select("id, name, type, institution, balance, currency, updated_at, external_id").order("balance", { ascending: false }),
@@ -175,6 +176,8 @@ export async function getDashboardData(): Promise<DashboardData> {
     accounts = ((accRes.data ?? []) as Account[]).map((a) => ({ ...a, balance: Number(a.balance) }));
     // In-person purchases abroad become Vacation, unless you picked a category for that transaction yourself.
     const vacation = vacationIds(txs, internalTransferIds(txs));
+    // Totals copied from a brokerage statement for the period before the CSV history (external_id "stmt:...").
+    statementIds = new Set(txs.filter((t) => t.external_id?.startsWith("stmt:")).map((t) => t.id));
     transactions = txs.map((lt) => {
       const t: Transaction = { id: lt.id, account_id: lt.account_id, date: lt.date, payee: lt.payee, amount: lt.amount, category: lt.category, type: lt.type, pending: lt.pending };
       return vacation.has(t.id) && lt.locked !== true ? { ...t, category: "Vacation" } : t;
@@ -187,10 +190,11 @@ export async function getDashboardData(): Promise<DashboardData> {
   const todayIso = isoDay(today);
   const accountType = new Map(accounts.map((a) => [a.id, a.type]));
   const investmentIds = new Set(accounts.filter((a) => a.type === "investment").map((a) => a.id));
-  const investmentHistoryStart = transactions.reduce<string | null>(
-    (min, t) => (t.account_id && investmentIds.has(t.account_id) && (!min || t.date < min) ? t.date : min),
-    null,
-  );
+  const earliestInvestmentDate = (txs: Transaction[]) =>
+    txs.reduce<string | null>((min, t) => (t.account_id && investmentIds.has(t.account_id) && (!min || t.date < min) ? t.date : min), null);
+  // Statement totals have no individual transfers to pair with, so pairing starts with the CSV rows.
+  const investmentHistoryStart = earliestInvestmentDate(transactions.filter((t) => !statementIds.has(t.id)));
+  const incomeHistoryStart = earliestInvestmentDate(transactions);
   const internal = internalTransferIds(transactions);
   const flows = new Map<string, Flow>();
   for (const t of transactions) {
@@ -202,7 +206,7 @@ export async function getDashboardData(): Promise<DashboardData> {
   // Estimate: investment income received so far in the tax year, projected to Dec 31 at the same daily pace.
   const taxYear = irpfFilingYear(today) - 1;
   const taxYearEnd = `${taxYear}-12-31`;
-  const incomeFrom = [`${taxYear}-01-01`, investmentHistoryStart ?? todayIso].sort()[1];
+  const incomeFrom = [`${taxYear}-01-01`, incomeHistoryStart ?? todayIso].sort()[1];
   const investmentIncome = transactions
     .filter((t) => t.account_id && investmentIds.has(t.account_id) && t.date.startsWith(`${taxYear}-`))
     .reduce((sum, t) => sum + (flows.get(t.id)?.income ?? 0), 0);
