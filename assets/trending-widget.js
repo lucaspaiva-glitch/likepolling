@@ -38,7 +38,7 @@
   }
 
   mount.className = 'ytt';
-  mount.setAttribute('aria-label', 'YouTube trending videos by country');
+  mount.setAttribute('aria-label', 'YouTube Trending: most popular videos in each country');
   mount.innerHTML = `
     <div class="ytt-head">
       <h2 class="ytt-title">Trending Index</h2>

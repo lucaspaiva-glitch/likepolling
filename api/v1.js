@@ -5,6 +5,7 @@
 //   GET /api/v1/music?country=BR
 //   GET /api/v1/worldwide
 //   GET /api/v1/education?country=BR
+//   GET /api/v1/news?country=BR[&topic=world|fashion]
 // Every number is a stored value or one of the formulas listed in FORMULAS.
 const metrics = require('./metrics');
 const earnings = require('../assets/earnings.js');
@@ -231,6 +232,26 @@ async function educationRoute(req, get) {
   };
 }
 
+// News headlines (Google News), separate from the YouTube video charts.
+const NEWS_TOPICS = { world: 'news_world', fashion: 'news_fashion' };
+async function newsRoute(req, get) {
+  const country = countryParam(req);
+  const topic = String(req.query.topic || 'world').toLowerCase();
+  const table = NEWS_TOPICS[topic];
+  if (!table) throw new HttpError(400, `Unknown topic. Use one of: ${Object.keys(NEWS_TOPICS).join(', ')}.`);
+  const only = topic === 'fashion' ? '&title_tr->>fashion=eq.true' : '';
+  const rows = await get(`${table}?select=rank,title,title_tr,source,link,image_url,published_at,fetched_at&country_code=eq.${country}${only}&order=rank.asc&limit=30`);
+  return {
+    body: {
+      country, topic, kind: 'news headlines (not videos)', source: 'Google News',
+      updated_at: rows.reduce((m, r) => (!m || r.fetched_at > m ? r.fetched_at : m), null),
+      items: rows.map((r, i) => ({ rank: i + 1, title: r.title, title_en: r.title_tr?.en || null, source: r.source || null, link: r.link,
+        image_url: r.image_url || null, published_at: r.published_at })),
+    },
+    cache: 'public, max-age=300, s-maxage=900, stale-while-revalidate=3600',
+  };
+}
+
 function corsHeaders(req, res, env) {
   const origin = req.headers?.origin;
   const extra = String(env.CREATORS_PLUS_ORIGINS || '').split(',').map((s) => s.trim()).filter(Boolean);
@@ -260,8 +281,9 @@ function createHandler(deps = {}) {
         : route === 'music' ? await chartRoute('youtube_music_chart', req, get)
         : route === 'worldwide' ? await worldwideRoute(get)
         : route === 'education' ? await educationRoute(req, get)
+        : route === 'news' ? await newsRoute(req, get)
         : null;
-      if (!out) throw new HttpError(404, 'Unknown route. Try /api/v1/channel, /trending, /music, /worldwide or /education.');
+      if (!out) throw new HttpError(404, 'Unknown route. Try /api/v1/channel, /trending, /music, /worldwide, /education or /news.');
       res.setHeader('Cache-Control', out.cache);
       return res.status(200).json(out.body);
     } catch (err) {

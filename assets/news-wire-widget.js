@@ -119,7 +119,7 @@
   };
 
   mount.className = 'nw';
-  mount.setAttribute('aria-label', 'Creator economy news');
+  mount.setAttribute('aria-label', 'Creator News: headlines about YouTube and creators');
   mount.innerHTML = `
     <div class="nw-head">
       <h2 class="nw-title">Creator News Wire</h2>
@@ -156,7 +156,7 @@
   // index.html reserves this frame (#news-front) so the page never shows the search first.
   const front = document.getElementById('news-front') || document.createElement('section');
   front.className = 'nw nw-front';
-  front.setAttribute('aria-label', 'World news');
+  front.setAttribute('aria-label', 'World News: top news headlines in each country');
   front.append(mount.querySelector('.nw-head'), mount.querySelector('.nw-sub'), empty, feedWrap, mount.querySelector('.nw-foot'));
   if (!front.isConnected) {
     const anchor = document.querySelector('.hero') || document.getElementById('results');

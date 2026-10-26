@@ -150,3 +150,19 @@ test('education: videos, subjects and the countries that have data', async () =>
   assert.ok(fetch.calls.some((c) => c.includes('country_code=eq.BR')));
   assert.equal((await run({ route: 'education', country: 'XX' }, { fetch })).statusCode, 400);
 });
+
+test('news: headlines per country, fashion only when AI confirmed, separate from videos', async () => {
+  const seen = [];
+  const fetch = mockFetch({
+    news_world: (p) => (seen.push(p), [{ rank: 1, title: 'Notícia', title_tr: null, source: 'RTP', link: 'https://n/1', image_url: '', published_at: '2026-10-25T10:00:00Z', fetched_at: '2026-10-25T11:00:00Z' }]),
+    news_fashion: (p) => (seen.push(p), [{ rank: 3, title: 'Moda', title_tr: { en: 'Fashion', fashion: true }, source: 'Vogue', link: 'https://n/2', image_url: 'https://i/2.jpg', published_at: '2026-10-25T09:00:00Z', fetched_at: '2026-10-25T11:00:00Z' }]),
+  });
+  const res = await run({ route: 'news', country: 'pt' }, { fetch });
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.body.kind, 'news headlines (not videos)');
+  assert.deepEqual(res.body.items[0], { rank: 1, title: 'Notícia', title_en: null, source: 'RTP', link: 'https://n/1', image_url: null, published_at: '2026-10-25T10:00:00Z' });
+  const f = await run({ route: 'news', country: 'PT', topic: 'fashion' }, { fetch });
+  assert.deepEqual([f.body.items[0].rank, f.body.items[0].title_en], [1, 'Fashion']);
+  assert.match(seen[1], /title_tr->>fashion=eq\.true/);
+  assert.equal((await run({ route: 'news', country: 'PT', topic: 'sports' }, { fetch })).statusCode, 400);
+});

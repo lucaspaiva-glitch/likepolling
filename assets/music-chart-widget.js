@@ -38,7 +38,7 @@
   }
 
   mount.className = 'ymu';
-  mount.setAttribute('aria-label', 'YouTube trending music by country');
+  mount.setAttribute('aria-label', 'YouTube Music: most popular music videos in each country');
   mount.innerHTML = `
     <div class="ymu-head">
       <h2 class="ymu-title">Music Index</h2>

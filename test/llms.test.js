@@ -14,6 +14,8 @@ const TABLES = {
   ],
   youtube_music_chart: [],
   news_world: [{ country_code: 'PT', rank: 1, title: 'Notícia <b>', source: 'RTP', link: 'https://example.pt/a' }],
+  news_fashion: [{ country_code: 'PT', rank: 4, title: 'Moda', title_tr: { en: 'Fashion', fashion: true }, source: 'Vogue', link: 'https://example.pt/m' }],
+  fashion_videos: [{ country_code: 'PT', rank: 1, video_id: 'zzzzzzzzzzz', title: 'Zara AW26', channel_title: 'Zara', channel_country: 'ES', views_per_hour: 1234.4 }],
   education_subjects: [{ country_code: 'IE', rank: 1, subject: 'Biology', video_count: 3, news_count: 1 }],
 };
 
@@ -46,7 +48,9 @@ test('summary lists live estimates and videos trending in several countries', as
 test('full adds a section per country', async () => {
   const res = await run('full');
   assert.match(res.body, /## Ireland \(IE\)[\s\S]*### Education topics\n\n1\. Biology \(3 videos, 1 news stories\)/);
-  assert.match(res.body, /## Portugal \(PT\)[\s\S]*### Top news\n\n1\. \[Notícia <b>\]\(https:\/\/example\.pt\/a\) – RTP/);
+  assert.match(res.body, /## Portugal \(PT\)[\s\S]*### World News headlines \(news\)\n\n1\. \[Notícia <b>\]\(https:\/\/example\.pt\/a\) – RTP/);
+  assert.match(res.body, /### Fashion News headlines\n\n1\. \[Moda\]\(https:\/\/example\.pt\/m\) \(English: Fashion\) – Vogue/);
+  assert.match(res.body, /### Fashion Index \(fashion videos\)\n\n1\. \[Zara AW26\]\(https:\/\/www\.youtube\.com\/watch\?v=zzzzzzzzzzz\) – Zara \(ES\) – 1,234 views\/hour/);
 });
 
 test('html escapes text and links each country', async () => {
@@ -61,4 +65,11 @@ test('database failure returns 502 without caching', async () => {
   const res = await run('summary', async () => ({ ok: false, status: 500, json: async () => ({}) }));
   assert.equal(res.code, 502);
   assert.equal(res.headers['cache-control'], 'no-store');
+});
+
+test('summary separates YouTube videos from news headlines', async () => {
+  const res = await run('summary');
+  assert.match(res.body, /## What each section is[\s\S]*\*\*YouTube Trending videos\*\*: [^\n]*not news[\s\S]*\*\*World News headlines\*\*: [^\n]*trending news/);
+  assert.match(res.body, /## YouTube Trending videos in the most countries \(videos, not news\)/);
+  assert.match(res.body, /## World News headlines by country \(news, not videos\)\n\n[^\n]*\n\n- Portugal \(PT\): 1\. \[Notícia <b>\]\(https:\/\/example\.pt\/a\) – RTP/);
 });

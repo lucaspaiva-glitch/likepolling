@@ -36,7 +36,7 @@
   }
 
   mount.classList.add('edu');
-  mount.setAttribute('aria-label', 'Education channels and subjects by country');
+  mount.setAttribute('aria-label', 'Education: learning videos and subjects in each country');
   mount.innerHTML = `
     <div class="edu-top"><h2 class="edu-h">Education</h2><p class="edu-p">What the world is learning on YouTube and talking about in the news.</p></div>
     <div class="edu-grid">

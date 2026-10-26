@@ -627,7 +627,7 @@
     .earn-note { margin: 10px 0 0; font-size: 11.5px; line-height: 1.45; color: var(--muted); }
   </style>
   <link rel="alternate" type="text/markdown" href="/llms.txt" title="Like Polling data for AI">
-  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "Dataset", "name": "Like Polling: what the world watches on YouTube", "description": "Estimated live YouTube viewers, YouTube Trending and Music top 10s, top news and education topics for 41 countries, refreshed hourly. Live viewer figures are modelled estimates.", "url": "https://www.likepolling.com/data", "isAccessibleForFree": true, "creator": {"@type": "Organization", "name": "Like Polling", "url": "https://www.likepolling.com/"}, "keywords": ["YouTube", "trending", "music", "news", "education", "countries", "creators"], "distribution": [{"@type": "DataDownload", "encodingFormat": "text/markdown", "contentUrl": "https://www.likepolling.com/llms-full.txt"}, {"@type": "DataDownload", "encodingFormat": "text/html", "contentUrl": "https://www.likepolling.com/data"}, {"@type": "DataDownload", "encodingFormat": "application/json", "contentUrl": "https://www.likepolling.com/api/v1/worldwide"}]}</script>
+  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "Dataset", "name": "Like Polling: what the world watches on YouTube", "description": "Estimated live YouTube viewers, YouTube Trending videos and YouTube Music top 10s, top news headlines (World News, Fashion News), and education and fashion videos for 41 countries, refreshed hourly. Live viewer figures are modelled estimates.", "url": "https://www.likepolling.com/data", "isAccessibleForFree": true, "creator": {"@type": "Organization", "name": "Like Polling", "url": "https://www.likepolling.com/"}, "keywords": ["YouTube", "trending", "music", "news", "education", "countries", "creators"], "distribution": [{"@type": "DataDownload", "encodingFormat": "text/markdown", "contentUrl": "https://www.likepolling.com/llms-full.txt"}, {"@type": "DataDownload", "encodingFormat": "text/html", "contentUrl": "https://www.likepolling.com/data"}, {"@type": "DataDownload", "encodingFormat": "application/json", "contentUrl": "https://www.likepolling.com/api/v1/worldwide"}]}</script>
 </head>
 <body>
   <div class="yt-ticker" id="yt-ticker" role="region" aria-label="Estimated number of people watching YouTube right now, by country">
@@ -654,12 +654,12 @@
       <div class="lp-ext-wrap"><a class="lp-ext" href="https://chromewebstore.google.com/detail/creators-+/ibajjhdapncbacoinjjcagimpcjpahbn" target="_blank" rel="noopener" aria-label="Add to Chrome"><svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path d="M8 2v8m0 0L4.8 6.8M8 10l3.2-3.2M3 13h10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Add to Chrome</span></a><button type="button" class="lp-ext-info" id="cp-link" aria-controls="cp-pop" aria-expanded="false">Free Extension</button></div>
     </header>
 
-    <section class="nw nw-front" id="news-front" aria-label="World news"></section>
-    <section class="ytt" id="yt-trending" data-supabase-url="https://iyhaoagslsrwtkcrxylp.supabase.co" data-supabase-key="sb_publishable_ZnV9HrtfDqeKlBftnDxH2Q_YK6XWJTp"></section>
-    <section class="ymu" id="yt-music" data-supabase-url="https://iyhaoagslsrwtkcrxylp.supabase.co" data-supabase-key="sb_publishable_ZnV9HrtfDqeKlBftnDxH2Q_YK6XWJTp"></section>
-    <section id="news-wire" data-supabase-url="https://iyhaoagslsrwtkcrxylp.supabase.co" data-supabase-key="sb_publishable_ZnV9HrtfDqeKlBftnDxH2Q_YK6XWJTp"></section>
-    <section id="edu" data-supabase-url="https://iyhaoagslsrwtkcrxylp.supabase.co" data-supabase-key="sb_publishable_ZnV9HrtfDqeKlBftnDxH2Q_YK6XWJTp"></section>
-    <section id="fashion" data-supabase-url="https://iyhaoagslsrwtkcrxylp.supabase.co" data-supabase-key="sb_publishable_ZnV9HrtfDqeKlBftnDxH2Q_YK6XWJTp"></section>
+    <section class="nw nw-front" id="news-front" aria-label="World News: top news headlines in each country"></section>
+    <section class="ytt" id="yt-trending" aria-label="YouTube Trending: most popular videos in each country" data-supabase-url="https://iyhaoagslsrwtkcrxylp.supabase.co" data-supabase-key="sb_publishable_ZnV9HrtfDqeKlBftnDxH2Q_YK6XWJTp"></section>
+    <section class="ymu" id="yt-music" aria-label="YouTube Music: most popular music videos in each country" data-supabase-url="https://iyhaoagslsrwtkcrxylp.supabase.co" data-supabase-key="sb_publishable_ZnV9HrtfDqeKlBftnDxH2Q_YK6XWJTp"></section>
+    <section id="news-wire" aria-label="Creator News: headlines about YouTube and creators" data-supabase-url="https://iyhaoagslsrwtkcrxylp.supabase.co" data-supabase-key="sb_publishable_ZnV9HrtfDqeKlBftnDxH2Q_YK6XWJTp"></section>
+    <section id="edu" aria-label="Education: learning videos and subjects in each country" data-supabase-url="https://iyhaoagslsrwtkcrxylp.supabase.co" data-supabase-key="sb_publishable_ZnV9HrtfDqeKlBftnDxH2Q_YK6XWJTp"></section>
+    <section id="fashion" aria-label="Fashion: fashion videos and fashion news in each country" data-supabase-url="https://iyhaoagslsrwtkcrxylp.supabase.co" data-supabase-key="sb_publishable_ZnV9HrtfDqeKlBftnDxH2Q_YK6XWJTp"></section>
   </div>
 
 
