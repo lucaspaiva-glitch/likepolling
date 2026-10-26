@@ -93,3 +93,15 @@ test('brief gives plain-text data for one country and topic', async () => {
     assert.equal(r.headers['cache-control'], 'no-store');
   }
 });
+
+test('brief country=auto uses the visitor location when tracked, else the fallback, and is not shared-cached', async () => {
+  const call = async (headers, query) => { const r = mockRes(); await createHandler({ env, fetch: mockFetch() })({ headers, query: { format: 'brief', topic: 'news', ...query } }, r); return r; };
+  const pt = await call({ 'x-vercel-ip-country': 'PT' }, { country: 'auto', fallback: 'IE' });
+  assert.match(pt.body, /for Portugal/);
+  assert.equal(pt.headers['cache-control'], 'private, max-age=300');
+  const fr = await call({ 'x-vercel-ip-country': 'FR' }, { fallback: 'PT' });
+  assert.match(fr.body, /for Portugal/);
+  const picked = await call({ 'x-vercel-ip-country': 'IE' }, { country: 'PT' });
+  assert.match(picked.body, /for Portugal/);
+  assert.match(picked.headers['cache-control'], /s-maxage/);
+});

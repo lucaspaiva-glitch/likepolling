@@ -184,9 +184,13 @@ function createHandler(deps = {}) {
       if (!env.SUPABASE_URL || !env.SUPABASE_KEY) throw new Error('Server is missing SUPABASE_URL/SUPABASE_KEY');
       const d = await load(rest(env, deps.fetch || fetch));
       if (format === 'brief') {
-        const text = brief(d, String(req.query.country || '').toUpperCase(), String(req.query.topic || 'all'));
+        // country=auto uses the visitor's location (Vercel's geo header) when Like Polling tracks it, else the fallback.
+        const auto = !req.query.country || String(req.query.country).toLowerCase() === 'auto';
+        const geo = String((req.headers && req.headers['x-vercel-ip-country']) || '').toUpperCase();
+        const cc = auto ? (d.countries.some((c) => c.code === geo) ? geo : String(req.query.fallback || 'US').toUpperCase()) : String(req.query.country).toUpperCase();
+        const text = brief(d, cc, String(req.query.topic || 'all'));
         res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-        res.setHeader('Cache-Control', text ? CACHE : 'no-store');
+        res.setHeader('Cache-Control', !text ? 'no-store' : auto ? 'private, max-age=300' : CACHE);
         return res.status(text ? 200 : 404).end(text || 'No data for this country or topic.\n');
       }
       res.setHeader('Content-Type', format === 'html' ? 'text/html; charset=utf-8' : 'text/plain; charset=utf-8');

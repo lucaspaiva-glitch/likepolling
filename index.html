@@ -1387,21 +1387,21 @@ ENERGY</div>
         setAiTopic(b.dataset.topic);
         try { localStorage.setItem('lp-ai-topic', b.dataset.topic); } catch (e) {}
       }));
-      // Gemini can't open new sites, so its copied message carries the data itself, for the country the World News panel shows.
+      // Gemini can't open new sites, so its copied message carries the data itself: for the country picked in World News,
+      // else the visitor's location, else the site language's country.
       const aiBriefs = {};
       const aiBriefKey = () => {
         let cc = null;
         try { cc = localStorage.getItem('lp-world-cc'); } catch (e) {}
         const lang = (window.LP_I18N && window.LP_I18N.lang) || 'en';
-        cc = cc || ({ en: 'US', 'en-GB': 'GB', pt: 'BR', 'pt-PT': 'PT', es: 'MX', de: 'DE', ru: 'RU', uk: 'UA', ko: 'KR', ja: 'JP' })[lang] || 'US';
-        return cc + '|' + aiTopic;
+        const fallback = ({ en: 'US', 'en-GB': 'GB', pt: 'BR', 'pt-PT': 'PT', es: 'MX', de: 'DE', ru: 'RU', uk: 'UA', ko: 'KR', ja: 'JP' })[lang] || 'US';
+        return (cc ? 'country=' + cc : 'country=auto&fallback=' + fallback) + '&topic=' + aiTopic;
       };
       function loadAiBrief() {
         const k = aiBriefKey();
         if (k in aiBriefs) return;
         aiBriefs[k] = null;
-        const [cc, topic] = k.split('|');
-        fetch('/api/llms?format=brief&country=' + cc + '&topic=' + topic)
+        fetch('/api/llms?format=brief&' + k)
           .then((r) => (r.ok ? r.text() : null)).then((t) => { aiBriefs[k] = t; }).catch(() => { delete aiBriefs[k]; });
       }
       [aiBtn, aiTab].forEach((el) => ['pointerenter', 'click'].forEach((ev) => el.addEventListener(ev, loadAiBrief)));
