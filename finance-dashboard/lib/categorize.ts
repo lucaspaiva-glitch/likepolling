@@ -3,6 +3,7 @@ export const DEFAULT_CATEGORIES = [
   "Investments",
   "Trades",
   "Transfer",
+  "Own accounts",
   "Housing",
   "Utilities",
   "Groceries",

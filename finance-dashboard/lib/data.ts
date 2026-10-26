@@ -128,7 +128,8 @@ async function loadSnapshots(accountIds: string[]): Promise<{ rows: Array<{ acco
 // neither; credit-card refunds reduce spending; negative investment income (e.g. accrued bond interest
 // paid on purchase) reduces income.
 function flowOf(t: Transaction, accountType: Map<string, string>, internal: Set<string>, investmentHistoryStart: string | null): Flow | null {
-  if (internal.has(t.id) || t.category === "Trades") return null;
+  // "Own accounts": money moved to one of your untracked accounts (e.g. a Portuguese bank) — neither spent nor earned.
+  if (internal.has(t.id) || t.category === "Trades" || t.category === "Own accounts") return null;
   const type = (t.account_id && accountType.get(t.account_id)) || "";
   if (t.amount >= 0) {
     if (isLiability(type)) {
@@ -211,12 +212,18 @@ export async function getDashboardData(): Promise<DashboardData> {
   const taxYear = irpfFilingYear(today) - 1;
   const taxYearEnd = `${taxYear}-12-31`;
   const incomeFrom = [`${taxYear}-01-01`, incomeHistoryStart ?? todayIso].sort()[1];
-  const investmentIncome = transactions
+  const yearIncome = transactions
     .filter((t) => t.account_id && investmentIds.has(t.account_id) && t.date.startsWith(`${taxYear}-`))
-    .reduce((sum, t) => sum + (flows.get(t.id)?.income ?? 0), 0);
+    .map((t) => flows.get(t.id)?.income ?? 0);
+  // Negative income (accrued interest paid when buying bonds) is a one-off, so it is subtracted but not projected.
+  const recurringIncome = yearIncome.filter((v) => v > 0).reduce((s, v) => s + v, 0);
+  const oneOffIncome = yearIncome.filter((v) => v < 0).reduce((s, v) => s + v, 0);
+  const investmentIncome = recurringIncome + oneOffIncome;
   const dayCount = (from: string, to: string) => Math.max(1, Math.round((Date.parse(to) - Date.parse(from)) / 864e5) + 1);
   const projectedIncome =
-    todayIso >= taxYearEnd ? investmentIncome : (investmentIncome * dayCount(incomeFrom, taxYearEnd)) / dayCount(incomeFrom, todayIso);
+    todayIso >= taxYearEnd
+      ? investmentIncome
+      : (recurringIncome * dayCount(incomeFrom, taxYearEnd)) / dayCount(incomeFrom, todayIso) + oneOffIncome;
   const taxEstimate = Math.round(projectedIncome * BR_FOREIGN_INVESTMENT_RATE);
   accounts = accounts.map((a) =>
     a.external_id === TAX_ACCOUNT_EXTERNAL_ID
