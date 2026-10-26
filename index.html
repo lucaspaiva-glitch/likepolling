@@ -747,7 +747,7 @@ ENERGY</div>
         <h3 id="ai-pop-h">Ask your AI</h3>
         <p>Pick your AI. It opens with a message telling it to read Like Polling's live data.</p>
         <span id="ai-msg" hidden>Read https://www.likepolling.com/llms.txt, then tell me what's trending on YouTube and the top news in my country today.</span>
-        <ul class="lp-ai-list"><li><a href="https://chatgpt.com/" data-ai="https://chatgpt.com/?hints=search&amp;q=" target="_blank" rel="noopener"><b data-no-i18n>ChatGPT</b><span aria-hidden="true">↗</span></a></li><li><a href="https://claude.ai/new" data-ai="https://claude.ai/new?q=" target="_blank" rel="noopener"><b data-no-i18n>Claude</b><span aria-hidden="true">↗</span></a></li><li><a href="https://gemini.google.com/app" data-ai="https://gemini.google.com/app" data-paste target="_blank" rel="noopener"><b data-no-i18n>Gemini</b><small>Paste the copied message</small><span aria-hidden="true">↗</span></a></li><li><a href="https://www.perplexity.ai/search" data-ai="https://www.perplexity.ai/search?q=" target="_blank" rel="noopener"><b data-no-i18n>Perplexity</b><span aria-hidden="true">↗</span></a></li><li><a href="https://copilot.microsoft.com/" data-ai="https://copilot.microsoft.com/?q=" target="_blank" rel="noopener"><b data-no-i18n>Microsoft Copilot</b><span aria-hidden="true">↗</span></a></li><li><a href="https://grok.com/" data-ai="https://grok.com/?q=" target="_blank" rel="noopener"><b data-no-i18n>Grok</b><span aria-hidden="true">↗</span></a></li><li><a href="https://poke.com/" data-ai="https://poke.com/" data-paste target="_blank" rel="noopener"><b data-no-i18n>Poke</b><small>Paste the copied message</small><span aria-hidden="true">↗</span></a></li><li><a href="https://app.devin.ai/" data-ai="https://app.devin.ai/" data-paste target="_blank" rel="noopener"><b data-no-i18n>Devin</b><small>Paste the copied message</small><span aria-hidden="true">↗</span></a></li></ul>
+        <ul class="lp-ai-list"><li><a href="https://chatgpt.com/" data-ai="https://chatgpt.com/?hints=search&amp;q=" data-pkg="com.openai.chatgpt" target="_blank" rel="noopener"><b data-no-i18n>ChatGPT</b><span aria-hidden="true">↗</span></a></li><li><a href="https://claude.ai/new" data-ai="https://claude.ai/new?q=" data-pkg="com.anthropic.claude" target="_blank" rel="noopener"><b data-no-i18n>Claude</b><span aria-hidden="true">↗</span></a></li><li><a href="https://gemini.google.com/app" data-ai="https://gemini.google.com/app" data-paste data-pkg="com.google.android.apps.bard" target="_blank" rel="noopener"><b data-no-i18n>Gemini</b><small>Paste the copied message</small><span aria-hidden="true">↗</span></a></li><li><a href="https://www.perplexity.ai/search" data-ai="https://www.perplexity.ai/search?q=" data-pkg="ai.perplexity.app.android" target="_blank" rel="noopener"><b data-no-i18n>Perplexity</b><span aria-hidden="true">↗</span></a></li><li><a href="https://copilot.microsoft.com/" data-ai="https://copilot.microsoft.com/?q=" data-pkg="com.microsoft.copilot" target="_blank" rel="noopener"><b data-no-i18n>Microsoft Copilot</b><span aria-hidden="true">↗</span></a></li><li><a href="https://grok.com/" data-ai="https://grok.com/?q=" data-pkg="ai.x.grok" target="_blank" rel="noopener"><b data-no-i18n>Grok</b><span aria-hidden="true">↗</span></a></li><li><a href="https://poke.com/" data-ai="https://poke.com/" data-paste target="_blank" rel="noopener"><b data-no-i18n>Poke</b><small>Paste the copied message</small><span aria-hidden="true">↗</span></a></li><li><a href="https://app.devin.ai/" data-ai="https://app.devin.ai/" data-paste target="_blank" rel="noopener"><b data-no-i18n>Devin</b><small>Paste the copied message</small><span aria-hidden="true">↗</span></a></li></ul>
       </div>
     </div>
   </div>
@@ -1340,10 +1340,26 @@ ENERGY</div>
       [aiBtn, aiTab].forEach((el) => el.addEventListener('click', (e) => { e.stopPropagation(); if (aHover) { aHover = false; clearTimeout(aT); return; } setAi(aiPop.hidden); }));
       document.addEventListener('click', (e) => { if (!aiPop.hidden && !aiPop.contains(e.target)) setAi(false); });
       // Each AI opens with the message (in the visitor's language) already typed in; it is also copied for AIs that can't be pre-filled.
-      aiPop.querySelectorAll('[data-ai]').forEach((a) => a.addEventListener('click', () => {
-        const msg = $('ai-msg').textContent.trim();
-        if (navigator.clipboard) navigator.clipboard.writeText(msg).catch(() => {});
-        if (!a.hasAttribute('data-paste')) a.href = a.dataset.ai + encodeURIComponent(msg);
+      // Phones try the AI's app first: on iPhone the web links below open the app when it is installed (ChatGPT, Claude,
+      // Perplexity, Grok); on Android an intent link opens the app by package name and falls back to the website.
+      const isAndroid = /Android/i.test(navigator.userAgent);
+      const aiMsg = () => $('ai-msg').textContent.trim();
+      const aiLinks = () => aiPop.querySelectorAll('[data-ai]');
+      function setAiHrefs() {
+        const msg = encodeURIComponent(aiMsg());
+        aiLinks().forEach((a) => {
+          const url = a.hasAttribute('data-paste') ? a.dataset.ai : a.dataset.ai + msg;
+          if (isAndroid && a.dataset.pkg) {
+            const u = new URL(url);
+            a.href = 'intent://' + u.host + u.pathname + u.search + '#Intent;scheme=https;package=' + a.dataset.pkg + ';S.browser_fallback_url=' + encodeURIComponent(url) + ';end';
+            a.removeAttribute('target');
+          } else a.href = url;
+        });
+      }
+      setAiHrefs();
+      new MutationObserver(setAiHrefs).observe($('ai-msg'), { childList: true, characterData: true, subtree: true });
+      aiLinks().forEach((a) => a.addEventListener('click', () => {
+        if (navigator.clipboard) navigator.clipboard.writeText(aiMsg()).catch(() => {});
         setAi(false);
       }));
       // "Trending in the most countries" compartment: same rules again.
