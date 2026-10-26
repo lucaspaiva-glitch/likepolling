@@ -255,7 +255,7 @@
     const out = [];
     let cur = '';
     for (const w of words) {
-      if (cur.trim() && w.trim() && (cur + w).trim().length > max) { out.push(cur.trim()); cur = ''; }
+      if (cur.trim() && /[\p{L}\p{N}]/u.test(w) && (cur + w).trim().length > max) { out.push(cur.trim()); cur = ''; }
       cur += w;
     }
     if (cur.trim()) out.push(cur.trim());
