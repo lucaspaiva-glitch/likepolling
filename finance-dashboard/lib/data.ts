@@ -194,7 +194,11 @@ export async function getDashboardData(): Promise<DashboardData> {
     txs.reduce<string | null>((min, t) => (t.account_id && investmentIds.has(t.account_id) && (!min || t.date < min) ? t.date : min), null);
   // Statement totals have no individual transfers to pair with, so pairing starts with the CSV rows.
   const investmentHistoryStart = earliestInvestmentDate(transactions.filter((t) => !statementIds.has(t.id)));
-  const incomeHistoryStart = earliestInvestmentDate(transactions);
+  const snaps = await loadSnapshots(Array.from(investmentIds));
+  // Income accrues from the day money arrived (first balance snapshot), even before the first payout.
+  const incomeHistoryStart = [earliestInvestmentDate(transactions), snaps.rows[0]?.date ?? null]
+    .filter((d): d is string => !!d)
+    .sort()[0] ?? null;
   const internal = internalTransferIds(transactions);
   const flows = new Map<string, Flow>();
   for (const t of transactions) {
@@ -259,7 +263,6 @@ export async function getDashboardData(): Promise<DashboardData> {
     .reduce((sum, t) => sum + (flows.get(t.id)?.burn ?? 0), 0);
 
   // Portfolio history: carry each investment account's last known balance forward day by day.
-  const snaps = await loadSnapshots(Array.from(investmentIds));
   const lastKnown = new Map<string, number>();
   const portfolioSeries: PortfolioPoint[] = [];
   for (const r of snaps.rows) {
