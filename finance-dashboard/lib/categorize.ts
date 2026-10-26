@@ -9,6 +9,7 @@ export const DEFAULT_CATEGORIES = [
   "Dining",
   "Transportation",
   "Travel",
+  "Vacation",
   "Shopping",
   "Entertainment",
   "Health",

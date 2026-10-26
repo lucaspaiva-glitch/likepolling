@@ -2,6 +2,7 @@ import "server-only";
 import { getServerSupabase, isSupabaseConfigured } from "@/lib/db/server";
 import { isLiability } from "@/lib/categorize";
 import { internalTransferIds } from "@/lib/transfers";
+import { vacationIds } from "@/lib/vacation";
 import { BR_FOREIGN_INVESTMENT_RATE, TAX_ACCOUNT_EXTERNAL_ID, irpfFilingYear } from "@/lib/br-tax";
 import { fmtUsd } from "@/lib/format";
 import type { Account, Transaction } from "@/lib/types";
@@ -79,19 +80,23 @@ function emptyData(configured: boolean, error: string | null): DashboardData {
   };
 }
 
-async function loadTransactions(since: string): Promise<Transaction[]> {
+type LoadedTransaction = Transaction & { channel: string | null; descriptor: string | null; locked: boolean | null };
+
+async function loadTransactions(since: string): Promise<LoadedTransaction[]> {
   const db = getServerSupabase();
-  const out: Transaction[] = [];
+  const out: LoadedTransaction[] = [];
   for (let from = 0; ; from += PAGE) {
     const { data, error } = await db
       .from("transactions")
-      .select("id, account_id, date, payee, amount, category, type, pending:raw_data->pending")
+      .select(
+        "id, account_id, date, payee, amount, category, type, pending:raw_data->pending, channel:raw_data->>payment_channel, descriptor:raw_data->>name, locked:raw_data->category_locked",
+      )
       .gte("date", since)
       .order("date", { ascending: false })
       .order("id", { ascending: true })
       .range(from, from + PAGE - 1);
     if (error) throw new Error(error.message);
-    out.push(...((data ?? []) as Transaction[]).map((t) => ({ ...t, amount: Number(t.amount), pending: t.pending === true })));
+    out.push(...((data ?? []) as LoadedTransaction[]).map((t) => ({ ...t, amount: Number(t.amount), pending: t.pending === true })));
     if (!data || data.length < PAGE) break;
   }
   return out;
@@ -168,7 +173,12 @@ export async function getDashboardData(): Promise<DashboardData> {
     ]);
     if (accRes.error) throw new Error(accRes.error.message);
     accounts = ((accRes.data ?? []) as Account[]).map((a) => ({ ...a, balance: Number(a.balance) }));
-    transactions = txs;
+    // In-person purchases abroad become Vacation, unless you picked a category for that transaction yourself.
+    const vacation = vacationIds(txs, internalTransferIds(txs));
+    transactions = txs.map((lt) => {
+      const t: Transaction = { id: lt.id, account_id: lt.account_id, date: lt.date, payee: lt.payee, amount: lt.amount, category: lt.category, type: lt.type, pending: lt.pending };
+      return vacation.has(t.id) && lt.locked !== true ? { ...t, category: "Vacation" } : t;
+    });
   } catch (err) {
     return emptyData(true, err instanceof Error ? err.message : String(err));
   }

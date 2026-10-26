@@ -73,10 +73,14 @@ export async function syncItem(item: Item) {
   // Keep categories the user already edited, including on the pending row a posted transaction replaces.
   const lookupIds = changed.flatMap((t) => [t.transaction_id, t.pending_transaction_id].filter(Boolean) as string[]);
   const existing = new Map<string, string | null>();
+  const locked = new Set<string>();
   for (let i = 0; i < lookupIds.length; i += 500) {
     const ids = lookupIds.slice(i, i + 500);
-    const { data } = await db.from("transactions").select("external_id, category").in("external_id", ids);
-    for (const r of data ?? []) existing.set(r.external_id as string, r.category as string | null);
+    const { data } = await db.from("transactions").select("external_id, category, locked:raw_data->category_locked").in("external_id", ids);
+    for (const r of data ?? []) {
+      existing.set(r.external_id as string, r.category as string | null);
+      if (r.locked === true) locked.add(r.external_id as string);
+    }
   }
 
   const txRows = changed.map((t) => {
@@ -93,7 +97,10 @@ export async function syncItem(item: Item) {
         (t.pending_transaction_id ? existing.get(t.pending_transaction_id) : undefined) ??
         categorize(payee, amount, prettyPlaidCategory(t.personal_finance_category?.primary)),
       type: txType(amount),
-      raw_data: t as unknown as Record<string, unknown>,
+      raw_data: {
+        ...(t as unknown as Record<string, unknown>),
+        ...(locked.has(t.transaction_id) || (t.pending_transaction_id && locked.has(t.pending_transaction_id)) ? { category_locked: true } : {}),
+      },
     };
   });
   for (let i = 0; i < txRows.length; i += 500) {
