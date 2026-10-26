@@ -2,9 +2,8 @@ name: World News Wire
 
 on:
   schedule:
-    # Twice a day (UTC): 00 is morning in East Asia/Australia, 12 is morning in the
-    # Americas and midday in Europe, the Middle East and Africa.
-    - cron: '0 0,12 * * *'
+    # Every 3 hours (UTC). Off the hour because GitHub delays :00 schedules the most.
+    - cron: '17 */3 * * *'
   workflow_dispatch:
 
 concurrency:
