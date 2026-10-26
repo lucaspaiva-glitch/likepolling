@@ -1343,6 +1343,8 @@ ENERGY</div>
       // Phones try the AI's app first: on iPhone the web links below open the app when it is installed (ChatGPT, Claude,
       // Perplexity, Grok); on Android an intent link opens the app by package name and falls back to the website.
       const isAndroid = /Android/i.test(navigator.userAgent);
+      // iPhones don't hand links that open a new Safari tab to the app, so there they open in the same tab.
+      const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
       const aiMsg = () => $('ai-msg').textContent.trim();
       const aiLinks = () => aiPop.querySelectorAll('[data-ai]');
       function setAiHrefs() {
@@ -1353,7 +1355,10 @@ ENERGY</div>
             const u = new URL(url);
             a.href = 'intent://' + u.host + u.pathname + u.search + '#Intent;scheme=https;package=' + a.dataset.pkg + ';S.browser_fallback_url=' + encodeURIComponent(url) + ';end';
             a.removeAttribute('target');
-          } else a.href = url;
+          } else {
+            a.href = url;
+            if (isIOS && !a.hasAttribute('data-paste')) a.removeAttribute('target');
+          }
         });
       }
       setAiHrefs();
