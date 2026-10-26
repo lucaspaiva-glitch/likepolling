@@ -602,14 +602,41 @@
     .lp-ext-info:hover, .lp-ext-info[aria-expanded="true"] { color: var(--red); text-decoration-color: currentColor; }
     .lp-ext-info:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; border-radius: 3px; }
     #cp-pop { left: auto; right: var(--pop-r, 16px); }
+    /* "Ask AI" button + "Connect your AI" link: same look as the Chrome button; opens the AI card below it. */
+    .lp-ai-wrap { flex: none; display: flex; flex-direction: column; align-items: center; margin-left: 10px; position: relative; }
+    .lp-ai-wrap .lp-ext { margin-left: 0; border: 0; font-family: inherit; cursor: pointer; }
+    .lp-ai-wrap .lp-ext-info { position: absolute; top: calc(100% + 5px); left: 50%; transform: translateX(-50%); }
+    .lp-ai-wrap + .lp-ext-wrap { margin-left: 14px; }
+    #ai-pop { left: auto; right: var(--pop-r, 16px); }
+    .lp-aip { width: min(320px, calc(100vw - 32px)); }
+    .lp-aip ol { margin: 10px 0 0; padding-left: 18px; font-size: 12.5px; line-height: 1.4; color: rgba(255,227,230,.92); }
+    .lp-aip ol li + li { margin-top: 4px; }
+    .lp-ai-q { display: flex; align-items: flex-start; gap: 8px; margin-top: 8px; padding: 8px 9px; border: 1px solid rgba(255,42,60,.45); border-radius: 8px; background: rgba(0,0,0,.22); }
+    .lp-ai-q span { flex: 1; min-width: 0; font-size: 12px; line-height: 1.4; color: #fff; }
+    .lp-ai-q button { flex: none; padding: 4px 9px; border: 1px solid #ff2a3c; border-radius: 6px; background: #b0000e; color: #fff; font: 650 11px Inter, system-ui, sans-serif; cursor: pointer; }
+    .lp-ai-q button:hover { background: #d0001a; }
+    .lp-ai-go { margin: 10px 0 0; font: 600 9px/1.2 ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: .04em; text-transform: uppercase; color: rgba(255,190,195,.85); }
+    .lp-ai-open { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin-top: 6px; }
+    .lp-ai-open a { display: block; padding: 7px 4px; border-radius: 999px; background: #fff; color: #b0000e; font: 650 12px Inter, system-ui, sans-serif; text-align: center; text-decoration: none; }
+    .lp-ai-open a:hover { background: #ffe3e6; }
+    .lp-ai-open a:focus-visible, .lp-ai-q button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
     .lp-ext:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
     /* Three compartments: shorter labels so the truck still has room to drive. */
     .lp-tab .lp-mq { height: 118px; }
     @media (max-width: 560px) { .lp-tab .lp-mq { height: 92px; } }
+    /* Tablets: not enough room for everything on one line, so the flags move to their own centred row (as on phones). */
+    @media (min-width: 521px) and (max-width: 980px) {
+      header.top { flex-wrap: wrap; row-gap: 26px; }
+      header.top > .brand { margin-right: auto; }
+      header.top::after { content: ''; order: 4; flex-basis: 100%; }
+      header.top > .lp-lang { order: 5; margin: 0 auto; }
+    }
+    @media (min-width: 521px) and (max-width: 700px) { header.top .tagline { display: none; } }
+    @media (min-width: 521px) and (max-width: 560px) { header.top { column-gap: 6px; } header.top > .lp-ai-wrap, header.top > .lp-ai-wrap + .lp-ext-wrap { margin-left: 4px; } }
     /* Phones: logo + title on the left, 24/7 on the right, flags centred below.
        Chrome extensions can't be installed on phones, so the extension button and card are desktop/tablet only. */
     @media (max-width: 520px) {
-      header.top { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "brand live" "lang lang"; column-gap: 12px; row-gap: 14px; align-items: center; }
+      header.top { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "brand ai live" "lang lang lang"; column-gap: 10px; row-gap: 14px; align-items: center; }
       header.top > .brand { grid-area: brand; min-width: 0; gap: 8px; white-space: nowrap; }
       header.top .brand-txt { overflow: hidden; }
       header.top .brand-txt > span:first-child { overflow: hidden; text-overflow: ellipsis; }
@@ -617,11 +644,15 @@
       header.top > .live { grid-area: live; margin: 0; padding: 4px 9px; }
       header.top > .live::after { font-size: 10px; }
       header.top > .lp-ext-wrap, #cp-pop { display: none !important; }
+      header.top > .lp-ai-wrap { grid-area: ai; margin: 0; }
+      header.top > .lp-ai-wrap .lp-ext { padding: 4px 9px; }
+      header.top > .lp-ai-wrap .lp-ext-info { display: none; }
       header.top > .lp-lang { grid-area: lang; justify-self: center; min-width: 0; max-width: 100%; overflow-x: auto; scrollbar-width: none; margin: 0; }
     }
     /* Strong zoom: 24/7 moves under the title so the two never collide. */
     @media (max-width: 260px) {
-      header.top { grid-template-columns: minmax(0, 1fr); grid-template-areas: "brand" "live" "lang"; row-gap: 8px; }
+      header.top { grid-template-columns: minmax(0, 1fr); grid-template-areas: "brand" "live" "ai" "lang"; row-gap: 8px; }
+      header.top > .lp-ai-wrap { justify-self: start; margin-left: 36px; }
       header.top > .live { justify-self: start; margin-left: 36px; }
     }
     .earn-note { margin: 10px 0 0; font-size: 11.5px; line-height: 1.45; color: var(--muted); }
@@ -651,6 +682,7 @@
     <header class="top">
       <a class="brand" href="/" aria-label="Like Polling home"><svg class="brand-mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="var(--red)"/><polyline points="5,21 8,19 10.5,20.2 13.5,16.5 15.5,17.6 18.5,12.5 20.5,13.6 23,6" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="23" cy="6" r="1.9" fill="#fff"/></svg><span class="brand-txt"><span data-no-i18n>Like Polling</span><small class="tagline">Human + AI analytics for what the world watches</small></span></a>
       <div class="live">Live data, 24/7</div>
+      <div class="lp-ai-wrap"><button type="button" class="lp-ext lp-ai" id="ai-btn" aria-controls="ai-pop" aria-expanded="false"><svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path d="M8 1.5 9.5 6.5 14.5 8 9.5 9.5 8 14.5 6.5 9.5 1.5 8 6.5 6.5Z" fill="currentColor"/></svg><span>Ask AI</span></button><button type="button" class="lp-ext-info" id="ai-link" aria-controls="ai-pop" aria-expanded="false">Connect your AI</button></div>
       <div class="lp-ext-wrap"><a class="lp-ext" href="https://chromewebstore.google.com/detail/creators-+/ibajjhdapncbacoinjjcagimpcjpahbn" target="_blank" rel="noopener" aria-label="Add to Chrome"><svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path d="M8 2v8m0 0L4.8 6.8M8 10l3.2-3.2M3 13h10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Add to Chrome</span></a><button type="button" class="lp-ext-info" id="cp-link" aria-controls="cp-pop" aria-expanded="false">Free Extension</button></div>
     </header>
 
@@ -708,6 +740,20 @@ ENERGY</div>
         <ul><li><img src="/assets/creators-plus/rankings.webp" width="800" height="500" loading="lazy" alt=""><span>Rankings</span></li><li><img src="/assets/creators-plus/trending.webp" width="800" height="500" loading="lazy" alt=""><span>Who's trending</span></li><li><img src="/assets/creators-plus/graphs.webp" width="800" height="500" loading="lazy" alt=""><span>Graphs</span></li></ul>
         <a class="lp-sp-full" href="https://chromewebstore.google.com/detail/creators-+/ibajjhdapncbacoinjjcagimpcjpahbn" target="_blank" rel="noopener">Add to Chrome · it's free</a>
         <small>Works on youtube.com in Chrome, Edge, Brave, Arc and Opera on computers (not on phones). After installing, open YouTube: the Creators + button appears on the left.</small>
+      </div>
+    </div>
+  </div>
+  <div class="mpe-pop lp-sp lp-cpp lp-aip" id="ai-pop" role="dialog" aria-labelledby="ai-pop-h" hidden>
+    <div class="lp-sp-card">
+      <div class="mpe-top"><span class="mpe-sym" data-no-i18n>AI</span><span>Connect your AI</span></div>
+      <div class="lp-cpp-in">
+        <h3 id="ai-pop-h">Ask your AI about Like Polling</h3>
+        <p>AI assistants can read Like Polling's live data for 41 countries: YouTube Trending, YouTube Music, World News, Fashion and Education. Free, with no account or setup.</p>
+        <ol><li>Open your AI with web search turned on.</li><li>Mention likepolling.com in your question, for example:</li></ol>
+        <div class="lp-ai-q"><span id="ai-q">Using likepolling.com, what's trending on YouTube in Japan, and what are the top news headlines there?</span><button type="button" id="ai-copy">Copy</button></div>
+        <p class="lp-ai-go">Ask in one click:</p>
+        <div class="lp-ai-open" data-no-i18n><a data-ai="https://chatgpt.com/?hints=search&amp;q=" href="https://chatgpt.com/" target="_blank" rel="noopener">ChatGPT</a><a data-ai="https://claude.ai/new?q=" href="https://claude.ai/new" target="_blank" rel="noopener">Claude</a><a data-ai="https://www.perplexity.ai/search?q=" href="https://www.perplexity.ai/" target="_blank" rel="noopener">Perplexity</a></div>
+        <small>Works with AIs that can open web links: ChatGPT, Claude, Gemini, Perplexity, Microsoft Copilot, Grok, Poke and others. If yours can't find the data, turn on web search. For developers: likepolling.com/llms.txt and /api/v1.</small>
       </div>
     </div>
   </div>
@@ -1087,6 +1133,7 @@ ENERGY</div>
       const adTab = $('ad-tab'), adPop = $('ad-pop');
       const sPop = $('search-pop'), sIn = $('sp-input'), sOut = $('sp-out');
       const cpTab = $('cp-link'), cpPop = $('cp-pop');
+      const aiBtn = $('ai-btn'), aiTab = $('ai-link'), aiPop = $('ai-pop');
       const trTab = $('tr-tab'), trPop = $('tr-pop');
       let raf = 0, idle = 0, cur = null, target = 0, glide = 0, spin = 0;
       const still = matchMedia('(prefers-reduced-motion: reduce)');
@@ -1107,6 +1154,7 @@ ENERGY</div>
         placePop();
         placeSearchPop();
         placeCpPop();
+        placeAiPop();
         placeTrPop();
         if (cur !== target) glide = requestAnimationFrame(step); else last = 0;
       }
@@ -1120,6 +1168,14 @@ ENERGY</div>
         const r = cpTab.getBoundingClientRect();
         cpPop.style.setProperty('--pop-y', Math.round(Math.max(8, Math.min(r.bottom + 6, innerHeight - cpPop.offsetHeight - 8))) + 'px');
         cpPop.style.setProperty('--pop-r', Math.round(Math.max(8, document.documentElement.clientWidth - r.right)) + 'px');
+      }
+      function placeAiPop() {
+        if (aiPop.hidden) return;
+        const link = aiTab.getBoundingClientRect();
+        const r = link.width ? link : aiBtn.getBoundingClientRect();
+        aiPop.style.setProperty('--pop-y', Math.round(Math.max(8, Math.min(r.bottom + 6, innerHeight - aiPop.offsetHeight - 8))) + 'px');
+        const cw = document.documentElement.clientWidth;
+        aiPop.style.setProperty('--pop-r', Math.round(Math.max(8, Math.min(cw - Math.max(r.right, aiBtn.getBoundingClientRect().right), cw - aiPop.offsetWidth - 8))) + 'px');
       }
       function placeTrPop() {
         if (trPop.hidden) return;
@@ -1255,6 +1311,7 @@ ENERGY</div>
       // Creators + link (under Add to Chrome): same hover / click / tap rules as the sponsor and search cards.
       let cHover = false, cT = 0;
       function setCp(on) {
+        setAi(false);
         if (!on) { cHover = false; clearTimeout(cT); }
         if (on) { setAd(false); setSearch(false); setTr(false); }
         cpPop.hidden = !on;
@@ -1269,6 +1326,34 @@ ENERGY</div>
       }
       cpTab.addEventListener('click', (e) => { e.stopPropagation(); if (cHover) { cHover = false; clearTimeout(cT); return; } setCp(cpPop.hidden); });
       document.addEventListener('click', (e) => { if (!cpPop.hidden && !cpPop.contains(e.target)) setCp(false); });
+      // "Ask AI" button / "Connect your AI" link: same rules; any other card opening closes it (via setCp(false)).
+      let aHover = false, aT = 0;
+      function setAi(on) {
+        if (!on) { aHover = false; clearTimeout(aT); }
+        if (on) { setCp(false); setAd(false); setSearch(false); setTr(false); }
+        aiPop.hidden = !on;
+        aiBtn.setAttribute('aria-expanded', String(on));
+        aiTab.setAttribute('aria-expanded', String(on));
+        placeAiPop();
+      }
+      if (matchMedia('(hover: hover) and (pointer: fine)').matches) {
+        [aiTab, aiPop].forEach((el) => {
+          el.addEventListener('pointerenter', (e) => { if (e.pointerType !== 'mouse') return; clearTimeout(aT); if (aiPop.hidden) aT = setTimeout(() => { setAi(true); aHover = true; }, 150); });
+          el.addEventListener('pointerleave', (e) => { if (e.pointerType !== 'mouse') return; clearTimeout(aT); if (aHover) aT = setTimeout(() => { if (aHover) setAi(false); }, 350); });
+        });
+      }
+      ['pointerdown', 'focusin'].forEach((ev) => aiPop.addEventListener(ev, () => { aHover = false; clearTimeout(aT); }));
+      [aiBtn, aiTab].forEach((el) => el.addEventListener('click', (e) => { e.stopPropagation(); if (aHover) { aHover = false; clearTimeout(aT); return; } setAi(aiPop.hidden); }));
+      document.addEventListener('click', (e) => { if (!aiPop.hidden && !aiPop.contains(e.target)) setAi(false); });
+      // The example question is shown in the visitor's language, so read it when it's used.
+      const aiQ = () => $('ai-q').textContent.trim();
+      aiPop.querySelectorAll('[data-ai]').forEach((a) => a.addEventListener('click', () => { a.href = a.dataset.ai + encodeURIComponent(aiQ()); }));
+      const aiCopy = $('ai-copy');
+      aiCopy.addEventListener('click', async () => {
+        try { await navigator.clipboard.writeText(aiQ()); } catch (err) { getSelection().selectAllChildren($('ai-q')); return; }
+        aiCopy.textContent = 'Copied';
+        setTimeout(() => { aiCopy.textContent = 'Copy'; }, 1800);
+      });
       // "Trending in the most countries" compartment: same rules again.
       let tHover = false, tT = 0;
       function setTr(on) {
@@ -1308,6 +1393,7 @@ ENERGY</div>
         if (!adPop.hidden) { setAd(false); adTab.focus({ preventScroll: true }); }
         else if (!sPop.hidden) { setSearch(false); tab.focus({ preventScroll: true }); }
         else if (!cpPop.hidden) { setCp(false); cpTab.focus({ preventScroll: true }); }
+        else if (!aiPop.hidden) { setAi(false); (aiTab.offsetWidth ? aiTab : aiBtn).focus({ preventScroll: true }); }
         else if (!trPop.hidden) { setTr(false); trTab.focus({ preventScroll: true }); }
         else if (drawer.classList.contains('open')) setOpen(false);
       });
