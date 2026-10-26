@@ -139,7 +139,7 @@ function brief(d, cc, topic) {
     if (tops.length) out.push('', 'Top news story in each country (Google News):', ...tops.map(([x, r]) => `- ${x.name}: ${news(r)}`));
   }
   if (!out.length) return null;
-  return [`Like Polling live data (likepolling.com) for ${topic === 'world' ? 'the world' : c.name}, as of ${utc(new Date().toISOString())}. Answer using this data:`, ...out].join('\n') + '\n';
+  return [`Like Polling live data for ${topic === 'world' ? 'the world' : c.name}, as of ${utc(new Date().toISOString())}. Answer using this data:`, ...out].join('\n') + '\n';
 }
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));

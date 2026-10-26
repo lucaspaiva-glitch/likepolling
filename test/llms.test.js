@@ -78,10 +78,10 @@ test('brief gives plain-text data for one country and topic', async () => {
   const res = mockRes();
   await createHandler({ env, fetch: mockFetch() })({ query: { format: 'brief', country: 'pt', topic: 'fashion' } }, res);
   assert.equal(res.code, 200);
-  assert.match(res.body, /^Like Polling live data \(likepolling\.com\) for Portugal, as of .* UTC\. Answer using this data:/);
+  assert.match(res.body, /^Like Polling live data for Portugal, as of .* UTC\. Answer using this data:/);
   assert.match(res.body, /Fashion Index for Portugal.*\n1\. Zara AW26 – Zara – 1,234 views\/hour/);
   assert.match(res.body, /Fashion news in Portugal.*\n1\. Moda \(English: Fashion\) – Vogue/);
-  assert.doesNotMatch(res.body, /Notícia/);
+  assert.doesNotMatch(res.body, /Notícia|likepolling\.com/);
   const world = mockRes();
   await createHandler({ env, fetch: mockFetch() })({ query: { format: 'brief', country: 'PT', topic: 'world' } }, world);
   assert.match(world.body, /Big \| trailer – Studio – trending in 2 countries \(IE, PT\)/);
