@@ -178,24 +178,27 @@ export default function TransactionsTable({ transactions, accounts }: { transact
       <Table className="mt-2 max-h-[560px] overflow-auto">
         <TableHead className="sticky top-0 z-10 bg-dark-tremor-background">
           <TableRow>
-            <TableHeaderCell className="w-20 py-1.5 text-xs sm:w-24">Date</TableHeaderCell>
-            <TableHeaderCell className="py-1.5 text-xs">Payee</TableHeaderCell>
-            <TableHeaderCell className="hidden w-44 py-1.5 text-xs md:table-cell">Account</TableHeaderCell>
-            <TableHeaderCell className="w-32 py-1.5 text-xs sm:w-48">Category</TableHeaderCell>
-            <TableHeaderCell className="hidden w-20 py-1.5 text-xs md:table-cell">Type</TableHeaderCell>
-            <TableHeaderCell className="w-24 py-1.5 text-right text-xs sm:w-28">Amount</TableHeaderCell>
+            <TableHeaderCell className="px-1.5 sm:px-4 w-20 py-1.5 text-xs sm:w-24">Date</TableHeaderCell>
+            <TableHeaderCell className="px-1.5 sm:px-4 py-1.5 text-xs">Payee</TableHeaderCell>
+            <TableHeaderCell className="px-1.5 sm:px-4 hidden w-44 py-1.5 text-xs md:table-cell">Account</TableHeaderCell>
+            <TableHeaderCell className="px-1.5 sm:px-4 hidden w-48 py-1.5 text-xs sm:table-cell">Category</TableHeaderCell>
+            <TableHeaderCell className="px-1.5 sm:px-4 hidden w-20 py-1.5 text-xs md:table-cell">Type</TableHeaderCell>
+            <TableHeaderCell className="px-1.5 sm:px-4 w-24 py-1.5 text-right text-xs sm:w-28">Amount</TableHeaderCell>
           </TableRow>
         </TableHead>
         <TableBody>
           {filtered.slice(0, limit).map((t) => (
             <TableRow key={t.id} className="hover:bg-dark-tremor-background-subtle/40">
-              <TableCell className="py-1 text-xs tabular-nums">{t.date}</TableCell>
-              <TableCell className="max-w-0 truncate py-1 text-xs text-dark-tremor-content-emphasis" title={t.payee ?? ""}>
-                {t.payee}
-                {t.pending && <span className="text-amber-400 md:hidden"> · pending</span>}
+              <TableCell className="px-1.5 sm:px-4 py-1 text-xs tabular-nums">{t.date}</TableCell>
+              <TableCell className="px-1.5 sm:px-4 max-w-0 truncate py-1 text-xs text-dark-tremor-content-emphasis" title={t.payee ?? ""}>
+                <span className="block truncate">
+                  {t.payee}
+                  {t.pending && <span className="text-amber-400 md:hidden"> · pending</span>}
+                </span>
+                <span className="block truncate text-[11px] text-dark-tremor-content-subtle sm:hidden">{t.category ?? "Uncategorized"}</span>
               </TableCell>
-              <TableCell className="hidden truncate py-1 text-xs md:table-cell">{(t.account_id && accountName.get(t.account_id)) || "—"}</TableCell>
-              <TableCell className="py-0.5">
+              <TableCell className="px-1.5 sm:px-4 hidden truncate py-1 text-xs md:table-cell">{(t.account_id && accountName.get(t.account_id)) || "—"}</TableCell>
+              <TableCell className="px-1.5 sm:px-4 hidden py-0.5 sm:table-cell">
                 <CategoryCell
                   tx={t}
                   onSaved={(c) => {
@@ -204,8 +207,8 @@ export default function TransactionsTable({ transactions, accounts }: { transact
                   }}
                 />
               </TableCell>
-              <TableCell className="hidden py-1 text-xs md:table-cell">{t.pending ? <span className="text-amber-400">pending</span> : t.type}</TableCell>
-              <TableCell className={`py-1 text-right text-xs tabular-nums ${t.amount >= 0 ? "text-emerald-400" : "text-dark-tremor-content-strong"}`}>
+              <TableCell className="px-1.5 sm:px-4 hidden py-1 text-xs md:table-cell">{t.pending ? <span className="text-amber-400">pending</span> : t.type}</TableCell>
+              <TableCell className={`px-1.5 sm:px-4 py-1 text-right text-xs tabular-nums ${t.amount >= 0 ? "text-emerald-400" : "text-dark-tremor-content-strong"}`}>
                 {fmtUsd2(t.amount)}
               </TableCell>
             </TableRow>
