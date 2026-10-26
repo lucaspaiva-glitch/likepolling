@@ -261,25 +261,50 @@
     if (cur.trim()) out.push(cur.trim());
     return out;
   };
-  const CAP_STEP = 1500;
-  const capTick = () => {
-    document.querySelectorAll('.nw-cap').forEach((cap) => {
-      const card = cap.closest('.nw-card');
-      const span = cap.firstElementChild;
-      if (calm.matches) { span.textContent = cap.dataset.cap; cap.classList.add('nw-cap-all'); return; }
-      if (!card || !card.classList.contains('nw-on') || card.classList.contains('nw-paused')) return;
-      if (!cap.nwChunks) { cap.nwChunks = capChunks(cap.dataset.cap, cap.closest('.nw-lead') ? 44 : 26); cap.nwAt = -1; }
-      // One blank beat after the last chunk, then the summary starts again.
-      cap.nwAt = (cap.nwAt + 1) % (cap.nwChunks.length + 1);
-      const chunk = cap.nwChunks[cap.nwAt] || '';
-      cap.classList.toggle('nw-cap-gap', !chunk);
-      if (!chunk) return;
-      span.textContent = chunk;
-      span.classList.remove('nw-cap-in');
-      void span.offsetWidth;
-      span.classList.add('nw-cap-in');
-    });
+  // Only one summary plays at a time, so the panel stays calm: on a computer it goes down the
+  // ranking (or follows the mouse); on touch screens it's the story nearest the middle of the screen.
+  const CAP_STEP = 2200;
+  const capTouch = matchMedia('(hover: none)').matches;
+  let capOn = null, capHover = null, capT = 0;
+  const capLive = (cap) => { const c = cap.closest('.nw-card'); return !!c && c.classList.contains('nw-on') && !c.classList.contains('nw-paused'); };
+  const capReset = (cap) => { cap.nwAt = -1; cap.nwDone = false; cap.firstElementChild.textContent = ''; cap.classList.remove('nw-cap-gap'); };
+  const capPick = (caps) => {
+    const live = caps.filter(capLive);
+    if (capHover && live.includes(capHover)) return capHover;
+    if (capTouch) {
+      let best = null, bestD = Infinity;
+      for (const cap of live) {
+        const r = cap.closest('.nw-card').getBoundingClientRect();
+        const d = Math.abs(r.top + r.height / 2 - innerHeight / 2);
+        if (d < bestD) { best = cap; bestD = d; }
+      }
+      return best;
+    }
+    if (capOn && live.includes(capOn) && !capOn.nwDone) return capOn;
+    const i = capOn ? caps.indexOf(capOn) : -1;
+    return [...caps.slice(i + 1), ...caps.slice(0, i + 1)].find(capLive) || null;
   };
+  const capTick = () => {
+    const caps = [...document.querySelectorAll('.nw-cap')];
+    if (calm.matches) { caps.forEach((cap) => { cap.firstElementChild.textContent = cap.dataset.cap; cap.classList.add('nw-cap-all'); }); return; }
+    const next = capPick(caps);
+    if (next !== capOn || (capOn && capOn.nwDone)) { if (capOn) capReset(capOn); capOn = next; if (next) capReset(next); }
+    if (!capOn) return;
+    if (!capOn.nwChunks) capOn.nwChunks = capChunks(capOn.dataset.cap, capOn.closest('.nw-lead') ? 44 : 26);
+    const span = capOn.firstElementChild;
+    capOn.nwAt += 1;
+    // A blank beat after the last chunk before the next summary starts.
+    if (capOn.nwAt >= capOn.nwChunks.length) { capOn.classList.add('nw-cap-gap'); capOn.nwDone = true; return; }
+    span.textContent = capOn.nwChunks[capOn.nwAt];
+    span.classList.remove('nw-cap-in');
+    void span.offsetWidth;
+    span.classList.add('nw-cap-in');
+  };
+  const capLoop = () => { clearTimeout(capT); capTick(); capT = setTimeout(capLoop, CAP_STEP); };
+  document.addEventListener('mouseover', (e) => {
+    const cap = e.target.closest?.('.nw-card')?.querySelector('.nw-cap') || null;
+    if (cap !== capHover) { capHover = cap; if (cap && cap !== capOn) capLoop(); }
+  });
   function cardHtml(r, lang, i, kind, note) {
     const foreign = r.lang && r.lang !== lang;
     const link = /^https:\/\//.test(r.link) ? esc(r.link) : '#';
@@ -379,7 +404,7 @@
       </article>`;
   }
   const calm = matchMedia('(prefers-reduced-motion: reduce)');
-  setInterval(capTick, CAP_STEP);
+  capT = setTimeout(capLoop, CAP_STEP);
   const YT_ORIGIN = 'https://www.youtube-nocookie.com';
   const ytCmd = (f, func) => { if (f.contentWindow) f.contentWindow.postMessage(JSON.stringify({ event: 'command', func, args: [] }), YT_ORIGIN); };
   function playShort(card, muted) {
@@ -840,7 +865,7 @@
     sFeed.innerHTML = `<div class="ysh-cards">${ranked.slice(0, 5).map((v, i) => `<a class="ysh-card" href="${plist(i)}" target="_blank" rel="noopener">
         <span class="ysh-cth"><img src="https://i.ytimg.com/vi/${v.video_id}/hqdefault.jpg" alt="" loading="lazy" referrerpolicy="no-referrer"><b class="ysh-crk">${rk(i)}</b>${v.view_count != null ? `<i class="ysh-cvw">${esc(compact(v.view_count, ui))}</i>` : ''}${window.lpVph && lpVph(v.view_count, v.published_at, v.fetched_at) != null ? `<i class="lp-vph">${esc(compact(lpVph(v.view_count, v.published_at, v.fetched_at), ui))}/h</i>` : ''}</span>
         <span class="ysh-ctt" title="${esc(v.title)}">${esc(v.title)}</span><span class="ysh-cch">${ch(v)}</span></a>`).join('')}</div>${ranked.length > 5 ? `<ol class="ysh-list" style="--r2:${Math.ceil((ranked.length - 5) / 2)};--r3:${Math.ceil((ranked.length - 5) / 3)}">${ranked.slice(5).map((v, j) => `<li><a href="${plist(j + 5)}" target="_blank" rel="noopener">
-        <span class="ysh-rk">${rk(j + 5)}</span><span class="lp-rth lp-rth-s" style="--k:${(1 - j * 0.018).toFixed(3)}"><img src="https://i.ytimg.com/vi/${v.video_id}/hqdefault.jpg" alt="" loading="lazy" referrerpolicy="no-referrer"></span>
+        <span class="ysh-rk">${rk(j + 5)}</span><span class="lp-rth lp-rth-s" style="--k:${(1 - j * 0.008).toFixed(3)}"><img src="https://i.ytimg.com/vi/${v.video_id}/hqdefault.jpg" alt="" loading="lazy" referrerpolicy="no-referrer"></span>
         <span class="ysh-tx"><span class="ysh-vt" title="${esc(v.title)}">${esc(v.title)}</span><span class="ysh-ch">${ch(v)}</span></span>
         <span class="ysh-vol"><span class="ysh-num">${v.view_count != null ? esc(compact(v.view_count, ui)) : '—'}</span>${window.lpVph && lpVph(v.view_count, v.published_at, v.fetched_at) != null ? `<span class="lp-vph-t">${esc(compact(lpVph(v.view_count, v.published_at, v.fetched_at), ui))}/h</span>` : ''}<span class="ysh-bar" style="width:${Math.max(4, Math.round((Number(v.view_count) || 0) / peak * 100))}%"></span></span></a></li>`).join('')}</ol>` : ''}`;
     sBox.querySelector('.nw-feed-wrap').hidden = !vids.length;

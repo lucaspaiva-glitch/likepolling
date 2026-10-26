@@ -47,21 +47,21 @@
 .ymu-card:hover .ymu-ctt { color: var(--red, #b0000e); }
 .ymu-cch { font-size: 11.5px; color: var(--muted, #737373); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 /* Screen size follows rank: #1 biggest, each lower rank a little smaller (rows below via --k). */
-.ymu-cards > :nth-child(1) { width: calc((100% - 12px) * .56); }
-.ymu-cards > :nth-child(2) { width: calc((100% - 12px) * .44); }
-.ymu-cards > :nth-child(3) { width: calc((100% - 24px) * .36); }
+.ymu-cards > :nth-child(1) { width: calc((100% - 12px) * .54); }
+.ymu-cards > :nth-child(2) { width: calc((100% - 12px) * .46); }
+.ymu-cards > :nth-child(3) { width: calc((100% - 24px) * .345); }
 .ymu-cards > :nth-child(4) { width: calc((100% - 24px) * .33); }
-.ymu-cards > :nth-child(5) { width: calc((100% - 24px) * .31); }
+.ymu-cards > :nth-child(5) { width: calc((100% - 24px) * .325); }
 .ymu-cards > :first-child .ymu-ctt { font-size: 14px; }
-.ymu-table { --rw: min(26cqi, 230px); }
+.ymu-table { --rw: min(28cqi, 240px); --st: .03; }
 .ymu-table .lp-rth { width: calc(var(--rw) * (1 - var(--i, 0) * var(--st, .05))); }
 @container (max-width: 560px) {
   .ymu-cards > :nth-child(1) { width: 100%; }
-  .ymu-cards > :nth-child(2) { width: calc((100% - 12px) * .52); }
-  .ymu-cards > :nth-child(3) { width: calc((100% - 12px) * .48); }
-  .ymu-cards > :nth-child(4) { width: calc((100% - 12px) * .47); }
-  .ymu-cards > :nth-child(5) { width: calc((100% - 12px) * .46); }
-  .ymu-table { --rw: 39cqi; --st: .025; }
+  .ymu-cards > :nth-child(2) { width: calc((100% - 12px) * .505); }
+  .ymu-cards > :nth-child(3) { width: calc((100% - 12px) * .495); }
+  .ymu-cards > :nth-child(4) { width: calc((100% - 12px) * .5); }
+  .ymu-cards > :nth-child(5) { width: calc((100% - 12px) * .49); }
+  .ymu-table { --rw: 42cqi; --st: .01; }
 }
 @container (max-width: 560px) {
   .ymu-cards { padding: 14px 14px 16px; }
@@ -76,7 +76,7 @@
 @container (max-width: 560px) {
   .ymu-head { padding: 12px 14px; }
   .ymu-table th, .ymu-table td { padding: 9px 12px; }
-  .ymu-vol-col { width: 84px; }
+  .ymu-vol-col { width: 76px; }
   .ymu-likes-col, .ymu-likes { display: none; }
   .ymu-asof { width: 100%; order: 3; }
 }

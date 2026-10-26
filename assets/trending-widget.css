@@ -47,21 +47,21 @@
 .ytt-card:hover .ytt-ctt { color: var(--red, #b0000e); }
 .ytt-cch { font-size: 11.5px; color: var(--muted, #737373); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 /* Screen size follows rank: #1 biggest, each lower rank a little smaller (rows below via --k). */
-.ytt-cards > :nth-child(1) { width: calc((100% - 12px) * .56); }
-.ytt-cards > :nth-child(2) { width: calc((100% - 12px) * .44); }
-.ytt-cards > :nth-child(3) { width: calc((100% - 24px) * .36); }
+.ytt-cards > :nth-child(1) { width: calc((100% - 12px) * .54); }
+.ytt-cards > :nth-child(2) { width: calc((100% - 12px) * .46); }
+.ytt-cards > :nth-child(3) { width: calc((100% - 24px) * .345); }
 .ytt-cards > :nth-child(4) { width: calc((100% - 24px) * .33); }
-.ytt-cards > :nth-child(5) { width: calc((100% - 24px) * .31); }
+.ytt-cards > :nth-child(5) { width: calc((100% - 24px) * .325); }
 .ytt-cards > :first-child .ytt-ctt { font-size: 14px; }
-.ytt-table { --rw: min(26cqi, 230px); }
+.ytt-table { --rw: min(28cqi, 240px); --st: .03; }
 .ytt-table .lp-rth { width: calc(var(--rw) * (1 - var(--i, 0) * var(--st, .05))); }
 @container (max-width: 560px) {
   .ytt-cards > :nth-child(1) { width: 100%; }
-  .ytt-cards > :nth-child(2) { width: calc((100% - 12px) * .52); }
-  .ytt-cards > :nth-child(3) { width: calc((100% - 12px) * .48); }
-  .ytt-cards > :nth-child(4) { width: calc((100% - 12px) * .47); }
-  .ytt-cards > :nth-child(5) { width: calc((100% - 12px) * .46); }
-  .ytt-table { --rw: 39cqi; --st: .025; }
+  .ytt-cards > :nth-child(2) { width: calc((100% - 12px) * .505); }
+  .ytt-cards > :nth-child(3) { width: calc((100% - 12px) * .495); }
+  .ytt-cards > :nth-child(4) { width: calc((100% - 12px) * .5); }
+  .ytt-cards > :nth-child(5) { width: calc((100% - 12px) * .49); }
+  .ytt-table { --rw: 42cqi; --st: .01; }
 }
 @container (max-width: 560px) {
   .ytt-cards { padding: 14px 14px 16px; }
@@ -76,7 +76,7 @@
 @container (max-width: 560px) {
   .ytt-head { padding: 12px 14px; }
   .ytt-table th, .ytt-table td { padding: 9px 12px; }
-  .ytt-vol-col { width: 84px; }
+  .ytt-vol-col { width: 76px; }
   .ytt-likes-col, .ytt-likes { display: none; }
   .ytt-asof { width: 100%; order: 3; }
 }
