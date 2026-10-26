@@ -615,6 +615,7 @@
     .lp-ai-list a:hover { background: #ffe3e6; }
     .lp-ai-list a:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
     .lp-ai-list b { font: 650 13px Inter, system-ui, sans-serif; }
+    .lp-cpp .lp-ai-list small[hidden] { display: none; }
     .lp-cpp .lp-ai-list small { display: inline; flex: 1; min-width: 0; margin: 0; font-size: 10.5px; color: #8a5a60; }
     .lp-cpp .lp-ai-list span { display: inline; margin: 0 0 0 auto; font: 12px Inter, system-ui, sans-serif; letter-spacing: 0; text-transform: none; color: #b0000e; }
     .lp-ext:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
@@ -747,7 +748,7 @@ ENERGY</div>
         <h3 id="ai-pop-h">Ask your AI</h3>
         <p>Pick your AI. It opens with a message telling it to read Like Polling's live data.</p>
         <span id="ai-msg" hidden>Read https://www.likepolling.com/llms.txt, then tell me what's trending on YouTube and the top news in my country today.</span>
-        <ul class="lp-ai-list"><li><a href="https://chatgpt.com/" data-ai="https://chatgpt.com/?hints=search&amp;q=" data-pkg="com.openai.chatgpt" target="_blank" rel="noopener"><b data-no-i18n>ChatGPT</b><span aria-hidden="true">↗</span></a></li><li><a href="https://claude.ai/new" data-ai="https://claude.ai/new?q=" data-pkg="com.anthropic.claude" target="_blank" rel="noopener"><b data-no-i18n>Claude</b><span aria-hidden="true">↗</span></a></li><li><a href="https://gemini.google.com/app" data-ai="https://gemini.google.com/app" data-paste data-pkg="com.google.android.apps.bard" target="_blank" rel="noopener"><b data-no-i18n>Gemini</b><small>Paste the copied message</small><span aria-hidden="true">↗</span></a></li><li><a href="https://www.perplexity.ai/search" data-ai="https://www.perplexity.ai/search?q=" data-pkg="ai.perplexity.app.android" target="_blank" rel="noopener"><b data-no-i18n>Perplexity</b><span aria-hidden="true">↗</span></a></li><li><a href="https://copilot.microsoft.com/" data-ai="https://copilot.microsoft.com/?q=" data-pkg="com.microsoft.copilot" target="_blank" rel="noopener"><b data-no-i18n>Microsoft Copilot</b><span aria-hidden="true">↗</span></a></li><li><a href="https://grok.com/" data-ai="https://grok.com/?q=" data-pkg="ai.x.grok" target="_blank" rel="noopener"><b data-no-i18n>Grok</b><span aria-hidden="true">↗</span></a></li><li><a href="https://poke.com/" data-ai="https://poke.com/" data-paste target="_blank" rel="noopener"><b data-no-i18n>Poke</b><small>Paste the copied message</small><span aria-hidden="true">↗</span></a></li><li><a href="https://app.devin.ai/" data-ai="https://app.devin.ai/" data-paste target="_blank" rel="noopener"><b data-no-i18n>Devin</b><small>Paste the copied message</small><span aria-hidden="true">↗</span></a></li></ul>
+        <ul class="lp-ai-list"><li><a href="https://chatgpt.com/" data-ai="https://chatgpt.com/?hints=search&amp;q=" data-pkg="com.openai.chatgpt" target="_blank" rel="noopener"><b data-no-i18n>ChatGPT</b><span aria-hidden="true">↗</span></a></li><li><a href="https://claude.ai/new" data-ai="https://claude.ai/new?q=" data-pkg="com.anthropic.claude" target="_blank" rel="noopener"><b data-no-i18n>Claude</b><span aria-hidden="true">↗</span></a></li><li><a href="https://gemini.google.com/app" data-ai="https://gemini.google.com/app" data-paste data-ios="googlegemini://" data-pkg="com.google.android.apps.bard" target="_blank" rel="noopener"><b data-no-i18n>Gemini</b><small>Paste the copied message</small><span aria-hidden="true">↗</span></a></li><li><a href="https://www.perplexity.ai/search" data-ai="https://www.perplexity.ai/search?q=" data-pkg="ai.perplexity.app.android" target="_blank" rel="noopener"><b data-no-i18n>Perplexity</b><span aria-hidden="true">↗</span></a></li><li><a href="https://copilot.microsoft.com/" data-ai="https://copilot.microsoft.com/?q=" data-pkg="com.microsoft.copilot" target="_blank" rel="noopener"><b data-no-i18n>Microsoft Copilot</b><span aria-hidden="true">↗</span></a></li><li><a href="https://grok.com/" data-ai="https://grok.com/?q=" data-pkg="ai.x.grok" target="_blank" rel="noopener"><b data-no-i18n>Grok</b><span aria-hidden="true">↗</span></a></li><li><a href="https://poke.com/" data-ai="https://poke.com/" data-paste data-sms target="_blank" rel="noopener"><b data-no-i18n>Poke</b><small class="lp-ai-desk">Paste the copied message</small><small class="lp-ai-phone" hidden>Choose Poke as the recipient</small><span aria-hidden="true">↗</span></a></li><li><a href="https://app.devin.ai/" data-ai="https://app.devin.ai/" data-paste target="_blank" rel="noopener"><b data-no-i18n>Devin</b><small>Paste the copied message</small><span aria-hidden="true">↗</span></a></li></ul>
       </div>
     </div>
   </div>
@@ -1351,7 +1352,12 @@ ENERGY</div>
         const msg = encodeURIComponent(aiMsg());
         aiLinks().forEach((a) => {
           const url = a.hasAttribute('data-paste') ? a.dataset.ai : a.dataset.ai + msg;
-          if (isAndroid && a.dataset.pkg) {
+          if ((isIOS || isAndroid) && a.hasAttribute('data-sms')) {
+            a.href = (isIOS ? 'sms:&body=' : 'sms:?body=') + msg;
+            a.removeAttribute('target');
+            a.querySelector('.lp-ai-desk').hidden = true;
+            a.querySelector('.lp-ai-phone').hidden = false;
+          } else if (isAndroid && a.dataset.pkg) {
             const u = new URL(url);
             a.href = 'intent://' + u.host + u.pathname + u.search + '#Intent;scheme=https;package=' + a.dataset.pkg + ';S.browser_fallback_url=' + encodeURIComponent(url) + ';end';
             a.removeAttribute('target');
@@ -1363,9 +1369,16 @@ ENERGY</div>
       }
       setAiHrefs();
       new MutationObserver(setAiHrefs).observe($('ai-msg'), { childList: true, characterData: true, subtree: true });
-      aiLinks().forEach((a) => a.addEventListener('click', () => {
+      aiLinks().forEach((a) => a.addEventListener('click', (e) => {
         if (navigator.clipboard) navigator.clipboard.writeText(aiMsg()).catch(() => {});
         setAi(false);
+        // Gemini's iPhone app only opens through its own address; if it isn't installed, go to the website instead.
+        if (isIOS && a.dataset.ios) {
+          e.preventDefault();
+          const web = a.href;
+          location.href = a.dataset.ios;
+          setTimeout(() => { if (!document.hidden) location.href = web; }, 1500);
+        }
       }));
       // "Trending in the most countries" compartment: same rules again.
       let tHover = false, tT = 0;
