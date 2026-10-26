@@ -116,6 +116,32 @@ function markdown(d, full) {
   return out.join('\n') + '\n';
 }
 
+// Plain-text data for one country and topic, pasted into AIs (Gemini) that can't open links themselves.
+const TOPICS = ['all', 'news', 'music', 'fashion', 'trending', 'world'];
+function brief(d, cc, topic) {
+  const c = d.countries.find((x) => x.code === cc);
+  if (!c || !TOPICS.includes(topic)) return null;
+  const t = (s) => String(s ?? '').replace(/\s+/g, ' ').trim();
+  const news = (r) => `${t(r.title)}${en(r) ? ` (English: ${t(en(r))})` : ''}${r.source ? ` – ${t(r.source)}` : ''}`;
+  const out = [];
+  const list = (title, rows, line) => { if (rows && rows.length) out.push('', `${title}:`, ...rows.map((r, i) => `${i + 1}. ${line(r)}`)); };
+  const vid = (r) => `${t(r.title)} – ${t(r.channel_title)} – ${fmt(r.view_count)} views`;
+  if (topic === 'all' || topic === 'news') list(`Top news in ${c.name} (Google News)`, d.news[cc], news);
+  if (topic === 'all' || topic === 'music') list(`Top 10 songs on YouTube in ${c.name} (YouTube Music chart)`, d.music[cc], vid);
+  if (topic === 'all' || topic === 'fashion') {
+    list(`Fashion Index for ${c.name}: fastest-growing videos from fashion brand and magazine channels`, d.fashionVideos[cc], (r) => `${t(r.title)} – ${t(r.channel_title)} – ${fmt(Math.round(r.views_per_hour))} views/hour`);
+    list(`Fashion news in ${c.name} (Google News)`, d.fashion[cc], news);
+  }
+  if (topic === 'trending') list(`YouTube Trending videos in ${c.name}`, d.trending[cc], vid);
+  if (topic === 'world') {
+    list('YouTube videos trending in the most countries', d.worldwide, (v) => `${t(v.title)} – ${t(v.channel)} – trending in ${v.countries.length} countries (${v.countries.join(', ')})`);
+    const tops = d.countries.map((x) => [x, (d.news[x.code] || [])[0]]).filter(([, r]) => r);
+    if (tops.length) out.push('', 'Top news story in each country (Google News):', ...tops.map(([x, r]) => `- ${x.name}: ${news(r)}`));
+  }
+  if (!out.length) return null;
+  return [`Like Polling live data (likepolling.com) for ${topic === 'world' ? 'the world' : c.name}, as of ${utc(new Date().toISOString())}. Answer using this data:`, ...out].join('\n') + '\n';
+}
+
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 function html(d) {
@@ -153,10 +179,16 @@ ${sections}
 function createHandler(deps = {}) {
   return async (req, res) => {
     const env = deps.env || process.env;
-    const format = ['full', 'html'].includes(req.query?.format) ? req.query.format : 'summary';
+    const format = ['full', 'html', 'brief'].includes(req.query?.format) ? req.query.format : 'summary';
     try {
       if (!env.SUPABASE_URL || !env.SUPABASE_KEY) throw new Error('Server is missing SUPABASE_URL/SUPABASE_KEY');
       const d = await load(rest(env, deps.fetch || fetch));
+      if (format === 'brief') {
+        const text = brief(d, String(req.query.country || '').toUpperCase(), String(req.query.topic || 'all'));
+        res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+        res.setHeader('Cache-Control', text ? CACHE : 'no-store');
+        return res.status(text ? 200 : 404).end(text || 'No data for this country or topic.\n');
+      }
       res.setHeader('Content-Type', format === 'html' ? 'text/html; charset=utf-8' : 'text/plain; charset=utf-8');
       res.setHeader('Cache-Control', CACHE);
       res.status(200).end(format === 'html' ? html(d) : markdown(d, format === 'full'));
