@@ -353,5 +353,10 @@ html.nw-lock { overflow: hidden; }
 @media (max-width: 760px) {
   .nw-front.nw-ranked .nw-feed-wrap { grid-template-columns: minmax(0, 1fr); }
   .nw-front.nw-ranked .nw-lead { height: min(360px, 92vw); }
-  .nw-front.nw-ranked .nw-feed { height: min(560px, 75svh); }
+  /* Phones: the stories sit in the page itself (no inner scroll box), so a swipe always scrolls the page. */
+  .nw-front.nw-ranked .nw-feed { height: auto; overflow: visible; padding-right: 0; }
+}
+/* Computers: the list fades out at the bottom instead of looking cut by the note below it. */
+@media (min-width: 761px) {
+  .nw-front.nw-ranked .nw-feed { padding-bottom: 40px; box-sizing: border-box; -webkit-mask-image: linear-gradient(#000 calc(100% - 44px), transparent); mask-image: linear-gradient(#000 calc(100% - 44px), transparent); }
 }
