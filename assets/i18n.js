@@ -21,6 +21,7 @@
   const DICT = {
     "Top story": ["Destaque", "Destacado", "Top-Story", "Главное", "Головне", "톱 뉴스", "トップ記事"],
     "Creator wire": ["Notícia de criadores", "Noticia de creadores", "Creator-News", "Новости авторов", "Новини авторів", "크리에이터 소식", "クリエイター速報"],
+    "How this works": ["Como funciona", "Cómo funciona", "So funktioniert es", "Как это работает", "Як це працює", "작동 방식", "仕組み"],
     "Read story": ["Ler matéria", "Leer noticia", "Artikel lesen", "Читать", "Читати", "기사 읽기", "記事を読む"],
     "Open source": ["Abrir fonte", "Abrir fuente", "Quelle öffnen", "Открыть источник", "Відкрити джерело", "출처 열기", "元記事を開く"],
     "Search channel": ["Buscar canal", "Buscar canal", "Kanal suchen", "Найти канал", "Знайти канал", "채널 검색", "チャンネルを検索"],

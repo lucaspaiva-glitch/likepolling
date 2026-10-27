@@ -271,11 +271,11 @@ html.nw-lock { overflow: hidden; }
 .nw-front.nw-ranked .nw-lead .nw-badge { height: 22px; padding: 0 8px; box-sizing: border-box; border-radius: 3px; background: #5a0008; border: 1px solid rgba(255,255,255,.14); box-shadow: 0 1px 4px rgba(0,0,0,.35); font: 600 10px/20px ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: .1em; }
 .nw-front.nw-ranked .nw-lead .nw-badge::before { content: '▲ '; color: #ff5c66; }
 .nw-front.nw-ranked .nw-lead .nw-age { height: 22px; padding: 0 8px; box-sizing: border-box; border-radius: 3px; line-height: 22px; }
-/* World News header and footer grow once the stories load (country strip, longer source note);
-   reserve their usual height so the page below doesn't jump on first load. */
+/* World News header grows once the stories load (country strip);
+   reserve its usual height so the page below doesn't jump on first load. */
 #news-front .nw-head, #news-front .nw-foot { box-sizing: border-box; }
-@media (min-width: 561px) { #news-front .nw-head { min-height: 53px; } #news-front .nw-foot { min-height: 73px; } }
-@media (max-width: 560px) { #news-front .nw-head { min-height: 103px; } #news-front .nw-foot { min-height: 164px; } }
+@media (min-width: 561px) { #news-front .nw-head { min-height: 53px; } }
+@media (max-width: 560px) { #news-front .nw-head { min-height: 103px; } }
 /* Popular Shorts ranked like the Trending/Music Index: top 5 as 9:16 cards, ranks 6+ as a list. */
 .nw-shorts .nw-feed.ysh { display: block; height: auto; max-height: none; overflow: visible; padding: 0; }
 .nw-shorts .nw-feed-wrap:has(.ysh) .nw-nav { display: none; }
