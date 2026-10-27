@@ -311,8 +311,16 @@ html.nw-lock { overflow: hidden; }
 .ysh-bar { display: block; height: 3px; margin: 6px 0 0 auto; border-radius: 2px; background: var(--red, #b0000e); opacity: .85; }
 @media (max-width: 560px) { .ysh-cards { padding: 12px 14px 14px; scroll-padding-inline: 14px; } .ysh-cards > :nth-child(1) { width: 48%; } .ysh-cards > :nth-child(2) { width: 47%; } .ysh-cards > :nth-child(3) { width: 46%; } .ysh-cards > :nth-child(4) { width: 45%; } .ysh-cards > :nth-child(5) { width: 44%; } .ysh-list .lp-rth-s { width: calc(96px * var(--k, 1)); } .ysh-list a { padding: 9px 14px; gap: 10px; } .ysh-rk { width: 20px; } .ysh-vol { width: 70px; } }
 /* World News ranks 02–10: the photo and headline shrink step by step down the ranking, like the video charts. */
-.nw-front.nw-ranked .nw-row { --rw: 168px; grid-template-columns: calc(var(--rw) * (1 - var(--i, 0) * var(--st, .03))) minmax(0, 1fr); }
-.nw-front.nw-ranked .nw-row .nw-hl { font-size: calc(16px - var(--i, 0) * .15px); }
+/* Ranks 02–10 are photo cards like 01, only slightly smaller step by step, so every
+   summary over a photo is big enough to read. 01 is shorter to keep the gap small. */
+.nw-front.nw-ranked .nw-feed-wrap { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.nw-front.nw-ranked .nw-lead, .nw-front.nw-ranked .nw-feed { height: 470px; }
+.nw-front.nw-ranked .nw-row { display: block; padding: 14px 0; }
+.nw-front.nw-ranked .nw-row:first-child { padding-top: 0; }
+.nw-front.nw-ranked .nw-row-media { width: calc(100% * (1 - var(--i, 0) * var(--st, .02))); aspect-ratio: 16 / 9; margin-bottom: 9px; }
+.nw-front.nw-ranked .nw-row .nw-hl { -webkit-line-clamp: 2; font-size: calc(16px - var(--i, 0) * .1px); }
+.nw-front.nw-ranked .nw-row-media .nw-cap { left: 8px; right: 8px; bottom: 8px; font-size: 13px; line-height: 1.5; }
+.nw-front.nw-ranked .nw-row-media .nw-cap span { padding: 2px 6px; }
 .nw-front.nw-ranked .nw-row:nth-child(2) { --i: 1; }
 .nw-front.nw-ranked .nw-row:nth-child(3) { --i: 2; }
 .nw-front.nw-ranked .nw-row:nth-child(4) { --i: 3; }
@@ -322,8 +330,8 @@ html.nw-lock { overflow: hidden; }
 .nw-front.nw-ranked .nw-row:nth-child(8) { --i: 7; }
 .nw-front.nw-ranked .nw-row:nth-child(n+9) { --i: 8; }
 @media (max-width: 560px) {
-  .nw-front.nw-ranked .nw-row { --rw: 46%; --st: .015; }
-  .nw-front.nw-ranked .nw-row .nw-hl { font-size: calc(15px - var(--i, 0) * .1px); }
+  .nw-front.nw-ranked .nw-row { --st: .012; }
+  .nw-front.nw-ranked .nw-row .nw-hl { font-size: calc(15px - var(--i, 0) * .05px); }
 }
 /* World News summaries: a few words at a time over the photo, like video subtitles. */
 .nw-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
@@ -340,4 +348,10 @@ html.nw-lock { overflow: hidden; }
 @media (max-width: 560px) {
   .nw-lead .nw-cap { font-size: 13.5px; }
   .nw-row-media .nw-cap { left: 4px; right: 4px; bottom: 4px; font-size: 11px; }
+  .nw-front.nw-ranked .nw-row-media .nw-cap { left: 6px; right: 6px; bottom: 6px; font-size: 12.5px; }
+}
+@media (max-width: 760px) {
+  .nw-front.nw-ranked .nw-feed-wrap { grid-template-columns: minmax(0, 1fr); }
+  .nw-front.nw-ranked .nw-lead { height: min(360px, 92vw); }
+  .nw-front.nw-ranked .nw-feed { height: min(560px, 75svh); }
 }

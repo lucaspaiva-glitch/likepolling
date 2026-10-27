@@ -272,6 +272,26 @@
     const live = caps.filter(capLive);
     if (capHover && live.includes(capHover)) return capHover;
     if (capTouch) {
+      // The first story (in ranking order) still fully on screen, so scrolling down the page or
+      // the stories list plays each summary in turn. At the end of the list, where the last
+      // stories can't scroll any higher, they play one after another.
+      const full = live.filter((cap) => {
+        const r = cap.closest('.nw-card').getBoundingClientRect();
+        const box = cap.closest('.nw-feed')?.getBoundingClientRect();
+        const top = Math.max(0, box ? box.top : 0), bottom = Math.min(innerHeight, box ? box.bottom : innerHeight);
+        return r.top >= top - 4 && r.bottom <= bottom + 4;
+      });
+      if (full.length) {
+        if (capOn && full.includes(capOn)) {
+          if (!capOn.nwDone) return capOn;
+          const fd = full[full.length - 1].closest('.nw-feed');
+          const cards = fd ? fd.querySelectorAll('.nw-card') : [];
+          const atEnd = !fd || full[full.length - 1].closest('.nw-card') === cards[cards.length - 1];
+          if (atEnd && capOn !== full[0]) return full[Math.min(full.indexOf(capOn) + 1, full.length - 1)];
+          if (atEnd && fd && full.length > 1 && capOn === full[0] && full[0].closest('.nw-feed') === fd) return full[1];
+        }
+        return full[0];
+      }
       let best = null, bestD = Infinity;
       for (const cap of live) {
         const r = cap.closest('.nw-card').getBoundingClientRect();
@@ -290,7 +310,7 @@
     const next = capPick(caps);
     if (next !== capOn || (capOn && capOn.nwDone)) { if (capOn) capReset(capOn); capOn = next; if (next) capReset(next); }
     if (!capOn) return;
-    if (!capOn.nwChunks) capOn.nwChunks = capChunks(capOn.dataset.cap, capOn.closest('.nw-lead') ? 44 : 26);
+    if (!capOn.nwChunks) capOn.nwChunks = capChunks(capOn.dataset.cap, capOn.closest('.nw-lead') ? 44 : 34);
     const span = capOn.firstElementChild;
     capOn.nwAt += 1;
     // A blank beat after the last chunk before the next summary starts.
@@ -301,6 +321,11 @@
     span.classList.add('nw-cap-in');
   };
   const capLoop = () => { clearTimeout(capT); capTick(); capT = setTimeout(capLoop, CAP_STEP); };
+  let capScroll = 0;
+  document.addEventListener('scroll', () => {
+    clearTimeout(capScroll);
+    capScroll = setTimeout(() => { if (capPick([...document.querySelectorAll('.nw-cap')]) !== capOn) capLoop(); }, 250);
+  }, { capture: true, passive: true });
   document.addEventListener('mouseover', (e) => {
     const cap = e.target.closest?.('.nw-card')?.querySelector('.nw-cap') || null;
     if (cap !== capHover) { capHover = cap; if (cap && cap !== capOn) capLoop(); }
@@ -327,7 +352,7 @@
         </div>
         <div class="nw-low">
           <div class="nw-bottom">
-            ${capHtml(r.summary)}
+            ${capHtml(r.summary || r.title)}
             <div class="nw-pub"><span class="nw-mono" aria-hidden="true">${initial}</span><span class="nw-src">${esc(src)}</span></div>
             <a class="nw-hl" href="${link}" target="_blank" rel="noopener"${r.title_orig ? ` title="${esc(r.title_orig)}"` : ''}>${esc(r.title)}</a>${r.summary ? `<span class="nw-sr">${esc(r.summary)}</span>` : ''}
             <a class="nw-read" href="${link}" target="_blank" rel="noopener" tabindex="-1">${esc(tr('Read story'))} ↗</a>
@@ -353,7 +378,7 @@
         <a class="nw-row-media" href="${link}" target="_blank" rel="noopener" tabindex="-1" aria-hidden="true">
           ${img ? `<img class="nw-img nw-kb${i % 4}" src="${img}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">` : ''}
           <div class="nw-art"><span>${initial}</span></div>
-          ${capHtml(r.summary)}
+          ${capHtml(r.summary || r.title)}
         </a>
         <div class="nw-row-body">
           <div class="nw-row-meta">

@@ -22,7 +22,7 @@ const GEMINI_MODELS = ['gemini-3.1-flash-lite', 'gemini-3.5-flash-lite'];
 const TRANSLATE_BATCH = 40;
 const TRANSLATIONS_PER_RUN = 800;
 // Short summaries shown over each photo, written from the publisher's own article description.
-const SUMMARY_LOOKUPS_PER_RUN = 300;
+const SUMMARY_LOOKUPS_PER_RUN = 500;
 const SUMMARY_CONCURRENCY = 6;
 const SUMMARY_BATCH = 20;
 const SUMMARY_WORDS = 15;
@@ -251,8 +251,12 @@ async function addSummaries(rows, deps, cfg = WORLD) {
   for (const r of [...rows].sort((a, b) => a.rank - b.rank)) {
     if (!r.image_url) continue;
     pos[r.country_code] = (pos[r.country_code] || 0) + 1;
-    if (pos[r.country_code] <= cfg.photoTarget && r.title_tr && r.title_tr.sum === undefined) todo.push(r);
+    if (pos[r.country_code] <= cfg.photoTarget && r.title_tr && r.title_tr.sum === undefined) todo.push([pos[r.country_code], r]);
   }
+  // Every country's #1 first, then every #2 and so on, so fill-in stories (low Google rank,
+  // high place on the site) aren't left at the back of the queue.
+  todo.sort((a, b) => a[0] - b[0]);
+  todo.forEach((t, i) => { todo[i] = t[1]; });
   if (!deps.summarize) return { summarized: 0, pending: todo.length };
   const queue = todo.slice(0, SUMMARY_LOOKUPS_PER_RUN);
   const ready = [];
