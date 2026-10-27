@@ -155,3 +155,33 @@ test("summarizes each translated photo story once from the publisher's descripti
   assert.equal(get('US', 2).ja, 'ja:sum:Second story');
   assert.equal(get('JP', 2), '');
 });
+
+test('retries a failed summary batch in halves', async () => {
+  let payload;
+  const asked = [];
+  const tr = (p) => (t) => Object.fromEntries(['en', 'pt', 'pt-PT', 'es', 'de', 'ru', 'uk', 'ko', 'ja'].map((l) => [l, `${l}:${p}${t.headline || t}`]));
+  const f = async (url, init = {}) => {
+    if (url.includes('/rpc/replace_news_world')) { payload = JSON.parse(init.body).payload; return text(200, String(payload.length)); }
+    if (url.includes('title_tr=not.is.null')) return text(200, JSON.stringify([{ link: 'https://news.google.com/rss/articles/US-1', title: 'First story', title_tr: { ...tr('')('First story'), sum: { en: 'stored summary' } } }]));
+    if (url.includes('/rest/v1/news_world')) return text(200, JSON.stringify(['US', 'JP'].flatMap((cc) => [1, 2].map((n) => ({ link: `https://news.google.com/rss/articles/${cc}-${n}`, image_url: `https://img.test/${cc}${n}.jpg` })))));
+    if (url.includes('/rest/v1/')) return text(200, '[]');
+    if (url.includes('/rss/articles/')) {
+      const id = url.split('/').pop();
+      return text(200, `<c-wiz data-n-a-sg="sg" data-n-a-ts="1"></c-wiz><i>${id}</i>`);
+    }
+    if (url.includes('batchexecute')) {
+      const id = decodeURIComponent(init.body).match(/((?:US|JP)-\d)/)[1];
+      return text(200, `)]}'\n\n${JSON.stringify([['wrb.fr', 'Fbv4je', JSON.stringify(['garturlres', `https://paper.test/${id}`])]])}`);
+    }
+    if (url.startsWith('https://paper.test/')) {
+      const id = url.split('/').pop();
+      return text(200, id === 'JP-2' ? '<html><head><title>x</title></head></html>' : `<meta property="og:description" content="Long description for ${id} &amp; what happened next in detail.">`);
+    }
+    const cc = new URL(url).searchParams.get('gl');
+    return text(200, cc === 'US' || cc === 'JP' ? rss(item('First story', 'Wire', `https://news.google.com/rss/articles/${cc}-1`), item('Second story', 'Paper', `https://news.google.com/rss/articles/${cc}-2`)) : rss());
+  };
+  const s = await run(env, { ...deps(f), translate: async (titles) => titles.map(tr('')), summarize: async (stories) => { if (stories.length > 1) throw new Error('Unexpected token, not valid JSON'); asked.push(...stories); return stories.map(tr('sum:')); } });
+  assert.equal(s.summaries.summarized, 2);
+  assert.deepEqual(s.summaries.errors, []);
+  assert.equal(payload.find((r) => r.country_code === 'US' && r.rank === 2).title_tr.sum.ja, 'ja:sum:Second story');
+});

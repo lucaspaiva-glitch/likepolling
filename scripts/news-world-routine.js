@@ -285,7 +285,11 @@ async function addSummaries(rows, deps, cfg = WORLD) {
           summarized++;
         }
       });
-    } catch (err) { errors.push(err.message); }
+    } catch (err) {
+      // One bad reply (e.g. invalid JSON) shouldn't hold back the whole batch: retry it in halves.
+      if (batch.length > 1) batches.push(batch.slice(0, batch.length >> 1), batch.slice(batch.length >> 1));
+      else errors.push(err.message);
+    }
   } }));
   return { summarized, no_description: noDescription, pending: todo.length - summarized - noDescription, errors: errors.slice(0, 3) };
 }
