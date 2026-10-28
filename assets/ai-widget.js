@@ -28,9 +28,9 @@
   mount.innerHTML = `
     <div class="ytt-head"><h2 class="ytt-title">Who am I in the age of AI?</h2><button type="button" class="aia-info" aria-expanded="false" aria-controls="aia-about">About</button><span class="ytt-spacer"></span><span class="ytt-asof aia-asof"></span>
       <div class="aia-about" id="aia-about" role="dialog" aria-label="About" hidden>
-        <p>Real news about people using AI for good: medicine, jobs, creativity and daily life. Picked and translated by AI (Gemini), updated twice a day.</p>
-        <p>The title is a question Ella Hafermalz (Vrije Universiteit Amsterdam) asks her students, from BBC News' AI Decoded.</p>
-        <a href="https://www.youtube.com/watch?v=6zAgTga9kZw&amp;t=860s" target="_blank" rel="noopener">Watch the moment on YouTube (14:23)</a>
+        <p>People using AI for good: medicine, jobs, creativity and daily life.</p>
+        <p>Title from Ella Hafermalz on BBC's AI Decoded.</p>
+        <a href="https://www.youtube.com/watch?v=6zAgTga9kZw&amp;t=860s" target="_blank" rel="noopener">Watch on YouTube (14:23)</a>
       </div>
     </div>
     <div class="aia-bar"><select class="ytt-select aia-select" aria-label="Country"></select><div class="aia-kinds" role="group" aria-label="Topic"></div></div>
