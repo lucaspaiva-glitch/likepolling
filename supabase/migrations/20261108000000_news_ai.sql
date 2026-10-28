@@ -1,0 +1,51 @@
+-- "Who am I in the age of AI?": recent AI headlines from Google News for each of the 41
+-- Trending Index countries, filled twice a day by scripts/news-ai-routine.js.
+-- title_tr holds the 9 site-language translations, "ai" (medicine / work / creativity / life / none,
+-- the AI check) and "sum" (short summaries). Adds one new table and one write function; nothing existing is changed.
+
+create table if not exists public.news_ai (
+  country_code  text        not null check (country_code ~ '^[A-Z]{2}$'),
+  link          text        not null,
+  rank          integer     not null,
+  title         text        not null,
+  source        text,
+  published_at  timestamptz,
+  image_url     text,
+  title_tr      jsonb,
+  fetched_at    timestamptz not null default now(),
+  primary key (country_code, link)
+);
+create index if not exists news_ai_country_rank on public.news_ai (country_code, rank);
+
+-- Replaces every country present in the payload in one transaction, so a
+-- country whose feed failed keeps its previous stories.
+create or replace function public.replace_news_ai(payload jsonb)
+returns integer
+language plpgsql
+set search_path = ''
+as $$
+declare
+  n integer;
+begin
+  delete from public.news_ai t
+   where t.country_code in (select distinct e->>'country_code' from jsonb_array_elements(payload) e);
+
+  insert into public.news_ai (country_code, link, rank, title, source, published_at, image_url, title_tr, fetched_at)
+  select r.country_code, r.link, r.rank, r.title, r.source, r.published_at, r.image_url, r.title_tr, now()
+    from jsonb_to_recordset(payload) as r(country_code text, link text, rank integer, title text, source text, published_at timestamptz, image_url text, title_tr jsonb)
+  on conflict (country_code, link) do nothing;
+
+  get diagnostics n = row_count;
+  return n;
+end;
+$$;
+
+revoke execute on function public.replace_news_ai(jsonb) from public, anon, authenticated;
+grant execute on function public.replace_news_ai(jsonb) to service_role;
+
+alter table public.news_ai enable row level security;
+drop policy if exists "Public read access" on public.news_ai;
+create policy "Public read access" on public.news_ai for select to anon, authenticated using (true);
+revoke insert, update, delete on public.news_ai from anon, authenticated;
+grant select on public.news_ai to anon, authenticated;
+grant select, insert, update, delete on public.news_ai to service_role;

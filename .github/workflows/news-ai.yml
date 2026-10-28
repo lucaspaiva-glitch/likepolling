@@ -1,0 +1,28 @@
+name: AI News (Who am I in the age of AI?)
+
+on:
+  schedule:
+    - cron: '50 0,12 * * *' # twice a day, after Fashion News
+  workflow_dispatch:
+
+concurrency:
+  group: news-ai
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+      - name: Install dependencies (Gemini SDK)
+        run: npm ci --omit=dev
+      - name: Refresh news_ai
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: node scripts/news-ai-routine.js

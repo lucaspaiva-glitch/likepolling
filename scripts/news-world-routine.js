@@ -181,11 +181,19 @@ function geminiJson(apiKey) {
 const LANG_LIST = 'en (English), pt (Brazilian Portuguese), pt-PT (European Portuguese), es (Spanish), de (German), ru (Russian), uk (Ukrainian), ko (Korean), ja (Japanese)';
 const LANG_KEYS = SITE_LANGS.map((l) => `"${l}"`).join(', ');
 
-// classify: also asks whether each headline is really about fashion (key "fashion").
+// Optional AI check stored with each translation (title_tr[key]); cfg.classify: true is the Fashion News one.
+const FASHION_CHECK = {
+  key: 'fashion',
+  rule: '"fashion" is true only if the headline is mainly about fashion: clothing, shoes, accessories, designers, fashion brands, models, fashion shows or style trends; otherwise false (for example sport, politics, food, or the word only used as in "in dramatic fashion").',
+  ok: (v) => typeof v === 'boolean',
+};
+const checkOf = (classify) => (classify === true ? FASHION_CHECK : classify || null);
+
 function geminiTranslator(apiKey, classify = false) {
   const ask = geminiJson(apiKey);
+  const check = checkOf(classify);
   return async (titles) => {
-    const prompt = `Translate each news headline below into these languages: ${LANG_LIST}. Keep names, numbers and meaning exact; do not add or drop information. Reply with only a JSON array with one object per headline, in the same order, each with exactly the keys ${LANG_KEYS}${classify ? ', "fashion"' : ''}.${classify ? ' "fashion" is true only if the headline is mainly about fashion: clothing, shoes, accessories, designers, fashion brands, models, fashion shows or style trends; otherwise false (for example sport, politics, food, or the word only used as in "in dramatic fashion").' : ''}\n\n${JSON.stringify(titles)}`;
+    const prompt = `Translate each news headline below into these languages: ${LANG_LIST}. Keep names, numbers and meaning exact; do not add or drop information. Reply with only a JSON array with one object per headline, in the same order, each with exactly the keys ${LANG_KEYS}${check ? `, "${check.key}"` : ''}.${check ? ` ${check.rule}` : ''}\n\n${JSON.stringify(titles)}`;
     const out = await ask(prompt);
     if (!Array.isArray(out) || out.length !== titles.length) throw new Error('translation count mismatch');
     return out;
@@ -219,6 +227,7 @@ async function addTranslations(rows, env, deps, cfg = WORLD) {
     if (!r.title_tr && pos[r.country_code] <= cfg.photoTarget) todo.push(r);
   }
   if (!deps.translate) return { translated: 0, pending: todo.length };
+  const check = checkOf(cfg.classify);
   const queue = todo.slice(0, cfg.translations);
   let translated = 0;
   const errors = [];
@@ -230,9 +239,9 @@ async function addTranslations(rows, env, deps, cfg = WORLD) {
       const out = await deps.translate(batch.map((r) => r.title));
       batch.forEach((r, k) => {
         const t = out[k] || {};
-        if (SITE_LANGS.every((l) => typeof t[l] === 'string' && t[l].trim()) && (!cfg.classify || typeof t.fashion === 'boolean')) {
+        if (SITE_LANGS.every((l) => typeof t[l] === 'string' && t[l].trim()) && (!check || check.ok(t[check.key]))) {
           r.title_tr = Object.fromEntries(SITE_LANGS.map((l) => [l, t[l].trim().slice(0, 500)]));
-          if (cfg.classify) r.title_tr.fashion = t.fashion;
+          if (check) r.title_tr[check.key] = t[check.key];
           translated++;
         }
       });
@@ -246,12 +255,14 @@ async function addTranslations(rows, env, deps, cfg = WORLD) {
 // no description get sum '' and aren't looked up again.
 async function addSummaries(rows, deps, cfg = WORLD) {
   if (!cfg.summaries) return null;
+  const check = checkOf(cfg.classify);
+  const shown = (r) => !check || !check.hide || !check.hide(r.title_tr[check.key]);
   const todo = [];
   const pos = {};
   for (const r of [...rows].sort((a, b) => a.rank - b.rank)) {
     if (!r.image_url) continue;
     pos[r.country_code] = (pos[r.country_code] || 0) + 1;
-    if (pos[r.country_code] <= cfg.photoTarget && r.title_tr && r.title_tr.sum === undefined) todo.push([pos[r.country_code], r]);
+    if (pos[r.country_code] <= cfg.photoTarget && r.title_tr && r.title_tr.sum === undefined && shown(r)) todo.push([pos[r.country_code], r]);
   }
   // Every country's #1 first, then every #2 and so on, so fill-in stories (low Google rank,
   // high place on the site) aren't left at the back of the queue.
@@ -350,7 +361,7 @@ async function run(env = process.env, deps = {}, cfg = WORLD) {
   return summary;
 }
 
-module.exports = { run, feedUrl, sectionUrl, EDITIONS, SEARCH, PHOTO_TARGET, WORLD };
+module.exports = { run, feedUrl, sectionUrl, EDITIONS, SEARCH, PHOTO_TARGET, WORLD, geminiTranslator };
 
 if (require.main === module) {
   run().catch((err) => {
