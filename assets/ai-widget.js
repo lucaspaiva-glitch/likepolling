@@ -26,14 +26,24 @@
 
   mount.classList.add('aia');
   mount.innerHTML = `
-    <div class="ytt-head"><h2 class="ytt-title">Who am I in the age of AI?</h2><span class="ytt-sym">AI·HUMAN</span><span class="ytt-spacer"></span><span class="ytt-asof aia-asof"></span></div>
+    <div class="ytt-head"><h2 class="ytt-title">Who am I in the age of AI?</h2><button type="button" class="aia-info" aria-expanded="false" aria-controls="aia-about">About</button><span class="ytt-spacer"></span><span class="ytt-asof aia-asof"></span></div>
+    <div class="aia-about" id="aia-about" hidden>
+      <p>Real stories from the last 2 days on Google News in the chosen country, in its language, about people using AI for good: medicine and science, new jobs, creativity and everyday life. AI (Google Gemini) picks them, leaving out stories about risks, scandals, markets and product ads, translates the headline and writes the short summary from the publisher's own description. Updated twice a day.</p>
+      <p>The title comes from a question that Ella Hafermalz, associate professor at Vrije Universiteit Amsterdam, asks her students, as she said on BBC News' AI Decoded.</p>
+      <a href="https://www.youtube.com/watch?v=6zAgTga9kZw&amp;t=860s" target="_blank" rel="noopener">Watch the moment on YouTube (14:23)</a>
+    </div>
     <div class="aia-bar"><select class="ytt-select aia-select" aria-label="Country"></select><div class="aia-kinds" role="group" aria-label="Topic"></div></div>
-    <div class="aia-body"></div>
-    <p class="ytt-foot">Real stories from the last 2 days on Google News in the chosen country, in its language, about people using AI for good: medicine and science, new jobs, creativity and everyday life. AI (Google Gemini) picks them, leaving out stories about risks, scandals, markets and product ads, translates the headline and writes the short summary from the publisher's own description. Updated twice a day.</p>`;
+    <div class="aia-body"></div>`;
   const select = mount.querySelector('.aia-select');
   const kindsBox = mount.querySelector('.aia-kinds');
   const body = mount.querySelector('.aia-body');
   const asof = mount.querySelector('.aia-asof');
+  const info = mount.querySelector('.aia-info');
+  const about = mount.querySelector('.aia-about');
+  info.addEventListener('click', () => {
+    about.hidden = !about.hidden;
+    info.setAttribute('aria-expanded', String(!about.hidden));
+  });
   const cache = {};
   let kind = 'all';
   let token = 0;
