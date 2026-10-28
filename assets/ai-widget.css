@@ -44,9 +44,10 @@ a.aia-info, .aia-info { display: inline-flex; align-items: center; gap: 4px; pad
 .aia-info::before { content: 'i'; display: inline-grid; place-items: center; width: 13px; height: 13px; border: 1.5px solid currentColor; border-radius: 50%; font: 700 9px/1 Georgia, serif; font-style: italic; }
 .aia-info:hover, .aia-info[aria-expanded="true"] { background: var(--red, #b0000e); color: #fff; }
 .aia-info:focus-visible { outline: 2px solid var(--red, #b0000e); outline-offset: 2px; }
-.aia-about { padding: 12px 18px 14px; border-bottom: 1px solid var(--line, #ebebeb); background: #fcfafa; font-size: 12px; line-height: 1.5; color: #4a4a4a; }
+.aia .ytt-head { position: relative; }
+.aia-about { position: absolute; z-index: 5; top: calc(100% - 6px); left: 12px; right: 12px; padding: 12px 14px; border: 1px solid var(--line, #ebebeb); border-radius: 10px; background: #fff; box-shadow: 0 10px 30px rgba(0,0,0,.14); font-size: 12px; line-height: 1.45; color: #4a4a4a; }
 .aia-about[hidden] { display: none; }
-.aia-about p { margin: 0 0 8px; }
+.aia-about p { margin: 0 0 6px; }
 .aia-about a { font-weight: 650; color: var(--red, #b0000e); text-decoration: none; }
 .aia-about a:hover { text-decoration: underline; }
 .aia-about a::after { content: ' ↗'; }
