@@ -495,8 +495,8 @@
   });
 
   // Endless vertical feed: the selected language first, then every other
-  // language's stories (flagged; the first one says so), each story once,
-  // then a "caught up" card. Cards load a few screens ahead of the reader.
+  // language's stories (flagged; the first one says so), each story once.
+  // Cards load a few screens ahead of the reader.
   let feedState = null;
   const nearEnd = () => sentinel.offsetTop - feed.scrollTop < feed.clientHeight * 3;
   async function moreFeed() {
@@ -515,7 +515,6 @@
       }
       if (st.shown >= st.items.length) {
         st.done = true;
-        sentinel.insertAdjacentHTML('beforebegin', `<p class="nw-feed-end">${esc(tr("You're all caught up"))}</p>`);
         return;
       }
       const from = st.shown;
