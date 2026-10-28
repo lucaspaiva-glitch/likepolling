@@ -1,0 +1,25 @@
+name: Wikipedia memory
+
+on:
+  schedule:
+    - cron: '23 6 * * *' # daily; Wikimedia publishes each day ~1-2 days late, so the run re-reads the last 4 days
+  workflow_dispatch:
+
+concurrency:
+  group: wiki-memory
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+      - name: Save Wikipedia top articles per country
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: node scripts/wiki-routine.js

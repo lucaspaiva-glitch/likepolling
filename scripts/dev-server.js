@@ -6,6 +6,7 @@ const metrics = require('../api/metrics');
 const youtubeActive = require('../api/youtube-active');
 const v1 = require('../api/v1');
 const llms = require('../api/llms');
+const searchCount = require('../api/search-count');
 
 const root = path.join(__dirname, '..');
 const port = Number(process.env.PORT || 3000);
@@ -14,7 +15,7 @@ http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
   const v1Route = url.pathname.match(/^\/api\/v1\/(\w+)$/);
   if (v1Route) url.searchParams.set('route', v1Route[1]);
-  const api = v1Route ? v1 : { '/api/metrics': metrics, '/api/metrics/youtube-active': youtubeActive, '/api/llms': llms }[url.pathname];
+  const api = v1Route ? v1 : { '/api/metrics': metrics, '/api/metrics/youtube-active': youtubeActive, '/api/llms': llms, '/api/search-count': searchCount }[url.pathname];
   if (api) {
     req.query = Object.fromEntries(url.searchParams);
     res.status = (code) => { res.statusCode = code; return res; };

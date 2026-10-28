@@ -1,0 +1,30 @@
+name: GDELT memory
+
+on:
+  schedule:
+    - cron: '43 1 * * *' # daily; yesterday's last GDELT file (23:45 UTC) is published by ~00:00 UTC
+  workflow_dispatch:
+    inputs:
+      day:
+        description: 'Day to (re)build, YYYY-MM-DD (default: yesterday UTC)'
+        required: false
+
+concurrency:
+  group: gdelt-memory
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+      - name: Save GDELT daily totals
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          DAY: ${{ inputs.day }}
+        run: node scripts/gdelt-routine.js

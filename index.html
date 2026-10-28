@@ -914,13 +914,20 @@ ENERGY</div>
       return data?.[0] || null;
     }
 
+    // Anonymous lookup count per visitor country (api/search-count.js); never blocks or breaks a search.
+    function countLookup(result) {
+      const id = result?.entity?.handles?.youtube_channel_id;
+      try { if (id && navigator.sendBeacon) navigator.sendBeacon('/api/search-count', new Blob([JSON.stringify({ channel_id: id })], { type: 'application/json' })); } catch (e) {}
+      return result;
+    }
+
     async function loadChannel(raw, onStatus) {
       const q = normalize(raw);
       onStatus('Searching database…');
       let entity = await retry(() => findEntity(q));
       let metric = entity ? await retry(() => latestMetric(entity.id)) : null;
       const needsDetails = metric && 'details' in metric && metric.details == null;
-      if (metric && !needsDetails && Date.now() - Date.parse(metric.created_at) < STALE_MS) return { entity, metric };
+      if (metric && !needsDetails && Date.now() - Date.parse(metric.created_at) < STALE_MS) return countLookup({ entity, metric });
 
       onStatus(metric ? 'Refreshing live metrics…' : 'Fetching live data from YouTube…');
       try {
@@ -931,10 +938,10 @@ ENERGY</div>
         onStatus('Loading from database…');
         entity = (await getEntity(body.entity.id)) || body.entity;
         metric = (await latestMetric(entity.id)) || body.metric;
-        return { entity, metric };
+        return countLookup({ entity, metric });
       } catch (err) {
         console.error('Metrics service error:', err);
-        if (metric) return { entity, metric, warning: `Showing cached data — live refresh failed (${err.message}).` };
+        if (metric) return countLookup({ entity, metric, warning: `Showing cached data — live refresh failed (${err.message}).` });
         throw err;
       }
     }
