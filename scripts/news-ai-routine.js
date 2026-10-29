@@ -34,7 +34,7 @@ const AI_CHECK = {
 const AI = {
   ...WORLD,
   table: 'news_ai', rpc: 'replace_news_ai', feed: aiUrl, searchTopUp: () => true,
-  photoTarget: 40, imageLookups: 2000, translations: 2000, classify: AI_CHECK, summaries: true,
+  maxPerSource: 3, photoTarget: 40, imageLookups: 2000, translations: 2000, classify: AI_CHECK, summaries: true,
 };
 
 const run = (env, deps) => runNews(env, deps, AI);

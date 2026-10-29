@@ -63,12 +63,15 @@ function sectionUrl(cc, topic) {
   return `https://news.google.com/rss/headlines/section/topic/${topic}?hl=${hl}&gl=${cc}&ceid=${ceid}`;
 }
 
-function uniqueItems(items, seen) {
+// maxPerSource keeps one outlet (e.g. a spam site flooding a search) from filling a country's list.
+function uniqueItems(items, seen, maxPerSource = Infinity) {
+  seen.perSource = seen.perSource || new Map();
   return items.filter((it) => {
     if (!it.title || !/^https:\/\//.test(it.link) || it.link.length > MAX_LINK || BLOCKED_SOURCES.test(it.source)) return false;
     const k = it.title.toLowerCase();
-    if (seen.has(it.link) || seen.has(k)) return false;
-    seen.add(it.link); seen.add(k);
+    const src = (it.source || '').toLowerCase();
+    if (seen.has(it.link) || seen.has(k) || (seen.perSource.get(src) || 0) >= maxPerSource) return false;
+    seen.add(it.link); seen.add(k); seen.perSource.set(src, (seen.perSource.get(src) || 0) + 1);
     return true;
   });
 }
@@ -81,7 +84,7 @@ const WORLD = {
 
 async function fetchCountry(cc, deps, cfg = WORLD) {
   const seen = new Set();
-  const items = uniqueItems(parseItems(await fetchText(cfg.feed(cc), deps)), seen);
+  const items = uniqueItems(parseItems(await fetchText(cfg.feed(cc), deps)), seen, cfg.maxPerSource);
   return { top: items.slice(0, TOP_N).map((it, i) => ({ country_code: cc, rank: i + 1, ...it })), more: items.slice(TOP_N), seen };
 }
 
@@ -95,7 +98,7 @@ async function topUpCandidates(cc, more, seen, deps, cfg = WORLD) {
       .then((xml) => parseItems(xml).slice(0, SECTION_DEPTH)).catch(() => []))));
   }
   const ts = (it) => Date.parse(it.published_at) || 0;
-  return uniqueItems(lists.flat(), seen).sort((a, b) => ts(b) - ts(a));
+  return uniqueItems(lists.flat(), seen, cfg.maxPerSource).sort((a, b) => ts(b) - ts(a));
 }
 
 async function loadStoredImages(env, deps, cfg = WORLD) {

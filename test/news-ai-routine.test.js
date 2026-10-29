@@ -51,3 +51,18 @@ test('writes news_ai with the AI kind in title_tr and summarizes only the shown 
   assert.equal(us[1].title_tr.sum, undefined);
   assert.ok(summarized.length > 0 && summarized.every((h) => h === 'AI spots cancer early'));
 });
+
+test('one outlet flooding a country\'s search keeps at most 3 stories', async () => {
+  let payload;
+  const f = async (url, init = {}) => {
+    if (url.includes('/rpc/replace_news_ai')) { payload = JSON.parse(init.body).payload; return text(200, String(payload.length)); }
+    if (url.includes('/rest/v1/') || url.includes('/rss/articles/')) return text(404, '');
+    const cc = new URL(url).searchParams.get('gl');
+    const spam = Array.from({ length: 8 }, (_, i) => item(`Spam ${i}`, 'Spam Farm', `https://news.google.com/rss/articles/${cc}-s${i}`)).join('');
+    return text(200, `<rss><channel>${spam}${item('AI spots cancer early', 'Health', `https://news.google.com/rss/articles/${cc}-1`)}</channel></rss>`);
+  };
+  await run(env, { fetch: f, sleep: async () => {}, log: () => {} });
+  const jp = payload.filter((r) => r.country_code === 'JP');
+  assert.equal(jp.filter((r) => r.source === 'Spam Farm').length, 3);
+  assert.ok(jp.some((r) => r.title === 'AI spots cancer early'));
+});
