@@ -323,7 +323,7 @@ async function run(env = process.env, deps = {}, cfg = WORLD) {
   const missing = ['SUPABASE_URL', 'SUPABASE_KEY'].filter((k) => !env[k]);
   if (missing.length) throw new Error(`Missing env vars: ${missing.join(', ')}`);
 
-  const countries = Object.keys(EDITIONS);
+  const countries = cfg.countries || Object.keys(EDITIONS);
   const queue = [...countries];
   const rows = [];
   const pending = {};

@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { run, fashionUrl, TERMS } = require('../scripts/news-fashion-routine');
+const { run, FASHION, fashionUrl, TERMS } = require('../scripts/news-fashion-routine');
 const { EDITIONS } = require('../scripts/news-world-routine');
 
 const env = { SUPABASE_URL: 'https://db.test', SUPABASE_KEY: 'secret' };
@@ -32,4 +32,9 @@ test('writes news_fashion with the AI fashion check stored in title_tr', async (
   assert.deepEqual(s.failed, []);
   const us = payload.filter((r) => r.country_code === 'US');
   assert.deepEqual(us.map((r) => [r.title, r.title_tr && r.title_tr.fashion]), [['Runway report', true], ['Team wins in style', false]]);
+});
+
+test('Fashion News skips Iraq', () => {
+  assert.equal(FASHION.countries.length, Object.keys(EDITIONS).length - 1);
+  assert.ok(!FASHION.countries.includes('IQ'));
 });
