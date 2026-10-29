@@ -26,7 +26,7 @@ const FASHION = {
   table: 'news_fashion', rpc: 'replace_news_fashion', feed: fashionUrl, searchTopUp: () => true,
   // Iraq has too little fashion news to fill a list.
   countries: Object.keys(EDITIONS).filter((cc) => cc !== 'IQ'),
-  maxPerSource: 3, photoTarget: 20, imageLookups: 1000, translations: 1000, classify: true, summaries: false,
+  maxPerSource: 3, photoTarget: 20, imageLookups: 1000, translations: 1000, classify: true, summaries: true,
 };
 
 const run = (env, deps) => runNews(env, deps, FASHION);

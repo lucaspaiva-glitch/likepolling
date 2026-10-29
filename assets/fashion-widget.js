@@ -48,11 +48,15 @@
     </section>
     <section class="ytt fsh-card">
       <div class="ytt-head"><h3 class="ytt-title">Fashion News</h3><span class="ytt-sym">FSH</span><span class="ytt-spacer"></span><span class="ytt-asof fsh-nasof"></span></div>
-      <div class="fsh-body"></div>
+      <p class="ytt-empty fsh-empty" hidden></p>
+      <div class="nw-front nw-ranked fsh-wire"><div class="nw-feed-wrap"><div class="nw-lead" data-no-i18n></div><div class="nw-feed" data-no-i18n></div></div></div>
       <p class="ytt-foot">Fashion stories from the last 2 days on Google News in the chosen country, in its language. AI (Google Gemini) checks that each one is about fashion and translates the headline; hover over it to see the original. Only stories with the article's own photo are shown. Updated twice a day.</p>
     </section>`;
   const select = mount.querySelector('.fsh-select');
-  const body = mount.querySelector('.fsh-body');
+  const empty = mount.querySelector('.fsh-empty');
+  const wrap = mount.querySelector('.fsh-wire .nw-feed-wrap');
+  const lead = mount.querySelector('.fsh-wire .nw-lead');
+  const feed = mount.querySelector('.fsh-wire .nw-feed');
   const asof = mount.querySelector('.fsh-nasof');
   const vcard = mount.querySelector('.fsh-vcard');
   const vbody = mount.querySelector('.fsh-vbody');
@@ -62,11 +66,50 @@
   const vcache = {};
   let videoCodes = [];
   let token = 0;
+  let spare = [];
+  const tr = (s) => (window.LP_I18N ? window.LP_I18N.t(s) : s);
+  const ICON = {
+    pause: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/></svg>',
+    play: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M8 5.5v13l10.5-6.5z"/></svg>',
+    open: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h9v9M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  };
 
-  // Hide photos that fail to load in this browser.
+  // Pan-and-zoom (and the summary over the photo) run only while a card is on screen.
+  const motion = 'IntersectionObserver' in window
+    ? new IntersectionObserver((entries) => entries.forEach((e) => e.target.classList.toggle('nw-on', e.isIntersecting)), { threshold: 0.6 })
+    : null;
+  const watchCards = () => mount.querySelectorAll('.fsh-wire .nw-card:not([data-w])').forEach((c) => {
+    c.dataset.w = '1';
+    if (motion) motion.observe(c); else c.classList.add('nw-on');
+  });
+
+  // Like World News, a story whose photo doesn't load is dropped and the next one moves up.
   mount.addEventListener('error', (e) => {
-    if (e.target.tagName === 'IMG') e.target.closest('.fsh-media')?.classList.add('fsh-noimg');
+    const img = e.target;
+    if (!img.classList || !img.classList.contains('nw-img')) return;
+    const card = img.closest('.nw-card');
+    if (card.classList.contains('nw-row')) {
+      card.remove();
+      if (spare.length) { feed.insertAdjacentHTML('beforeend', rowHtml(spare.shift(), feed.children.length + 1)); watchCards(); }
+      return;
+    }
+    card.classList.add('nw-noimg');
+    img.remove();
   }, true);
+  function setPaused(card, paused) {
+    card.classList.toggle('nw-paused', paused);
+    const b = card.querySelector('.nw-pp');
+    const label = tr(paused ? 'Play motion' : 'Pause motion');
+    b.setAttribute('aria-pressed', String(paused));
+    b.setAttribute('aria-label', label);
+    b.title = label;
+    b.innerHTML = paused ? ICON.play : ICON.pause;
+  }
+  mount.addEventListener('click', (e) => {
+    const card = e.target.closest('.fsh-wire .nw-card');
+    if (!card || e.target.closest('a') || card.classList.contains('nw-row')) return;
+    setPaused(card, !card.classList.contains('nw-paused'));
+  });
 
   function ago(iso) {
     const t = Date.parse(iso);
@@ -78,23 +121,89 @@
     return rtf.format(-Math.round(mins / 1440), 'day');
   }
 
-  function story(r, cls) {
-    const shown = (r.title_tr && r.title_tr[dataLang(siteLang())]) || r.title;
-    const orig = shown !== r.title ? ` title="${esc(r.title)}"` : '';
-    return `<article class="${cls}">
-      <a class="fsh-media" href="${esc(r.link)}" target="_blank" rel="noopener" tabindex="-1" aria-hidden="true">
-        <img src="${esc(r.image_url)}" alt="" loading="lazy" referrerpolicy="no-referrer"><span>${esc((r.source || '?').slice(0, 1))}</span></a>
-      <div class="fsh-text">
-        <div class="fsh-meta"><span class="fsh-src" data-no-i18n>${esc(r.source || '')}</span><span class="fsh-age">${esc(ago(r.published_at))}</span></div>
-        <a class="fsh-hl" href="${esc(r.link)}" target="_blank" rel="noopener" data-no-i18n${orig}>${esc(shown)}</a>
-      </div></article>`;
+  // Same ranked cards as World News Wire (news-wire-widget.css): 01 is the big photo card,
+  // 02–10 photo cards that shrink step by step. Its summary player also plays these captions.
+  function parts(r) {
+    const t = r.title_tr || {};
+    const l = dataLang(siteLang());
+    const title = t[l] || r.title;
+    const src = String(r.source || 'Google News').trim();
+    return {
+      title,
+      orig: title !== r.title ? ` title="${esc(r.title)}"` : '',
+      sum: (t.sum && t.sum[l]) || '',
+      link: /^https:\/\//.test(r.link) ? esc(r.link) : '#',
+      img: /^https:\/\//.test(r.image_url || '') ? esc(r.image_url) : '',
+      src: esc(src),
+      initial: esc(([...src][0] || 'N').toUpperCase()),
+    };
+  }
+  const capHtml = (text) => `<p class="nw-cap" aria-hidden="true" data-cap="${esc(text)}"><span></span></p>`;
+
+  function leadHtml(r) {
+    const p = parts(r);
+    return `
+      <article class="nw-card nw-short nw-hero nw-in${p.img ? '' : ' nw-noimg'}">
+        <div class="nw-media" aria-hidden="true">
+          ${p.img ? `<img class="nw-img nw-kb0" src="${p.img}" alt="" decoding="async" referrerpolicy="no-referrer">` : ''}
+          <div class="nw-art"><span>${p.initial}</span></div>
+        </div>
+        <div class="nw-shade" aria-hidden="true"></div>
+        <div class="nw-top">
+          <span class="nw-badge">${esc(tr('Top story'))}</span>
+          <span class="nw-age">${esc(ago(r.published_at))}</span>
+        </div>
+        <div class="nw-low">
+          <div class="nw-bottom">
+            ${capHtml(p.sum || p.title)}
+            <div class="nw-pub"><span class="nw-mono" aria-hidden="true">${p.initial}</span><span class="nw-src">${p.src}</span></div>
+            <a class="nw-hl" href="${p.link}" target="_blank" rel="noopener"${p.orig}>${esc(p.title)}</a>${p.sum ? `<span class="nw-sr">${esc(p.sum)}</span>` : ''}
+            <a class="nw-read" href="${p.link}" target="_blank" rel="noopener" tabindex="-1">${esc(tr('Read story'))} ↗</a>
+          </div>
+          <div class="nw-rail">
+            <button type="button" class="nw-act nw-pp" aria-pressed="false" aria-label="${esc(tr('Pause motion'))}" title="${esc(tr('Pause motion'))}">${ICON.pause}</button>
+            <a class="nw-act" href="${p.link}" target="_blank" rel="noopener" aria-label="${esc(tr('Open source'))}" title="${esc(tr('Open source'))}">${ICON.open}</a>
+          </div>
+        </div>
+      </article>`;
+  }
+
+  function rowHtml(r, i) {
+    const p = parts(r);
+    return `
+      <article class="nw-card nw-row nw-in${p.img ? '' : ' nw-noimg'}" style="animation-delay:${i * 45}ms">
+        <a class="nw-row-media" href="${p.link}" target="_blank" rel="noopener" tabindex="-1" aria-hidden="true">
+          ${p.img ? `<img class="nw-img nw-kb${i % 4}" src="${p.img}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">` : ''}
+          <div class="nw-art"><span>${p.initial}</span></div>
+          ${capHtml(p.sum || p.title)}
+        </a>
+        <div class="nw-row-body">
+          <div class="nw-row-meta">
+            <span class="nw-src">${p.src}</span>
+            <span class="nw-row-age">${esc(ago(r.published_at))}</span>
+          </div>
+          <a class="nw-hl" href="${p.link}" target="_blank" rel="noopener"${p.orig}>${esc(p.title)}</a>${p.sum ? `<span class="nw-sr">${esc(p.sum)}</span>` : ''}
+        </div>
+      </article>`;
+  }
+
+  function showEmpty(msg) {
+    lead.innerHTML = '';
+    feed.innerHTML = '';
+    wrap.hidden = true;
+    empty.textContent = msg;
+    empty.hidden = false;
   }
 
   function draw(rows) {
-    if (!rows.length) { body.innerHTML = '<div class="ytt-empty">No fashion news for this country right now.</div>'; return; }
-    body.innerHTML = `<div class="fsh-grid">${story(rows[0], 'fsh-lead')}
-      <div class="fsh-list">${rows.slice(1, 5).map((r) => story(r, 'fsh-row')).join('')}</div></div>
-      ${rows.length > 5 ? `<div class="fsh-more">${rows.slice(5).map((r) => story(r, 'fsh-tile')).join('')}</div>` : ''}`;
+    if (!rows.length) { showEmpty('No fashion news for this country right now.'); return; }
+    empty.hidden = true;
+    wrap.hidden = false;
+    spare = rows.slice(SHOWN);
+    feed.scrollTop = 0;
+    lead.innerHTML = leadHtml(rows[0]);
+    feed.innerHTML = rows.slice(1, SHOWN).map((r, i) => rowHtml(r, i + 1)).join('');
+    watchCards();
   }
 
   function videos(rows) {
@@ -135,9 +244,9 @@
   async function show(cc) {
     const mine = ++token;
     showVideos(cc);
-    if (!cache[cc]) body.innerHTML = '';
+    if (!cache[cc]) { lead.innerHTML = ''; feed.innerHTML = ''; wrap.hidden = false; empty.hidden = true; }
     try {
-      cache[cc] = cache[cc] || await get(`news_fashion?select=link,title,title_tr,source,published_at,image_url,fetched_at&country_code=eq.${encodeURIComponent(cc)}&image_url=like.https%3A%2F%2F*&title_tr->>fashion=eq.true&order=rank.asc&limit=${SHOWN}`);
+      cache[cc] = cache[cc] || await get(`news_fashion?select=link,title,title_tr,source,published_at,image_url,fetched_at&country_code=eq.${encodeURIComponent(cc)}&image_url=like.https%3A%2F%2F*&title_tr->>fashion=eq.true&order=rank.asc&limit=${SHOWN * 2}`);
       if (mine !== token) return;
       const rows = cache[cc];
       draw(rows);
@@ -145,7 +254,7 @@
     } catch (err) {
       if (mine !== token) return;
       console.error('Fashion widget:', err);
-      body.innerHTML = '<div class="ytt-empty">Fashion news is unavailable right now.</div>';
+      showEmpty('Fashion news is unavailable right now.');
       asof.textContent = '';
     }
   }
