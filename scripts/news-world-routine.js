@@ -25,9 +25,9 @@ const TRANSLATIONS_PER_RUN = 800;
 const SUMMARY_LOOKUPS_PER_RUN = 500;
 const SUMMARY_CONCURRENCY = 6;
 const SUMMARY_BATCH = 10;
-const SUMMARY_WORDS = 15;
+const SUMMARY_WORDS = 30;
 // Bump to rewrite every stored summary with the current rules (title_tr.sv).
-const SUMMARY_VERSION = 2;
+const SUMMARY_VERSION = 3;
 
 // Google News edition per country: [hl, ceid].
 const EDITIONS = {
@@ -211,8 +211,8 @@ function geminiSummarizer(apiKey) {
     const input = stories.map((st, id) => ({ id, ...st }));
     const prompt = `Each news story below has an id, its headline and the publisher's own description of the article. For each story:
 1. Set "fits" to false if the description is not about the same news as the headline (for example a generic site text, a live page about other news, or a different article); otherwise true.
-2. If it fits, write "en": one clear, complete English sentence of at most ${SUMMARY_WORDS} words that a reader seeing only the headline will understand. Use only facts stated in the headline or description, and prefer details the headline doesn't already say. Never add, guess or change names, dates, years, numbers or places. No quotation marks, no hashtags.
-3. Then translate that exact "en" sentence into ${LANG_LIST.replace(/^en \(English\), /, '')}, with the keys ${LANG_KEYS.replace(/^"en", /, '')}.
+2. If it fits, write "en": two clear, complete English sentences, at most ${SUMMARY_WORDS} words in total, that explain the story to a reader who hasn't seen the headline. Say who did what: name the people, groups or places from the headline instead of vague references like "the advice", "a candidate" or "the plan". Use only facts stated in the headline or description, and prefer details the headline doesn't already say. Never add, guess or change names, dates, years, numbers or places. No quotation marks, no hashtags.
+3. Then translate that exact "en" text into ${LANG_LIST.replace(/^en \(English\), /, '')}, with the keys ${LANG_KEYS.replace(/^"en", /, '')}.
 If it doesn't fit, return only "id" and "fits". Reply with only a JSON array with one object per story, each with "id", "fits" and, when it fits, exactly the keys ${LANG_KEYS}.
 
 ${JSON.stringify(input)}`;
@@ -323,7 +323,7 @@ async function addSummaries(rows, deps, cfg = WORLD) {
           r.title_tr = { ...r.title_tr, sum: '', sv: SUMMARY_VERSION };
           rejected++;
         } else if (SITE_LANGS.every((l) => typeof t[l] === 'string' && t[l].trim())) {
-          r.title_tr = { ...r.title_tr, sum: Object.fromEntries(SITE_LANGS.map((l) => [l, t[l].trim().slice(0, 200)])), sv: SUMMARY_VERSION };
+          r.title_tr = { ...r.title_tr, sum: Object.fromEntries(SITE_LANGS.map((l) => [l, t[l].trim().slice(0, 400)])), sv: SUMMARY_VERSION };
           summarized++;
         }
       });
