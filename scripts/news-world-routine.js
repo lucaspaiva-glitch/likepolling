@@ -245,7 +245,11 @@ async function addTranslations(rows, env, deps, cfg = WORLD) {
           translated++;
         }
       });
-    } catch (err) { errors.push(err.message); }
+    } catch (err) {
+      // One bad reply (e.g. invalid JSON) shouldn't leave the whole batch untranslated: retry it in halves.
+      if (batch.length > 1) batches.push(batch.slice(0, batch.length >> 1), batch.slice(batch.length >> 1));
+      else errors.push(err.message);
+    }
   } }));
   return { translated, pending: todo.length - translated, errors: errors.slice(0, 3) };
 }

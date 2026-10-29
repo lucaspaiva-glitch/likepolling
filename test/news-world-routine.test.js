@@ -107,6 +107,23 @@ test('tops up countries short of photo stories from section feeds, newest first'
   assert.equal(s.images.topped_up.looked, 0);
 });
 
+test('a batch whose translation reply is invalid JSON is retried in halves', async () => {
+  let payload;
+  const tr = (t) => Object.fromEntries(['en', 'pt', 'pt-PT', 'es', 'de', 'ru', 'uk', 'ko', 'ja'].map((l) => [l, `${l}:${t}`]));
+  const f = async (url, init = {}) => {
+    if (url.includes('/rpc/')) { payload = JSON.parse(init.body).payload; return text(200, String(payload.length)); }
+    if (url.includes('/rest/v1/news_world?select=link,image_url')) return text(200, JSON.stringify(Object.keys(EDITIONS).map((cc) => ({ link: `https://news.google.com/rss/articles/${cc}-1`, image_url: 'https://img.test/a.jpg' }))));
+    if (url.includes('/rest/v1/') || url.includes('/rss/articles/')) return text(404, '');
+    const cc = new URL(url).searchParams.get('gl');
+    return text(200, rss(item(`Story ${cc}`, 'Wire', `https://news.google.com/rss/articles/${cc}-1`)));
+  };
+  const s = await run(env, { ...deps(f), translate: async (titles) => { if (titles.length > 10) throw new Error("Expected ',' or '}' after property value in JSON"); return titles.map(tr); } });
+  assert.equal(s.translations.translated, 41);
+  assert.equal(s.translations.pending, 0);
+  assert.deepEqual(s.translations.errors, []);
+  assert.equal(payload.find((r) => r.country_code === 'AR').title_tr.en, 'en:Story AR');
+});
+
 test("translates only each country's first PHOTO_TARGET photo stories", async () => {
   const asked = [];
   const tr = (t) => Object.fromEntries(['en', 'pt', 'pt-PT', 'es', 'de', 'ru', 'uk', 'ko', 'ja'].map((l) => [l, `${l}:${t}`]));
