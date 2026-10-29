@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { run, feedUrl, sectionUrl, EDITIONS, SEARCH, PHOTO_TARGET } = require('../scripts/news-world-routine');
+const { run, feedUrl, sectionUrl, EDITIONS, SEARCH, PHOTO_TARGET, numbersCheckOut } = require('../scripts/news-world-routine');
 
 const env = { SUPABASE_URL: 'https://db.test', SUPABASE_KEY: 'secret' };
 const item = (title, source, link) =>
@@ -145,7 +145,7 @@ test("summarizes each translated photo story once from the publisher's descripti
   const tr = (p) => (t) => Object.fromEntries(['en', 'pt', 'pt-PT', 'es', 'de', 'ru', 'uk', 'ko', 'ja'].map((l) => [l, `${l}:${p}${t.headline || t}`]));
   const f = async (url, init = {}) => {
     if (url.includes('/rpc/replace_news_world')) { payload = JSON.parse(init.body).payload; return text(200, String(payload.length)); }
-    if (url.includes('title_tr=not.is.null')) return text(200, JSON.stringify([{ link: 'https://news.google.com/rss/articles/US-1', title: 'First story', title_tr: { ...tr('')('First story'), sum: { en: 'stored summary' } } }]));
+    if (url.includes('title_tr=not.is.null')) return text(200, JSON.stringify([{ link: 'https://news.google.com/rss/articles/US-1', title: 'First story', title_tr: { ...tr('')('First story'), sum: { en: 'stored summary' }, sv: 2 } }]));
     if (url.includes('/rest/v1/news_world')) return text(200, JSON.stringify(['US', 'JP'].flatMap((cc) => [1, 2].map((n) => ({ link: `https://news.google.com/rss/articles/${cc}-${n}`, image_url: `https://img.test/${cc}${n}.jpg` })))));
     if (url.includes('/rest/v1/')) return text(200, '[]');
     if (url.includes('/rss/articles/')) {
@@ -173,13 +173,56 @@ test("summarizes each translated photo story once from the publisher's descripti
   assert.equal(get('JP', 2), '');
 });
 
+test("drops a summary whose description doesn't fit or that invents a number, and redoes summaries from older rules", async () => {
+  let payload;
+  const asked = [];
+  const tr = (p) => (t) => Object.fromEntries(['en', 'pt', 'pt-PT', 'es', 'de', 'ru', 'uk', 'ko', 'ja'].map((l) => [l, `${l}:${p}${t.headline || t}`]));
+  const f = async (url, init = {}) => {
+    if (url.includes('/rpc/replace_news_world')) { payload = JSON.parse(init.body).payload; return text(200, String(payload.length)); }
+    if (url.includes('title_tr=not.is.null')) return text(200, JSON.stringify([{ link: 'https://news.google.com/rss/articles/US-1', title: 'First story', title_tr: { ...tr('')('First story'), sum: { en: 'old summary' } } }]));
+    if (url.includes('/rest/v1/news_world')) return text(200, JSON.stringify(['US', 'JP'].flatMap((cc) => [1, 2].map((n) => ({ link: `https://news.google.com/rss/articles/${cc}-${n}`, image_url: `https://img.test/${cc}${n}.jpg` })))));
+    if (url.includes('/rest/v1/')) return text(200, '[]');
+    if (url.includes('/rss/articles/')) {
+      const id = url.split('/').pop();
+      return text(200, `<c-wiz data-n-a-sg="sg" data-n-a-ts="1"></c-wiz><i>${id}</i>`);
+    }
+    if (url.includes('batchexecute')) {
+      const id = decodeURIComponent(init.body).match(/((?:US|JP)-\d)/)[1];
+      return text(200, `)]}'\n\n${JSON.stringify([['wrb.fr', 'Fbv4je', JSON.stringify(['garturlres', `https://paper.test/${id}`])]])}`);
+    }
+    if (url.startsWith('https://paper.test/')) {
+      const id = url.split('/').pop();
+      return text(200, id === 'JP-2' ? '<html><head><title>x</title></head></html>' : `<meta property="og:description" content="Long description for ${id} &amp; what happened next in detail.">`);
+    }
+    const cc = new URL(url).searchParams.get('gl');
+    return text(200, cc === 'US' || cc === 'JP' ? rss(item('First story', 'Wire', `https://news.google.com/rss/articles/${cc}-1`), item('Second story', 'Paper', `https://news.google.com/rss/articles/${cc}-2`)) : rss());
+  };
+  const s = await run(env, { ...deps(f), translate: async (titles) => titles.map(tr('')), summarize: async (stories) => { asked.push(...stories); return stories.map((st) => (/US-1/.test(st.description) ? tr('sum:')(st) : /US-2/.test(st.description) ? { ...tr('sum:')(st), en: 'Crash in 2024 killed 40.' } : { fits: false })); } });
+  assert.equal(asked.length, 3);
+  assert.equal(s.summaries.summarized, 1);
+  assert.equal(s.summaries.rejected, 2);
+  const get = (cc, n) => payload.find((r) => r.country_code === cc && r.rank === n).title_tr;
+  assert.equal(get('US', 1).sum.ja, 'ja:sum:First story');
+  assert.equal(get('US', 1).sv, 2);
+  assert.equal(get('US', 2).sum, '');
+  assert.equal(get('JP', 1).sum, '');
+});
+
+test('a summary may only use numbers found in its headline or description', () => {
+  assert.ok(numbersCheckOut('Payments run until November 13, 2026.', 'Pagos', 'Del 28 de octubre al 13 de noviembre de 2026'));
+  assert.ok(numbersCheckOut('A $200,000 staffing package.', 'Offer', 'a staffing package worth $200 000'));
+  assert.ok(numbersCheckOut('Talks resume in 2026.', 'محادثات', 'تستأنف المحادثات في ٢٠٢٦'));
+  assert.ok(numbersCheckOut('Sales rose 20%.', '売上', '売上が２０％増加'));
+  assert.ok(!numbersCheckOut("Spain's deadly 2024 train collision.", 'Train collision', "Europe's deadliest train collision since 2013"));
+});
+
 test('retries a failed summary batch in halves', async () => {
   let payload;
   const asked = [];
   const tr = (p) => (t) => Object.fromEntries(['en', 'pt', 'pt-PT', 'es', 'de', 'ru', 'uk', 'ko', 'ja'].map((l) => [l, `${l}:${p}${t.headline || t}`]));
   const f = async (url, init = {}) => {
     if (url.includes('/rpc/replace_news_world')) { payload = JSON.parse(init.body).payload; return text(200, String(payload.length)); }
-    if (url.includes('title_tr=not.is.null')) return text(200, JSON.stringify([{ link: 'https://news.google.com/rss/articles/US-1', title: 'First story', title_tr: { ...tr('')('First story'), sum: { en: 'stored summary' } } }]));
+    if (url.includes('title_tr=not.is.null')) return text(200, JSON.stringify([{ link: 'https://news.google.com/rss/articles/US-1', title: 'First story', title_tr: { ...tr('')('First story'), sum: { en: 'stored summary' }, sv: 2 } }]));
     if (url.includes('/rest/v1/news_world')) return text(200, JSON.stringify(['US', 'JP'].flatMap((cc) => [1, 2].map((n) => ({ link: `https://news.google.com/rss/articles/${cc}-${n}`, image_url: `https://img.test/${cc}${n}.jpg` })))));
     if (url.includes('/rest/v1/')) return text(200, '[]');
     if (url.includes('/rss/articles/')) {

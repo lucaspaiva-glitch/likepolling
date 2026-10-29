@@ -24,8 +24,10 @@ const TRANSLATIONS_PER_RUN = 800;
 // Short summaries shown over each photo, written from the publisher's own article description.
 const SUMMARY_LOOKUPS_PER_RUN = 500;
 const SUMMARY_CONCURRENCY = 6;
-const SUMMARY_BATCH = 20;
+const SUMMARY_BATCH = 10;
 const SUMMARY_WORDS = 15;
+// Bump to rewrite every stored summary with the current rules (title_tr.sv).
+const SUMMARY_VERSION = 2;
 
 // Google News edition per country: [hl, ceid].
 const EDITIONS = {
@@ -206,11 +208,28 @@ function geminiTranslator(apiKey, classify = false) {
 function geminiSummarizer(apiKey) {
   const ask = geminiJson(apiKey);
   return async (stories) => {
-    const prompt = `For each news story below (its headline and the publisher's own description), write one short summary of at most ${SUMMARY_WORDS} words in each of these languages: ${LANG_LIST}. Use only facts stated in the headline or description; do not add facts, opinions or names that are not there. Prefer details the headline doesn't already say. No quotation marks, no hashtags. Reply with only a JSON array with one object per story, in the same order, each with exactly the keys ${LANG_KEYS}.\n\n${JSON.stringify(stories)}`;
+    const input = stories.map((st, id) => ({ id, ...st }));
+    const prompt = `Each news story below has an id, its headline and the publisher's own description of the article. For each story:
+1. Set "fits" to false if the description is not about the same news as the headline (for example a generic site text, a live page about other news, or a different article); otherwise true.
+2. If it fits, write "en": one clear, complete English sentence of at most ${SUMMARY_WORDS} words that a reader seeing only the headline will understand. Use only facts stated in the headline or description, and prefer details the headline doesn't already say. Never add, guess or change names, dates, years, numbers or places. No quotation marks, no hashtags.
+3. Then translate that exact "en" sentence into ${LANG_LIST.replace(/^en \(English\), /, '')}, with the keys ${LANG_KEYS.replace(/^"en", /, '')}.
+If it doesn't fit, return only "id" and "fits". Reply with only a JSON array with one object per story, each with "id", "fits" and, when it fits, exactly the keys ${LANG_KEYS}.
+
+${JSON.stringify(input)}`;
     const out = await ask(prompt);
-    if (!Array.isArray(out) || out.length !== stories.length) throw new Error('summary count mismatch');
-    return out;
+    if (!Array.isArray(out)) throw new Error('summary reply is not a list');
+    const byId = new Map(out.filter((o) => o && Number.isInteger(o.id)).map((o) => [o.id, o]));
+    if (!byId.size) throw new Error('summary count mismatch');
+    return input.map((st) => byId.get(st.id) || {});
   };
+}
+
+// A summary may only use numbers (dates, years, amounts) that are in its headline or description.
+const digitsOf = (s) => (String(s).match(/\d+(?:[.,]\d+)*/g) || []).map((n) => n.replace(/[.,]/g, ''));
+function numbersCheckOut(summary, headline, description) {
+  const ascii = (t) => t.replace(/[٠-٩۰-۹０-９]/g, (c) => String((c.charCodeAt(0) - (c >= '０' ? 0xFF10 : c >= '۰' ? 0x06F0 : 0x0660))));
+  const source = ascii(`${headline} ${description}`).replace(/(\d)[.,\s](?=\d)/g, '$1');
+  return digitsOf(summary).every((n) => source.includes(n));
 }
 
 // Stored translations are reused; new headlines the site can show (each country's
@@ -259,7 +278,8 @@ async function addTranslations(rows, env, deps, cfg = WORLD) {
 
 // Each country's first photoTarget translated photo stories get a summary (title_tr.sum, one per
 // site language), stored with the translations so it's written once. Stories whose article has
-// no description get sum '' and aren't looked up again.
+// no description, or whose summary fails the checks, get sum '' (the site shows the headline instead)
+// and aren't looked up again until SUMMARY_VERSION changes.
 async function addSummaries(rows, deps, cfg = WORLD) {
   if (!cfg.summaries) return null;
   const check = checkOf(cfg.classify);
@@ -269,7 +289,7 @@ async function addSummaries(rows, deps, cfg = WORLD) {
   for (const r of [...rows].sort((a, b) => a.rank - b.rank)) {
     if (!r.image_url) continue;
     pos[r.country_code] = (pos[r.country_code] || 0) + 1;
-    if (pos[r.country_code] <= cfg.photoTarget && r.title_tr && r.title_tr.sum === undefined && shown(r)) todo.push([pos[r.country_code], r]);
+    if (pos[r.country_code] <= cfg.photoTarget && r.title_tr && (r.title_tr.sum === undefined || r.title_tr.sv !== SUMMARY_VERSION) && shown(r)) todo.push([pos[r.country_code], r]);
   }
   // Every country's #1 first, then every #2 and so on, so fill-in stories (low Google rank,
   // high place on the site) aren't left at the back of the queue.
@@ -285,21 +305,25 @@ async function addSummaries(rows, deps, cfg = WORLD) {
       const d = await descriptionFor(r.link, deps);
       if (d === null) continue;
       if (d) ready.push([r, d]);
-      else { r.title_tr = { ...r.title_tr, sum: '' }; noDescription++; }
+      else { r.title_tr = { ...r.title_tr, sum: '', sv: SUMMARY_VERSION }; noDescription++; }
     }
   }));
   const batches = [];
   for (let i = 0; i < ready.length; i += SUMMARY_BATCH) batches.push(ready.slice(i, i + SUMMARY_BATCH));
   let summarized = 0;
+  let rejected = 0;
   const errors = [];
   await Promise.all(Array.from({ length: 4 }, async () => { while (batches.length) {
     const batch = batches.shift();
     try {
       const out = await deps.summarize(batch.map(([r, d]) => ({ headline: r.title, description: d })));
-      batch.forEach(([r], k) => {
+      batch.forEach(([r, d], k) => {
         const t = out[k] || {};
-        if (SITE_LANGS.every((l) => typeof t[l] === 'string' && t[l].trim())) {
-          r.title_tr = { ...r.title_tr, sum: Object.fromEntries(SITE_LANGS.map((l) => [l, t[l].trim().slice(0, 200)])) };
+        if (t.fits === false || (typeof t.en === 'string' && !numbersCheckOut(t.en, r.title, d))) {
+          r.title_tr = { ...r.title_tr, sum: '', sv: SUMMARY_VERSION };
+          rejected++;
+        } else if (SITE_LANGS.every((l) => typeof t[l] === 'string' && t[l].trim())) {
+          r.title_tr = { ...r.title_tr, sum: Object.fromEntries(SITE_LANGS.map((l) => [l, t[l].trim().slice(0, 200)])), sv: SUMMARY_VERSION };
           summarized++;
         }
       });
@@ -309,7 +333,7 @@ async function addSummaries(rows, deps, cfg = WORLD) {
       else errors.push(err.message);
     }
   } }));
-  return { summarized, no_description: noDescription, pending: todo.length - summarized - noDescription, errors: errors.slice(0, 3) };
+  return { summarized, rejected, no_description: noDescription, pending: todo.length - summarized - rejected - noDescription, errors: errors.slice(0, 3) };
 }
 
 async function run(env = process.env, deps = {}, cfg = WORLD) {
@@ -368,7 +392,7 @@ async function run(env = process.env, deps = {}, cfg = WORLD) {
   return summary;
 }
 
-module.exports = { run, feedUrl, sectionUrl, EDITIONS, SEARCH, PHOTO_TARGET, WORLD, geminiTranslator };
+module.exports = { run, feedUrl, sectionUrl, EDITIONS, SEARCH, PHOTO_TARGET, WORLD, geminiTranslator, numbersCheckOut };
 
 if (require.main === module) {
   run().catch((err) => {
