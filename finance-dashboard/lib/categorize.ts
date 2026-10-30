@@ -16,6 +16,7 @@ export const DEFAULT_CATEGORIES = [
   "Health",
   "Insurance",
   "Subscriptions",
+  "Like Polling",
   "Fees",
   "Taxes",
   "Uncategorized",

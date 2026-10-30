@@ -3,6 +3,7 @@ import { getServerSupabase, isSupabaseConfigured } from "@/lib/db/server";
 import { isLiability } from "@/lib/categorize";
 import { internalTransferIds } from "@/lib/transfers";
 import { vacationIds } from "@/lib/vacation";
+import { LIKE_POLLING_CATEGORY, likePollingSummary, likePollingVendor, type LikePollingSummary } from "@/lib/like-polling";
 import { BR_FOREIGN_INVESTMENT_RATE, TAX_ACCOUNT_EXTERNAL_ID, irpfFilingYear } from "@/lib/br-tax";
 import { fmtUsd } from "@/lib/format";
 import type { Account, Transaction } from "@/lib/types";
@@ -41,6 +42,7 @@ export interface DashboardData {
   portfolioSeries: PortfolioPoint[];
   snapshotsReady: boolean;
   categories: { d30: CategoryPoint[]; d90: CategoryPoint[]; m12: CategoryPoint[] };
+  likePolling: LikePollingSummary;
   lastUpdated: string | null;
 }
 
@@ -76,6 +78,7 @@ function emptyData(configured: boolean, error: string | null): DashboardData {
     portfolioSeries: [],
     snapshotsReady: false,
     categories: { d30: [], d90: [], m12: [] },
+    likePolling: { total: 0, since: null, last30: 0, vendors: [], monthly: [] },
     lastUpdated: null,
   };
 }
@@ -168,6 +171,7 @@ export async function getDashboardData(): Promise<DashboardData> {
   let accounts: Account[];
   let transactions: Transaction[];
   let statementIds = new Set<string>();
+  const likePollingVendors = new Map<string, string>();
   try {
     const [accRes, txs] = await Promise.all([
       getServerSupabase().from("accounts").select("id, name, type, institution, balance, currency, updated_at, external_id").order("balance", { ascending: false }),
@@ -181,7 +185,12 @@ export async function getDashboardData(): Promise<DashboardData> {
     statementIds = new Set(txs.filter((t) => t.external_id?.startsWith("stmt:")).map((t) => t.id));
     transactions = txs.map((lt) => {
       const t: Transaction = { id: lt.id, account_id: lt.account_id, date: lt.date, payee: lt.payee, amount: lt.amount, category: lt.category, type: lt.type, pending: lt.pending };
-      return vacation.has(t.id) && lt.locked !== true ? { ...t, category: "Vacation" } : t;
+      const vendor = likePollingVendor(lt.payee, lt.descriptor);
+      if (vendor) likePollingVendors.set(t.id, vendor);
+      if (lt.locked === true) return t;
+      // Like Polling running costs (Devin, Google Cloud, ...) get their own category.
+      if (vendor && t.amount < 0) return { ...t, category: LIKE_POLLING_CATEGORY };
+      return vacation.has(t.id) ? { ...t, category: "Vacation" } : t;
     });
   } catch (err) {
     return emptyData(true, err instanceof Error ? err.message : String(err));
@@ -328,6 +337,7 @@ export async function getDashboardData(): Promise<DashboardData> {
       d90: categoryTotals(transactions, since90, flows),
       m12: categoryTotals(transactions, since12, flows),
     },
+    likePolling: likePollingSummary(transactions, likePollingVendors, since30),
     lastUpdated,
   };
 }

@@ -3,6 +3,7 @@ import AllocationChart from "@/components/AllocationChart";
 import CategoryBreakdown from "@/components/CategoryBreakdown";
 import CsvDropzone from "@/components/CsvDropzone";
 import KpiStrip from "@/components/KpiStrip";
+import LikePollingCard from "@/components/LikePollingCard";
 import PlaidConnect from "@/components/PlaidConnect";
 import PortfolioChart from "@/components/PortfolioChart";
 import TransactionsTable from "@/components/TransactionsTable";
@@ -55,8 +56,11 @@ export default async function Page() {
         <div className="lg:col-span-9">
           <CategoryBreakdown categories={data.categories} />
         </div>
-        <div className="lg:col-span-3">
-          <CsvDropzone accounts={data.accounts} />
+        <div className="flex flex-col gap-2 lg:col-span-3">
+          <LikePollingCard data={data.likePolling} />
+          <div className="flex-1">
+            <CsvDropzone accounts={data.accounts} />
+          </div>
         </div>
       </div>
 
