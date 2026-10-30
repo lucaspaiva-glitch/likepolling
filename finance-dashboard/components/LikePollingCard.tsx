@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { BarChart, Card } from "@tremor/react";
+import { Card, DonutChart, LineChart } from "@tremor/react";
 import { fmtDate, fmtUsd } from "@/lib/format";
 import type { LikePollingSummary } from "@/lib/like-polling";
 
@@ -9,6 +9,17 @@ import type { LikePollingSummary } from "@/lib/like-polling";
 const LEVELS = ["Day", "Week", "Month", "Year"] as const;
 type Level = (typeof LEVELS)[number];
 const BAR_PX: Record<Level, number> = { Day: 14, Week: 28, Month: 48, Year: 80 };
+const COLORS = ["blue", "cyan", "violet", "amber", "emerald", "rose", "indigo", "lime"];
+const DOT: Record<string, string> = {
+  blue: "bg-blue-500",
+  cyan: "bg-cyan-500",
+  violet: "bg-violet-500",
+  amber: "bg-amber-500",
+  emerald: "bg-emerald-500",
+  rose: "bg-rose-500",
+  indigo: "bg-indigo-500",
+  lime: "bg-lime-500",
+};
 
 const utc = (iso: string) => {
   const [y, m, d] = iso.split("-").map(Number);
@@ -85,14 +96,32 @@ export default function LikePollingCard({ data }: { data: LikePollingSummary }) 
         <p className="py-6 text-center text-xs text-dark-tremor-content-subtle">No Like Polling charges yet</p>
       ) : (
         <>
-          <ul className="mt-2 divide-y divide-dark-tremor-border text-xs">
-            {data.vendors.map((v) => (
-              <li key={v.name} className="flex justify-between gap-2 py-1">
-                <span className="text-dark-tremor-content-emphasis">{v.name}</span>
-                <span className="tabular-nums text-dark-tremor-content-strong">{fmtUsd(v.total)}</span>
-              </li>
-            ))}
-          </ul>
+          <div className="mt-2 flex items-center gap-3">
+            <DonutChart
+              className="h-24 w-24 shrink-0"
+              data={data.vendors}
+              category="total"
+              index="name"
+              variant="pie"
+              colors={COLORS}
+              valueFormatter={fmtUsd}
+              showAnimation={false}
+            />
+            <ul className="min-w-0 flex-1 divide-y divide-dark-tremor-border text-xs">
+              {data.vendors.map((v, i) => (
+                <li key={v.name} className="flex items-center justify-between gap-2 py-1">
+                  <span className="flex min-w-0 items-center gap-1.5 text-dark-tremor-content-emphasis">
+                    <span className={`h-2 w-2 shrink-0 rounded-full ${DOT[COLORS[i % COLORS.length]]}`} />
+                    {v.name}
+                  </span>
+                  <span className="whitespace-nowrap tabular-nums text-dark-tremor-content-strong">
+                    {fmtUsd(v.total)}
+                    <span className="ml-1 text-dark-tremor-content">{data.total > 0 ? Math.round((v.total / data.total) * 100) : 0}%</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
           <div className="mt-3 flex items-center justify-between gap-2">
             <p className="text-[11px] text-dark-tremor-content">Spent per {level.toLowerCase()}</p>
             <div className="flex items-center gap-1">
@@ -107,12 +136,13 @@ export default function LikePollingCard({ data }: { data: LikePollingSummary }) 
           </div>
           <div ref={scroller} className="mt-1 overflow-x-auto">
             <div style={{ minWidth: `${points.length * BAR_PX[level] + 56}px` }}>
-              <BarChart
+              <LineChart
                 className="h-40"
                 data={points}
                 index="period"
                 categories={["Spent"]}
                 colors={["red"]}
+                curveType="monotone"
                 valueFormatter={fmtUsd}
                 showLegend={false}
                 showAnimation={false}
