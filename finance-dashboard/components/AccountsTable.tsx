@@ -69,9 +69,24 @@ function BalanceCell({ account }: { account: Account }) {
           if (e.key === "Enter") save();
           if (e.key === "Escape") setEditing(false);
         }}
-        onBlur={() => !busy && !error && setEditing(false)}
+        enterKeyHint="done"
+        // Phone number pads have no Enter key, so leaving the field saves a changed value.
+        onBlur={() => {
+          if (busy || error) return;
+          if (value.trim() === String(account.balance)) setEditing(false);
+          else save();
+        }}
         className="w-28 rounded border border-dark-tremor-border bg-dark-tremor-background px-1 py-0.5 text-right tabular-nums text-dark-tremor-content-strong"
       />
+      <button
+        type="button"
+        disabled={busy}
+        onPointerDown={(e) => e.preventDefault()}
+        onClick={save}
+        className="rounded bg-blue-600 px-2 py-0.5 text-[11px] font-medium text-white disabled:opacity-50"
+      >
+        {busy ? "…" : "Save"}
+      </button>
       {error && <span className="text-[11px] text-rose-400">{error}</span>}
     </span>
   );
