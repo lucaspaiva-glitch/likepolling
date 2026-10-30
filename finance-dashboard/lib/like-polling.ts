@@ -7,6 +7,7 @@ const VENDORS: Array<[RegExp, string]> = [
   [/cognition|devin/i, "Devin (Cognition)"],
   [/google\s*cloud|\bcloud\b.*google\.com|google.*\bcloud\b/i, "Google Cloud"],
   [/chrome support|chrome web store/i, "Chrome Web Store"],
+  [/poke by interaction|poke\.com/i, "Poke"],
   [/vercel/i, "Vercel"],
   [/supabase/i, "Supabase"],
   [/github/i, "GitHub"],
