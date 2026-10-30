@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Card, DonutChart, LineChart } from "@tremor/react";
+import { AreaChart, Card, DonutChart } from "@tremor/react";
 import { fmtDate, fmtUsd } from "@/lib/format";
 import type { LikePollingSummary } from "@/lib/like-polling";
 
@@ -9,14 +9,14 @@ import type { LikePollingSummary } from "@/lib/like-polling";
 const LEVELS = ["Day", "Week", "Month", "Year"] as const;
 type Level = (typeof LEVELS)[number];
 const BAR_PX: Record<Level, number> = { Day: 14, Week: 28, Month: 48, Year: 80 };
-const COLORS = ["blue", "cyan", "violet", "amber", "emerald", "rose", "indigo", "lime"];
+const COLORS = ["emerald", "blue", "cyan", "indigo", "lime", "sky", "teal", "green"];
 const DOT: Record<string, string> = {
-  blue: "bg-blue-500",
-  cyan: "bg-cyan-500",
-  violet: "bg-violet-500",
-  amber: "bg-amber-500",
   emerald: "bg-emerald-500",
-  rose: "bg-rose-500",
+  blue: "bg-blue-500",
+  teal: "bg-teal-500",
+  sky: "bg-sky-500",
+  green: "bg-green-500",
+  cyan: "bg-cyan-500",
   indigo: "bg-indigo-500",
   lime: "bg-lime-500",
 };
@@ -136,13 +136,12 @@ export default function LikePollingCard({ data }: { data: LikePollingSummary }) 
           </div>
           <div ref={scroller} className="mt-1 overflow-x-auto">
             <div style={{ minWidth: `${points.length * BAR_PX[level] + 56}px` }}>
-              <LineChart
+              <AreaChart
                 className="h-40"
                 data={points}
                 index="period"
                 categories={["Spent"]}
-                colors={["red"]}
-                curveType="monotone"
+                colors={["emerald"]}
                 valueFormatter={fmtUsd}
                 showLegend={false}
                 showAnimation={false}

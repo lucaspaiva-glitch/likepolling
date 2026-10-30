@@ -11,7 +11,7 @@ const RANGES = [
   { key: "m12", label: "12m" },
 ] as const;
 
-const COLORS = ["blue", "cyan", "indigo", "violet", "fuchsia", "rose", "amber", "lime", "emerald", "teal", "slate"];
+const COLORS = ["blue", "emerald", "sky", "teal", "indigo", "green", "cyan", "lime", "slate", "zinc", "stone"];
 
 export default function CategoryBreakdown({ categories }: { categories: DashboardData["categories"] }) {
   const [idx, setIdx] = useState(1);
