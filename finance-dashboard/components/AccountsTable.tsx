@@ -76,7 +76,7 @@ function BalanceCell({ account }: { account: Account }) {
           if (value.trim() === String(account.balance)) setEditing(false);
           else save();
         }}
-        className="w-28 rounded border border-dark-tremor-border bg-dark-tremor-background px-1 py-0.5 text-right tabular-nums text-dark-tremor-content-strong"
+        className="w-32 rounded border border-dark-tremor-border bg-dark-tremor-background px-1 py-0.5 text-right tabular-nums text-dark-tremor-content-strong"
       />
       <button
         type="button"
