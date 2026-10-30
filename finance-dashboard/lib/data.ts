@@ -78,7 +78,7 @@ function emptyData(configured: boolean, error: string | null): DashboardData {
     portfolioSeries: [],
     snapshotsReady: false,
     categories: { d30: [], d90: [], m12: [] },
-    likePolling: { total: 0, since: null, last30: 0, vendors: [], monthly: [] },
+    likePolling: { total: 0, since: null, today: isoDay(new Date()), vendors: [], daily: [] },
     lastUpdated: null,
   };
 }
@@ -337,7 +337,7 @@ export async function getDashboardData(): Promise<DashboardData> {
       d90: categoryTotals(transactions, since90, flows),
       m12: categoryTotals(transactions, since12, flows),
     },
-    likePolling: likePollingSummary(transactions, likePollingVendors, since30),
+    likePolling: likePollingSummary(transactions, likePollingVendors, todayIso),
     lastUpdated,
   };
 }
