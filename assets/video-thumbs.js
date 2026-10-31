@@ -1,7 +1,7 @@
 // Shared by every video section: the views/hour badge and the hover preview.
 // Hovering a thumbnail with a mouse plays the video muted inside it (YouTube's own
-// player); on touch screens the thumbnail in the middle of the screen plays once
-// scrolling stops, and a tap opens the video. Only one preview plays at a time.
+// player); on touch screens a finger resting on a thumbnail plays it, and a quick tap
+// opens the video. Only one preview plays at a time.
 (function () {
   const SEL = '.ytt-cth, .ymu-cth, .ysh-cth, .ci-th, .lp-rth';
 
@@ -112,9 +112,9 @@ a:hover > .lp-rth img { transform: scale(1.04); }
     b.setAttribute('aria-pressed', String(pref.cc));
     b.title = b.ariaLabel = pref.cc ? 'Subtitles off' : 'Subtitles on';
   }
-  function start(el) {
+  function start(el, delay = DELAY) {
     const id = idOf(el);
-    if (!id) return;
+    if (!id || el.querySelector('iframe:not(.lp-prev)')) return; // the section's own player is already showing it
     box = el;
     warm();
     timer = setTimeout(() => {
@@ -147,7 +147,7 @@ a:hover > .lp-rth img { transform: scale(1.04); }
         if (shown && info.currentTime >= CONTROLS_GONE) { veil.classList.remove('on'); done(); }
       });
       el.querySelector('img').after(f, veil, ctl);
-    }, DELAY);
+    }, delay);
   }
   if (mouse) {
     document.addEventListener('mouseover', (e) => {
@@ -162,37 +162,45 @@ a:hover > .lp-rth img { transform: scale(1.04); }
     addEventListener('blur', stop);
     return;
   }
-  // Touch screens: when scrolling stops, the thumbnail nearest the middle of the screen plays
-  // muted inside itself; a tap still opens the video. Skipped with reduced motion or Data Saver.
-  if (matchMedia('(prefers-reduced-motion: reduce)').matches || navigator.connection?.saveData || !('IntersectionObserver' in window)) return;
-  const seen = new Map();
-  const io = new IntersectionObserver((entries) => {
-    for (const e of entries) if (e.intersectionRatio >= 0.75) seen.set(e.target, true); else seen.delete(e.target);
-    settle();
-  }, { threshold: [0, 0.75, 1] });
-  const known = new WeakSet();
-  const scan = () => document.querySelectorAll(SEL).forEach((el) => { if (!known.has(el)) { known.add(el); io.observe(el); } });
-  let scanT = 0;
-  new MutationObserver(() => { clearTimeout(scanT); scanT = setTimeout(scan, 200); }).observe(document.body, { childList: true, subtree: true });
-  scan();
-  let idle = 0;
-  function pick() {
-    if (document.hidden) return stop();
-    const mid = innerHeight / 2;
-    let best = null, bestD = Infinity;
-    for (const el of seen.keys()) {
-      if (!el.isConnected) { seen.delete(el); continue; }
-      const r = el.getBoundingClientRect();
-      if (r.width < 40 || r.right <= 0 || r.left >= innerWidth) continue;
-      if (el.querySelector('iframe:not(.lp-prev)')) continue; // the section's own player is already showing it
-      const d = Math.abs(r.top + r.height / 2 - mid);
-      if (d < bestD) { best = el; bestD = d; }
-    }
-    if (best === box) return;
-    stop();
-    if (best) start(best);
-  }
-  function settle() { clearTimeout(idle); idle = setTimeout(pick, 500); }
-  addEventListener('scroll', settle, { passive: true, capture: true });
-  document.addEventListener('visibilitychange', () => { if (document.hidden) stop(); else settle(); });
+  // Touch screens: a finger resting on a thumbnail plays it muted inside itself, and it keeps
+  // playing after the finger lifts until it leaves the screen. A quick tap, or a tap on the
+  // playing preview, opens the video. Moving the finger first (scrolling) plays nothing.
+  const HOLD = 180, SLOP = 10;
+  const tcss = document.createElement('style');
+  tcss.textContent = `${SEL} { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }`;
+  document.head.appendChild(tcss);
+  let touch = null, holdT = 0;
+  document.addEventListener('touchstart', (e) => {
+    clearTimeout(holdT);
+    const el = e.target.closest?.(SEL);
+    if (!el || e.touches.length > 1 || e.target.closest('.lp-pvc')) { touch = null; return; }
+    const t = e.touches[0];
+    const cur = touch = { el, x: t.clientX, y: t.clientY, held: false };
+    if (el === box) return;
+    warm();
+    holdT = setTimeout(() => { if (touch === cur) { cur.held = true; stop(); start(el, 0); } }, HOLD);
+  }, { passive: true });
+  document.addEventListener('touchmove', (e) => {
+    if (!touch || touch.held) return;
+    const t = e.touches[0];
+    if (Math.hypot(t.clientX - touch.x, t.clientY - touch.y) > SLOP) { clearTimeout(holdT); touch = null; }
+  }, { passive: true });
+  document.addEventListener('touchend', (e) => {
+    clearTimeout(holdT);
+    if (touch?.held && e.cancelable) e.preventDefault(); // lifting the finger keeps the preview instead of opening the video
+    touch = null;
+  });
+  document.addEventListener('touchcancel', () => { clearTimeout(holdT); touch = null; });
+  document.addEventListener('contextmenu', (e) => { if (e.target.closest?.(SEL)) e.preventDefault(); });
+  let raf = 0;
+  addEventListener('scroll', () => {
+    if (!box || raf) return;
+    raf = requestAnimationFrame(() => {
+      raf = 0;
+      if (!box) return;
+      const r = box.getBoundingClientRect();
+      if (!box.isConnected || r.bottom <= 0 || r.top >= innerHeight || r.right <= 0 || r.left >= innerWidth) stop();
+    });
+  }, { passive: true, capture: true });
+  document.addEventListener('visibilitychange', () => { if (document.hidden) stop(); });
 })();
