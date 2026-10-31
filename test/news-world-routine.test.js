@@ -245,3 +245,17 @@ test('retries a failed summary batch in halves', async () => {
   assert.deepEqual(s.summaries.errors, []);
   assert.equal(payload.find((r) => r.country_code === 'US' && r.rank === 2).title_tr.sum.ja, 'ja:sum:Second story');
 });
+
+test('keeps the previous stories when Gemini fails for every headline', async () => {
+  let wrote = false;
+  const f = async (url) => {
+    if (url.includes('/rpc/')) { wrote = true; return text(200, '1'); }
+    if (url.includes('/rest/v1/news_world?select=link,image_url')) return text(200, JSON.stringify([{ link: 'https://news.google.com/rss/articles/US-0', image_url: 'https://img.test/a.jpg' }]));
+    if (url.includes('/rest/v1/') || url.includes('/rss/articles/')) return text(404, '');
+    const cc = new URL(url).searchParams.get('gl');
+    if (cc !== 'US' || url.includes('/section/')) return text(200, rss());
+    return text(200, rss(item('US story 0', 'Wire', 'https://news.google.com/rss/articles/US-0')));
+  };
+  await assert.rejects(run(env, { ...deps(f), translate: async () => { throw new Error('{"error":{"code":402,"message":"Your prepayment credits are depleted."}}'); } }), /Gemini failed for every headline, kept the previous stories: .*402/);
+  assert.equal(wrote, false);
+});

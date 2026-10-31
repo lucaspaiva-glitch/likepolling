@@ -375,6 +375,11 @@ async function run(env = process.env, deps = {}, cfg = WORLD) {
   }));
   images.topped_up = await topUp(rows, extras, stored, deps, cfg.photoTarget);
   const translations = await addTranslations(rows, env, deps, cfg);
+  // Gemini down (e.g. credits used up): keep the last good stories instead of writing untranslated,
+  // unchecked ones that would empty the AI and Fashion sections. The failed run alerts by email.
+  if (deps.translate && translations.translated === 0 && translations.errors?.length) {
+    throw new Error(`Gemini failed for every headline, kept the previous stories: ${translations.errors[0].slice(0, 300)}`);
+  }
   const summaries = await addSummaries(rows, deps, cfg);
 
   const res = await deps.fetch(`${env.SUPABASE_URL}/rest/v1/rpc/${cfg.rpc}`, {
