@@ -5,7 +5,7 @@ export const LIKE_POLLING_CATEGORY = "Like Polling";
 // Vendors that bill for running likepolling.com, matched on the payee or the bank descriptor.
 const VENDORS: Array<[RegExp, string]> = [
   [/cognition|devin/i, "Devin (Cognition)"],
-  [/google\s*cloud|\bcloud\b.*google\.com|google.*\bcloud\b/i, "Google Cloud"],
+  [/google\s*cloud|\bcloud\b.*google\.com|google.*\bcloud\b/i, "Google Cloud (Gemini + YouTube API keys)"],
   [/chrome support|chrome web store/i, "Chrome Web Store"],
   [/poke by interaction|poke\.com/i, "Poke"],
   [/vercel/i, "Vercel"],
