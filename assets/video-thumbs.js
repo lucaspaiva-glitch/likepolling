@@ -178,6 +178,7 @@ a:hover > .lp-rth img { transform: scale(1.04); }
   let idle = 0;
   function pick() {
     if (document.hidden) return stop();
+    if (box && box.isConnected && seen.has(box)) return; // keep the playing video while it's mostly on screen
     const mid = innerHeight / 2;
     let best = null, bestD = Infinity;
     for (const el of seen.keys()) {
