@@ -1,7 +1,7 @@
 // Shared by every video section: the views/hour badge and the hover preview.
 // Hovering a thumbnail with a mouse plays the video muted inside it (YouTube's own
-// player); on touch screens the thumbnail in the middle of the screen plays once
-// scrolling stops, and a tap opens the video. Only one preview plays at a time.
+// player); on touch screens the thumbnail on the middle line of the screen plays while
+// scrolling, and a tap opens the video. Only one preview plays at a time.
 (function () {
   const SEL = '.ytt-cth, .ymu-cth, .ysh-cth, .ci-th, .lp-rth';
 
@@ -162,38 +162,40 @@ a:hover > .lp-rth img { transform: scale(1.04); }
     addEventListener('blur', stop);
     return;
   }
-  // Touch screens: when scrolling stops, the thumbnail nearest the middle of the screen plays
-  // muted inside itself; a tap still opens the video. Skipped with reduced motion or Data Saver.
+  // Touch screens: while scrolling, the thumbnail on (or nearest) the middle line of the screen
+  // plays muted inside itself; it stops the moment another one becomes nearer that line, so the
+  // switch happens at one clear point. A tap still opens the video. Skipped with reduced motion
+  // or Data Saver.
   if (matchMedia('(prefers-reduced-motion: reduce)').matches || navigator.connection?.saveData || !('IntersectionObserver' in window)) return;
-  const seen = new Map();
+  const seen = new Set();
   const io = new IntersectionObserver((entries) => {
-    for (const e of entries) if (e.intersectionRatio >= 0.75) seen.set(e.target, true); else seen.delete(e.target);
-    settle();
-  }, { threshold: [0, 0.75, 1] });
+    for (const e of entries) if (e.isIntersecting) seen.add(e.target); else seen.delete(e.target);
+    check();
+  });
   const known = new WeakSet();
   const scan = () => document.querySelectorAll(SEL).forEach((el) => { if (!known.has(el)) { known.add(el); io.observe(el); } });
   let scanT = 0;
   new MutationObserver(() => { clearTimeout(scanT); scanT = setTimeout(scan, 200); }).observe(document.body, { childList: true, subtree: true });
   scan();
-  let idle = 0;
   function pick() {
     if (document.hidden) return stop();
-    if (box && box.isConnected && seen.has(box)) return; // keep the playing video while it's mostly on screen
     const mid = innerHeight / 2;
     let best = null, bestD = Infinity;
-    for (const el of seen.keys()) {
+    for (const el of seen) {
       if (!el.isConnected) { seen.delete(el); continue; }
       const r = el.getBoundingClientRect();
-      if (r.width < 40 || r.right <= 0 || r.left >= innerWidth) continue;
+      if (r.width < 40 || r.right <= 0 || r.left >= innerWidth || r.bottom <= 0 || r.top >= innerHeight) continue;
       if (el.querySelector('iframe:not(.lp-prev)')) continue; // the section's own player is already showing it
-      const d = Math.abs(r.top + r.height / 2 - mid);
+      const d = r.top > mid ? r.top - mid : r.bottom < mid ? mid - r.bottom : 0;
       if (d < bestD) { best = el; bestD = d; }
     }
     if (best === box) return;
     stop();
-    if (best) start(best);
+    if (best) start(best); // starts after DELAY, so videos flicked past quickly never load
   }
-  function settle() { clearTimeout(idle); idle = setTimeout(pick, 500); }
-  addEventListener('scroll', settle, { passive: true, capture: true });
-  document.addEventListener('visibilitychange', () => { if (document.hidden) stop(); else settle(); });
+  let raf = 0;
+  function check() { if (!raf) raf = requestAnimationFrame(() => { raf = 0; pick(); }); }
+  addEventListener('scroll', check, { passive: true, capture: true });
+  addEventListener('resize', check, { passive: true });
+  document.addEventListener('visibilitychange', () => { if (document.hidden) stop(); else check(); });
 })();
