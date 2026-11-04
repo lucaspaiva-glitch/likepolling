@@ -323,6 +323,16 @@ html.nw-lock { overflow: hidden; }
   .ysh-list .ysh-vol { display: flex; align-items: baseline; gap: 8px; width: auto; text-align: left; }
   .ysh-list .ysh-bar { display: none; }
 }
+/* Phones: one Short per row, centred, each 1.2% smaller than the one above (like the other video
+   charts), so the Short on the middle line of the screen plays while scrolling. */
+@media (max-width: 560px) {
+  .ysh-cards { flex-direction: column; align-items: center; gap: 18px; overflow: visible; scroll-snap-type: none; border-bottom: 0; padding: 16px 14px 18px; }
+  .ysh-cards > :nth-child(n) { width: calc(66% * (1 - var(--i, 0) * .012)); }
+  .ysh-cards > :nth-child(2) { --i: 1; } .ysh-cards > :nth-child(3) { --i: 2; } .ysh-cards > :nth-child(4) { --i: 3; } .ysh-cards > :nth-child(5) { --i: 4; }
+  .ysh-list { grid-template-columns: minmax(0, 1fr); gap: 18px; padding: 0 14px 18px; }
+  .ysh-list a { width: calc(66% * (1 - (var(--j, 0) + 5) * .012)); margin: 0 auto; }
+  .ysh-list .lp-rth-s { width: 100%; }
+}
 /* World News ranks 02–10: the photo and headline shrink step by step down the ranking, like the video charts. */
 /* Ranks 02–10 are photo cards like 01, only slightly smaller step by step, so every
    summary over a photo is big enough to read. 01 is shorter to keep the gap small. */
