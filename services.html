@@ -18,23 +18,14 @@
 
     <h1>See what other countries are watching, and get inspired.</h1>
     <p class="lead">Like Polling shows what 41 countries watch, read and talk about, every day, for free. For marketing teams and creators who want ideas from abroad, we turn our daily records into short reports.</p>
+    <div class="stats">
+      <div><b>41</b><span>countries tracked</span></div>
+      <div><b>2&times;</b><span>a day, since 24 Oct 2026</span></div>
+      <div><b>2</b><span>open data sources, credited</span></div>
+      <div><b>0</b><span>accounts or sign-ups</span></div>
+    </div>
 
     <div class="offers">
-      <section class="card">
-        <span class="tag">Free</span>
-        <h3>Like Polling and Creators +</h3>
-        <div class="price">€0</div>
-        <ul>
-          <li>Live rankings for 41 countries</li>
-          <li>Trending, Music, Shorts, news, education</li>
-          <li>Creators + browser extension for YouTube</li>
-        </ul>
-        <div class="push">
-          <a class="btn ghost" href="/">Open Like Polling</a>
-          <a class="btn ghost" href="/extension">Get the extension</a>
-        </div>
-      </section>
-
       <section class="card main" id="report">
         <span class="tag">Most popular</span>
         <h3>Country Inspiration Report</h3>
@@ -55,6 +46,21 @@
           <a class="btn" id="buy" href="#">Buy report</a>
           <a class="btn ghost" href="/report?sample=BR-PT">See a free sample: Brazil vs Portugal</a>
           <p class="small muted" style="margin:0">No account needed. Pay with card, PayPal, Apple Pay or Google Pay. VAT is handled by Lemon Squeezy, which emails your key and invoice.</p>
+        </div>
+      </section>
+
+      <section class="card">
+        <span class="tag">Free</span>
+        <h3>Like Polling and Creators +</h3>
+        <div class="price">€0</div>
+        <ul>
+          <li>Live rankings for 41 countries</li>
+          <li>Trending, Music, Shorts, news, education</li>
+          <li>Creators + browser extension for YouTube</li>
+        </ul>
+        <div class="push">
+          <a class="btn ghost" href="/">Open Like Polling</a>
+          <a class="btn ghost" href="/extension">Get the extension</a>
         </div>
       </section>
 
@@ -87,6 +93,39 @@
           <a class="btn ghost" id="sponsor-btn" href="mailto:lucaspaiva@likepolling.com">Ask about sponsoring</a>
         </div>
       </section>
+    </div>
+
+    <section class="inside" id="inside">
+      <div class="inside-text">
+        <span class="tag">Inside the report</span>
+        <h2>Charts and plain words, not a spreadsheet</h2>
+        <p class="muted">Every number comes with a line that says what it means. This preview is live from the free Brazil vs Portugal sample.</p>
+        <ul class="feats">
+          <li><b>At a glance:</b> the key numbers for each country on one card</li>
+          <li><b>Side by side:</b> both countries in one table, plus what they both read</li>
+          <li><b>News per day:</b> a chart of coverage, with the busiest day marked</li>
+          <li><b>Most-read and rising:</b> ranked bars, each with its day-by-day trend</li>
+          <li><b>What the news talks about:</b> cooperation vs tension, by type of event</li>
+          <li><b>5 ideas to copy</b> and a short guide to reading the numbers</li>
+        </ul>
+        <div class="cta"><a class="btn" href="#report">Get a report for &euro;18</a><a class="btn ghost" href="/report?sample=BR-PT">Open the full sample</a></div>
+      </div>
+      <a class="preview" id="preview" href="/report?sample=BR-PT" aria-label="Open the Brazil vs Portugal sample report">
+        <div class="pv-head"><span>Country Inspiration Report</span><b>Brazil vs Portugal</b></div>
+        <div class="pv-kpis" id="pv-kpis"><div><b>&nbsp;</b><span>&nbsp;</span></div><div><b>&nbsp;</b><span>&nbsp;</span></div></div>
+        <div class="pv-label">News articles per day</div>
+        <svg id="pv-chart" viewBox="0 0 300 90" aria-hidden="true"></svg>
+        <div class="pv-label">Most-read on Wikipedia in Brazil</div>
+        <ol class="pv-rank" id="pv-rank"></ol>
+        <p class="pv-take" id="pv-take">Loading the sample&hellip;</p>
+      </a>
+    </section>
+
+    <h2>Who it's for</h2>
+    <div class="who">
+      <div><b>Marketing agencies</b><p>Pitch clients abroad with what that country is reading this week.</p></div>
+      <div><b>Brands entering a country</b><p>See the people, topics and partners that country cares about before you launch.</p></div>
+      <div><b>Creators</b><p>Find what another country or language is curious about, and make it first.</p></div>
     </div>
 
     <h2>How buying a report works</h2>

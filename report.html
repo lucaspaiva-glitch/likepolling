@@ -68,7 +68,8 @@
       main { padding: 0; max-width: none; }
       a { color: #0d0d0d; text-decoration: none; }
       .cols.n2 { grid-template-columns: 1fr 1fr; }
-      .rsec { break-inside: auto; }
+      .rsec.long { break-inside: auto; }
+      .rsec h2, .rsec .note, .col h3 { break-after: avoid; }
       .col, .kpi, ol.rank li, .chart, table.cmp { break-inside: avoid; }
       * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     }
