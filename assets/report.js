@@ -58,6 +58,11 @@
           $('pe-msg').textContent = kind === 'artist' ? 'Pick your report\'s artist. This is set once per key.' : 'Pick your report\'s company. This is set once per key.';
           $('pe-l').textContent = kind === 'artist' ? 'Artist' : 'Company or brand';
           $('e1').placeholder = kind === 'artist' ? 'e.g. Anitta' : 'e.g. Nike';
+          const pre = store.get(`lp_report_choice_${kind}`);
+          if (pre && pre.subject) {
+            if (!$('e1').value) $('e1').value = pre.subject;
+            if (!body.choice) return open({ ...body, choice: { subject: String(pre.subject).slice(0, 120), peers: [] } });
+          }
         }
         error(data.error);
         if (res.status === 403 || res.status === 404) store.del('lp_report');

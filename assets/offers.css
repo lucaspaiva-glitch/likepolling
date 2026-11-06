@@ -21,7 +21,7 @@
 .svc-more i { display: inline-block; font-style: normal; transition: transform .2s; }
 .svc.open .svc-more i { transform: rotate(90deg); }
 .svc-body { display: grid; gap: 10px; max-height: 0; padding: 0 14px; overflow: hidden; opacity: 0; transition: max-height .35s ease, opacity .25s, padding .35s; }
-.svc.open .svc-body { max-height: 420px; padding: 2px 14px 16px; opacity: 1; }
+.svc.open .svc-body { max-height: 600px; padding: 2px 14px 16px; opacity: 1; }
 .svc-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
 .svc-stats div { padding: 8px 4px; border-radius: 10px; background: #f5f5f7; text-align: center; }
 .svc-stats b { display: block; font: 700 20px/1.1 Inter, system-ui, sans-serif; color: #1d1d1f; }
@@ -30,6 +30,13 @@
 .svc-btn:hover { background: #8f000b; }
 .svc-link { font-size: 13px; font-weight: 600; text-align: center; color: #b0000e; text-decoration: none; }
 .svc-link:hover { text-decoration: underline; }
+.svc-form p { margin: 0; font: 500 14px/2 Inter, system-ui, sans-serif; color: #1d1d1f; }
+.svc-form input, .svc-form select { max-width: 100%; padding: 1px 2px; border: 0; border-bottom: 1.5px solid #b0000e; border-radius: 0; background: transparent; font: 600 14px Inter, system-ui, sans-serif; color: #b0000e; outline: 0; }
+.svc-form input { width: 11em; }
+.svc-form select { max-width: 11em; cursor: pointer; }
+.svc-form input::placeholder { color: #c98a8f; font-weight: 500; }
+.svc-form input:focus, .svc-form select:focus { background: #fbeaec; }
+.svc-form .need { border-bottom-color: #ff5a1f; background: #fff3ec; }
 .svc-fine { margin: 0; font-size: 11.5px; line-height: 1.4; text-align: center; color: #6e6e73; }
 @media (max-width: 960px) { .svc-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 560px) { .svc-grid { grid-template-columns: 1fr; } }

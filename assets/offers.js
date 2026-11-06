@@ -16,12 +16,22 @@
     { id: 'sponsor', sym: 'Ad spot', top: 'Launch rate', name: 'YOUR BRAND\nHERE', sub: 'A card on Like Polling, seen in 41 countries.', mail: 'Sponsoring Like Polling',
       stats: [['41', 'countries'], ['2×', 'updated a day'], ['1', 'brand at a time']] },
   ];
+  const COUNTRIES = ['AR', 'AU', 'BD', 'BE', 'BR', 'CA', 'CL', 'CO', 'DE', 'DZ', 'EC', 'EG', 'ES', 'FR', 'GB', 'ID', 'IE', 'IN', 'IQ', 'IT', 'JP', 'KE',
+    'KR', 'MA', 'MX', 'MY', 'NG', 'NL', 'PE', 'PH', 'PK', 'PL', 'PT', 'SA', 'TH', 'TR', 'TW', 'UA', 'US', 'VN', 'ZA'];
   const SAMPLES = 'https://iyhaoagslsrwtkcrxylp.supabase.co/storage/v1/object/public/samples';
   const tr = (s) => (window.LP_I18N ? window.LP_I18N.t(s) : s);
   const lang = () => (window.LP_I18N && window.LP_I18N.lang) || 'en';
   const pdf = (id) => `${SAMPLES}/${lang()}/${id}-report.pdf?download=like-polling-${id}-report.pdf`;
   const roots = document.querySelectorAll('[data-offers]');
   if (!roots.length) return;
+  const loc = () => (lang() === 'pt' ? 'pt-BR' : lang());
+  const cname = (c) => { try { return new Intl.DisplayNames([loc()], { type: 'region' }).of(c) || c; } catch { return c; } };
+  // The buyer's choice is kept in this browser only; /report reads it after they paste their key.
+  const saved = {
+    get(k) { try { return localStorage.getItem(k) || ''; } catch { return ''; } },
+    set(k, v) { try { localStorage.setItem(k, v); } catch { /* private mode */ } },
+  };
+  const choiceKey = (id) => `lp_report_choice_${id}`;
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   let source = '';
   try {
@@ -37,10 +47,40 @@
     if (source) u.searchParams.set('utm_source', source);
     return u.toString();
   };
+  // Fill-in-the-blank shown above Buy on each report card.
+  const blank = (o) => {
+    if (o.id === 'country') {
+      const [a, b] = saved.get('lp_report_countries').split(',');
+      const opts = (sel) => COUNTRIES.map((c) => [c, cname(c)]).sort((x, y) => x[1].localeCompare(y[1]))
+        .map(([c, n]) => `<option value="${c}"${c === sel ? ' selected' : ''}>${esc(n)}</option>`).join('');
+      return `<p>${tr('Show me')} <select name="c1" aria-label="${esc(tr('Country'))}"><option value="">${esc(tr('a country'))}</option>${opts(COUNTRIES.includes(a) ? a : '')}</select> ${tr('next to')} <select name="c2" aria-label="${esc(tr('Compare with'))}"><option value="">${esc(tr('no other country'))}</option>${opts(COUNTRIES.includes(b) ? b : '')}</select>.</p>`;
+    }
+    let v = '';
+    try { v = JSON.parse(saved.get(choiceKey(o.id)) || '{}').subject || ''; } catch { /* ignore */ }
+    const ph = o.id === 'artist' ? 'artist name' : 'company or brand';
+    return `<p>${tr('A report on')} <input name="subject" value="${esc(v)}" placeholder="${esc(tr(ph))}" maxlength="120" autocomplete="off" spellcheck="false" required>.</p>`;
+  };
+  // Buy: the blank must be filled; the answer is saved locally and Gumroad opens.
+  function wireForm(c) {
+    const f = c.querySelector('.svc-form');
+    if (!f) return;
+    const id = c.id.replace('offer-', '');
+    f.addEventListener('submit', (e) => { e.preventDefault(); c.querySelector('.svc-btn').click(); });
+    f.addEventListener('input', (e) => e.target.classList.remove('need'));
+    c.querySelector('.svc-btn').addEventListener('click', (e) => {
+      const first = f.elements[0];
+      if (!first.value.trim()) { e.preventDefault(); first.classList.add('need'); first.focus(); return; }
+      if (id === 'country') {
+        saved.set('lp_report_countries', [f.elements.c1.value, f.elements.c2.value].filter((x, i, a) => x && a.indexOf(x) === i).join(','));
+      } else {
+        saved.set(choiceKey(id), JSON.stringify({ subject: first.value.trim().slice(0, 120), peers: [] }));
+      }
+    });
+  }
   const card = (o) => {
     const report = !o.mail;
     const actions = report
-      ? `<a class="svc-btn" href="${esc(buyLink(o))}">${tr(o.buy ? 'Buy' : 'Order')} · ${PRICE}</a><a class="svc-link" href="${esc(pdf(o.id))}">${tr('Download a free sample (PDF) ›')}</a><p class="svc-fine">${tr('Gathered every day since 24 Oct 2026. You choose after paying.')}</p>`
+      ? `<form class="svc-form" novalidate>${blank(o)}</form><a class="svc-btn" href="${esc(buyLink(o))}">${tr(o.buy ? 'Buy' : 'Order')} · ${PRICE}</a><a class="svc-link" href="${esc(pdf(o.id))}">${tr('Download a free sample (PDF) ›')}</a><p class="svc-fine">${tr('Gathered every day since 24 Oct 2026.')}</p>`
       : `<a class="svc-btn" href="${esc(mailto(o.mail, 'Hi! I\'d like to know about sponsoring Like Polling.\n\nBrand:\nCountries we target:\nWebsite:'))}">${tr('Ask about the ad spot')}</a><p class="svc-fine">${tr('Like the Machu Picchu Energy card. Monthly views and clicks included.')}</p>`;
     const nm = tr(o.name);
     return `<section class="svc" id="offer-${o.id}" data-no-i18n>
@@ -63,6 +103,7 @@
     roots.forEach((r) => { r.classList.add('svc-grid'); r.innerHTML = OFFERS.map(card).join(''); });
     cards = [...document.querySelectorAll('.svc')];
     cards.forEach(wire);
+    cards.forEach(wireForm);
   }
   function setOpen(c, on) {
     c.classList.toggle('open', on);
