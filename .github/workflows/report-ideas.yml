@@ -1,0 +1,27 @@
+name: Report ideas
+
+on:
+  schedule:
+    - cron: '17 5 * * 1' # Mondays
+  workflow_dispatch:
+
+concurrency:
+  group: report-ideas
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+      - run: npm ci --omit=dev
+      - name: Write 5 ideas per country with Gemini
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: node scripts/report-ideas-routine.js

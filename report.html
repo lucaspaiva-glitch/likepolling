@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Country Inspiration Report · Like Polling</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2028%2028%22%3E%3Crect%20width%3D%2228%22%20height%3D%2228%22%20rx%3D%227%22%20fill%3D%22%23b0000e%22/%3E%3Cpolyline%20points%3D%225%2C21%208%2C19%2010.5%2C20.2%2013.5%2C16.5%2015.5%2C17.6%2018.5%2C12.5%2020.5%2C13.6%2023%2C6%22%20fill%3D%22none%22%20stroke%3D%22white%22%20stroke-width%3D%222.4%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/assets/fonts/fonts.css">
+  <link rel="stylesheet" href="/assets/commerce.css">
+  <style>
+    .access { max-width: 520px; }
+    .access form { display: flex; flex-direction: column; gap: 12px; margin-top: 18px; }
+    .err { background: #fbeaec; color: #8e000b; border-radius: 10px; padding: 10px 12px; font-size: 14px; }
+    .spin { padding: 60px 0; text-align: center; color: #6b6b6b; }
+    .rhead h1 { margin-top: 10px; }
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+    .rsec { margin-top: 34px; padding-top: 22px; border-top: 1px solid #eee; break-inside: avoid; }
+    .rsec h2 { margin: 0 0 2px; }
+    .note { margin: 0 0 14px; color: #6b6b6b; font-size: 14px; }
+    .cols { display: grid; gap: 24px; }
+    .cols.n2 { grid-template-columns: 1fr 1fr; }
+    .col h3 { color: #b0000e; font-size: 14px; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 8px; }
+    ol.plain, ol.ideas { margin: 0; padding-left: 22px; }
+    ol.plain li { margin: 5px 0; }
+    ol.plain small, ol.ideas small { color: #6b6b6b; }
+    ol.ideas li { margin: 0 0 12px; }
+    ol.ideas p { margin: 2px 0; }
+    ul.bars { list-style: none; padding: 0; margin: 10px 0 0; }
+    ul.bars li { display: grid; grid-template-columns: 9.5em 1fr 3em; align-items: center; gap: 8px; font-size: 14px; margin: 6px 0; }
+    ul.bars i { display: block; height: 10px; border-radius: 5px; background: linear-gradient(90deg, #b0000e var(--w), #f1f1f1 var(--w)); }
+    ul.bars b { text-align: right; }
+    .sources p { color: #555; }
+    @media (max-width: 700px) { .cols.n2 { grid-template-columns: 1fr; } }
+    @media print {
+      .top nav, .actions, .foot { display: none !important; }
+      main { padding: 0; max-width: none; }
+      a { color: #0d0d0d; text-decoration: none; }
+      .cols.n2 { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="top">
+      <a class="brand" href="/"><svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="#b0000e"/><polyline points="5,21 8,19 10.5,20.2 13.5,16.5 15.5,17.6 18.5,12.5 20.5,13.6 23,6" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="23" cy="6" r="1.9" fill="#fff"/></svg>Like Polling</a>
+      <nav><a href="/services">Services</a><a href="/report?sample=BR-PT">Free sample</a></nav>
+    </div>
+
+    <section id="access" class="access" hidden>
+      <h1>Open your report</h1>
+      <p class="muted">Paste the license key from your Lemon Squeezy receipt email. No account needed: this browser remembers it.</p>
+      <form id="form">
+        <div><label for="key">License key</label><input id="key" autocomplete="off" spellcheck="false" placeholder="e.g. 38b1460a-5104-4067-a91d-77b872934d51" required></div>
+        <div id="pick" hidden>
+          <p class="small" style="margin:0 0 8px">Pick your report's countries. This is set once per key.</p>
+          <div class="row2">
+            <div><label for="p1">Country</label><select id="p1"></select></div>
+            <div><label for="p2">Compare with</label><select id="p2"></select></div>
+          </div>
+        </div>
+        <div id="err" class="err" hidden></div>
+        <button class="btn" id="go" type="submit">Open my report</button>
+      </form>
+      <p class="small muted">No key yet? <a href="/services#report">Get a report</a> or <a href="/report?sample=BR-PT">see the free sample</a>.</p>
+    </section>
+
+    <div id="loading" class="spin" hidden>Gathering your report…</div>
+    <article id="report" hidden></article>
+
+    <div class="foot"><a href="/services">Services</a><a href="/terms">Terms of sale</a><a href="/terms#refunds">Refunds</a><a href="/privacy">Privacy</a><a href="mailto:lucaspaiva@likepolling.com">Contact</a></div>
+  </main>
+  <script src="/assets/report.js" defer></script>
+  <script defer src="/_vercel/insights/script.js"></script>
+</body>
+</html>

@@ -6,6 +6,9 @@
     { "source": "/llms-full.txt", "destination": "/api/llms?format=full" },
     { "source": "/data", "destination": "/api/llms?format=html" },
     { "source": "/privacy", "destination": "/privacy.html" },
-    { "source": "/extension", "destination": "/extension.html" }
+    { "source": "/extension", "destination": "/extension.html" },
+    { "source": "/services", "destination": "/services.html" },
+    { "source": "/report", "destination": "/report.html" },
+    { "source": "/terms", "destination": "/terms.html" }
   ]
 }
