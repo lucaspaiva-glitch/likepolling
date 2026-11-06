@@ -148,7 +148,7 @@
     return `<div class="kpis">${[
       card(short(k.views), L('Wikipedia views'), L('of the daily top 30 pages, all days added')),
       card(short(k.f.articles), L('News articles'), L('about the country, worldwide')),
-      k.f.cooperation_pct == null ? '' : card(`${k.f.cooperation_pct}%`, L('Cooperation news'), L('talks, deals, aid. The rest is tension or conflict')),
+      k.f.cooperation_pct == null ? '' : card(`${k.f.cooperation_pct}%`, L('Peaceful news'), L('talks, deals, aid. The rest is tension or conflict')),
       k.partner ? card(esc(name(k.partner.country)), L('Most in the news with'), L('{n} articles together', { n: num(k.partner.articles) })) : '',
       k.top ? card(esc(k.top.title), L('Most-read page'), L('{n} views', { n: num(k.top.views) })) : '',
       card(String(c.wikipedia_rising.length), L('New this week'), L('pages that just entered the top 30')),
@@ -173,7 +173,7 @@
     ['What the news talks about', 'Share of all news articles about the country, by type of event.', (c) => {
       const f = c.news_focus;
       if (!f.articles) return empty();
-      return `<div class="split"><i style="--w:${f.cooperation_pct}%"></i></div><div class="splitl"><span><b>${f.cooperation_pct}%</b> ${L('cooperation')}</span><span><b>${100 - f.cooperation_pct}%</b> ${L('tension or conflict')}</span></div>
+      return `<div class="split"><i style="--w:${f.cooperation_pct}%"></i></div><div class="splitl"><span><b>${f.cooperation_pct}%</b> ${L('peaceful')}</span><span><b>${100 - f.cooperation_pct}%</b> ${L('tension or conflict')}</span></div>
         <ul class="bars">${f.topics.map((t) => `<li><span>${esc(L(t.topic))}</span><i style="--w:${Math.max(2, t.pct)}%"></i><b>${t.pct}%</b></li>`).join('')}</ul>
         <p class="take">${L('The most common type was {t}, at {p}% of {n} articles.', { t: `<b>${esc(/^en/.test(LANG_ID()) ? f.topics[0].topic.toLowerCase() : L(f.topics[0].topic))}</b>`, p: f.topics[0].pct, n: num(f.articles) })}</p>`;
     }],
@@ -187,7 +187,7 @@
     <dt>${L('Views')}</dt><dd>${L('Times a Wikipedia page was opened from that country. Wikimedia rounds them up a little to protect privacy.')}</dd>
     <dt>${L('Days in the top 30')}</dt><dd>${L('On how many recorded days the page was among the country\'s 30 most-read. More days means lasting interest, not a one-day spike.')}</dd>
     <dt>${L('News articles')}</dt><dd>${L('Online news articles worldwide that mention the country, counted by The GDELT Project. One article can count for two countries.')}</dd>
-    <dt>${L('Cooperation and conflict')}</dt><dd>${L('GDELT sorts every news event into 20 types, from statements and talks (cooperation) to protests and fighting (conflict).')}</dd>
+    <dt>${L('Peaceful and tense news')}</dt><dd>${L('GDELT sorts every news event into 20 types. Talks, deals and aid count as peaceful. Protests and fighting count as tension or conflict.')}</dd>
     <dt>${L('Period')}</dt><dd>${L('Like Polling has recorded its sources every day since {date}, the day we started.', { date: dlong(STARTED) })} ${L('Each report covers up to the last 30 recorded days.')}</dd></dl></section>`;
 
   // ---- artist / company reports: numbers and charts first, one short line each ----
@@ -308,7 +308,7 @@
       shared = `<section class="rsec"><h2>${L('Side by side')}</h2><p class="note">${L('The same measures for both countries.')}</p>
         <table class="cmp"><thead><tr><th></th><th>${esc(name(cs[0].country))}</th><th>${esc(name(cs[1].country))}</th></tr></thead><tbody>
         ${row(L('News articles'), num(a.f.articles), num(b.f.articles))}
-        ${row(L('Cooperation news'), a.f.cooperation_pct == null ? '–' : `${a.f.cooperation_pct}%`, b.f.cooperation_pct == null ? '–' : `${b.f.cooperation_pct}%`)}
+        ${row(L('Peaceful news'), a.f.cooperation_pct == null ? '–' : `${a.f.cooperation_pct}%`, b.f.cooperation_pct == null ? '–' : `${b.f.cooperation_pct}%`)}
         ${row(L('Busiest news day'), a.busy ? dshort(a.busy.day) : '–', b.busy ? dshort(b.busy.day) : '–')}
         ${row(L('Wikipedia views (top 30)'), short(a.views), short(b.views))}
         ${row(L('Most-read page'), a.top ? esc(a.top.title) : '–', b.top ? esc(b.top.title) : '–')}
