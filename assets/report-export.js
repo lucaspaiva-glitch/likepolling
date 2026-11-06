@@ -75,6 +75,8 @@
       each((c) => c.wikipedia, (c, w) => L('People in {c} cared most about {t}.', { c: name(c.country), t: w.title })));
     perCountry(L('Rising this week'), L('Pages that entered the daily top 30 only in the last 7 days. Often the best early signals.'), (c) => c.wikipedia_rising, (w) => cut(w.title), (w) => w.views,
       each((c) => c.wikipedia_rising, (c, w) => L('{t} is the newest big interest in {c}.', { c: name(c.country), t: w.title })));
+    perCountry(L('Searched on Google'), L('Searches that suddenly grew on Google in the country (Google Trends). The numbers are Google\'s rough estimates.'), (c) => (c.searches ? c.searches.top : []), (q) => cut(q.query), (q) => q.traffic,
+      each((c) => (c.searches ? c.searches.top : []), (c, q) => L('The biggest search in {c} was {q}, with about {n} searches.', { c: name(c.country), q: q.query, n: num(q.traffic) })));
     if (cs.some((c) => c.news_focus.articles)) {
       slides.push({ type: 'charts', title: L('Peaceful and tense news'), note: L('GDELT sorts every news event into 20 types. Talks, deals and aid count as peaceful. Protests and fighting count as tension or conflict.'),
         charts: cs.map((c, i) => (c.news_focus.articles ? { head: cs.length > 1 ? names[i] : '', kind: 'doughnut', labels: [L('peaceful'), L('tension or conflict')], series: [{ name: names[i], values: [c.news_focus.cooperation_pct, 100 - c.news_focus.cooperation_pct] }] } : { head: '', empty: true })) });
@@ -83,6 +85,11 @@
     }
     perCountry(L('In the news with'), L('Countries that appeared in the same news articles most often. A sign of who the country deals with.'), (c) => c.news_partners, (p) => name(p.country), (p) => p.articles,
       each((c) => c.news_partners, (c, q) => L('{p} shows up next to {c} in the news more than any other country.', { c: name(c.country), p: name(q.country) })));
+    if (cs.some((c) => (c.holidays || []).length)) {
+      slides.push({ type: 'list', title: L('Holidays coming up'), note: L('National public holidays in the next months. Good dates to plan campaigns around.'),
+        groups: cs.map((c, i) => ({ head: cs.length > 1 ? names[i] : '', items: (c.holidays || []).map((h) => ({ title: `${dshort(h.day)} · ${h.local_name}`, text: h.name !== h.local_name ? h.name : '' })) })),
+        take: each((c) => c.holidays || [], (c, h) => L('Next holiday in {c}: {h} on {d}.', { c: name(c.country), h: h.local_name, d: dshort(h.day) }).replace(/\.\.$/, '.')) });
+    }
     if (cs.some((c) => c.ideas.length)) {
       slides.push({ type: 'list', title: L('Ideas to copy'), note: L('Written each week by AI from the data above. Use them as starting points.'),
         groups: cs.map((c, i) => ({ head: cs.length > 1 ? names[i] : '', items: c.ideas.slice(0, 5).map((it) => ({ title: it.title, text: it.idea })) })) });
@@ -148,11 +155,17 @@
         charts: [{ kind: 'bar', horizontal: true, labels: top.map((c) => name(c.country)), series: [{ name: L('Countries trending'), values: top.map((c) => c.days) }] }],
         take: L('{s} is followed most in {c}.', { s: s.title, c: name(top[0].country) }) });
     }
+    if ((data.trends || []).length) {
+      const top = data.trends.slice(0, 10);
+      slides.push({ type: 'charts', title: L('Trending on Google'), note: L('Days {s} was among the trending Google searches in each country (Google Trends).', { s: s.title }),
+        charts: [{ kind: 'bar', horizontal: true, labels: top.map((t) => name(t.country)), series: [{ name: L('Days trending'), values: top.map((t) => t.days) }] }],
+        take: top.length === 1 ? L('{s} was a trending Google search in {c}.', { s: s.title, c: name(top[0].country) }) : L('{s} was a trending Google search in {n} countries.', { s: s.title, n: data.trends.length }) });
+    }
     slides.push({ type: 'text', title: L('Sources'), foot: x.sources });
     return { slides, title: s.title, file: `like-polling-${data.type}-${s.title.toLowerCase().normalize('NFD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-report` };
   }
 
-  const TIP_OF = ['Top in its field:field', 'The economy:gdp', 'At a glance:glance', 'News coverage per day:line', 'Wikipedia attention per day:line', 'Attention, day by day:line', 'Most-read on Wikipedia:top', 'Rising this week:rising',
+  const TIP_OF = ['Searched on Google:searches', 'Holidays coming up:holidays', 'Trending on Google:searches', 'Top in its field:field', 'The economy:gdp', 'At a glance:glance', 'News coverage per day:line', 'Wikipedia attention per day:line', 'Attention, day by day:line', 'Most-read on Wikipedia:top', 'Rising this week:rising',
     'Peaceful and tense news:topics', 'What the news talks about:topics', 'In the news with:partners', 'Side by side:vs', 'Languages:langs', 'Trending in countries:ctry'];
   const deckOf = (data, x) => {
     const d = data.type === 'artist' || data.type === 'company' ? entityDeck(data, x) : countryDeck(data, x);
@@ -308,6 +321,7 @@
       sheet(L('Attention, day by day'), [[L('Day'), ...all.map((p) => plain(p.title))].map(H), ...ds.map((d) => [day(d), ...maps.map((m) => n(m.get(d) || 0))])], [14, ...all.map(() => 20)]);
       const total = sum(data.languages.map((l) => l.views));
       sheet(L('Languages'), [[L('Language'), L('Code'), L('Page title'), L('Views'), L('Share')].map(H), ...data.languages.map((l) => [langName(l.lang), l.lang, l.title, n(l.views), p100(pct(l.views, total))])], [22, 8, 34, 14, 10]);
+      sheet(L('Trending on Google'), [[L('Country'), L('Days trending'), L('Approx. searches')].map(H), ...(data.trends || []).map((t) => [name(t.country), n(t.days), n(t.traffic)])], [24, 16, 18]);
       sheet(L('Trending in countries'), [[L('Country'), L('Days in the daily top 30')].map(H), ...data.countries.map((c) => [name(c.country), n(c.days)])], [24, 22]);
     } else {
       const cs = data.countries;
@@ -339,6 +353,10 @@
         ...cs.flatMap((c, ci) => (c.gdp || []).map((g) => [names[ci], g.year, n(g.usd), n(g.per_person), g.growth_pct == null ? null : { value: g.growth_pct / 100, format: '0.0%' }]))], [18, 8, 22, 22, 22]);
       sheet(L('In the news with'), [[L('Country'), L('Partner country'), L('Articles together')].map(H),
         ...cs.flatMap((c, ci) => c.news_partners.map((q) => [names[ci], name(q.country), n(q.articles)]))], [18, 22, 18]);
+      sheet(L('Searched on Google'), [[L('Country'), L('Search'), L('Approx. searches'), L('Days trending')].map(H),
+        ...cs.flatMap((c, ci) => (c.searches ? c.searches.top : []).map((q) => [names[ci], q.query, n(q.traffic), n(q.days)]))], [18, 40, 18, 16]);
+      sheet(L('Holidays coming up'), [[L('Country'), L('Date'), L('Holiday'), L('Name in English')].map(H),
+        ...cs.flatMap((c, ci) => (c.holidays || []).map((h) => [names[ci], day(h.day), h.local_name, h.name]))], [18, 14, 34, 34]);
       sheet(L('Ideas to copy'), [[L('Country'), L('Title'), L('Idea'), L('Based on')].map(H),
         ...cs.flatMap((c, ci) => c.ideas.map((i) => [names[ci], i.title, i.idea, i.based_on || '']))], [18, 30, 80, 40]);
     }

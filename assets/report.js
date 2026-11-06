@@ -173,6 +173,8 @@
     langs: 'Where people read is a hint of where fans or customers are, not proof.',
     ctry: 'More days in a country\'s top 30 means steady interest there, not just one viral moment.',
   field: 'Compare with real rivals, not with everyone. A small brand can lead its niche and still look tiny next to the giants.',
+  searches: 'A search spike shows curiosity, not love. People also search for things they fear or just heard about.',
+  holidays: 'On holidays people shop, travel and go online differently. Plan posts a week or two ahead.',
   gdp: 'GDP is the size of a whole economy, not how rich each person is. For that, look at GDP per person.',
   };
   const tip = (id) => L(TIPS[id]);
@@ -234,6 +236,12 @@
         <p class="take">${L('The most common type was {t}, at {p}% of {n} articles.', { t: `<b>${esc(/^en/.test(LANG_ID()) ? f.topics[0].topic.toLowerCase() : L(f.topics[0].topic))}</b>`, p: f.topics[0].pct, n: num(f.articles) })}</p>`;
     }, 'topics'],
     ['In the news with', 'Countries that appeared in the same news articles most often. A sign of who the country deals with.', (c) => (c.news_partners.length ? rank(c.news_partners, (p) => p.articles, (p) => esc(name(p.country))) + `<p class="take">${L('{p} shows up next to {c} in the news more than any other country.', { c: esc(name(c.country)), p: `<b>${esc(name(c.news_partners[0].country))}</b>` })}</p>` : ''), 'partners'],
+    ['Searched on Google', 'Searches that suddenly grew on Google in the country (Google Trends). The numbers are Google\'s rough estimates.', (c) => (c.searches && c.searches.top.length
+      ? rank(c.searches.top.slice(0, 8), (q) => q.traffic, (q) => esc(q.query), c.searches.days > 1 ? (q) => `<small>${L(q.days === 1 ? 'trending on 1 day' : 'trending on {n} days', { n: q.days })}</small>` : null)
+        + `<p class="take">${L('The biggest search in {c} was {q}, with about {n} searches.', { c: esc(name(c.country)), q: `<b>${esc(c.searches.top[0].query)}</b>`, n: num(c.searches.top[0].traffic) })}</p>` : ''), 'searches'],
+    ['Holidays coming up', 'National public holidays in the next months. Good dates to plan campaigns around.', (c) => (c.holidays && c.holidays.length
+      ? `<ul class="hol">${c.holidays.map((h) => `<li><b>${dshort(h.day)}</b><span>${esc(h.local_name)}${h.name && h.name !== h.local_name ? ` <small>${esc(h.name)}</small>` : ''}</span></li>`).join('')}</ul>`
+        + `<p class="take">${L('Next holiday in {c}: {h} on {d}.', { c: esc(name(c.country)), h: `<b>${esc(c.holidays[0].local_name)}</b>`, d: dshort(c.holidays[0].day) }).replace(/\.\.$/, '.')}</p>` : ''), 'holidays'],
     ['Ideas to copy', 'Written each week by AI from the data above. Use them as starting points.', (c) => (c.ideas.length
       ? `<ol class="ideas">${c.ideas.map((i) => `<li><b>${esc(i.title)}</b><p>${esc(i.idea)}</p>${i.based_on ? `<small>${L('Based on: {x}', { x: esc(i.based_on) })}</small>` : ''}</li>`).join('')}</ol>`
       : '')],
@@ -381,7 +389,10 @@
       ${data.languages[1] ? `<p class="take">${L('After English, the most readers are in {l}.', { l: `<b>${esc(langName(data.languages[1].lang))}</b>` })}</p>` : ''}${learn('langs')}</section>`;
     const ctry = data.countries.length ? `<section class="rsec"><h2>${L('Trending in countries')}</h2><p class="note">${L('Days the page was in a country\'s daily top 30.')}</p>
       ${rank(data.countries.slice(0, 10), (c) => c.days, (c) => esc(name(c.country)))}<p class="take">${L('{s} is followed most in {c}.', { s: esc(s.title), c: `<b>${esc(name(data.countries[0].country))}</b>` })}</p>${learn('ctry')}</section>` : '';
-    const srcText = `${L('Wikipedia page views and pages: Wikimedia Foundation (wikimedia.org), open data.')} ${L(data.peers_chosen ? 'Comparisons chosen by the buyer.' : 'Similar pages picked by Wikipedia\'s "more like this" search.')} ${L('No YouTube or news data.')}`;
+    const gt = data.trends || [];
+    const gtr = gt.length ? `<section class="rsec"><h2>${L('Trending on Google')}</h2><p class="note">${L('Days {s} was among the trending Google searches in each country (Google Trends).', { s: esc(s.title) })}</p>
+      ${rank(gt.slice(0, 10), (t) => t.days, (t) => esc(name(t.country)))}<p class="take">${gt.length === 1 ? L('{s} was a trending Google search in {c}.', { s: esc(s.title), c: esc(name(gt[0].country)) }) : L('{s} was a trending Google search in {n} countries.', { s: esc(s.title), n: gt.length })}</p>${learn('searches')}</section>` : '';
+    const srcText = `${L('Wikipedia page views and pages: Wikimedia Foundation (wikimedia.org), open data.')} ${L(data.peers_chosen ? 'Comparisons chosen by the buyer.' : 'Similar pages picked by Wikipedia\'s "more like this" search.')}${gt.length ? ` ${L('Trending searches: Google Trends.')}` : ''} ${L('No YouTube or news data.')}`;
     const sources = `<section class="rsec sources"><h2>${L('Sources')}</h2><p class="small">${srcText}</p></section>`;
     const know = [];
     if (s.change_pct) know.push({ big: `${s.change_pct > 0 ? '+' : '−'}${Math.abs(s.change_pct)}%`, line: L(s.change_pct > 0 ? 'more Wikipedia views for {s} than the month before.' : 'fewer Wikipedia views for {s} than the month before.', { s: s.title }) });
@@ -391,7 +402,7 @@
     const avg = s.series.length > 2 ? sum(s.series.map((d) => d.views)) / s.series.length : 0;
     if (s.peak && avg && s.peak.views >= 1.5 * avg) know.push({ big: `${times(s.peak.views, avg)}×`, line: L('On {day}, views of {s} were {x}× a normal day.', { day: dshort(s.peak.day), s: s.title, x: times(s.peak.views, avg) }) });
     if (f) know.unshift({ big: L('#{r} of {n}', { r: f.rank, n: f.compared }), line: L('{s} in {f}, by Wikipedia views.', { s: s.title, f: fn }) });
-    $('report').innerHTML = head + knowSec(know.slice(0, 3)) + kpis + fieldSec + trend + vs + langs + ctry + sources + (data.sample ? getYours() : '');
+    $('report').innerHTML = head + knowSec(know.slice(0, 3)) + kpis + fieldSec + trend + vs + langs + ctry + gtr + sources + (data.sample ? getYours() : '');
     plainWords();
     wire(data, ctx(data, { know: know.slice(0, 3), fieldName: fn, fieldTake: ft, tag, title: s.title, subtitle: s.description, dates: dateList(data.from, data.to, data.generated_at), sources: srcText }));
     show('report');
@@ -456,7 +467,8 @@
     if (shared) body.splice(1, 0, shared);
     const econ = econSec(cs);
     if (econ.html) body.splice(shared ? 2 : 1, 0, econ.html);
-    const srcText = L(cs.some((c) => c.ideas.length) ? 'Built by Like Polling from its own daily records of open data: Wikipedia page views (Wikimedia Foundation) and news topics and countries (The GDELT Project). Ideas are written by AI (Google Gemini) and can contain mistakes. YouTube and news headlines are not part of the report.' : 'Built by Like Polling from its own daily records of open data: Wikipedia page views (Wikimedia Foundation) and news topics and countries (The GDELT Project). YouTube and news headlines are not part of the report.') + (econ.html ? ` ${L('GDP figures come from the World Bank\'s open data.')}` : '');
+    const srcText = L(cs.some((c) => c.ideas.length) ? 'Built by Like Polling from its own daily records of open data: Wikipedia page views (Wikimedia Foundation) and news topics and countries (The GDELT Project). Ideas are written by AI (Google Gemini) and can contain mistakes. YouTube and news headlines are not part of the report.' : 'Built by Like Polling from its own daily records of open data: Wikipedia page views (Wikimedia Foundation) and news topics and countries (The GDELT Project). YouTube and news headlines are not part of the report.') + (econ.html ? ` ${L('GDP figures come from the World Bank\'s open data.')}` : '')
+      + (cs.some((c) => c.searches && c.searches.top.length) ? ` ${L('Trending searches: Google Trends.')}` : '') + (cs.some((c) => c.holidays && c.holidays.length) ? ` ${L('Holidays: Nager.Date, open data.')}` : '');
     const sources = `<section class="rsec sources"><h2>${L('Sources and limits')}</h2><p class="small">${srcText}</p></section>`;
     const know = knowCountry(cs);
     $('report').innerHTML = head + knowSec(know) + body.join('') + glossary() + sources + (data.sample ? getYours() : '');

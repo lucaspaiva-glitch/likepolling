@@ -71,7 +71,9 @@ test('a comparison report uses open data only and adds what both countries share
   assert.deepEqual(out.shared.read_in_both.map((a) => a.title), ['Lula', 'Halloween']);
   assert.equal(out.countries[0].ideas[0].title, 'T');
   assert.ok(!('all_partners' in out.countries[0]));
-  assert.ok(f.seen.every((u) => /wiki_top_daily|gdelt_|report_insights/.test(u)), 'no YouTube or news tables');
+  assert.ok(f.seen.every((u) => /wiki_top_daily|gdelt_|report_insights|trends_daily|holidays/.test(u)), 'no YouTube or news tables');
+  assert.deepEqual(out.countries[0].searches, { top: [], days: 0 });
+  assert.deepEqual(out.countries[0].holidays, []);
 });
 
 test('GET serves only the Brazil vs Portugal sample', async () => {
@@ -343,4 +345,10 @@ test('company report ranks the subject in its narrowest shared Wikipedia categor
   assert.equal(body.field.compared, 6);
   assert.ok(!body.field.ranked.some((p) => p.title === 'Air Jordan'));
   assert.deepEqual(body.peers.map((p) => p.title), ['Adidas', 'Puma (brand)', 'Asics']);
+});
+
+test('searches adds up Google Trends traffic and trending days per search', () => {
+  const s = report.searches([{ day: '2026-11-05', query: 'Flamengo', traffic: 500 }, { day: '2026-11-06', query: 'flamengo', traffic: 2000 }, { day: '2026-11-06', query: 'Enem', traffic: 1000 }]);
+  assert.deepEqual(s.top, [{ query: 'Flamengo', days: 2, traffic: 2500 }, { query: 'Enem', days: 1, traffic: 1000 }]);
+  assert.equal(s.days, 2);
 });
