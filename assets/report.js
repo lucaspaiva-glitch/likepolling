@@ -1,5 +1,5 @@
 // /report: opens the Country Inspiration Report. ?sample=BR-PT is free; otherwise the buyer pastes the
-// license key from their Lemon Squeezy receipt once, and this browser remembers it (localStorage only).
+// license key from their receipt (Lemon Squeezy or Gumroad) once, and this browser remembers it (localStorage only).
 (function () {
   'use strict';
   const COUNTRIES = ['AR', 'AU', 'BD', 'BE', 'BR', 'CA', 'CL', 'CO', 'DE', 'DZ', 'EC', 'EG', 'ES', 'FR', 'GB', 'ID', 'IE', 'IN', 'IQ', 'IT', 'JP', 'KE',

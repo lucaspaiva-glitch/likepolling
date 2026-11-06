@@ -175,3 +175,52 @@ test('ideas routine sends only open data to Gemini and saves cleaned ideas', asy
 test('ideas routine fails the job when most countries fail', async () => {
   await assert.rejects(ideas.run({ ...env, GEMINI_API_KEY: 'g' }, { fetch: db(), log: () => {}, countries: ['BR'], ask: async () => [] }), /Most countries failed/);
 });
+
+// Fake Gumroad License API.
+const GKEY = 'A1B2C3D4-E5F60718-9ABCDEF0-1234ABCD';
+const genv = { GUMROAD_PRODUCT_ID: 'gp==', REPORT_TOKEN_SECRET: 'test-secret' };
+async function gpost(state, body, envOver = {}) {
+  const calls = [];
+  const route = async (url, init) => {
+    if (!url.startsWith('https://api.gumroad.com/')) return null;
+    const p = Object.fromEntries(new URLSearchParams(init.body));
+    calls.push(p);
+    if (p.license_key !== GKEY || p.product_id !== 'gp==') return json({ success: false, message: 'That license does not exist for the provided product.' }, 404);
+    if (p.increment_uses_count === 'true') state.uses = (state.uses || 0) + 1;
+    return json({ success: true, uses: state.uses || 0, purchase: { email: 'buyer@example.com', refunded: !!state.refunded, disputed: false, chargebacked: false } });
+  };
+  const handler = createHandler({ env: { ...env, ...genv, ...envOver }, fetch: db({ route }), now: () => NOW.getTime() });
+  const res = mockRes();
+  await handler({ method: 'POST', body, headers: { 'x-forwarded-for': `10.2.0.${++ipSeq}` } }, res);
+  return { res, calls };
+}
+
+test('Gumroad key: first visit picks countries once, then a signed instance reopens them', async () => {
+  const state = {};
+  let { res } = await gpost(state, { key: GKEY });
+  assert.equal(res.statusCode, 409);
+  assert.equal(res.body.need_countries, true);
+  ({ res } = await gpost(state, { key: GKEY, countries: 'BR,PT' }));
+  assert.equal(res.statusCode, 200);
+  assert.equal(state.uses, 1);
+  assert.match(res.body.instance_id, /^g-BR-PT-[0-9a-f]{32}$/);
+  assert.deepEqual(res.body.countries.map((c) => c.country), ['BR', 'PT']);
+  assert.ok(!JSON.stringify(res.body).includes('buyer@example.com'));
+  const inst = res.body.instance_id;
+  let calls;
+  ({ res, calls } = await gpost(state, { key: GKEY, instance: inst, countries: 'US' }));
+  assert.equal(res.statusCode, 200);
+  assert.deepEqual(res.body.countries.map((c) => c.country), ['BR', 'PT']);
+  assert.ok(calls.every((c) => c.increment_uses_count === 'false'));
+  assert.equal(state.uses, 1);
+});
+
+test('Gumroad key: forged instance, used key elsewhere, unknown and refunded keys are refused', async () => {
+  const state = { uses: 1 };
+  assert.equal((await gpost(state, { key: GKEY, instance: `g-US-${'0'.repeat(32)}`, countries: 'US' })).res.statusCode, 409);
+  assert.equal((await gpost(state, { key: GKEY, countries: 'US' })).res.statusCode, 409);
+  assert.equal((await gpost({}, { key: 'ZZZZZZZZ-ZZZZZZZZ' })).res.statusCode, 404);
+  assert.equal((await gpost({ refunded: true }, { key: GKEY })).res.statusCode, 403);
+  assert.equal((await gpost({}, { key: GKEY }, { GUMROAD_PRODUCT_ID: '' })).res.statusCode, 404);
+  assert.equal((await gpost({}, { key: GKEY }, { GUMROAD_PRODUCT_ID: '', LEMONSQUEEZY_STORE_ID: '' })).res.statusCode, 503);
+});

@@ -4,7 +4,10 @@
 (function () {
   'use strict';
   // Lemon Squeezy "Share" link of the report product. Empty = the button opens an email order instead.
-  const CHECKOUT_URL = 'https://likepolling.lemonsqueezy.com/checkout/buy/482d48a0-1fcf-461b-a8d5-050e6cafb544';
+  const LEMON_URL = 'https://likepolling.lemonsqueezy.com/checkout/buy/482d48a0-1fcf-461b-a8d5-050e6cafb544';
+  // Gumroad product link; when set, the Buy button uses Gumroad instead (it pays out to Brazil via PayPal).
+  const GUMROAD_URL = '';
+  const CHECKOUT_URL = GUMROAD_URL || LEMON_URL;
   const COUNTRIES = ['AR', 'AU', 'BD', 'BE', 'BR', 'CA', 'CL', 'CO', 'DE', 'DZ', 'EC', 'EG', 'ES', 'FR', 'GB', 'ID', 'IE', 'IN', 'IQ', 'IT', 'JP', 'KE',
     'KR', 'MA', 'MX', 'MY', 'NG', 'NL', 'PE', 'PH', 'PK', 'PL', 'PT', 'SA', 'TH', 'TR', 'TW', 'UA', 'US', 'VN', 'ZA'];
   const MAIL = 'lucaspaiva@likepolling.com';
@@ -32,8 +35,13 @@
     const label = list.map((c) => names.of(c)).join(' vs ');
     if (CHECKOUT_URL) {
       const u = new URL(CHECKOUT_URL);
-      u.searchParams.set('checkout[custom][countries]', list.join(','));
-      if (source) u.searchParams.set('checkout[custom][ref]', source);
+      if (GUMROAD_URL) {
+        u.searchParams.set('wanted', 'true');
+        if (source) u.searchParams.set('utm_source', source);
+      } else {
+        u.searchParams.set('checkout[custom][countries]', list.join(','));
+        if (source) u.searchParams.set('checkout[custom][ref]', source);
+      }
       $('buy').href = u.toString();
       $('buy').textContent = `Buy report: ${label}`;
     } else {

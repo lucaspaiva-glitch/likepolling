@@ -7,7 +7,11 @@
 //        name at Lemon Squeezy. Later visits send the key (+ the activation id the browser kept).
 // Env: LEMONSQUEEZY_STORE_ID and LEMONSQUEEZY_PRODUCT_ID (keys from other stores/products are refused),
 // optional LEMONSQUEEZY_API_KEY (lets a buyer reopen the report on a new device with just the key).
+// Gumroad sells it too (GUMROAD_PRODUCT_ID + REPORT_TOKEN_SECRET). Its keys have no activations, so the
+// first visit bumps the key's use count and the browser gets a signed "instance" that carries the
+// countries (g-BR-PT-<signature>); nothing is stored here either. Lemon Squeezy keys are UUIDs.
 'use strict';
+const crypto = require('crypto');
 const report = require('../lib/report');
 
 const LICENSE_API = 'https://api.lemonsqueezy.com/v1/licenses/';
@@ -75,6 +79,49 @@ function checkLicense(env, v) {
   if (lk.status === 'expired') throw fail(403, 'This report key has expired.');
 }
 
+const GUMROAD_VERIFY = 'https://api.gumroad.com/v2/licenses/verify';
+const isLemonKey = (k) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(k);
+const sign = (env, key, list) => crypto.createHmac('sha256', String(env.REPORT_TOKEN_SECRET).trim())
+  .update(`${key}|${list.join(',')}`).digest('hex').slice(0, 32);
+const gumroadToken = (env, key, list) => `g-${list.join('-')}-${sign(env, key, list)}`;
+
+function readGumroadToken(env, key, token) {
+  const m = /^g-((?:[A-Z]{2}-){1,2})([0-9a-f]{32})$/.exec(token || '');
+  if (!m) return null;
+  const list = report.parseCountries(m[1].slice(0, -1).split('-').join(','));
+  if (!list.length) return null;
+  const a = Buffer.from(m[2]), b = Buffer.from(sign(env, key, list));
+  return a.length === b.length && crypto.timingSafeEqual(a, b) ? list : null;
+}
+
+async function gumroadVerify(env, fetchImpl, key, increment) {
+  const res = await fetchImpl(GUMROAD_VERIFY, {
+    method: 'POST',
+    headers: { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ product_id: String(env.GUMROAD_PRODUCT_ID).trim(), license_key: key, increment_uses_count: String(increment) }).toString(),
+    signal: AbortSignal.timeout(10000),
+  });
+  const json = await res.json().catch(() => null);
+  if (!json || res.status >= 500) throw fail(502, 'Gumroad didn\'t answer. Try again in a minute.');
+  if (!json.success || !json.purchase) throw fail(404, 'That key wasn\'t found. Copy it from your receipt email.');
+  const p = json.purchase;
+  if (p.refunded || p.disputed || p.chargebacked) throw fail(403, 'This key was refunded or turned off.');
+  return json;
+}
+
+async function unlockGumroad(env, fetchImpl, { key, instance, countries }) {
+  if (!env.GUMROAD_PRODUCT_ID || !env.REPORT_TOKEN_SECRET) throw fail(404, 'That key wasn\'t found. Copy it from your receipt email.');
+  const v = await gumroadVerify(env, fetchImpl, key, false);
+  let list = readGumroadToken(env, key, instance);
+  if (!list) {
+    if (v.uses > 0) throw fail(409, 'This key was already opened in another browser. Open the report there (or use the link it shows), or email lucaspaiva@likepolling.com and we\'ll help.');
+    list = report.parseCountries(countries);
+    if (!list.length) throw fail(409, 'Pick the country (or two) for your report.', { need_countries: true });
+    await gumroadVerify(env, fetchImpl, key, true);
+  }
+  return { countries: list, instance_id: gumroadToken(env, key, list), expires_at: null };
+}
+
 // Returns { countries, instance_id, expires_at } for a valid key, activating it on the first visit.
 async function unlock(env, fetchImpl, { key, instance, countries }) {
   const license = licenseApi(fetchImpl);
@@ -115,14 +162,16 @@ function createHandler(deps = {}) {
         return res.status(200).json({ ...body, sample: true });
       }
       if (req.method === 'POST') {
-        if (!env.LEMONSQUEEZY_STORE_ID) throw fail(503, 'Report sales open soon.');
+        if (!env.LEMONSQUEEZY_STORE_ID && !env.GUMROAD_PRODUCT_ID) throw fail(503, 'Report sales open soon.');
         const ip = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim() || 'unknown';
         if (!allowed(ip, now)) throw fail(429, 'Too many tries. Wait a minute and try again.');
         const { key, instance, countries } = await parseBody(req);
         const k = String(key || '').trim();
         const i = String(instance || '').trim();
         if (!/^[A-Za-z0-9-]{8,64}$/.test(k)) throw fail(400, 'Paste the license key from your receipt email.');
-        const access = await unlock(env, fetchImpl, { key: k, instance: /^[A-Za-z0-9-]{8,64}$/.test(i) ? i : '', countries });
+        const args = { key: k, instance: /^[A-Za-z0-9-]{8,64}$/.test(i) ? i : '', countries };
+        const lemon = isLemonKey(k) && env.LEMONSQUEEZY_STORE_ID;
+        const access = await (lemon ? unlock(env, fetchImpl, args) : unlockGumroad(env, fetchImpl, args));
         const body = await report.buildReport(get, access.countries, new Date(now));
         res.setHeader('Cache-Control', 'no-store');
         return res.status(200).json({ ...body, sample: false, instance_id: access.instance_id, expires_at: access.expires_at });
