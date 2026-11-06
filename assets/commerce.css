@@ -12,6 +12,8 @@ h3 { font-size: 17px; margin: 0 0 6px; }
 .top { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
 .top nav a { margin-left: 16px; color: #0d0d0d; text-decoration: none; font-size: 15px; }
 .top nav a:hover { color: #b0000e; }
+.top .lp-lang { margin: 0 0 0 auto; }
+@media (max-width: 700px) { .top .lp-lang { order: 3; margin: 0; } }
 .offers { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 28px; }
 .card { border: 1px solid #e6e6e6; border-radius: 14px; padding: 22px; display: flex; flex-direction: column; gap: 10px; background: #fff; }
 .card.main { border: 2px solid #b0000e; }

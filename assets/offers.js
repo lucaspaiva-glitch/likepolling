@@ -16,6 +16,10 @@
     { id: 'sponsor', sym: 'Ad spot', top: 'Launch rate', name: 'YOUR BRAND\nHERE', sub: 'A card on Like Polling, seen in 41 countries.', mail: 'Sponsoring Like Polling',
       stats: [['41', 'countries'], ['2×', 'updated a day'], ['1', 'brand at a time']] },
   ];
+  const SAMPLES = 'https://iyhaoagslsrwtkcrxylp.supabase.co/storage/v1/object/public/samples';
+  const tr = (s) => (window.LP_I18N ? window.LP_I18N.t(s) : s);
+  const lang = () => (window.LP_I18N && window.LP_I18N.lang) || 'en';
+  const pdf = (id) => `${SAMPLES}/${lang()}/${id}-report.pdf?download=like-polling-${id}-report.pdf`;
   const roots = document.querySelectorAll('[data-offers]');
   if (!roots.length) return;
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -36,32 +40,36 @@
   const card = (o) => {
     const report = !o.mail;
     const actions = report
-      ? `<a class="svc-btn" href="${esc(buyLink(o))}">${o.buy ? `Buy · ${PRICE}` : `Order · ${PRICE}`}</a><a class="svc-link" href="${o.sample}" download>Download a free sample (PDF) ›</a><p class="svc-fine">Gathered every day since 24 Oct 2026. You choose after paying.</p>`
-      : `<a class="svc-btn" href="${esc(mailto(o.mail, 'Hi! I\'d like to know about sponsoring Like Polling.\n\nBrand:\nCountries we target:\nWebsite:'))}">Ask about the ad spot</a><p class="svc-fine">Like the Machu Picchu Energy card. Monthly views and clicks included.</p>`;
-    return `<section class="svc" id="offer-${o.id}">
+      ? `<a class="svc-btn" href="${esc(buyLink(o))}">${tr(o.buy ? 'Buy' : 'Order')} · ${PRICE}</a><a class="svc-link" href="${esc(pdf(o.id))}">${tr('Download a free sample (PDF) ›')}</a><p class="svc-fine">${tr('Gathered every day since 24 Oct 2026. You choose after paying.')}</p>`
+      : `<a class="svc-btn" href="${esc(mailto(o.mail, 'Hi! I\'d like to know about sponsoring Like Polling.\n\nBrand:\nCountries we target:\nWebsite:'))}">${tr('Ask about the ad spot')}</a><p class="svc-fine">${tr('Like the Machu Picchu Energy card. Monthly views and clicks included.')}</p>`;
+    const nm = tr(o.name);
+    return `<section class="svc" id="offer-${o.id}" data-no-i18n>
       <button type="button" class="svc-tab" aria-expanded="false" aria-controls="offer-${o.id}-body">
-        <span class="svc-top"><span class="svc-sym">${esc(o.sym)}</span><span>${esc(o.top || `${PRICE}`)}</span></span>
-        <span class="svc-name svc-glitch" data-no-i18n data-text="${esc(o.name)}">${esc(o.name)}</span>
+        <span class="svc-top"><span class="svc-sym">${esc(tr(o.sym))}</span><span>${esc(o.top ? tr(o.top) : PRICE)}</span></span>
+        <span class="svc-name svc-glitch" data-text="${esc(nm)}">${esc(nm)}</span>
         <span class="svc-bar" aria-hidden="true"></span>
-        <span class="svc-sub">${esc(o.sub)}</span>
-        <span class="svc-more" aria-hidden="true">${report ? 'What you get' : 'How it works'} <i>›</i></span>
+        <span class="svc-sub">${esc(tr(o.sub))}</span>
+        <span class="svc-more" aria-hidden="true">${tr(report ? 'What you get' : 'How it works')} <i>›</i></span>
       </button>
       <div class="svc-body" id="offer-${o.id}-body">
-        <div class="svc-stats">${o.stats.map(([n, l]) => `<div><b>${esc(n)}</b><span>${esc(l)}</span></div>`).join('')}</div>
+        <div class="svc-stats">${o.stats.map(([n, l]) => `<div><b>${esc(n)}</b><span>${esc(tr(l))}</span></div>`).join('')}</div>
         ${actions}
       </div>
     </section>`;
   };
-  roots.forEach((r) => { r.classList.add('svc-grid'); r.innerHTML = OFFERS.map(card).join(''); });
-
-  const cards = [...document.querySelectorAll('.svc')];
   const fine = matchMedia('(hover: hover) and (pointer: fine)').matches;
+  let cards = [];
+  function draw() {
+    roots.forEach((r) => { r.classList.add('svc-grid'); r.innerHTML = OFFERS.map(card).join(''); });
+    cards = [...document.querySelectorAll('.svc')];
+    cards.forEach(wire);
+  }
   function setOpen(c, on) {
     c.classList.toggle('open', on);
     c.querySelector('.svc-tab').setAttribute('aria-expanded', String(on));
     if (!on) c.pinned = false;
   }
-  cards.forEach((c) => {
+  function wire(c) {
     let t = 0;
     c.querySelector('.svc-tab').addEventListener('click', () => {
       clearTimeout(t);
@@ -78,7 +86,9 @@
       clearTimeout(t);
       t = setTimeout(() => { if (!c.pinned) setOpen(c, false); }, 350);
     });
-  });
+  }
+  draw();
+  document.addEventListener('lp:lang', draw);
   const fromHash = () => {
     const id = { '#report': 'country', '#sponsor': 'sponsor' }[location.hash] || location.hash.slice(1);
     const c = document.getElementById(`offer-${id}`);

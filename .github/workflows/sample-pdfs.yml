@@ -9,20 +9,14 @@ concurrency:
   group: sample-pdfs
   cancel-in-progress: false
 
-permissions:
-  contents: write
-
 jobs:
   print:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v5
-      - name: Print the 3 free samples from the live site
+      - name: Print the free samples in every language and upload them to Supabase Storage
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
         run: scripts/sample-pdfs.sh https://www.likepolling.com google-chrome
-      - name: Commit if they changed
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add samples/*.pdf
-          git diff --cached --quiet || (git commit -m "Samples: weekly PDF refresh" && git push)

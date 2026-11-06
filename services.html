@@ -24,7 +24,7 @@
 
     <div data-offers></div>
 
-    <p class="svc-free">Everything else on <a href="/">Like Polling</a> and the <a href="/extension">Creators + extension</a> stays free.</p>
+    <p class="svc-free"><a href="/">Everything else on Like Polling stays free.</a></p>
 
     <section class="inside" id="inside">
       <div class="inside-text">
@@ -36,14 +36,14 @@
           <li>Charts of news and reading, day by day</li>
           <li>What's rising, and 5 ideas to adapt</li>
         </ul>
-        <div class="cta"><a class="btn" href="#country">Get a report for &euro;18</a><a class="btn ghost" href="/samples/country-report.pdf" download>Download the sample (PDF)</a></div>
+        <div class="cta"><a class="btn" href="#country">Get a report for &euro;18</a><a class="btn ghost" id="pv-pdf" href="https://iyhaoagslsrwtkcrxylp.supabase.co/storage/v1/object/public/samples/en/country-report.pdf?download=like-polling-country-report.pdf">Download the sample (PDF)</a></div>
       </div>
-      <a class="preview" id="preview" href="/report?sample=BR-PT" aria-label="Open the Brazil vs Portugal sample report">
-        <div class="pv-head"><span>Extended Country Report</span><b>Brazil vs Portugal</b></div>
+      <a class="preview" id="preview" data-no-i18n href="/report?sample=BR-PT" aria-label="Open the Brazil vs Portugal sample report">
+        <div class="pv-head"><span id="pv-tag">Extended Country Report</span><b id="pv-title">Brazil vs Portugal</b></div>
         <div class="pv-kpis" id="pv-kpis"><div><b>&nbsp;</b><span>&nbsp;</span></div><div><b>&nbsp;</b><span>&nbsp;</span></div></div>
-        <div class="pv-label">News articles per day</div>
+        <div class="pv-label" id="pv-nl">News articles per day</div>
         <svg id="pv-chart" viewBox="0 0 300 90" aria-hidden="true"></svg>
-        <div class="pv-label">Most-read on Wikipedia in Brazil</div>
+        <div class="pv-label" id="pv-rank-l">Most-read on Wikipedia</div>
         <ol class="pv-rank" id="pv-rank"></ol>
         <p class="pv-take" id="pv-take">Loading the sample&hellip;</p>
       </a>
@@ -53,7 +53,7 @@
     <ol class="steps">
       <li>Pick a report and pay. No account.</li>
       <li>Your receipt email has a key.</li>
-      <li>Paste it on <a href="/report">likepolling.com</a>, choose your country, artist or company. Your report opens.</li>
+      <li>Paste it on likepolling.com/report and choose your country, artist or company.</li>
     </ol>
 
     <h2>Questions</h2>
@@ -61,15 +61,17 @@
       <dt>Where does the data come from?</dt>
       <dd>Open data only. Country reports: Like Polling's daily records of Wikipedia views (Wikimedia Foundation) and worldwide news coverage (The GDELT Project), with ideas written by AI (Google Gemini). Artist and company reports: Wikipedia views in 17 languages, compared with similar pages.</dd>
       <dt>Does the report include YouTube or news headlines?</dt>
-      <dd>No. YouTube rankings and news headlines belong to YouTube and the publishers, so they stay free on <a href="/">likepolling.com</a> and are never sold. You pay for our work: collecting, organising and explaining open data.</dd>
+      <dd>No. YouTube rankings and news headlines belong to YouTube and the publishers, so they stay free on likepolling.com and are never sold. You pay for our work: collecting, organising and explaining open data.</dd>
       <dt>What do you keep about me?</dt>
-      <dd>Nothing. Our checkout partner handles the payment and your email. Like Polling has no accounts and stores no buyer data. See the <a href="/privacy">privacy policy</a>.</dd>
+      <dd>Nothing. Our checkout partner handles the payment and your email. Like Polling has no accounts and stores no buyer data. <a href="/privacy">Privacy policy</a></dd>
       <dt>Can I get a refund?</dt>
-      <dd>Yes, within 14 days if the report isn't useful to you. See the <a href="/terms#refunds">refund policy</a>.</dd>
+      <dd>Yes, within 14 days if the report isn't useful to you. <a href="/terms#refunds">Refund policy</a></dd>
     </dl>
 
     <div class="foot"><a href="/">Like Polling</a><a href="/terms">Terms of sale</a><a href="/terms#refunds">Refunds</a><a href="/privacy">Privacy</a><a href="mailto:lucaspaiva@likepolling.com">Contact</a></div>
   </main>
+  <script src="/assets/i18n.js"></script>
+  <script src="/assets/report-i18n.js"></script>
   <script src="/assets/offers.js" defer></script>
   <script src="/assets/services.js" defer></script>
   <script defer src="/_vercel/insights/script.js"></script>

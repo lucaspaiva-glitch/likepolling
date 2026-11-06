@@ -122,7 +122,7 @@
           </div>
         </div>
         <div id="pick-e" hidden>
-          <p class="small" style="margin:0 0 8px">Pick your report's <span id="pe-kind">artist</span>. This is set once per key.</p>
+          <p class="small" style="margin:0 0 8px" id="pe-msg">Pick your report's artist. This is set once per key.</p>
           <div><label for="e1" id="pe-l">Artist</label><input id="e1" list="e-sug" autocomplete="off" spellcheck="false"></div>
           <div style="margin-top:10px"><label for="e2">Compare with <span class="muted">(optional: leave empty and we pick similar ones)</span></label><input id="e2" list="e-sug" autocomplete="off"><input id="e3" list="e-sug" autocomplete="off"><input id="e4" list="e-sug" autocomplete="off"></div>
           <datalist id="e-sug"></datalist>
@@ -130,15 +130,17 @@
         <div id="err" class="err" hidden></div>
         <button class="btn" id="go" type="submit">Open my report</button>
       </form>
-      <p class="small muted">No key yet? <a href="/services">Get a report</a>. Free samples (PDF): <a href="/samples/country-report.pdf" download>country</a>, <a href="/samples/artist-report.pdf" download>artist</a>, <a href="/samples/company-report.pdf" download>company</a>.</p>
+      <p class="small muted">No key yet? <a href="/services">Get a report</a>. <a href="/services">Free samples (PDF)</a></p>
     </section>
 
     <div id="loading" class="spin" hidden>Gathering your report…</div>
-    <article id="report" hidden></article>
+    <article id="report" data-no-i18n hidden></article>
 
     <div class="foot"><a href="/services">Services</a><a href="/terms">Terms of sale</a><a href="/terms#refunds">Refunds</a><a href="/privacy">Privacy</a><a href="mailto:lucaspaiva@likepolling.com">Contact</a></div>
   </main>
-  <script src="/assets/report.js" defer></script>
+  <script src="/assets/i18n.js"></script>
+  <script src="/assets/report-i18n.js"></script>
+  <script src="/assets/report.js"></script>
   <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>
