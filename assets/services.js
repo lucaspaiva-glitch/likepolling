@@ -3,9 +3,8 @@
 // Lemon Squeezy's order list shows which channel sold. Nothing is sent to Like Polling.
 (function () {
   'use strict';
-  // Lemon Squeezy "Share" link of the report product. Empty until the store is approved: then the
-  // button opens an email order instead.
-  const CHECKOUT_URL = '';
+  // Lemon Squeezy "Share" link of the report product. Empty = the button opens an email order instead.
+  const CHECKOUT_URL = 'https://likepolling.lemonsqueezy.com/checkout/buy/482d48a0-1fcf-461b-a8d5-050e6cafb544';
   const COUNTRIES = ['AR', 'AU', 'BD', 'BE', 'BR', 'CA', 'CL', 'CO', 'DE', 'DZ', 'EC', 'EG', 'ES', 'FR', 'GB', 'ID', 'IE', 'IN', 'IQ', 'IT', 'JP', 'KE',
     'KR', 'MA', 'MX', 'MY', 'NG', 'NL', 'PE', 'PH', 'PK', 'PL', 'PT', 'SA', 'TH', 'TR', 'TW', 'UA', 'US', 'VN', 'ZA'];
   const MAIL = 'lucaspaiva@likepolling.com';

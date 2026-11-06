@@ -72,7 +72,7 @@ function checkLicense(env, v) {
     throw fail(404, 'That key wasn\'t found. Copy it from your Lemon Squeezy receipt email.');
   }
   if (lk.status === 'disabled') throw fail(403, 'This key was refunded or turned off.');
-  if (lk.status === 'expired') throw fail(403, 'This report\'s 12 months of access have ended.');
+  if (lk.status === 'expired') throw fail(403, 'This report key has expired.');
 }
 
 // Returns { countries, instance_id, expires_at } for a valid key, activating it on the first visit.
