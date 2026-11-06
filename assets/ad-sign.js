@@ -57,7 +57,7 @@
         <span class="svc-sub">${tr('A card on Like Polling, seen in 41 countries.')}</span></div>
         <div class="svc-body"><div class="svc-stats"><div><b>41</b><span>${tr('countries')}</span></div><div><b>2×</b><span>${tr('updated a day')}</span></div><div><b>1</b><span>${tr('brand at a time')}</span></div></div>
         <form class="lp-sign-form" novalidate><p>${tr('We are')} <input name="brand" placeholder="${tr('brand name')}" autocomplete="organization" required>, ${tr('a')} <input name="kind" placeholder="${tr('kind of')}" required> ${tr('company, at')} <input name="site" placeholder="${tr('website')}" inputmode="url" autocomplete="url" required>.</p>
-        <a class="svc-btn" href="#">${tr('Buy')} · ${tr('1 week')} · ${PRICE}</a></form><p class="svc-fine">${tr('Like the Machu Picchu Energy card. Weekly views and clicks included.')}</p></div>
+        <a class="svc-btn" href="#">${tr('Buy')} · ${tr('1 week')} · ${PRICE}</a></form><p class="svc-fine">${tr('Like the Machu Picchu Energy card. Weekly views and clicks included.')} ${tr('No gambling or betting brands.')}</p></div>
       </section></div>`;
     const f = root.querySelector('.lp-sign-form'), go = f.querySelector('.svc-btn');
     const val = () => Object.fromEntries([...f.elements].filter((e) => e.name).map((e) => [e.name, e.value.trim()]));

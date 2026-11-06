@@ -252,6 +252,7 @@
     "kind of": ["tipo de", "tipo de", "Art von", "тип", "тип", "업종", "業種"],
     "company, at": ["empresa, em", "empresa, en", "Unternehmen, unter", "компании, сайт", "компанії, сайт", "회사, 웹사이트", "の会社、サイト"],
     "website": ["site", "sitio web", "Website", "сайт", "сайт", "웹사이트", "ウェブサイト"],
+    "No gambling or betting brands.": ["Não aceitamos marcas de apostas ou jogos de azar.", "No aceptamos marcas de apuestas ni juegos de azar.", "Keine Glücksspiel- oder Wettmarken.", "Без брендов азартных игр и ставок.", "Без брендів азартних ігор і ставок.", "도박·베팅 브랜드는 받지 않습니다.", "ギャンブル・賭博関連のブランドはお受けしません。"],
     "1 week": ["1 semana", "1 semana", "1 Woche", "1 неделя", "1 тиждень", "1주", "1週間"],
     "Like the Machu Picchu Energy card. Weekly views and clicks included.": ["Como o card da Machu Picchu Energy. Visualizações e cliques semanais incluídos.", "Como la tarjeta de Machu Picchu Energy. Vistas y clics semanales incluidos.", "Wie die Machu-Picchu-Energy-Karte. Wöchentliche Aufrufe und Klicks inklusive.", "Как карточка Machu Picchu Energy. Еженедельные просмотры и клики включены.", "Як картка Machu Picchu Energy. Щотижневі перегляди й кліки включено.", "Machu Picchu Energy 카드처럼요. 주간 조회수와 클릭 수 포함.", "Machu Picchu Energyのカードと同じ形式。週ごとの表示数とクリック数付き。"],
     "Order": ["Pedir", "Pedir", "Bestellen", "Заказать", "Замовити", "주문", "注文"],

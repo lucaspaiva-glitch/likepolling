@@ -70,15 +70,19 @@
       const charts = cs.map((c, i) => { const it = list(c).slice(0, 8); return it.length ? { head: cs.length > 1 ? names[i] : '', kind: 'bar', horizontal: true, labels: it.map(label), series: [{ name: title, values: it.map(val) }] } : null; });
       if (charts.some(Boolean)) slides.push({ type: 'charts', title, note, charts: charts.map((c) => c || { head: '', empty: true }), take });
     };
-    perCountry(L('Most-read on Wikipedia'), L('Total views over the period.'), (c) => c.wikipedia, (w) => cut(w.title), (w) => w.views);
-    perCountry(L('Rising this week'), L('Pages that entered the daily top 30 only in the last 7 days. Often the best early signals.'), (c) => c.wikipedia_rising, (w) => cut(w.title), (w) => w.views);
+    const each = (list, line) => cs.map((c) => (list(c)[0] ? line(c, list(c)[0]) : '')).filter(Boolean).join('   ·   ');
+    perCountry(L('Most-read on Wikipedia'), L('Total views over the period.'), (c) => c.wikipedia, (w) => cut(w.title), (w) => w.views,
+      each((c) => c.wikipedia, (c, w) => L('People in {c} cared most about {t}.', { c: name(c.country), t: w.title })));
+    perCountry(L('Rising this week'), L('Pages that entered the daily top 30 only in the last 7 days. Often the best early signals.'), (c) => c.wikipedia_rising, (w) => cut(w.title), (w) => w.views,
+      each((c) => c.wikipedia_rising, (c, w) => L('{t} is the newest big interest in {c}.', { c: name(c.country), t: w.title })));
     if (cs.some((c) => c.news_focus.articles)) {
       slides.push({ type: 'charts', title: L('Peaceful and tense news'), note: L('GDELT sorts every news event into 20 types. Talks, deals and aid count as peaceful. Protests and fighting count as tension or conflict.'),
         charts: cs.map((c, i) => (c.news_focus.articles ? { head: cs.length > 1 ? names[i] : '', kind: 'doughnut', labels: [L('peaceful'), L('tension or conflict')], series: [{ name: names[i], values: [c.news_focus.cooperation_pct, 100 - c.news_focus.cooperation_pct] }] } : { head: '', empty: true })) });
       perCountry(L('What the news talks about'), L('Share of all news articles about the country, by type of event.'), (c) => (c.news_focus.articles ? c.news_focus.topics : []), (t) => L(t.topic), (t) => t.pct, null);
       slides[slides.length - 1].charts.forEach((ch) => { ch.fmt = 'pct'; });
     }
-    perCountry(L('In the news with'), L('Countries that appeared in the same news articles most often. A sign of who the country deals with.'), (c) => c.news_partners, (p) => name(p.country), (p) => p.articles);
+    perCountry(L('In the news with'), L('Countries that appeared in the same news articles most often. A sign of who the country deals with.'), (c) => c.news_partners, (p) => name(p.country), (p) => p.articles,
+      each((c) => c.news_partners, (c, q) => L('{p} shows up next to {c} in the news more than any other country.', { c: name(c.country), p: name(q.country) })));
     if (cs.some((c) => c.ideas.length)) {
       slides.push({ type: 'list', title: L('Ideas to copy'), note: L('Written each week by AI from the data above. Use them as starting points.'),
         groups: cs.map((c, i) => ({ head: cs.length > 1 ? names[i] : '', items: c.ideas.slice(0, 5).map((it) => ({ title: it.title, text: it.idea })) })) });
@@ -114,25 +118,35 @@
       const g = by('change_pct')[0];
       slides.push({ type: 'charts', title: L('Side by side'), note: L('The same three measures for each.'),
         charts: [bar(L('Views, 30 days'), 'views'), bar(L('Change vs last month'), 'change_pct', 'pct'), bar(L('Languages'), 'languages')],
-        take: L('Fastest growing: {a} ({p}).', { a: g.title, p: `${g.change_pct >= 0 ? '+' : ''}${g.change_pct ?? 0}%` }) });
+        take: g.change_pct > 0 ? L('Fastest growing: {a} ({p}).', { a: g.title, p: `+${g.change_pct}%` }) : '' });
     }
     if (langTotal) {
       const top = data.languages.slice(0, 8);
       slides.push({ type: 'charts', title: L('Where people read about {s}', { s: s.title }), note: L('Views by Wikipedia language, last 30 days.'),
         charts: [{ head: '', kind: 'doughnut', labels: [langName('en'), L('other languages')], series: [{ name: s.title, values: [100 - abroad, abroad] }] },
           { head: '', kind: 'bar', horizontal: true, labels: top.map((l) => langName(l.lang)), series: [{ name: L('Wikipedia views'), values: top.map((l) => l.views) }], wide: 2 }],
-        take: data.languages[1] ? L('After English, the most readers are in {l}.', { l: langName(data.languages[1].lang) }) : '' });
+        take: data.languages[1] ? L('After English, the most readers are in {l}.', { l: langName(data.languages[1].lang) }) : '', learn: x.tip ? x.tip('langs') : '' });
     }
     if (data.countries.length) {
       const top = data.countries.slice(0, 10);
       slides.push({ type: 'charts', title: L('Trending in countries'), note: L('Days the page was in a country\'s daily top 30.'),
-        charts: [{ kind: 'bar', horizontal: true, labels: top.map((c) => name(c.country)), series: [{ name: L('Countries trending'), values: top.map((c) => c.days) }] }] });
+        charts: [{ kind: 'bar', horizontal: true, labels: top.map((c) => name(c.country)), series: [{ name: L('Countries trending'), values: top.map((c) => c.days) }] }],
+        take: L('{s} is followed most in {c}.', { s: s.title, c: name(top[0].country) }) });
     }
     slides.push({ type: 'text', title: L('Sources'), foot: x.sources });
     return { slides, title: s.title, file: `like-polling-${data.type}-${s.title.toLowerCase().normalize('NFD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-report` };
   }
 
-  const deckOf = (data, x) => (data.type === 'artist' || data.type === 'company' ? entityDeck(data, x) : countryDeck(data, x));
+  const TIP_OF = ['At a glance:glance', 'News coverage per day:line', 'Wikipedia attention per day:line', 'Attention, day by day:line', 'Most-read on Wikipedia:top', 'Rising this week:rising',
+    'Peaceful and tense news:topics', 'What the news talks about:topics', 'In the news with:partners', 'Side by side:vs', 'Languages:langs', 'Trending in countries:ctry'];
+  const deckOf = (data, x) => {
+    const d = data.type === 'artist' || data.type === 'company' ? entityDeck(data, x) : countryDeck(data, x);
+    if (!x.tip) return d;
+    const tips = new Map(TIP_OF.map((t) => { const [k, v] = t.split(':'); return [x.L(k), v]; }));
+    d.slides.forEach((sl) => { if (tips.has(sl.title)) sl.learn = x.tip(tips.get(sl.title)); });
+    if (x.know && x.know.length) d.slides.unshift({ type: 'know', title: x.L('In plain words'), note: x.L('The report in a few easy numbers. The slides after this show the details.'), items: x.know, learn: x.tip('know') });
+    return d;
+  };
 
   // ---------- PowerPoint ----------
   async function pptx(data, x) {
@@ -166,10 +180,19 @@
     const head = (sl, s) => {
       sl.addText(s.title, { x: 0.6, y: 0.65, w: 12.1, h: 0.7, fontFace: FONT, fontSize: 30, bold: true, color: INK, fit: 'shrink' });
       if (s.note) sl.addText(s.note, { x: 0.6, y: 1.32, w: 12.1, h: 0.5, fontFace: FONT, fontSize: 13, color: GREY, valign: 'top' });
-      if (s.take) {
-        sl.addShape(p.ShapeType.rect, { x: 0.6, y: 6.25, w: 0.06, h: 0.5, fill: { color: RED }, line: { color: RED } });
-        sl.addText(s.take, { x: 0.66, y: 6.25, w: 12.04, h: 0.5, fontFace: FONT, fontSize: 12, color: INK, fill: { color: 'FBF6F6' }, margin: [0, 10, 0, 10], valign: 'middle', fit: 'shrink' });
+      let yb = 6.8;
+      if (s.learn) {
+        yb -= 0.5;
+        sl.addText([{ text: `${x.learnL.toUpperCase()}   `, options: { bold: true, color: RED, fontSize: 10, charSpacing: 1 } }, { text: s.learn, options: { color: GREY, fontSize: 11 } }],
+          { x: 0.6, y: yb, w: 12.1, h: 0.42, fontFace: FONT, valign: 'middle', fit: 'shrink' });
       }
+      if (s.take) {
+        yb -= 0.58;
+        sl.addShape(p.ShapeType.rect, { x: 0.6, y: yb, w: 0.06, h: 0.5, fill: { color: RED }, line: { color: RED } });
+        sl.addText([{ text: `${x.wtm.toUpperCase()}   `, options: { bold: true, color: RED, fontSize: 10, charSpacing: 1 } }, { text: s.take, options: { color: INK, fontSize: 12 } }],
+          { x: 0.66, y: yb, w: 12.04, h: 0.5, fontFace: FONT, fill: { color: 'FBF6F6' }, margin: [0, 10, 0, 10], valign: 'middle', fit: 'shrink' });
+      }
+      return yb - 0.12;
     };
     const fmtCode = (f) => (f === 'pct' ? '0"%"' : '#,##0');
     const chart = (sl, ch, X, Y, W, H) => {
@@ -192,9 +215,16 @@
     };
     d.slides.forEach((s) => {
       const sl = p.addSlide({ masterName: 'LP' });
-      head(sl, s);
-      const top = 1.95, bottom = s.take ? 6.1 : 6.75;
-      if (s.type === 'charts') {
+      const top = 1.95, bottom = head(sl, s);
+      if (s.type === 'know') {
+        const n = s.items.length, gap = 0.35, cw = (12.1 - gap * (n - 1)) / n, ch = Math.min(3.6, bottom - top);
+        s.items.forEach((k, i) => {
+          const cx = 0.6 + i * (cw + gap);
+          sl.addShape(p.ShapeType.roundRect, { x: cx, y: top, w: cw, h: ch, fill: { color: PALE }, line: { color: PALE }, rectRadius: 0.12 });
+          sl.addText([{ text: k.big, options: { fontSize: 40, bold: true, color: RED, breakLine: true } }, { text: k.line, options: { fontSize: 17, color: INK } }],
+            { x: cx + 0.25, y: top + 0.25, w: cw - 0.5, h: ch - 0.5, fontFace: FONT, valign: 'top', fit: 'shrink', paraSpaceAfter: 8 });
+        });
+      } else if (s.type === 'charts') {
         const units = s.charts.reduce((t, ch) => t + (ch.wide || 1), 0);
         const gap = 0.35, W = (12.1 - gap * (s.charts.length - 1)) / units;
         let X = 0.6;
@@ -249,7 +279,8 @@
     const link = (v) => (v ? { value: v } : null);
     const sheets = [];
     const sheet = (title, rows, widths) => { if (rows.length > 1) sheets.push({ sheet: cut(String(title).replace(/[[\]:*?/\\]/g, ' '), 31).replace(/…$/, ''), data: rows, columns: widths.map((w) => ({ width: w })), stickyRowsCount: 1 }); };
-    const about = [[H(L('Report')), H(x.tag)], [L('Name'), x.title], ...x.dates.map(([k, v]) => [k, v]), [L('Sources'), x.sources], ['', ''], [x.since, '']];
+    const about = [[H(L('Report')), H(x.tag)], [L('Name'), x.title], ...x.dates.map(([k, v]) => [k, v]), [L('Sources'), x.sources], ['', ''], [x.since, ''],
+      ...(x.know && x.know.length ? [['', ''], [H(L('In plain words')), H('')], ...x.know.map((k) => [k.big, k.line])] : [])];
     if (data.type === 'artist' || data.type === 'company') {
       const all = [data.subject, ...data.peers];
       sheets.push({ sheet: cut(L('Summary'), 31), data: about, columns: [{ width: 22 }, { width: 70 }] });
