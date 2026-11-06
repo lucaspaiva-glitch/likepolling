@@ -67,3 +67,10 @@ textarea { min-height: 90px; resize: vertical; }
 .who p { margin: 4px 0 0; font-size: 14px; color: #444; }
 @media (max-width: 760px) { .offers { grid-template-columns: 1fr; } .inside { grid-template-columns: 1fr; padding: 20px; } .preview { transform: none; } .who { grid-template-columns: 1fr; } .stats { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 560px) { h1 { font-size: 28px; } .top nav a { margin: 0 14px 0 0; } .row2 { grid-template-columns: 1fr; } }
+/* /services hero */
+.svc-hero { text-align: center; margin: 34px auto 26px; max-width: 720px; }
+.svc-hero h1 { font-size: 40px; }
+.svc-hero .lead { margin: 0 auto; color: #6e6e73; }
+.steps li { font-size: 15px; }
+.svc-free { text-align: center; color: #6e6e73; font-size: 14px; margin: 22px 0 0; }
+@media (max-width: 860px) { .svc-hero h1 { font-size: 30px; } }

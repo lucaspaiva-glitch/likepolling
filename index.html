@@ -11,6 +11,7 @@
   <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2028%2028%22%3E%3Crect%20width%3D%2228%22%20height%3D%2228%22%20rx%3D%227%22%20fill%3D%22%23b0000e%22/%3E%3Cpolyline%20points%3D%225%2C21%208%2C19%2010.5%2C20.2%2013.5%2C16.5%2015.5%2C17.6%2018.5%2C12.5%2020.5%2C13.6%2023%2C6%22%20fill%3D%22none%22%20stroke%3D%22white%22%20stroke-width%3D%222.4%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22/%3E%3C/svg%3E">
   <link rel="preload" href="/assets/fonts/inter-var-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/assets/fonts/fonts.css">
+  <link rel="stylesheet" href="/assets/offers.css">
   <link rel="stylesheet" href="/assets/news-wire-widget.css">
   <link rel="stylesheet" href="/assets/trending-widget.css">
   <link rel="stylesheet" href="/assets/music-chart-widget.css">
@@ -612,27 +613,6 @@
     .lp-ext-info:hover, .lp-ext-info[aria-expanded="true"] { color: var(--red); text-decoration-color: currentColor; }
     .lp-ext-info:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; border-radius: 3px; }
     #cp-pop { left: auto; right: var(--pop-r, 16px); }
-    /* "Ask AI" button + "Connect your AI" link: same look as the Chrome button; opens the AI card below it. */
-    .lp-ai-wrap { flex: none; display: flex; flex-direction: column; align-items: center; margin-left: 10px; position: relative; }
-    .lp-ai-wrap .lp-ext { margin-left: 0; border: 0; font-family: inherit; cursor: pointer; }
-    .lp-ai-wrap .lp-ext-info { position: absolute; top: calc(100% + 5px); left: 50%; transform: translateX(-50%); }
-    .lp-ai-wrap + .lp-ext-wrap { margin-left: 14px; }
-    #ai-pop { left: auto; right: var(--pop-r, 16px); }
-    .lp-aip { width: min(280px, calc(100vw - 32px)); }
-    .lp-ai-topics { display: flex; flex-wrap: wrap; gap: 5px; margin: 10px 0 0; }
-    .lp-ai-topics button { padding: 4px 9px; border: 1px solid rgba(255,255,255,.55); border-radius: 999px; background: transparent; color: #fff; font: 600 11px Inter, system-ui, sans-serif; cursor: pointer; }
-    .lp-ai-topics button:hover { background: rgba(255,255,255,.15); }
-    .lp-ai-topics button[aria-pressed="true"] { background: #fff; border-color: #fff; color: #b0000e; }
-    .lp-ai-topics button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
-    .lp-cpp ul.lp-ai-list { display: block; margin: 10px 0 0; }
-    .lp-ai-list li + li { margin-top: 5px; }
-    .lp-ai-list a { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; background: #fff; color: #b0000e; text-decoration: none; }
-    .lp-ai-list a:hover { background: #ffe3e6; }
-    .lp-ai-list a:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
-    .lp-ai-list b { font: 650 13px Inter, system-ui, sans-serif; }
-    .lp-cpp .lp-ai-list small[hidden] { display: none; }
-    .lp-cpp .lp-ai-list small { display: inline; flex: 1; min-width: 0; margin: 0; font-size: 10.5px; color: #8a5a60; }
-    .lp-cpp .lp-ai-list span { display: inline; margin: 0 0 0 auto; font: 12px Inter, system-ui, sans-serif; letter-spacing: 0; text-transform: none; color: #b0000e; }
     .lp-ext:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
     /* Three compartments: shorter labels so the truck still has room to drive. */
     .lp-tab .lp-mq { height: 118px; }
@@ -645,11 +625,11 @@
       header.top > .lp-lang { order: 5; margin: 0 auto; }
     }
     @media (min-width: 521px) and (max-width: 700px) { header.top .tagline { display: none; } }
-    @media (min-width: 521px) and (max-width: 560px) { header.top { column-gap: 6px; } header.top > .lp-ai-wrap, header.top > .lp-ai-wrap + .lp-ext-wrap { margin-left: 4px; } }
+    @media (min-width: 521px) and (max-width: 560px) { header.top { column-gap: 6px; } }
     /* Phones: logo + title on the left, 24/7 on the right, flags centred below.
        Chrome extensions can't be installed on phones, so the extension button and card are desktop/tablet only. */
     @media (max-width: 520px) {
-      header.top { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "brand ai live" "lang lang lang"; column-gap: 10px; row-gap: 14px; align-items: center; }
+      header.top { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "brand live" "lang lang"; column-gap: 10px; row-gap: 14px; align-items: center; }
       header.top > .brand { grid-area: brand; min-width: 0; gap: 8px; white-space: nowrap; }
       header.top .brand-txt { overflow: hidden; }
       header.top .brand-txt > span:first-child { overflow: hidden; text-overflow: ellipsis; }
@@ -657,17 +637,31 @@
       header.top > .live { grid-area: live; margin: 0; padding: 4px 9px; }
       header.top > .live::after { font-size: 10px; }
       header.top > .lp-ext-wrap, #cp-pop { display: none !important; }
-      header.top > .lp-ai-wrap { grid-area: ai; margin: 0; }
-      header.top > .lp-ai-wrap .lp-ext { padding: 4px 9px; }
-      header.top > .lp-ai-wrap .lp-ext-info { display: none; }
       header.top > .lp-lang { grid-area: lang; justify-self: center; min-width: 0; max-width: 100%; overflow-x: auto; scrollbar-width: none; margin: 0; }
     }
     /* Strong zoom: 24/7 moves under the title so the two never collide. */
     @media (max-width: 260px) {
-      header.top { grid-template-columns: minmax(0, 1fr); grid-template-areas: "brand" "live" "ai" "lang"; row-gap: 8px; }
-      header.top > .lp-ai-wrap { justify-self: start; margin-left: 36px; }
+      header.top { grid-template-columns: minmax(0, 1fr); grid-template-areas: "brand" "live" "lang"; row-gap: 8px; }
       header.top > .live { justify-self: start; margin-left: 36px; }
     }
+    /* Reports strip under the header: quiet product line + "Open your report" key box (opens /report#k=KEY). */
+    .lp-offers { max-width: 1080px; margin: 8px auto 40px; padding: 0 24px; }
+    .lp-offers > h2 { margin: 0; font: 700 26px/1.15 Inter, system-ui, sans-serif; letter-spacing: -.01em; color: #1d1d1f; text-align: center; }
+    .lp-offers > p { margin: 6px 0 20px; font-size: 14px; color: #6e6e73; text-align: center; }
+    .lp-head { grid-column: 1 / -1; grid-row: 1; min-width: 0; }
+    .lp-rep { display: flex; align-items: center; justify-content: space-between; gap: 14px 24px; flex-wrap: wrap; margin: 14px 0 -16px; padding: 12px 16px; border-radius: 14px; background: #f5f5f7; font-size: 13px; color: #1d1d1f; }
+    .lp-rep p { margin: 0; line-height: 1.45; }
+    .lp-rep p b { font-weight: 650; }
+    .lp-rep p span { color: #6e6e73; }
+    .lp-rep p a { color: var(--red); text-decoration: none; white-space: nowrap; margin-left: 10px; font-weight: 500; }
+    .lp-rep p a:hover { text-decoration: underline; }
+    .lp-rep form { display: flex; align-items: center; gap: 6px; flex: 0 1 340px; min-width: 0; }
+    .lp-rep label { font-weight: 600; white-space: nowrap; }
+    .lp-rep input { flex: 1; min-width: 0; padding: 7px 12px; border: 1px solid #d2d2d7; border-radius: 999px; background: #fff; font: 13px Inter, system-ui, sans-serif; color: #1d1d1f; }
+    .lp-rep input:focus { outline: 2px solid var(--red); outline-offset: 1px; border-color: transparent; }
+    .lp-rep button { flex: none; padding: 7px 14px; border: 0; border-radius: 999px; background: var(--red); color: #fff; font: 600 13px Inter, system-ui, sans-serif; cursor: pointer; }
+    .lp-rep button:hover { background: var(--red-dark); }
+    @media (max-width: 700px) { .lp-rep { flex-direction: column; flex-wrap: nowrap; align-items: stretch; } .lp-rep { margin-bottom: 14px; } .lp-rep form { flex-basis: auto; flex-wrap: wrap; } .lp-rep label { flex: 1 0 100%; } .lp-rep p a { margin-left: 8px; } }
     .earn-note { margin: 10px 0 0; font-size: 11.5px; line-height: 1.45; color: var(--muted); }
   </style>
   <link rel="alternate" type="text/markdown" href="/llms.txt" title="Like Polling data for AI">
@@ -692,12 +686,17 @@
     </div>
   </div>
   <div class="wrap">
+    <div class="lp-head">
     <header class="top">
       <a class="brand" href="/" aria-label="Like Polling home"><svg class="brand-mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="var(--red)"/><polyline points="5,21 8,19 10.5,20.2 13.5,16.5 15.5,17.6 18.5,12.5 20.5,13.6 23,6" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="23" cy="6" r="1.9" fill="#fff"/></svg><span class="brand-txt"><span data-no-i18n>Like Polling</span><small class="tagline">Human + AI analytics for what the world watches</small></span></a>
       <div class="live">Live data, 24/7</div>
-      <div class="lp-ai-wrap"><button type="button" class="lp-ext lp-ai" id="ai-btn" aria-controls="ai-pop" aria-expanded="false"><svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path d="M8 1.5 9.5 6.5 14.5 8 9.5 9.5 8 14.5 6.5 9.5 1.5 8 6.5 6.5Z" fill="currentColor"/></svg><span>Ask AI</span></button><button type="button" class="lp-ext-info" id="ai-link" aria-controls="ai-pop" aria-expanded="false">Connect your AI</button></div>
       <div class="lp-ext-wrap"><a class="lp-ext" href="https://chromewebstore.google.com/detail/creators-+/ibajjhdapncbacoinjjcagimpcjpahbn" target="_blank" rel="noopener" aria-label="Add to Chrome"><svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path d="M8 2v8m0 0L4.8 6.8M8 10l3.2-3.2M3 13h10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Add to Chrome</span></a><button type="button" class="lp-ext-info" id="cp-link" aria-controls="cp-pop" aria-expanded="false">Free Extension</button></div>
     </header>
+    <div class="lp-rep" id="lp-rep">
+      <p><b>Extended reports.</b> <span>Countries, artists and companies. From €18.</span><a href="#offers">Learn more ›</a></p>
+      <form id="lp-rep-form" action="/report"><label for="lp-rep-key">Open your report</label><input id="lp-rep-key" autocomplete="off" spellcheck="false" placeholder="Paste your key" required><button type="submit">Open</button></form>
+    </div>
+    </div>
 
     <section class="nw nw-front" id="news-front" aria-label="World News: top news headlines in each country"></section>
     <section id="ai-age" aria-label="Who am I in the age of AI? Stories of people using AI for good in each country" data-supabase-url="https://iyhaoagslsrwtkcrxylp.supabase.co" data-supabase-key="sb_publishable_ZnV9HrtfDqeKlBftnDxH2Q_YK6XWJTp"></section>
@@ -757,17 +756,6 @@ ENERGY</div>
       </div>
     </div>
   </div>
-  <div class="mpe-pop lp-sp lp-cpp lp-aip" id="ai-pop" role="dialog" aria-labelledby="ai-pop-h" hidden>
-    <div class="lp-sp-card">
-      <div class="mpe-top"><span class="mpe-sym" data-no-i18n>AI</span><span>Connect your AI</span></div>
-      <div class="lp-cpp-in">
-        <h3 id="ai-pop-h">Ask your AI</h3>
-        <p>Pick your AI. It opens with a message telling it to read Like Polling's live data.</p>
-        <div class="lp-ai-topics" role="group" aria-label="Topic"><button type="button" data-topic="all" aria-pressed="true">Everything</button><button type="button" data-topic="news" aria-pressed="false">News</button><button type="button" data-topic="music" aria-pressed="false">Music</button><button type="button" data-topic="fashion" aria-pressed="false">Fashion</button><button type="button" data-topic="trending" aria-pressed="false">Trending</button><button type="button" data-topic="world" aria-pressed="false">World</button></div><span id="ai-data-ref" hidden>the Like Polling data above</span><span id="ai-follow" class="ai-follow" hidden>For the rest of this chat, answer my follow-up questions from Like Polling too: read it again for current numbers (every country is in https://www.likepolling.com/llms-full.txt) and tell me when something isn&#39;t in its data.</span><span id="ai-follow-data" class="ai-follow" hidden>For the rest of this chat, answer my follow-up questions from this Like Polling data too, without searching the web, and tell me when something isn&#39;t in it.</span><span class="ai-msg" data-topic="all" hidden>Read https://www.likepolling.com/llms.txt, then tell me the top news, the top 10 songs on YouTube and the fashion brands getting the most attention in my country right now.</span><span class="ai-msg" data-topic="news" hidden>Read https://www.likepolling.com/llms.txt, then tell me the top news in my country right now.</span><span class="ai-msg" data-topic="music" hidden>Read https://www.likepolling.com/llms.txt, then tell me the top 10 songs on YouTube in my country right now.</span><span class="ai-msg" data-topic="fashion" hidden>Read https://www.likepolling.com/llms.txt, then tell me the fashion brands getting the most attention in my country right now and the latest fashion news.</span><span class="ai-msg" data-topic="trending" hidden>Read https://www.likepolling.com/llms.txt, then tell me the top YouTube Trending videos in my country right now.</span><span class="ai-msg" data-topic="world" hidden>Read https://www.likepolling.com/llms.txt, then tell me which YouTube videos are trending in the most countries right now and the top news around the world.</span>
-        <ul class="lp-ai-list"><li><a href="https://chatgpt.com/" data-ai="https://chatgpt.com/?hints=search&amp;q=" data-pkg="com.openai.chatgpt" target="_blank" rel="noopener"><b data-no-i18n>ChatGPT</b><span aria-hidden="true">↗</span></a></li><li><a href="https://claude.ai/new" data-ai="https://claude.ai/new?q=" data-pkg="com.anthropic.claude" target="_blank" rel="noopener"><b data-no-i18n>Claude</b><span aria-hidden="true">↗</span></a></li><li><a href="https://gemini.google.com/app" data-ai="https://gemini.google.com/app" data-paste data-brief data-ios="googlegemini://" data-pkg="com.google.android.apps.bard" target="_blank" rel="noopener"><b data-no-i18n>Gemini</b><small>Paste the copied message</small><span aria-hidden="true">↗</span></a></li><li><a href="https://www.perplexity.ai/search" data-ai="https://www.perplexity.ai/search?q=" data-pkg="ai.perplexity.app.android" target="_blank" rel="noopener"><b data-no-i18n>Perplexity</b><span aria-hidden="true">↗</span></a></li><li><a href="https://copilot.microsoft.com/" data-ai="https://copilot.microsoft.com/?q=" data-pkg="com.microsoft.copilot" target="_blank" rel="noopener"><b data-no-i18n>Microsoft Copilot</b><span aria-hidden="true">↗</span></a></li><li><a href="https://grok.com/" data-ai="https://grok.com/?q=" data-pkg="ai.x.grok" target="_blank" rel="noopener"><b data-no-i18n>Grok</b><span aria-hidden="true">↗</span></a></li><li><a href="https://poke.com/" data-ai="https://poke.com/" data-paste data-sms data-amb="https://poke.com/api/v1/amb/direct?body=" target="_blank" rel="noopener"><b data-no-i18n>Poke</b><small class="lp-ai-desk">Paste the copied message</small><small class="lp-ai-phone" hidden>Choose Poke as the recipient</small><span aria-hidden="true">↗</span></a></li><li><a href="https://app.devin.ai/" data-ai="https://app.devin.ai/" data-paste target="_blank" rel="noopener"><b data-no-i18n>Devin</b><small>Paste the copied message</small><span aria-hidden="true">↗</span></a></li></ul>
-      </div>
-    </div>
-  </div>
   <div class="mpe-pop lp-sp lp-trp" id="tr-pop" hidden>
     <div class="lp-sp-card">
       <div class="mpe-top"><span class="mpe-sym" data-no-i18n>TOP</span><span>Trending in the most countries</span></div>
@@ -803,6 +791,11 @@ ENERGY</div>
 
       <main id="results" aria-live="polite"></main>
   </aside>
+  <section class="lp-offers" id="offers" aria-labelledby="offers-h">
+    <h2 id="offers-h">Extended reports.</h2>
+    <p>Based on Like Polling's analysis of its history data, gathered every day since 24 October 2026, the day we started.</p>
+    <div data-offers></div>
+  </section>
   <footer><div class="foot-tag">Human + AI analytics for what the world watches</div><div class="foot-src">Sources: YouTube Data API · Google News · Google Gemini (AI)</div>Like Polling · Data via YouTube Data API · Earnings are estimates (by country, topic and Shorts)<span aria-hidden="true"> · </span><a href="/data">Open data for AI</a><span aria-hidden="true"> · </span><a href="/services">Services</a></footer>
 
   <script src="/assets/earnings.js"></script>
@@ -1151,7 +1144,6 @@ ENERGY</div>
       const adTab = $('ad-tab'), adPop = $('ad-pop');
       const sPop = $('search-pop'), sIn = $('sp-input'), sOut = $('sp-out');
       const cpTab = $('cp-link'), cpPop = $('cp-pop');
-      const aiBtn = $('ai-btn'), aiTab = $('ai-link'), aiPop = $('ai-pop');
       const trTab = $('tr-tab'), trPop = $('tr-pop');
       let raf = 0, idle = 0, cur = null, target = 0, glide = 0, spin = 0;
       const still = matchMedia('(prefers-reduced-motion: reduce)');
@@ -1172,7 +1164,6 @@ ENERGY</div>
         placePop();
         placeSearchPop();
         placeCpPop();
-        placeAiPop();
         placeTrPop();
         if (cur !== target) glide = requestAnimationFrame(step); else last = 0;
       }
@@ -1186,14 +1177,6 @@ ENERGY</div>
         const r = cpTab.getBoundingClientRect();
         cpPop.style.setProperty('--pop-y', Math.round(Math.max(8, Math.min(r.bottom + 6, innerHeight - cpPop.offsetHeight - 8))) + 'px');
         cpPop.style.setProperty('--pop-r', Math.round(Math.max(8, document.documentElement.clientWidth - r.right)) + 'px');
-      }
-      function placeAiPop() {
-        if (aiPop.hidden) return;
-        const link = aiTab.getBoundingClientRect();
-        const r = link.width ? link : aiBtn.getBoundingClientRect();
-        aiPop.style.setProperty('--pop-y', Math.round(Math.max(8, Math.min(r.bottom + 6, innerHeight - aiPop.offsetHeight - 8))) + 'px');
-        const cw = document.documentElement.clientWidth;
-        aiPop.style.setProperty('--pop-r', Math.round(Math.max(8, Math.min(cw - Math.max(r.right, aiBtn.getBoundingClientRect().right), cw - aiPop.offsetWidth - 8))) + 'px');
       }
       function placeTrPop() {
         if (trPop.hidden) return;
@@ -1329,7 +1312,6 @@ ENERGY</div>
       // Creators + link (under Add to Chrome): same hover / click / tap rules as the sponsor and search cards.
       let cHover = false, cT = 0;
       function setCp(on) {
-        setAi(false);
         if (!on) { cHover = false; clearTimeout(cT); }
         if (on) { setAd(false); setSearch(false); setTr(false); }
         cpPop.hidden = !on;
@@ -1344,106 +1326,6 @@ ENERGY</div>
       }
       cpTab.addEventListener('click', (e) => { e.stopPropagation(); if (cHover) { cHover = false; clearTimeout(cT); return; } setCp(cpPop.hidden); });
       document.addEventListener('click', (e) => { if (!cpPop.hidden && !cpPop.contains(e.target)) setCp(false); });
-      // "Ask AI" button / "Connect your AI" link: same rules; any other card opening closes it (via setCp(false)).
-      let aHover = false, aT = 0;
-      function setAi(on) {
-        if (!on) { aHover = false; clearTimeout(aT); }
-        if (on) { setCp(false); setAd(false); setSearch(false); setTr(false); }
-        aiPop.hidden = !on;
-        aiBtn.setAttribute('aria-expanded', String(on));
-        aiTab.setAttribute('aria-expanded', String(on));
-        placeAiPop();
-      }
-      if (matchMedia('(hover: hover) and (pointer: fine)').matches) {
-        [aiTab, aiPop].forEach((el) => {
-          el.addEventListener('pointerenter', (e) => { if (e.pointerType !== 'mouse') return; clearTimeout(aT); if (aiPop.hidden) aT = setTimeout(() => { setAi(true); aHover = true; }, 150); });
-          el.addEventListener('pointerleave', (e) => { if (e.pointerType !== 'mouse') return; clearTimeout(aT); if (aHover) aT = setTimeout(() => { if (aHover) setAi(false); }, 350); });
-        });
-      }
-      ['pointerdown', 'focusin'].forEach((ev) => aiPop.addEventListener(ev, () => { aHover = false; clearTimeout(aT); }));
-      [aiBtn, aiTab].forEach((el) => el.addEventListener('click', (e) => { e.stopPropagation(); if (aHover) { aHover = false; clearTimeout(aT); return; } setAi(aiPop.hidden); }));
-      document.addEventListener('click', (e) => { if (!aiPop.hidden && !aiPop.contains(e.target)) setAi(false); });
-      // Each AI opens with the message (in the visitor's language) already typed in; it is also copied for AIs that can't be pre-filled.
-      // Phones try the AI's app first: on iPhone the web links below open the app when it is installed (ChatGPT, Claude,
-      // Perplexity, Grok); on Android an intent link opens the app by package name and falls back to the website.
-      const isAndroid = /Android/i.test(navigator.userAgent);
-      // iPhones don't hand links that open a new Safari tab to the app, so there they open in the same tab.
-      const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-      // Topic buttons pick which message the AIs open with; the last choice is remembered for repeat visitors.
-      const aiTopics = aiPop.querySelectorAll('.lp-ai-topics button');
-      let aiTopic = 'all';
-      try { const t = localStorage.getItem('lp-ai-topic'); if (aiPop.querySelector('.ai-msg[data-topic="' + t + '"]')) aiTopic = t; } catch (e) {}
-      const aiQ = () => aiPop.querySelector('.ai-msg[data-topic="' + aiTopic + '"]').textContent.trim();
-      const aiTxt = (id) => document.getElementById(id).textContent.trim();
-      // Every message also asks the AI to keep using Like Polling for follow-up questions in the same chat.
-      const aiJoin = (q, f) => q + (/。$/.test(q) ? '' : ' ') + f;
-      const aiMsg = () => aiJoin(aiQ(), aiTxt('ai-follow'));
-      const aiLinks = () => aiPop.querySelectorAll('[data-ai]');
-      function setAiHrefs() {
-        const msg = encodeURIComponent(aiMsg());
-        aiLinks().forEach((a) => {
-          const url = a.hasAttribute('data-paste') ? a.dataset.ai : a.dataset.ai + msg;
-          if ((isIOS || isAndroid) && a.hasAttribute('data-sms')) {
-            // On iPhone, Poke's Apple Messages link opens the Poke chat with the message written; Android picks the recipient.
-            a.href = (isIOS ? a.dataset.amb : 'sms:?body=') + msg;
-            a.removeAttribute('target');
-            a.querySelector('.lp-ai-desk').hidden = true;
-            a.querySelector('.lp-ai-phone').hidden = isIOS;
-          } else if (isAndroid && a.dataset.pkg) {
-            const u = new URL(url);
-            a.href = 'intent://' + u.host + u.pathname + u.search + '#Intent;scheme=https;package=' + a.dataset.pkg + ';S.browser_fallback_url=' + encodeURIComponent(url) + ';end';
-            a.removeAttribute('target');
-          } else {
-            a.href = url;
-            if (isIOS && !a.hasAttribute('data-paste')) a.removeAttribute('target');
-          }
-        });
-      }
-      function setAiTopic(t) {
-        aiTopic = t;
-        aiTopics.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.topic === t)));
-        setAiHrefs();
-      }
-      setAiTopic(aiTopic);
-      aiTopics.forEach((b) => b.addEventListener('click', () => {
-        setAiTopic(b.dataset.topic);
-        try { localStorage.setItem('lp-ai-topic', b.dataset.topic); } catch (e) {}
-      }));
-      // Gemini can't open new sites, so its copied message carries the data itself: for the country picked in World News,
-      // else the visitor's location, else the site language's country.
-      const aiBriefs = {};
-      const aiBriefKey = () => {
-        let cc = null;
-        try { cc = localStorage.getItem('lp-world-cc'); } catch (e) {}
-        const lang = (window.LP_I18N && window.LP_I18N.lang) || 'en';
-        const fallback = ({ en: 'US', 'en-GB': 'GB', pt: 'BR', 'pt-PT': 'PT', es: 'MX', de: 'DE', ru: 'RU', uk: 'UA', ko: 'KR', ja: 'JP' })[lang] || 'US';
-        return (cc ? 'country=' + cc : 'country=auto&fallback=' + fallback) + '&topic=' + aiTopic;
-      };
-      function loadAiBrief() {
-        const k = aiBriefKey();
-        if (k in aiBriefs) return;
-        aiBriefs[k] = null;
-        fetch('/api/llms?format=brief&' + k)
-          .then((r) => (r.ok ? r.text() : null)).then((t) => { aiBriefs[k] = t; }).catch(() => { delete aiBriefs[k]; });
-      }
-      [aiBtn, aiTab].forEach((el) => ['pointerenter', 'click'].forEach((ev) => el.addEventListener(ev, loadAiBrief)));
-      aiTopics.forEach((b) => b.addEventListener('click', loadAiBrief));
-      const aiObs = new MutationObserver(setAiHrefs);
-      aiPop.querySelectorAll('.ai-msg, .ai-follow').forEach((m) => aiObs.observe(m, { childList: true, characterData: true, subtree: true }));
-      aiLinks().forEach((a) => a.addEventListener('click', (e) => {
-        const brief = a.hasAttribute('data-brief') && aiBriefs[aiBriefKey()];
-        // With the data pasted in, Gemini gets no link: it tries to open links, fails and then ignores the data.
-        const text = brief ? brief + '\n' + aiJoin(aiQ().replace(/https:\/\/www\.likepolling\.com\/llms\.txt(?: ([를を]))?/, (m, p) => aiTxt('ai-data-ref') + (p || '')), aiTxt('ai-follow-data')) : aiMsg();
-        if (navigator.clipboard) navigator.clipboard.writeText(text).catch(() => {});
-        setAi(false);
-        // Gemini's iPhone app only opens through its own address; if it isn't installed, go to the website instead.
-        if (isIOS && a.dataset.ios) {
-          e.preventDefault();
-          const web = a.href;
-          location.href = a.dataset.ios;
-          setTimeout(() => { if (!document.hidden) location.href = web; }, 1500);
-        }
-      }));
       // "Trending in the most countries" compartment: same rules again.
       let tHover = false, tT = 0;
       function setTr(on) {
@@ -1483,7 +1365,6 @@ ENERGY</div>
         if (!adPop.hidden) { setAd(false); adTab.focus({ preventScroll: true }); }
         else if (!sPop.hidden) { setSearch(false); tab.focus({ preventScroll: true }); }
         else if (!cpPop.hidden) { setCp(false); cpTab.focus({ preventScroll: true }); }
-        else if (!aiPop.hidden) { setAi(false); (aiTab.offsetWidth ? aiTab : aiBtn).focus({ preventScroll: true }); }
         else if (!trPop.hidden) { setTr(false); trTab.focus({ preventScroll: true }); }
         else if (drawer.classList.contains('open')) setOpen(false);
       });
@@ -1501,6 +1382,14 @@ ENERGY</div>
       }
     });
   </script>
+  <script>
+    document.getElementById('lp-rep-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const k = document.getElementById('lp-rep-key').value.trim();
+      if (k) location.href = '/report#k=' + encodeURIComponent(k);
+    });
+  </script>
+  <script src="/assets/offers.js" defer></script>
   <script src="/assets/video-thumbs.js" defer></script>
   <script src="/assets/trending-widget.js" defer></script>
   <script src="/assets/music-chart-widget.js" defer></script>

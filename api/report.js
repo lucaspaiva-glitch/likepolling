@@ -13,6 +13,7 @@
 'use strict';
 const crypto = require('crypto');
 const report = require('../lib/report');
+const entity = require('../lib/entity-report');
 
 const LICENSE_API = 'https://api.lemonsqueezy.com/v1/licenses/';
 const LIMIT_PER_MIN = 10;
@@ -94,11 +95,15 @@ function readGumroadToken(env, key, token) {
   return a.length === b.length && crypto.timingSafeEqual(a, b) ? list : null;
 }
 
-async function gumroadVerify(env, fetchImpl, key, increment) {
+// Gumroad products by report type. A key belongs to exactly one of them.
+const gumroadProducts = (env) => [['country', env.GUMROAD_PRODUCT_ID], ['artist', env.GUMROAD_ARTIST_PRODUCT_ID], ['company', env.GUMROAD_COMPANY_PRODUCT_ID]]
+  .map(([type, id]) => [type, String(id || '').trim()]).filter(([, id]) => id);
+
+async function gumroadVerify(env, fetchImpl, key, increment, productId) {
   const res = await fetchImpl(GUMROAD_VERIFY, {
     method: 'POST',
     headers: { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ product_id: String(env.GUMROAD_PRODUCT_ID).trim(), license_key: key, increment_uses_count: String(increment) }).toString(),
+    body: new URLSearchParams({ product_id: productId, license_key: key, increment_uses_count: String(increment) }).toString(),
     signal: AbortSignal.timeout(10000),
   });
   const json = await res.json().catch(() => null);
@@ -109,17 +114,54 @@ async function gumroadVerify(env, fetchImpl, key, increment) {
   return json;
 }
 
-async function unlockGumroad(env, fetchImpl, { key, instance, countries }) {
-  if (!env.GUMROAD_PRODUCT_ID || !env.REPORT_TOKEN_SECRET) throw fail(404, 'That key wasn\'t found. Copy it from your receipt email.');
-  const v = await gumroadVerify(env, fetchImpl, key, false);
-  let list = readGumroadToken(env, key, instance);
-  if (!list) {
-    if (v.uses > 0) throw fail(409, 'This key was already opened in another browser. Open the report there (or use the link it shows), or email lucaspaiva@likepolling.com and we\'ll help.');
-    list = report.parseCountries(countries);
-    if (!list.length) throw fail(409, 'Pick the country (or two) for your report.', { need_countries: true });
-    await gumroadVerify(env, fetchImpl, key, true);
+const USED_ELSEWHERE = 'This key was already opened in another browser. Open the report there (or use the link it shows), or email lucaspaiva@likepolling.com and we\'ll help.';
+
+// Finds which product (report type) the key belongs to.
+async function findGumroad(env, fetchImpl, key) {
+  for (const [type, id] of gumroadProducts(env)) {
+    try {
+      return { type, id, v: await gumroadVerify(env, fetchImpl, key, false, id) };
+    } catch (err) {
+      if (err.status !== 404) throw err;
+    }
   }
-  return { countries: list, instance_id: gumroadToken(env, key, list), expires_at: null };
+  throw fail(404, 'That key wasn\'t found. Copy it from your receipt email.');
+}
+
+// Artist/company access token: g-a.<base64url choice>.<signature> (or g-c. for companies).
+const b64 = (s) => Buffer.from(s).toString('base64url');
+const entityToken = (env, key, type, choice) => { const p = b64(JSON.stringify(choice)); return `g-${type[0]}.${p}.${sign(env, key, [type, p])}`; };
+function readEntityToken(env, key, type, token) {
+  const m = /^g-([ac])\.([A-Za-z0-9_-]+)\.([0-9a-f]{32})$/.exec(token || '');
+  if (!m || m[1] !== type[0]) return null;
+  const a = Buffer.from(m[3]), b = Buffer.from(sign(env, key, [type, m[2]]));
+  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null;
+  try { return entity.parseChoice(JSON.parse(Buffer.from(m[2], 'base64url').toString())); } catch { return null; }
+}
+
+async function unlockGumroad(env, fetchImpl, { key, instance, countries, choice }, build) {
+  if (!env.REPORT_TOKEN_SECRET || !gumroadProducts(env).length) throw fail(404, 'That key wasn\'t found. Copy it from your receipt email.');
+  const { type, id, v } = await findGumroad(env, fetchImpl, key);
+  if (type === 'country') {
+    let list = readGumroadToken(env, key, instance);
+    if (!list) {
+      if (v.uses > 0) throw fail(409, USED_ELSEWHERE);
+      list = report.parseCountries(countries);
+      if (!list.length) throw fail(409, 'Pick the country (or two) for your report.', { need_countries: true });
+      await gumroadVerify(env, fetchImpl, key, true, id);
+    }
+    return { type, countries: list, instance_id: gumroadToken(env, key, list), expires_at: null };
+  }
+  let picked = readEntityToken(env, key, type, instance);
+  const first = !picked;
+  if (first) {
+    if (v.uses > 0) throw fail(409, USED_ELSEWHERE);
+    picked = entity.parseChoice(choice);
+    if (!picked) throw fail(409, `Pick the ${type} for your report.`, { need_choice: type });
+  }
+  const body = await build(type, picked);
+  if (first) await gumroadVerify(env, fetchImpl, key, true, id);
+  return { type, body, instance_id: entityToken(env, key, type, picked), expires_at: null };
 }
 
 // Returns { countries, instance_id, expires_at } for a valid key, activating it on the first visit.
@@ -154,6 +196,11 @@ function createHandler(deps = {}) {
     try {
       if (!env.SUPABASE_URL || !env.SUPABASE_KEY) throw fail(500, 'Server is missing its database settings.');
       const get = report.rest(env, fetchImpl);
+      if (req.method === 'GET' && entity.TYPES[req.query.type]) {
+        const body = await entity.buildEntityReport(get, req.query.type, entity.SAMPLES[req.query.type], { fetchImpl, rest: get, now: new Date(now) });
+        res.setHeader('Cache-Control', 'public, max-age=300, s-maxage=21600, stale-while-revalidate=86400');
+        return res.status(200).json({ ...body, sample: true });
+      }
       if (req.method === 'GET') {
         const list = report.parseCountries([req.query.country, req.query.compare].join(','));
         if (!report.isSample(list)) throw fail(403, 'Only the Brazil vs Portugal sample is free. Get a report at likepolling.com/services.');
@@ -162,17 +209,18 @@ function createHandler(deps = {}) {
         return res.status(200).json({ ...body, sample: true });
       }
       if (req.method === 'POST') {
-        if (!env.LEMONSQUEEZY_STORE_ID && !env.GUMROAD_PRODUCT_ID) throw fail(503, 'Report sales open soon.');
+        if (!env.LEMONSQUEEZY_STORE_ID && !gumroadProducts(env).length) throw fail(503, 'Report sales open soon.');
         const ip = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim() || 'unknown';
         if (!allowed(ip, now)) throw fail(429, 'Too many tries. Wait a minute and try again.');
-        const { key, instance, countries } = await parseBody(req);
+        const { key, instance, countries, choice } = await parseBody(req);
         const k = String(key || '').trim();
         const i = String(instance || '').trim();
         if (!/^[A-Za-z0-9-]{8,64}$/.test(k)) throw fail(400, 'Paste the license key from your receipt email.');
-        const args = { key: k, instance: /^[A-Za-z0-9-]{8,64}$/.test(i) ? i : '', countries };
+        const args = { key: k, instance: /^[A-Za-z0-9._-]{8,700}$/.test(i) ? i : '', countries, choice };
         const lemon = isLemonKey(k) && env.LEMONSQUEEZY_STORE_ID;
-        const access = await (lemon ? unlock(env, fetchImpl, args) : unlockGumroad(env, fetchImpl, args));
-        const body = await report.buildReport(get, access.countries, new Date(now));
+        const build = (type, picked) => entity.buildEntityReport(get, type, picked, { fetchImpl, rest: get, now: new Date(now) });
+        const access = await (lemon ? unlock(env, fetchImpl, args) : unlockGumroad(env, fetchImpl, args, build));
+        const body = access.body || await report.buildReport(get, access.countries, new Date(now));
         res.setHeader('Cache-Control', 'no-store');
         return res.status(200).json({ ...body, sample: false, instance_id: access.instance_id, expires_at: access.expires_at });
       }

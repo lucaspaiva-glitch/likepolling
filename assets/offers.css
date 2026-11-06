@@ -1,0 +1,36 @@
+/* Product cards (assets/offers.js), styled like the homepage sponsor card. Used by / and /services. */
+.svc-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; align-items: start; }
+.svc { position: relative; border: 1px solid #ebebeb; border-radius: 14px; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.04), 0 12px 28px -18px rgba(0,0,0,.25); overflow: hidden; transition: border-color .2s, box-shadow .2s; font-family: Inter, system-ui, sans-serif; }
+.svc:hover, .svc.open { border-color: rgba(176,0,14,.45); box-shadow: 0 1px 2px rgba(0,0,0,.04), 0 18px 36px -18px rgba(176,0,14,.35); }
+.svc-tab { display: block; width: 100%; padding: 0 0 14px; border: 0; background: none; text-align: left; font: inherit; color: inherit; cursor: pointer; }
+.svc-tab:focus-visible { outline: 2px solid #b0000e; outline-offset: -2px; border-radius: 14px; }
+.svc-top { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px 0; color: #737373; font: 600 10px/1 ui-monospace, 'SF Mono', Menlo, Consolas, monospace; letter-spacing: .12em; text-transform: uppercase; }
+.svc-sym { padding: 3px 6px; border-radius: 5px; background: #fbeaec; color: #b0000e; letter-spacing: .08em; }
+.svc-name { display: block; margin: 14px 14px 0; white-space: pre-line; font: italic 900 23px/.98 'Kanit', 'Arial Black', system-ui, sans-serif; letter-spacing: .02em; color: #b0000e; }
+.svc-glitch { position: relative; }
+.svc-glitch::before, .svc-glitch::after { content: attr(data-text); position: absolute; inset: 0; white-space: inherit; pointer-events: none; }
+.svc-glitch::before { color: rgba(0,235,255,.6); animation: svc-glitch-a 3.4s steps(1) infinite; }
+.svc-glitch::after { color: rgba(255,0,70,.9); animation: svc-glitch-b 2.9s steps(1) infinite; }
+@keyframes svc-glitch-a { 0%, 86%, 100% { clip-path: inset(0 0 100% 0); transform: none; } 88% { clip-path: inset(8% 0 58% 0); transform: translate(-3px,-1px); } 91% { clip-path: inset(62% 0 12% 0); transform: translate(2px,1px); } }
+@keyframes svc-glitch-b { 0%, 80%, 100% { clip-path: inset(100% 0 0 0); transform: none; } 82% { clip-path: inset(48% 0 30% 0); transform: translate(3px,0); } 85% { clip-path: inset(12% 0 70% 0); transform: translate(-2px,0); } }
+.svc-bar { position: relative; display: block; height: 3px; margin: 14px 14px 12px; overflow: hidden; border-radius: 2px; background: #f6dfe2; }
+.svc-bar::after { content: ''; position: absolute; top: 0; bottom: 0; left: -30%; width: 30%; border-radius: 2px; background: #b0000e; animation: svc-scan 2.4s linear infinite; }
+@keyframes svc-scan { to { left: 100%; } }
+.svc-sub { display: block; margin: 0 14px; font-size: 14px; line-height: 1.4; color: #1d1d1f; }
+.svc-more { display: block; margin: 8px 14px 0; font-size: 13px; font-weight: 600; color: #b0000e; }
+.svc-more i { display: inline-block; font-style: normal; transition: transform .2s; }
+.svc.open .svc-more i { transform: rotate(90deg); }
+.svc-body { display: grid; gap: 10px; max-height: 0; padding: 0 14px; overflow: hidden; opacity: 0; transition: max-height .35s ease, opacity .25s, padding .35s; }
+.svc.open .svc-body { max-height: 420px; padding: 2px 14px 16px; opacity: 1; }
+.svc-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.svc-stats div { padding: 8px 4px; border-radius: 10px; background: #f5f5f7; text-align: center; }
+.svc-stats b { display: block; font: 700 20px/1.1 Inter, system-ui, sans-serif; color: #1d1d1f; }
+.svc-stats span { display: block; margin-top: 3px; font-size: 10.5px; line-height: 1.25; color: #6e6e73; }
+.svc-btn { display: flex; justify-content: center; padding: 10px 14px; border-radius: 999px; background: #b0000e; color: #fff; font: 600 14px Inter, system-ui, sans-serif; text-decoration: none; }
+.svc-btn:hover { background: #8f000b; }
+.svc-link { font-size: 13px; font-weight: 600; text-align: center; color: #b0000e; text-decoration: none; }
+.svc-link:hover { text-decoration: underline; }
+.svc-fine { margin: 0; font-size: 11.5px; line-height: 1.4; text-align: center; color: #6e6e73; }
+@media (max-width: 960px) { .svc-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .svc-grid { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) { .svc-glitch::before, .svc-glitch::after, .svc-bar::after { animation: none; } }

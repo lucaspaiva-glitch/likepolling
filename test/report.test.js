@@ -224,3 +224,83 @@ test('Gumroad key: forged instance, used key elsewhere, unknown and refunded key
   assert.equal((await gpost({}, { key: GKEY }, { GUMROAD_PRODUCT_ID: '' })).res.statusCode, 404);
   assert.equal((await gpost({}, { key: GKEY }, { GUMROAD_PRODUCT_ID: '', LEMONSQUEEZY_STORE_ID: '' })).res.statusCode, 503);
 });
+
+// Fake Wikipedia / Wikimedia for artist and company reports.
+const entity = require('../lib/entity-report');
+function wikiRoute(url) {
+  if (url.startsWith('https://wikimedia.org/api/rest_v1/metrics/pageviews/')) {
+    const title = decodeURIComponent(url.split('/user/')[1].split('/')[0]);
+    const base = title.startsWith('Anitta') ? 100 : 10;
+    const items = Array.from({ length: 60 }, (_, i) => ({ timestamp: `${new Date(Date.UTC(2026, 8, 21) + i * 864e5).toISOString().slice(0, 10).replace(/-/g, '')}00`, views: base + (i >= 30 ? 10 : 0) }));
+    return json({ items });
+  }
+  if (!url.startsWith('https://en.wikipedia.org/w/api.php')) return null;
+  const q = Object.fromEntries(new URL(url).searchParams);
+  if (q.list === 'search') return json({ query: { search: [{ title: 'Ludmilla (singer)' }, { title: 'Anitta discography' }, { title: 'Rio de Janeiro' }] } });
+  if (q.prop === 'langlinks') return json({ query: { pages: [{ title: q.titles, langlinks: [{ lang: 'pt', title: q.titles.replace(' (singer)', '') }, { lang: 'xx', title: 'skip' }, { lang: 'yy', title: 'skip' }, { lang: 'zz', title: 'skip' }] }] } });
+  if (q.prop === 'revisions') return json({ query: { pages: [{ revisions: [{}, {}, {}] }] } });
+  const desc = { 'Anitta (singer)': 'Brazilian singer', 'Ludmilla (singer)': 'Brazilian singer', 'Rio de Janeiro': 'City in Brazil' };
+  return json({ query: { pages: q.titles.split('|').filter((t) => desc[t]).map((t) => ({ title: t, description: desc[t] })) } });
+}
+
+test('parseChoice keeps a subject and up to 3 different peers', () => {
+  assert.deepEqual(entity.parseChoice({ subject: ' Nike,_Inc. ', peers: ['Adidas', 'Nike, Inc.', 'Puma', 'Asics', 'Fila'] }), { subject: 'Nike, Inc.', peers: ['Adidas', 'Puma', 'Asics'] });
+  assert.equal(entity.parseChoice({ subject: '' }), null);
+  assert.equal(entity.parseChoice('x'), null);
+});
+
+test('artist sample: Wikipedia data only, similar artists picked by type', async () => {
+  const f = db({ route: async (url) => wikiRoute(url) });
+  const handler = createHandler({ env, fetch: f, now: () => NOW.getTime() });
+  const res = mockRes();
+  await handler({ method: 'GET', query: { type: 'artist' }, headers: {} }, res);
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.body.sample, true);
+  assert.equal(res.body.subject.title, 'Anitta (singer)');
+  assert.deepEqual(res.body.peers.map((p) => p.title), ['Ludmilla (singer)']);
+  assert.equal(res.body.subject.views, 3300);
+  assert.equal(res.body.subject.change_pct, 10);
+  assert.equal(res.body.subject.rank, 1);
+  assert.equal(res.body.subject.languages, 5);
+  assert.deepEqual(res.body.languages.map((l) => l.lang).sort(), ['en', 'pt']);
+  assert.ok(f.seen.every((u) => !/youtube|gdelt|news/i.test(u)));
+});
+
+test('Gumroad artist key: picks the artist once, then a signed instance reopens it', async () => {
+  const state = {};
+  const aenv = { GUMROAD_ARTIST_PRODUCT_ID: 'ga==' };
+  const route = async (url, init) => {
+    const w = wikiRoute(url);
+    if (w) return w;
+    if (!url.startsWith('https://api.gumroad.com/')) return null;
+    const p = Object.fromEntries(new URLSearchParams(init.body));
+    if (p.license_key !== GKEY || p.product_id !== 'ga==') return json({ success: false }, 404);
+    if (p.increment_uses_count === 'true') state.uses = (state.uses || 0) + 1;
+    return json({ success: true, uses: state.uses || 0, purchase: { email: 'buyer@example.com' } });
+  };
+  const call = async (body) => {
+    const handler = createHandler({ env: { ...env, ...genv, ...aenv }, fetch: db({ route }), now: () => NOW.getTime() });
+    const res = mockRes();
+    await handler({ method: 'POST', body, headers: { 'x-forwarded-for': `10.3.0.${++ipSeq}` } }, res);
+    return res;
+  };
+  let res = await call({ key: GKEY });
+  assert.equal(res.statusCode, 409);
+  assert.equal(res.body.need_choice, 'artist');
+  res = await call({ key: GKEY, choice: { subject: 'Nobody Here' } });
+  assert.equal(res.statusCode, 404);
+  assert.equal(state.uses, undefined, 'a wrong name does not use up the key');
+  res = await call({ key: GKEY, choice: { subject: 'Anitta (singer)', peers: ['Ludmilla (singer)'] } });
+  assert.equal(res.statusCode, 200);
+  assert.equal(state.uses, 1);
+  assert.match(res.body.instance_id, /^g-a\.[A-Za-z0-9_-]+\.[0-9a-f]{32}$/);
+  assert.equal(res.body.peers_chosen, true);
+  assert.ok(!JSON.stringify(res.body).includes('buyer@example.com'));
+  const inst = res.body.instance_id;
+  res = await call({ key: GKEY, instance: inst, choice: { subject: 'Someone Else' } });
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.body.subject.title, 'Anitta (singer)');
+  assert.equal(state.uses, 1);
+  res = await call({ key: GKEY, instance: inst.replace(/.$/, (c) => (c === '0' ? '1' : '0')) });
+  assert.equal(res.statusCode, 409);
+});

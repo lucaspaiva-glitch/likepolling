@@ -1,0 +1,28 @@
+name: Sample PDFs
+
+on:
+  schedule:
+    - cron: '47 6 * * 1' # Mondays, after the report ideas
+  workflow_dispatch:
+
+concurrency:
+  group: sample-pdfs
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  print:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - name: Print the 3 free samples from the live site
+        run: scripts/sample-pdfs.sh https://www.likepolling.com google-chrome
+      - name: Commit if they changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add samples/*.pdf
+          git diff --cached --quiet || (git commit -m "Samples: weekly PDF refresh" && git push)

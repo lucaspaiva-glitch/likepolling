@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Country Inspiration Report · Like Polling</title>
+  <title>Extended report · Like Polling</title>
   <meta name="robots" content="noindex">
   <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2028%2028%22%3E%3Crect%20width%3D%2228%22%20height%3D%2228%22%20rx%3D%227%22%20fill%3D%22%23b0000e%22/%3E%3Cpolyline%20points%3D%225%2C21%208%2C19%2010.5%2C20.2%2013.5%2C16.5%2015.5%2C17.6%2018.5%2C12.5%2020.5%2C13.6%2023%2C6%22%20fill%3D%22none%22%20stroke%3D%22white%22%20stroke-width%3D%222.4%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22/%3E%3C/svg%3E">
   <link rel="stylesheet" href="/assets/fonts/fonts.css">
@@ -62,9 +62,36 @@
     .gloss dt { font-weight: 700; margin-top: 10px; font-size: 14px; }
     .gloss dd { margin: 2px 0 0; color: #444; font-size: 14px; }
     .sources p { color: #555; }
-    @media (max-width: 700px) { .cols.n2 { grid-template-columns: 1fr; } }
+    .since { margin: 14px 0 0; padding: 10px 14px; border-radius: 12px; background: #fbeaec; color: #5c0007; font-size: 14px; line-height: 1.45; }
+    .since b { color: #b0000e; }
+    .print-only { display: none; }
+    .dates { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 0; }
+    .dates div { flex: 1 1 0; min-width: 0; padding: 8px 12px; border: 1px solid #eee; border-radius: 10px; }
+    @media (max-width: 520px) { .dates { gap: 6px; } .dates div { padding: 7px 8px; } .dates dt { font-size: 9.5px; letter-spacing: .03em; } .dates dd { font-size: 12.5px; } }
+    .dates dt { font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: #6b6b6b; }
+    .dates dd { margin: 2px 0 0; font-size: 15px; font-weight: 700; }
+    .ehead { display: flex; align-items: center; gap: 16px; margin-top: 10px; }
+    .ehead img { width: 76px; height: 76px; border-radius: 50%; object-fit: cover; flex: none; background: #f1f1f1; }
+    .ehead h1 { margin: 0; }
+    .kpi b em { font-style: normal; font-size: 13px; font-weight: 700; margin-left: 6px; vertical-align: middle; }
+    em.up { color: #0a7d32; } em.down { color: #b0000e; }
+    .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; list-style: none; padding: 0; margin: 8px 0 0; font-size: 13px; }
+    .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+    .chart .ln2 { fill: none; stroke-width: 1.6; stroke-linejoin: round; opacity: .85; }
+    .chart .ln1 { fill: none; stroke-width: 3; stroke-linejoin: round; }
+    .vs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+    .vs h3 { font-size: 13px; color: #6b6b6b; letter-spacing: .04em; text-transform: uppercase; margin: 0 0 6px; }
+    ul.cbars { list-style: none; padding: 0; margin: 0; }
+    ul.cbars li { margin: 0 0 8px; font-size: 13px; }
+    ul.cbars .rl { display: flex; justify-content: space-between; gap: 8px; }
+    ul.cbars .rl span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    ul.cbars i { display: block; height: 9px; border-radius: 5px; margin-top: 3px; background: linear-gradient(90deg, var(--c) var(--w), #f1f1f1 var(--w)); }
+    ul.cbars li.me { font-weight: 700; }
+    .access input[list] + input[list] { margin-top: 6px; }
+    @media (max-width: 700px) { .cols.n2 { grid-template-columns: 1fr; } .vs { grid-template-columns: 1fr; } }
     @media print {
       .top nav, .actions, .foot { display: none !important; }
+      .print-only { display: block; margin-top: 28px; padding: 12px 14px; border-radius: 12px; background: #fbeaec; text-align: center; font-size: 15px; }
       main { padding: 0; max-width: none; }
       a { color: #0d0d0d; text-decoration: none; }
       .cols.n2 { grid-template-columns: 1fr 1fr; }
@@ -79,7 +106,7 @@
   <main>
     <div class="top">
       <a class="brand" href="/"><svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="#b0000e"/><polyline points="5,21 8,19 10.5,20.2 13.5,16.5 15.5,17.6 18.5,12.5 20.5,13.6 23,6" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="23" cy="6" r="1.9" fill="#fff"/></svg>Like Polling</a>
-      <nav><a href="/services">Services</a><a href="/report?sample=BR-PT">Free sample</a></nav>
+      <nav><a href="/services">Extended reports</a></nav>
     </div>
 
     <section id="access" class="access" hidden>
@@ -94,10 +121,16 @@
             <div><label for="p2">Compare with</label><select id="p2"></select></div>
           </div>
         </div>
+        <div id="pick-e" hidden>
+          <p class="small" style="margin:0 0 8px">Pick your report's <span id="pe-kind">artist</span>. This is set once per key.</p>
+          <div><label for="e1" id="pe-l">Artist</label><input id="e1" list="e-sug" autocomplete="off" spellcheck="false"></div>
+          <div style="margin-top:10px"><label for="e2">Compare with <span class="muted">(optional: leave empty and we pick similar ones)</span></label><input id="e2" list="e-sug" autocomplete="off"><input id="e3" list="e-sug" autocomplete="off"><input id="e4" list="e-sug" autocomplete="off"></div>
+          <datalist id="e-sug"></datalist>
+        </div>
         <div id="err" class="err" hidden></div>
         <button class="btn" id="go" type="submit">Open my report</button>
       </form>
-      <p class="small muted">No key yet? <a href="/services#report">Get a report</a> or <a href="/report?sample=BR-PT">see the free sample</a>.</p>
+      <p class="small muted">No key yet? <a href="/services">Get a report</a>. Free samples (PDF): <a href="/samples/country-report.pdf" download>country</a>, <a href="/samples/artist-report.pdf" download>artist</a>, <a href="/samples/company-report.pdf" download>company</a>.</p>
     </section>
 
     <div id="loading" class="spin" hidden>Gathering your report…</div>
