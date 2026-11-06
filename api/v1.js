@@ -6,9 +6,11 @@
 //   GET /api/v1/worldwide
 //   GET /api/v1/education?country=BR
 //   GET /api/v1/news?country=BR[&topic=world|fashion]
+//   GET /api/v1/pulse?country=BR   free public country page (/pulse): searches, holidays, reads, news mood, GDP
 // Every number is a stored value or one of the formulas listed in FORMULAS.
 const metrics = require('./metrics');
 const earnings = require('../assets/earnings.js');
+const report = require('../lib/report');
 
 const COUNTRIES = ['AR', 'AU', 'BD', 'BE', 'BR', 'CA', 'CL', 'CO', 'DE', 'DZ', 'EC', 'EG', 'ES', 'FR', 'GB', 'ID', 'IE', 'IN', 'IQ', 'IT', 'JP', 'KE',
   'KR', 'MA', 'MX', 'MY', 'NG', 'NL', 'PE', 'PH', 'PK', 'PL', 'PT', 'SA', 'TH', 'TR', 'TW', 'UA', 'US', 'VN', 'ZA'];
@@ -252,6 +254,35 @@ async function newsRoute(req, get) {
   };
 }
 
+// The free "Country pulse": this week's Google Trends searches, next holidays, most-read Wikipedia pages,
+// share of peaceful news (GDELT) and yearly growth (World Bank). Aggregates only.
+async function pulseRoute(req, get, deps) {
+  const cc = String(req.query.country || '').toUpperCase();
+  if (!COUNTRIES.includes(cc)) throw new HttpError(400, 'Use ?country= with one of the 41 country codes, e.g. ?country=BR.');
+  const now = deps.now ? new Date(deps.now()) : new Date();
+  const week = new Date(now.getTime() - 7 * 864e5).toISOString().slice(0, 10);
+  const q = `country_code=eq.${cc}`;
+  const [trends, holidays, wiki, news, g] = await Promise.all([
+    get(`trends_daily?select=day,query,traffic&${q}&day=gte.${week}&order=traffic.desc.nullslast&limit=400`).catch(() => []),
+    get(`holidays?select=day,local_name,name&${q}&day=gte.${now.toISOString().slice(0, 10)}&order=day.asc&limit=4`).catch(() => []),
+    get(`wiki_top_daily?select=day,project,article,views_ceil&${q}&rank=lte.30&day=gte.${week}&order=day.desc&limit=1000`).catch(() => []),
+    get(`gdelt_country_daily?select=day,root_code,articles&${q}&day=gte.${week}&limit=1000`).catch(() => []),
+    report.gdp(deps.fetch || fetch, [cc], now).catch(() => ({})),
+  ]);
+  const focus = report.newsFocus(news);
+  return {
+    cache: 'public, max-age=600, s-maxage=1800, stale-while-revalidate=3600',
+    body: {
+      country: cc, generated_at: now.toISOString(),
+      searches: report.searches(trends, 12),
+      holidays: holidays.map((h) => ({ day: h.day, local_name: h.local_name, name: h.name })),
+      wikipedia: report.wikipedia(wiki, now, 5).top.map((w) => ({ title: w.title, views: w.views, link: w.link })),
+      news: { articles: focus.articles, peaceful_pct: focus.cooperation_pct },
+      gdp: (g[cc] || []).filter((d) => d.growth_pct != null).slice(-6).map((d) => ({ year: d.year, growth_pct: d.growth_pct })),
+    },
+  };
+}
+
 function corsHeaders(req, res, env) {
   const origin = req.headers?.origin;
   const extra = String(env.CREATORS_PLUS_ORIGINS || '').split(',').map((s) => s.trim()).filter(Boolean);
@@ -282,8 +313,9 @@ function createHandler(deps = {}) {
         : route === 'worldwide' ? await worldwideRoute(get)
         : route === 'education' ? await educationRoute(req, get)
         : route === 'news' ? await newsRoute(req, get)
+        : route === 'pulse' ? await pulseRoute(req, get, deps)
         : null;
-      if (!out) throw new HttpError(404, 'Unknown route. Try /api/v1/channel, /trending, /music, /worldwide, /education or /news.');
+      if (!out) throw new HttpError(404, 'Unknown route. Try /api/v1/channel, /trending, /music, /worldwide, /education, /news or /pulse.');
       res.setHeader('Cache-Control', out.cache);
       return res.status(200).json(out.body);
     } catch (err) {

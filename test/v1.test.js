@@ -166,3 +166,31 @@ test('news: headlines per country, fashion only when AI confirmed, separate from
   assert.match(seen[1], /title_tr->>fashion=eq\.true/);
   assert.equal((await run({ route: 'news', country: 'PT', topic: 'sports' }, { fetch })).statusCode, 400);
 });
+
+test('pulse: free country page data from saved aggregates only', async () => {
+  const { createHandler } = require('../api/v1');
+  const seen = [];
+  const fetchImpl = async (url) => {
+    seen.push(String(url));
+    const body = url.includes('trends_daily') ? [{ day: '2026-11-06', query: 'Flamengo', traffic: 2000 }]
+      : url.includes('holidays') ? [{ day: '2026-11-15', local_name: 'Proclamação da República', name: 'Republic Proclamation Day' }]
+      : url.includes('wiki_top_daily') ? [{ day: '2026-11-05', project: 'pt.wikipedia', article: 'Lula', views_ceil: 900 }]
+      : url.includes('gdelt_country_daily') ? [{ day: '2026-11-05', root_code: '04', articles: 70 }, { day: '2026-11-05', root_code: '19', articles: 30 }]
+      : url.includes('worldbank') ? [{}, [{ indicator: { id: 'NY.GDP.MKTP.CD' }, country: { id: 'BR' }, date: '2024', value: 2e12 }, { indicator: { id: 'NY.GDP.MKTP.KD.ZG' }, country: { id: 'BR' }, date: '2024', value: 3.4 }, { indicator: { id: 'NY.GDP.MKTP.CD' }, country: { id: 'BR' }, date: '2023', value: 1.9e12 }, { indicator: { id: 'NY.GDP.MKTP.KD.ZG' }, country: { id: 'BR' }, date: '2023', value: 3.2 }, { indicator: { id: 'NY.GDP.MKTP.CD' }, country: { id: 'BR' }, date: '2022', value: 1.8e12 }]]
+      : [];
+    return { ok: true, status: 200, json: async () => body };
+  };
+  const res = { headers: {}, setHeader(k, v) { this.headers[k] = v; }, status(c) { this.statusCode = c; return this; }, json(b) { this.body = b; return this; }, end() { return this; } };
+  await createHandler({ env: { SUPABASE_URL: 'https://db.test', SUPABASE_KEY: 'k' }, fetch: fetchImpl, now: () => Date.parse('2026-11-07T10:00:00Z') })({ method: 'GET', query: { route: 'pulse', country: 'br' }, headers: {} }, res);
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.body.country, 'BR');
+  assert.deepEqual(res.body.searches.top, [{ query: 'Flamengo', days: 1, traffic: 2000 }]);
+  assert.equal(res.body.holidays[0].local_name, 'Proclamação da República');
+  assert.equal(res.body.wikipedia[0].title, 'Lula');
+  assert.deepEqual(res.body.news, { articles: 100, peaceful_pct: 70 });
+  assert.deepEqual(res.body.gdp, [{ year: 2023, growth_pct: 3.2 }, { year: 2024, growth_pct: 3.4 }]);
+  assert.match(res.headers['Cache-Control'], /s-maxage/);
+  const bad = { ...res, headers: {}, setHeader(k, v) { this.headers[k] = v; } };
+  await createHandler({ env: { SUPABASE_URL: 'https://db.test', SUPABASE_KEY: 'k' }, fetch: fetchImpl })({ method: 'GET', query: { route: 'pulse', country: 'XX' }, headers: {} }, bad);
+  assert.equal(bad.statusCode, 400);
+});

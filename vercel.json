@@ -9,6 +9,7 @@
     { "source": "/extension", "destination": "/extension.html" },
     { "source": "/services", "destination": "/services.html" },
     { "source": "/report", "destination": "/report.html" },
-    { "source": "/terms", "destination": "/terms.html" }
+    { "source": "/terms", "destination": "/terms.html" },
+    { "source": "/pulse", "destination": "/pulse.html" }
   ]
 }
