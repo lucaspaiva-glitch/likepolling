@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Creators +",
   "short_name": "Creators +",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "YouTube rankings, who's trending, education and channel graphs from Like Polling, right on youtube.com (desktop browsers).",
   "homepage_url": "https://www.likepolling.com",
   "minimum_chrome_version": "116",

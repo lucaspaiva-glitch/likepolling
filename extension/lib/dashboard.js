@@ -13,8 +13,6 @@
     gear: '<svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="2.2"/><path d="M8 1.8v1.8M8 12.4v1.8M1.8 8h1.8M12.4 8h1.8M3.6 3.6l1.3 1.3M11.1 11.1l1.3 1.3M3.6 12.4l1.3-1.3M11.1 4.9l1.3-1.3"/></svg>',
   };
   const SITE = 'https://www.likepolling.com';
-  // Ticker keeps its place across re-renders (a re-render used to restart it off-screen).
-  const TAPE_T0 = Date.now(), TAPE_S = 80;
 
   function Dashboard(container, opts) {
     let t = CP.translator(opts.lang);
@@ -63,7 +61,7 @@
 
     const eduCountry = () => st.eduCountry || st.country;
     function ensureTabData() {
-      need('worldwide', 'worldwide');
+      if (st.tab === 'trending' && st.scope === 'worldwide') need('worldwide', 'worldwide');
       if (st.tab === 'trending' && st.scope === 'country') need(`trending:${st.country}`, `trending?country=${st.country}`);
       if (st.tab === 'music') need(`music:${st.country}`, `music?country=${st.country}`);
       if (st.tab === 'education') need(`edu:${eduCountry()}`, `education?country=${eduCountry()}`);
@@ -184,13 +182,6 @@
         + (b.updated_at ? `<p class="cp-note">${t('updated', { t: f.ago(b.updated_at) })}</p>` : '');
     }
 
-    function ticker() {
-      const w = st.charts.worldwide?.body;
-      if (!w?.items?.length) return '<div class="cp-tape"><div class="cp-tape-in still"><span>Like Polling · YouTube</span></div></div>';
-      const items = w.items.slice(0, 10).map((r) => `<span><b>${esc(r.title.length > 42 ? r.title.slice(0, 40) + '…' : r.title)}</b> <em>${r.country_count}/${w.countries_total}</em></span>`).join('');
-      return `<div class="cp-tape" title="${esc(t('worldwide'))}"><div class="cp-tape-in" style="animation-delay:-${(((Date.now() - TAPE_T0) / 1000) % TAPE_S).toFixed(2)}s">${items}${items}</div></div>`;
-    }
-
     const LANG_NAMES = { en: 'English', pt: 'Português (Brasil)', 'pt-PT': 'Português (Portugal)', es: 'Español', de: 'Deutsch', ru: 'Русский', uk: 'Українська', ko: '한국어', ja: '日本語' };
     function settingsView() {
       return `<div class="cp-settings"><label>${t('language')}<select data-act="lang">${CP.LANGS.map((k) => `<option value="${k}"${k === opts.lang ? ' selected' : ''}>${LANG_NAMES[k]}</option>`).join('')}</select></label>
@@ -212,7 +203,6 @@
       const scrollTop = container.querySelector('.cp-body')?.scrollTop || 0;
       container.innerHTML = `<div class="cp ${hud ? 'hud' : 'popup'}${st.full ? ' full' : ''}" lang="${esc(CP.LOCALE[opts.lang] || 'en')}">
         <header class="cp-bar" data-drag>${LOGO}<span class="cp-name">Creators <i>+</i></span><span class="cp-tools">${tools}</span></header>
-        ${ticker()}
         ${opts.where ? `<div class="cp-where">${esc(t('w_where'))} <a href="https://www.youtube.com/" target="_blank" rel="noopener">${esc(t('open_yt'))} ↗</a></div>` : ''}
         <nav class="cp-tabs" role="tablist">${tabs}</nav>
         <div class="cp-body">${view}</div>
