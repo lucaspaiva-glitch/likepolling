@@ -3,7 +3,7 @@
 (function () {
   'use strict';
   const MAIL = 'lucaspaiva@likepolling.com';
-  const BUY = ''; // Gumroad link for the ad spot; empty = email button
+  const BUY = 'https://lucaspoll.gumroad.com/l/laijtn'; // Gumroad ad-spot product
   const PRICE = '€18';
   const tr = (s) => (window.LP_I18N ? window.LP_I18N.t(s) : s);
   const css = `
