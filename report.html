@@ -30,6 +30,37 @@
     ul.bars li { display: grid; grid-template-columns: 9.5em 1fr 3em; align-items: center; gap: 8px; font-size: 14px; margin: 6px 0; }
     ul.bars i { display: block; height: 10px; border-radius: 5px; background: linear-gradient(90deg, #b0000e var(--w), #f1f1f1 var(--w)); }
     ul.bars b { text-align: right; }
+    .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+    .kpi { background: #f7f7f7; border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; break-inside: avoid; }
+    .kpi b { font-size: 22px; line-height: 1.2; letter-spacing: -0.01em; overflow-wrap: anywhere; }
+    .kpi span { font-size: 13px; font-weight: 600; margin-top: 2px; }
+    .kpi small { font-size: 12px; color: #6b6b6b; line-height: 1.35; margin-top: 2px; }
+    .chart { margin: 0; }
+    .chart svg { width: 100%; height: auto; display: block; font: 11px Inter, system-ui, sans-serif; fill: #6b6b6b; }
+    .chart .g { stroke: #ececec; }
+    .chart .area { fill: #fbeaec; }
+    .chart .ln { fill: none; stroke: #b0000e; stroke-width: 2.2; stroke-linejoin: round; }
+    .chart .dot { fill: #b0000e; }
+    .chart .pk { fill: #fff; stroke: #b0000e; stroke-width: 2.5; }
+    .chart .pkl { fill: #0d0d0d; font-weight: 700; }
+    .take { font-size: 14px; background: #fbf6f6; border-left: 3px solid #b0000e; padding: 8px 12px; border-radius: 0 8px 8px 0; margin: 10px 0 0; }
+    ol.rank { margin: 0; padding-left: 22px; }
+    ol.rank li { margin: 0 0 10px; font-size: 14px; }
+    ol.rank .rl { display: flex; justify-content: space-between; gap: 10px; }
+    ol.rank .rl b { white-space: nowrap; }
+    ol.rank i { display: block; height: 8px; border-radius: 4px; margin-top: 3px; background: linear-gradient(90deg, #b0000e var(--w), #f1f1f1 var(--w)); }
+    ol.rank .rx { display: flex; align-items: center; gap: 8px; margin-top: 2px; }
+    ol.rank .rx small { color: #6b6b6b; font-size: 12px; }
+    .spark { width: 72px; height: 18px; flex: none; }
+    .spark polyline { fill: none; stroke: #b0000e; stroke-width: 1.6; }
+    .split { height: 14px; border-radius: 7px; background: linear-gradient(90deg, #b0000e var(--w), #e2a3a8 var(--w)); }
+    .splitl { display: flex; justify-content: space-between; font-size: 13px; margin: 4px 0 6px; }
+    table.cmp { width: 100%; border-collapse: collapse; font-size: 14px; }
+    table.cmp th, table.cmp td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #eee; vertical-align: top; }
+    table.cmp thead th { color: #b0000e; font-size: 13px; letter-spacing: .05em; text-transform: uppercase; }
+    table.cmp tbody th { font-weight: 600; color: #444; width: 34%; }
+    .gloss dt { font-weight: 700; margin-top: 10px; font-size: 14px; }
+    .gloss dd { margin: 2px 0 0; color: #444; font-size: 14px; }
     .sources p { color: #555; }
     @media (max-width: 700px) { .cols.n2 { grid-template-columns: 1fr; } }
     @media print {
@@ -37,6 +68,9 @@
       main { padding: 0; max-width: none; }
       a { color: #0d0d0d; text-decoration: none; }
       .cols.n2 { grid-template-columns: 1fr 1fr; }
+      .rsec { break-inside: auto; }
+      .col, .kpi, ol.rank li, .chart, table.cmp { break-inside: avoid; }
+      * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     }
   </style>
 </head>
