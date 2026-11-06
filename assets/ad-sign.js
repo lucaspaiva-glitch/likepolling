@@ -3,17 +3,22 @@
 (function () {
   'use strict';
   const MAIL = 'lucaspaiva@likepolling.com';
+  const BUY = ''; // Gumroad link for the ad spot; empty = email button
+  const PRICE = '€99';
   const tr = (s) => (window.LP_I18N ? window.LP_I18N.t(s) : s);
   const css = `
   .lp-sign { position: fixed; right: 0; top: 50%; z-index: 59; transform: translateY(-50%); font-family: Inter, system-ui, sans-serif; }
-  .lp-sign-tab { position: relative; display: flex; flex-direction: column; align-items: center; gap: 1px; width: 30px; padding: 12px 0 16px; border: 0; border-radius: 10px 0 0 10px; cursor: pointer;
-    background: linear-gradient(180deg, #8fb4d9 0%, #c9dcef 38%, #6f8a4e 62%, #4f6634 100%); box-shadow: -2px 4px 14px -6px rgba(0,0,0,.45); overflow: hidden; }
-  .lp-sign-tab b { position: relative; z-index: 1; display: block; font: 900 13px/1 'Kanit', 'Arial Black', system-ui, sans-serif; color: #fff; letter-spacing: 0; text-shadow: 0 1px 0 rgba(0,0,0,.35), 0 0 1px rgba(0,0,0,.5); }
-  .lp-sign-tab b:nth-child(odd) { transform: translateX(-1px) rotate(-2deg); }
-  .lp-sign-tab b:nth-child(even) { transform: translateX(1px) rotate(2deg); }
-  .lp-sign-tab i { display: block; height: 6px; }
-  .lp-sign-tab::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 10px; background: repeating-linear-gradient(90deg, rgba(255,255,255,.55) 0 1px, transparent 1px 5px); opacity: .5; }
-  .lp-sign-tab:hover, .lp-sign-tab[aria-expanded="true"] { filter: brightness(1.08); }
+  .lp-sign-tab { position: relative; display: flex; flex-direction: column; align-items: center; width: 34px; padding: 0; border: 0; background: none; cursor: pointer; animation: lp-fly 6s ease-in-out infinite; }
+  .lp-sign-tab svg.plane { display: block; width: 30px; height: 34px; filter: drop-shadow(0 2px 3px rgba(0,0,0,.25)); }
+  .lp-sign-tab .rope { display: block; width: 1px; height: 8px; background: #b0000e; opacity: .7; }
+  .lp-sign-tab .flag { position: relative; display: flex; flex-direction: column; align-items: center; gap: 1px; width: 26px; padding: 8px 0; border: 1.5px solid #b0000e; border-radius: 3px; background: #fff; box-shadow: -2px 6px 14px -8px rgba(0,0,0,.45); transform-origin: top center; animation: lp-flap 2.2s ease-in-out infinite; }
+  .lp-sign-tab .flag::after { content: ''; position: absolute; left: -1.5px; right: -1.5px; bottom: -8px; height: 8px; background: linear-gradient(135deg, #b0000e 50%, transparent 50%) left / 50% 100% no-repeat, linear-gradient(225deg, #b0000e 50%, transparent 50%) right / 50% 100% no-repeat; }
+  .lp-sign-tab b { display: block; font: 900 12px/1.02 'Kanit', 'Arial Black', system-ui, sans-serif; color: #b0000e; }
+  .lp-sign-tab i { display: block; height: 5px; }
+  @keyframes lp-fly { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+  @keyframes lp-flap { 0%, 100% { transform: skewX(0deg); } 50% { transform: skewX(-4deg); } }
+  @media (prefers-reduced-motion: reduce) { .lp-sign-tab, .lp-sign-tab .flag { animation: none; } }
+  .lp-sign-tab:hover .flag, .lp-sign-tab[aria-expanded="true"] .flag { background: #fbeaec; }
   .lp-sign-tab:focus-visible { outline: 2px solid #b0000e; outline-offset: 2px; }
   .lp-sign-pop { position: absolute; right: 38px; top: 50%; width: 236px; transform: translateY(-50%); }
   .lp-sign-pop[hidden] { display: none; }
@@ -21,8 +26,10 @@
   .lp-sign-pop .svc-body { max-height: none; padding: 2px 14px 16px; opacity: 1; }
   @media (max-width: 700px) {
     .lp-sign { top: auto; bottom: 90px; transform: none; }
-    .lp-sign-tab { width: 24px; padding: 9px 0 12px; }
-    .lp-sign-tab b { font-size: 10.5px; }
+    .lp-sign-tab { width: 28px; }
+    .lp-sign-tab svg.plane { width: 24px; height: 28px; }
+    .lp-sign-tab .flag { width: 22px; padding: 6px 0; }
+    .lp-sign-tab b { font-size: 10px; }
     .lp-sign-pop { top: auto; bottom: 0; transform: none; right: 30px; width: min(260px, calc(100vw - 48px)); }
   }
   @media print { .lp-sign { display: none; } }`;
@@ -37,13 +44,13 @@
   let open = false, hover = false, t = 0;
   function draw() {
     const mail = `mailto:${MAIL}?subject=${encodeURIComponent('Sponsoring Like Polling')}&body=${encodeURIComponent('Hi! I\'d like to know about the ad spot on Like Polling.\n\nBrand:\nCountries we target:\nWebsite:')}`;
-    root.innerHTML = `<button type="button" class="lp-sign-tab" aria-expanded="${open}" aria-controls="lp-sign-pop" aria-label="${tr('Ad spot')}: ${tr('YOUR BRAND\nHERE').replace(/\n/g, ' ')}">${letters('YOUR')}<i></i>${letters('AD')}<i></i>${letters('HERE')}</button>
+    root.innerHTML = `<button type="button" class="lp-sign-tab" aria-expanded="${open}" aria-controls="lp-sign-pop" aria-label="${tr('Ad spot')}: ${tr('YOUR BRAND\nHERE').replace(/\n/g, ' ')}"><svg class="plane" viewBox="0 0 30 34" aria-hidden="true"><path d="M15 1c1.6 0 2.6 1.6 2.6 4v7l11 6v3.2l-11-3v7.3l3.6 2.8V31l-6.2-1.6L8.8 31v-2.7l3.6-2.8v-7.3l-11 3V18l11-6V5C12.4 2.6 13.4 1 15 1Z" fill="#b0000e"/><path d="M15 3.2c.8 0 1.2.9 1.2 2.2v3h-2.4v-3c0-1.3.4-2.2 1.2-2.2Z" fill="#fff"/><rect x="3" y="18.4" width="6" height="1.4" rx=".7" fill="#fff" transform="rotate(-16 6 19)"/><rect x="21" y="18.4" width="6" height="1.4" rx=".7" fill="#fff" transform="rotate(16 24 19)"/></svg><span class="rope"></span><span class="flag">${letters('YOUR')}<i></i>${letters('AD')}<i></i>${letters('HERE')}</span></button>
       <div class="lp-sign-pop" id="lp-sign-pop" ${open ? '' : 'hidden'}><section class="svc open">
         <div class="svc-tab" style="cursor:default"><span class="svc-top"><span class="svc-sym">${tr('Ad spot')}</span><span>${tr('Launch rate')}</span></span>
         <span class="svc-name svc-glitch" data-text="${tr('YOUR BRAND\nHERE')}">${tr('YOUR BRAND\nHERE')}</span><span class="svc-bar" aria-hidden="true"></span>
         <span class="svc-sub">${tr('A card on Like Polling, seen in 41 countries.')}</span></div>
         <div class="svc-body"><div class="svc-stats"><div><b>41</b><span>${tr('countries')}</span></div><div><b>2×</b><span>${tr('updated a day')}</span></div><div><b>1</b><span>${tr('brand at a time')}</span></div></div>
-        <a class="svc-btn" href="${mail}">${tr('Ask about the ad spot')}</a><p class="svc-fine">${tr('Like the Machu Picchu Energy card. Monthly views and clicks included.')}</p></div>
+        <a class="svc-btn" href="${BUY ? BUY + '?wanted=true' : mail}"${BUY ? ' target="_blank" rel="noopener"' : ''}>${BUY ? tr('Buy') + ' · ' + tr('1 month') + ' · ' + PRICE : tr('Ask about the ad spot')}</a><p class="svc-fine">${tr('Like the Machu Picchu Energy card. Monthly views and clicks included.')}</p></div>
       </section></div>`;
     root.querySelector('.lp-sign-tab').addEventListener('click', (e) => { e.stopPropagation(); clearTimeout(t); if (hover) { hover = false; return; } set(!open); });
   }
