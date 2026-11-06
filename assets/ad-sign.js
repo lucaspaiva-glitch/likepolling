@@ -4,7 +4,7 @@
   'use strict';
   const MAIL = 'lucaspaiva@likepolling.com';
   const BUY = ''; // Gumroad link for the ad spot; empty = email button
-  const PRICE = '€99';
+  const PRICE = '€18';
   const tr = (s) => (window.LP_I18N ? window.LP_I18N.t(s) : s);
   const css = `
   .lp-sign { position: fixed; right: 0; top: 50%; z-index: 59; transform: translateY(-50%); font-family: Inter, system-ui, sans-serif; }
@@ -20,10 +20,16 @@
   @media (prefers-reduced-motion: reduce) { .lp-sign-tab, .lp-sign-tab .flag { animation: none; } }
   .lp-sign-tab:hover .flag, .lp-sign-tab[aria-expanded="true"] .flag { background: #fbeaec; }
   .lp-sign-tab:focus-visible { outline: 2px solid #b0000e; outline-offset: 2px; }
-  .lp-sign-pop { position: absolute; right: 38px; top: 50%; width: 236px; transform: translateY(-50%); }
+  .lp-sign-pop { position: absolute; right: 38px; top: 50%; width: 270px; transform: translateY(-50%); }
   .lp-sign-pop[hidden] { display: none; }
   .lp-sign-pop .svc { box-shadow: 0 18px 40px -16px rgba(0,0,0,.35); }
   .lp-sign-pop .svc-body { max-height: none; padding: 2px 14px 16px; opacity: 1; }
+  .lp-sign-form p { margin: 0 0 12px; font: 500 14px/2 Inter, system-ui, sans-serif; color: #222; }
+  .lp-sign-form input { width: 9.5em; max-width: 100%; padding: 1px 2px; border: 0; border-bottom: 1.5px solid #b0000e; background: transparent; font: 600 14px Inter, system-ui, sans-serif; color: #b0000e; outline: 0; }
+  .lp-sign-form input[name="kind"] { width: 6.5em; }
+  .lp-sign-form input::placeholder { color: #c98a8f; font-weight: 500; }
+  .lp-sign-form input:focus { background: #fbeaec; }
+  .lp-sign-form input.need { border-bottom-color: #ff5a1f; background: #fff3ec; }
   @media (max-width: 700px) {
     .lp-sign { top: auto; bottom: 90px; transform: none; }
     .lp-sign-tab { width: 28px; }
@@ -50,8 +56,24 @@
         <span class="svc-name svc-glitch" data-text="${tr('YOUR BRAND\nHERE')}">${tr('YOUR BRAND\nHERE')}</span><span class="svc-bar" aria-hidden="true"></span>
         <span class="svc-sub">${tr('A card on Like Polling, seen in 41 countries.')}</span></div>
         <div class="svc-body"><div class="svc-stats"><div><b>41</b><span>${tr('countries')}</span></div><div><b>2×</b><span>${tr('updated a day')}</span></div><div><b>1</b><span>${tr('brand at a time')}</span></div></div>
-        <a class="svc-btn" href="${BUY ? BUY + '?wanted=true' : mail}"${BUY ? ' target="_blank" rel="noopener"' : ''}>${BUY ? tr('Buy') + ' · ' + tr('1 month') + ' · ' + PRICE : tr('Ask about the ad spot')}</a><p class="svc-fine">${tr('Like the Machu Picchu Energy card. Monthly views and clicks included.')}</p></div>
+        <form class="lp-sign-form" novalidate><p>${tr('We are')} <input name="brand" placeholder="${tr('brand name')}" autocomplete="organization" required>, ${tr('a')} <input name="kind" placeholder="${tr('kind of')}" required> ${tr('company, at')} <input name="site" placeholder="${tr('website')}" inputmode="url" autocomplete="url" required>.</p>
+        <a class="svc-btn" href="#">${tr('Buy')} · ${tr('1 week')} · ${PRICE}</a></form><p class="svc-fine">${tr('Like the Machu Picchu Energy card. Weekly views and clicks included.')}</p></div>
       </section></div>`;
+    const f = root.querySelector('.lp-sign-form'), go = f.querySelector('.svc-btn');
+    const val = () => Object.fromEntries([...f.elements].filter((e) => e.name).map((e) => [e.name, e.value.trim()]));
+    const link = () => {
+      const v = val();
+      if (BUY) return `${BUY}?wanted=true&brand=${encodeURIComponent(v.brand)}&kind=${encodeURIComponent(v.kind)}&website=${encodeURIComponent(v.site)}`;
+      return `mailto:${MAIL}?subject=${encodeURIComponent('Ad spot: ' + v.brand)}&body=${encodeURIComponent(`Hi! We'd like the ad spot on Like Polling for 1 week (${PRICE}).\n\nBrand: ${v.brand}\nKind of company: ${v.kind}\nWebsite: ${v.site}`)}`;
+    };
+    f.addEventListener('input', () => { go.href = link(); });
+    go.addEventListener('click', (e) => {
+      const empty = [...f.elements].find((x) => x.name && !x.value.trim());
+      if (empty) { e.preventDefault(); empty.focus(); empty.classList.add('need'); return; }
+      go.href = link();
+      if (BUY) { go.target = '_blank'; go.rel = 'noopener'; }
+    });
+    f.addEventListener('submit', (e) => { e.preventDefault(); go.click(); });
     root.querySelector('.lp-sign-tab').addEventListener('click', (e) => { e.stopPropagation(); clearTimeout(t); if (hover) { hover = false; return; } set(!open); });
   }
   function set(on) { open = on; draw(); }
