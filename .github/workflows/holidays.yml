@@ -1,0 +1,25 @@
+name: Holidays memory
+
+on:
+  schedule:
+    - cron: '41 4 * * 1' # Mondays
+  workflow_dispatch:
+
+concurrency:
+  group: holidays-memory
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+      - name: Save Holidays memory
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: node scripts/holidays-routine.js

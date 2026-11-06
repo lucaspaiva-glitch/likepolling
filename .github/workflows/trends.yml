@@ -1,0 +1,25 @@
+name: Google Trends memory
+
+on:
+  schedule:
+    - cron: '11 */2 * * *' # every 2 hours; the feed only lists about 10 searches at a time
+  workflow_dispatch:
+
+concurrency:
+  group: trends-memory
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+      - name: Save trending searches per country
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: node scripts/trends-routine.js
