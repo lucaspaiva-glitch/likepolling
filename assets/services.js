@@ -6,7 +6,7 @@
   // Lemon Squeezy "Share" link of the report product. Empty = the button opens an email order instead.
   const LEMON_URL = 'https://likepolling.lemonsqueezy.com/checkout/buy/482d48a0-1fcf-461b-a8d5-050e6cafb544';
   // Gumroad product link; when set, the Buy button uses Gumroad instead (it pays out to Brazil via PayPal).
-  const GUMROAD_URL = '';
+  const GUMROAD_URL = 'https://lucaspoll.gumroad.com/l/udjsyu';
   const CHECKOUT_URL = GUMROAD_URL || LEMON_URL;
   const COUNTRIES = ['AR', 'AU', 'BD', 'BE', 'BR', 'CA', 'CL', 'CO', 'DE', 'DZ', 'EC', 'EG', 'ES', 'FR', 'GB', 'ID', 'IE', 'IN', 'IQ', 'IT', 'JP', 'KE',
     'KR', 'MA', 'MX', 'MY', 'NG', 'NL', 'PE', 'PH', 'PK', 'PL', 'PT', 'SA', 'TH', 'TR', 'TW', 'UA', 'US', 'VN', 'ZA'];
