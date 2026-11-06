@@ -36,7 +36,7 @@ textarea { min-height: 90px; resize: vertical; }
 .faq dt { font-weight: 700; margin-top: 14px; }
 .faq dd { margin: 2px 0 0; color: #333; }
 .foot { margin-top: 48px; padding-top: 18px; border-top: 1px solid #eee; font-size: 14px; color: #6b6b6b; }
-.foot a { color: #6b6b6b; margin-right: 14px; }
+.foot a { color: #6b6b6b; margin-right: 14px; white-space: nowrap; display: inline-block; line-height: 1.9; }
 .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 20px; }
 .stats div { border-left: 3px solid #b0000e; padding: 2px 0 2px 12px; }
 .stats b { display: block; font-size: 26px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.1; }

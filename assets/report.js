@@ -107,7 +107,7 @@
     return `<ol class="rank">${items.map((it) => `<li><div class="rl"><span>${label(it)}</span><b>${num(val(it))}</b></div><i style="--w:${Math.max(2, (val(it) / max) * 100).toFixed(1)}%"></i>${extra ? `<div class="rx">${extra(it)}</div>` : ''}</li>`).join('')}</ol>`;
   };
   const wikiLabel = (w) => `<a href="${esc(w.link)}" target="_blank" rel="noopener">${esc(w.title)}</a>`;
-  const wikiExtra = (c) => (w) => `${spark(w.series)}<small>${w.days} of ${c.wikipedia_days.length} days in the daily top 30 · first seen ${dshort(w.first_day)}</small>`;
+  const wikiExtra = (c) => (w) => `${spark(w.series)}<small>${w.days} of ${c.wikipedia_days.length} days in the daily top 30 · first seen <span style="white-space:nowrap">${dshort(w.first_day)}</span></small>`;
 
   const sum = (a) => a.reduce((t, n) => t + n, 0);
   function facts(c) {
