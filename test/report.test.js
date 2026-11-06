@@ -304,3 +304,43 @@ test('Gumroad artist key: picks the artist once, then a signed instance reopens 
   res = await call({ key: GKEY, instance: inst.replace(/.$/, (c) => (c === '0' ? '1' : '0')) });
   assert.equal(res.statusCode, 409);
 });
+
+test('country report adds World Bank GDP by year when available', async () => {
+  const wb = (id, cc, date, value) => ({ indicator: { id }, country: { id: cc }, date, value });
+  const rows = ['2021', '2022', '2023', '2024'].flatMap((y, i) => [wb('NY.GDP.MKTP.CD', 'BR', y, 1e12 + i * 1e11), wb('NY.GDP.PCAP.CD', 'BR', y, 9000 + i * 100), wb('NY.GDP.MKTP.KD.ZG', 'BR', y, i ? 2.345 : null)]);
+  const f = db({ route: async (url) => (url.startsWith('https://api.worldbank.org/') ? json([{}, rows]) : null) });
+  const out = await report.buildReport(report.rest(env, f), ['BR', 'PT'], NOW, { fetchImpl: f });
+  const br = out.countries.find((c) => c.country === 'BR');
+  assert.deepEqual(br.gdp.map((g) => g.year), [2021, 2022, 2023, 2024]);
+  assert.deepEqual(br.gdp[3], { year: 2024, usd: 1.3e12, per_person: 9300, growth_pct: 2.3 });
+  assert.equal(br.gdp[0].growth_pct, undefined);
+  assert.equal(out.countries.find((c) => c.country === 'PT').gdp, undefined);
+});
+
+test('company report ranks the subject in its narrowest shared Wikipedia category', async () => {
+  const brands = ['Adidas', 'Puma (brand)', 'Asics', 'Reebok', 'Fila (company)'];
+  const route = async (url) => {
+    if (url.startsWith('https://wikimedia.org/api/rest_v1/metrics/pageviews/')) {
+      const title = decodeURIComponent(url.split('/user/')[1].split('/')[0]).replace(/_/g, ' ');
+      const base = title === 'Nike, Inc.' ? 500 : 100 - brands.indexOf(title) * 10;
+      return json({ items: Array.from({ length: 60 }, (_, i) => ({ timestamp: `${new Date(Date.UTC(2026, 8, 21) + i * 864e5).toISOString().slice(0, 10).replace(/-/g, '')}00`, views: base })) });
+    }
+    if (!url.startsWith('https://en.wikipedia.org/w/api.php')) return null;
+    const q = Object.fromEntries(new URL(url).searchParams);
+    if (q.list === 'search') return json({ query: { search: brands.map((title) => ({ title })) } });
+    if (q.prop === 'categories' && q.clcategories) return json({ query: { pages: q.titles.split('|').map((title) => ({ title, categories: [{ title: 'Category:Athletic shoe brands' }, { title: 'Category:Shoe brands' }] })) } });
+    if (q.prop === 'categories') return json({ query: { pages: [{ title: q.titles, categories: ['1964 establishments in Oregon', 'Athletic shoe brands', 'Shoe brands', 'Nike brands'].map((c) => ({ title: `Category:${c}` })) }] } });
+    if (q.prop === 'categoryinfo') return json({ query: { pages: [{ title: 'Category:Athletic shoe brands', categoryinfo: { pages: 81 } }, { title: 'Category:Shoe brands', categoryinfo: { pages: 210 } }] } });
+    if (q.generator === 'categorymembers') return json({ query: { pages: [{ title: 'Nike, Inc.', description: 'American athletic equipment company', length: 9e4 }, ...brands.map((title, i) => ({ title, description: 'sportswear brand', length: 5e4 - i })), { title: 'Air Jordan', description: 'Basketball shoe line', length: 6e4 }] } });
+    if (q.prop === 'langlinks') return json({ query: { pages: [{ title: q.titles, langlinks: q.titles.startsWith('Category:') ? [{ lang: 'pt', title: 'Categoria:Marcas de calçado esportivo' }] : [] }] } });
+    if (q.prop === 'revisions') return json({ query: { pages: [{ revisions: [] }] } });
+    return json({ query: { pages: q.titles.split('|').map((title) => ({ title, description: 'American athletic equipment company' })) } });
+  };
+  const body = await entity.buildEntityReport(null, 'company', { subject: 'Nike, Inc.', peers: [] }, { fetchImpl: route, now: NOW });
+  assert.equal(body.field.name, 'Athletic shoe brands');
+  assert.equal(body.field.names.pt, 'Marcas de calçado esportivo');
+  assert.equal(body.field.rank, 1);
+  assert.equal(body.field.compared, 6);
+  assert.ok(!body.field.ranked.some((p) => p.title === 'Air Jordan'));
+  assert.deepEqual(body.peers.map((p) => p.title), ['Adidas', 'Puma (brand)', 'Asics']);
+});

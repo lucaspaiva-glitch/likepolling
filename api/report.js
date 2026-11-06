@@ -204,7 +204,7 @@ function createHandler(deps = {}) {
       if (req.method === 'GET') {
         const list = report.parseCountries([req.query.country, req.query.compare].join(','));
         if (!report.isSample(list)) throw fail(403, 'Only the Brazil vs Portugal sample is free. Get a report at likepolling.com/services.');
-        const body = await report.buildReport(get, list, new Date(now));
+        const body = await report.buildReport(get, list, new Date(now), { fetchImpl });
         res.setHeader('Cache-Control', 'public, max-age=300, s-maxage=3600, stale-while-revalidate=3600');
         return res.status(200).json({ ...body, sample: true });
       }
@@ -220,7 +220,7 @@ function createHandler(deps = {}) {
         const lemon = isLemonKey(k) && env.LEMONSQUEEZY_STORE_ID;
         const build = (type, picked) => entity.buildEntityReport(get, type, picked, { fetchImpl, rest: get, now: new Date(now) });
         const access = await (lemon ? unlock(env, fetchImpl, args) : unlockGumroad(env, fetchImpl, args, build));
-        const body = access.body || await report.buildReport(get, access.countries, new Date(now));
+        const body = access.body || await report.buildReport(get, access.countries, new Date(now), { fetchImpl });
         res.setHeader('Cache-Control', 'no-store');
         return res.status(200).json({ ...body, sample: false, instance_id: access.instance_id, expires_at: access.expires_at });
       }
