@@ -85,6 +85,8 @@
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       render(data);
+      const dl = params.get('dl');
+      if (dl === 'pptx' || dl === 'xlsx') { const b = $('report').querySelector(`[data-ex="${dl}"]`); if (b) b.click(); }
     } catch (err) {
       show('access');
       error(err.message || 'Couldn\'t load the sample.');
@@ -182,8 +184,8 @@
       const top = c.wikipedia[0];
       return `${lineChart(pts, L('Wikipedia views'))}${top ? `<p class="take">${L('The #1 page, {title}, had {n} views: {p}% of all top-30 views in the period.', { title: `<b>${esc(top.title)}</b>`, n: num(top.views), p: Math.round((top.views / (sum(c.wikipedia_daily_total) || 1)) * 100) })}</p>` : ''}`;
     }],
-    ['Most-read on Wikipedia', 'Total views over the period. The small line shows that page\'s views day by day.', (c) => rank(c.wikipedia, (w) => w.views, wikiLabel, wikiExtra(c))],
-    ['Rising this week', 'Pages that entered the daily top 30 only in the last 7 days. Often the best early signals.', (c) => rank(c.wikipedia_rising, (w) => w.views, wikiLabel, wikiExtra(c))],
+    ['Most-read on Wikipedia', 'Total views over the period. The small line shows that page\'s views day by day.', (c) => rank(c.wikipedia.slice(0, 8), (w) => w.views, wikiLabel, wikiExtra(c))],
+    ['Rising this week', 'Pages that entered the daily top 30 only in the last 7 days. Often the best early signals.', (c) => rank(c.wikipedia_rising.slice(0, 8), (w) => w.views, wikiLabel, wikiExtra(c))],
     ['What the news talks about', 'Share of all news articles about the country, by type of event.', (c) => {
       const f = c.news_focus;
       if (!f.articles) return empty();
@@ -197,12 +199,14 @@
       : '')],
   ];
 
-  const glossary = () => `<section class="rsec"><h2>${L('How to read the numbers')}</h2><dl class="gloss">
-    <dt>${L('Views')}</dt><dd>${L('Times a Wikipedia page was opened from that country. Wikimedia rounds them up a little to protect privacy.')}</dd>
-    <dt>${L('Days in the top 30')}</dt><dd>${L('On how many recorded days the page was among the country\'s 30 most-read. More days means lasting interest, not a one-day spike.')}</dd>
-    <dt>${L('News articles')}</dt><dd>${L('Online news articles worldwide that mention the country, counted by The GDELT Project. One article can count for two countries.')}</dd>
-    <dt>${L('Peaceful and tense news')}</dt><dd>${L('GDELT sorts every news event into 20 types. Talks, deals and aid count as peaceful. Protests and fighting count as tension or conflict.')}</dd>
-    <dt>${L('Period')}</dt><dd>${L('Like Polling has recorded its sources every day since {date}, the day we started.', { date: dlong(STARTED) })} ${L('Each report covers up to the last 30 recorded days.')}</dd></dl></section>`;
+  const terms = () => [
+    [L('Views'), L('Times a Wikipedia page was opened from that country. Wikimedia rounds them up a little to protect privacy.')],
+    [L('Days in the top 30'), L('On how many recorded days the page was among the country\'s 30 most-read. More days means lasting interest, not a one-day spike.')],
+    [L('News articles'), L('Online news articles worldwide that mention the country, counted by The GDELT Project. One article can count for two countries.')],
+    [L('Peaceful and tense news'), L('GDELT sorts every news event into 20 types. Talks, deals and aid count as peaceful. Protests and fighting count as tension or conflict.')],
+    [L('Period'), `${L('Like Polling has recorded its sources every day since {date}, the day we started.', { date: dlong(STARTED) })} ${L('Each report covers up to the last 30 recorded days.')}`],
+  ];
+  const glossary = () => `<section class="rsec"><h2>${L('How to read the numbers')}</h2><dl class="gloss">${terms().map(([t, d]) => `<dt>${t}</dt><dd>${d}</dd>`).join('')}</dl></section>`;
 
   // ---- artist / company reports: numbers and charts first, one short line each ----
   const langName = (code) => display('language', code);
@@ -211,6 +215,30 @@
   const isoDay = (iso) => String(iso).slice(0, 10);
   const dates = (from, to, printed) => `<dl class="dates"><div><dt>${L('Gathered from')}</dt><dd>${dlong(from)}</dd></div><div><dt>${L('Latest data')}</dt><dd>${dlong(to)}</dd></div><div><dt>${L('Printed')}</dt><dd>${dlong(isoDay(printed))}</dd></div></dl>`;
   const getYours = () => `<p class="print-only">${L('Get your own report at {site}. From €18, no sign-up.', { site: '<b>likepolling.com/services</b>' })}</p>`;
+  const exportBar = (data, own) => `<div class="actions exports"><span class="exl">${L('Download as')}</span>
+    <button class="btn" type="button" data-ex="pdf">PDF</button>
+    <button class="btn ghost" type="button" data-ex="pptx">${L('Presentation')}<small>PowerPoint · Keynote · Google Slides</small></button>
+    <button class="btn ghost" type="button" data-ex="xlsx">Excel<small>Excel · Google Sheets · Numbers</small></button>
+    ${data.sample ? `<a class="btn ghost" href="${own}">${L('Get your own report')}</a>` : ''}</div>`;
+  const ctx = (data, extra) => ({ L, name, langName, num, short, dshort,
+    since: `${L('Gathered since day one.')} ${L('Like Polling has recorded its sources every day since {date}, the day we started.', { date: dlong(STARTED) })}`,
+    cta: data.sample ? L('Get your own report at {site}. From €18, no sign-up.', { site: 'likepolling.com/services' }) : '', ...extra });
+  const dateList = (from, to, printed) => [[L('Gathered from'), dlong(from)], [L('Latest data'), dlong(to)], [L('Printed'), dlong(isoDay(printed))]];
+  let busy = false;
+  function wire(data, x) {
+    $('report').querySelectorAll('[data-ex]').forEach((b) => b.addEventListener('click', () => exportAs(b.dataset.ex, data, x, b)));
+  }
+  async function exportAs(kind, data, x, btn) {
+    if (kind === 'pdf') return window.print();
+    if (busy || !window.LP_EXPORT) return;
+    busy = true;
+    const was = btn && btn.innerHTML;
+    if (btn) { btn.disabled = true; btn.textContent = L('Preparing…'); }
+    try { await window.LP_EXPORT[kind](data, x); } catch (e) { alert(L('Couldn\'t make the file. Please try again.')); } finally {
+      busy = false;
+      if (btn) { btn.disabled = false; btn.innerHTML = was; }
+    }
+  }
   const COLORS = ['#b0000e', '#1d1d1f', '#9a9a9a', '#d08a2e'];
   const delta = (p) => (p == null ? '' : `<em class="${p >= 0 ? 'up' : 'down'}">${p >= 0 ? '▲' : '▼'} ${Math.abs(p)}%</em>`);
   const pct = (a, b) => (b ? Math.round((a / b) * 100) : 0);
@@ -255,7 +283,7 @@
       <p class="muted">${L(artist ? 'Compared with {n} similar artists.' : 'Compared with {n} similar brands.', { n: all.length - 1 })}</p>
       ${dates(data.from, data.to, data.generated_at)}
       ${since('This report also uses Wikimedia\'s public view history.')}
-      <div class="actions"><button class="btn" type="button" id="print">${L('Save as PDF')}</button>${data.sample ? `<a class="btn ghost" href="/services#${data.type}">${L('Get your own report')}</a>` : ''}</div></header>`;
+      ${exportBar(data, `/services#${data.type}`)}</header>`;
     const kpis = `<section class="rsec"><h2>${L('At a glance')}</h2><div class="kpis">${[
       kcard(`${short(s.views)}${delta(s.change_pct)}`, L('Wikipedia views'), L('last 30 days, vs the 30 before'), area(s.series.map((d) => d.views))),
       all.length > 1 ? kcard(L('#{r} of {n}', { r: s.rank, n: all.length }), L(artist ? 'Among similar artists' : 'Among similar brands'), L('by views'), cols([...all].sort((a, b) => b.views - a.views).map((p) => p.views), s.rank - 1)) : '',
@@ -282,9 +310,10 @@
       ${data.languages[1] ? `<p class="take">${L('After English, the most readers are in {l}.', { l: `<b>${esc(langName(data.languages[1].lang))}</b>` })}</p>` : ''}</section>`;
     const ctry = data.countries.length ? `<section class="rsec"><h2>${L('Trending in countries')}</h2><p class="note">${L('Days the page was in a country\'s daily top 30.')}</p>
       ${rank(data.countries.slice(0, 10), (c) => c.days, (c) => esc(name(c.country)))}</section>` : '';
-    const sources = `<section class="rsec sources"><h2>${L('Sources')}</h2><p class="small">${L('Wikipedia page views and pages: Wikimedia Foundation (wikimedia.org), open data.')} ${L(data.peers_chosen ? 'Comparisons chosen by the buyer.' : 'Similar pages picked by Wikipedia\'s "more like this" search.')} ${L('No YouTube or news data.')}</p></section>`;
+    const srcText = `${L('Wikipedia page views and pages: Wikimedia Foundation (wikimedia.org), open data.')} ${L(data.peers_chosen ? 'Comparisons chosen by the buyer.' : 'Similar pages picked by Wikipedia\'s "more like this" search.')} ${L('No YouTube or news data.')}`;
+    const sources = `<section class="rsec sources"><h2>${L('Sources')}</h2><p class="small">${srcText}</p></section>`;
     $('report').innerHTML = head + kpis + trend + vs + langs + ctry + sources + (data.sample ? getYours() : '');
-    $('print').addEventListener('click', () => window.print());
+    wire(data, ctx(data, { tag, title: s.title, subtitle: s.description, dates: dateList(data.from, data.to, data.generated_at), sources: srcText }));
     show('report');
     window.scrollTo(0, 0);
   }
@@ -314,7 +343,7 @@
       <p class="muted">${L(cs.length > 1 ? 'What these countries read and talked about.' : 'What this country read and talked about.')}${data.expires_at ? ` ${L('Your access lasts until {date}.', { date: dlong(isoDay(data.expires_at)) })}` : ''}</p>
       ${allDays.length ? dates(allDays[0], allDays[allDays.length - 1], data.generated_at) : ''}
       ${since('Every number below comes from those records.')}
-      <div class="actions"><button class="btn" type="button" id="print">${L('Save as PDF')}</button>${data.sample ? `<a class="btn ghost" href="/services#country">${L('Get your own report')}</a>` : ''}</div></header>`;
+      ${exportBar(data, '/services#country')}</header>`;
     let shared = '';
     if (data.shared) {
       const [a, b] = cs.map(facts);
@@ -323,13 +352,16 @@
       shared = `<section class="rsec"><h2>${L('Side by side')}</h2><p class="note">${L('The same measures for both countries.')}</p>
         <div class="vs">${pair(L('News articles'), a.f.articles, b.f.articles, short)}${pair(L('Wikipedia views (top 30)'), a.views, b.views, short)}${pair(L('Peaceful news'), a.f.cooperation_pct, b.f.cooperation_pct, (v) => `${v}%`)}</div>
         <p class="take">${L('{n} news articles mentioned both countries together.', { n: `<b>${num(data.shared.articles_together)}</b>` })} ${(() => { const n = data.shared.read_in_both.length; return n === 0 ? L('No page was among the most-read in both countries.') : n === 1 ? L('1 page was among the most-read in both:') : L('{n} pages were among the most-read in both:', { n: `<b>${n}</b>` }); })()}</p>
-        ${data.shared.read_in_both.length ? `<ol class="plain">${data.shared.read_in_both.map((w) => `<li>${wikiLabel(w)}</li>`).join('')}</ol>` : ''}</section>`;
+        ${data.shared.read_in_both.length ? `<ol class="plain">${data.shared.read_in_both.slice(0, 6).map((w) => `<li>${wikiLabel(w)}</li>`).join('')}</ol>` : ''}</section>`;
     }
     const body = SECTIONS.map(([h, note, fn]) => [h, note, cs.map(fn)]).filter(([, , out]) => out.some((x) => x && x !== empty()))
-      .map(([h, note, out]) => `<section class="rsec${/^(Most-read|Rising)/.test(h) ? ' long' : ''}"><h2>${esc(L(h))}</h2><p class="note">${esc(L(note))}</p><div class="cols n${cs.length}">${cs.map((c, i) => `<div class="col">${cs.length > 1 ? `<h3>${esc(name(c.country))}</h3>` : ''}${out[i] || empty()}</div>`).join('')}</div></section>`).join('');
-    const sources = `<section class="rsec sources"><h2>${L('Sources and limits')}</h2><p class="small">${L(cs.some((c) => c.ideas.length) ? 'Built by Like Polling from its own daily records of open data: Wikipedia page views (Wikimedia Foundation) and news topics and countries (The GDELT Project). Ideas are written by AI (Google Gemini) and can contain mistakes. YouTube and news headlines are not part of the report.' : 'Built by Like Polling from its own daily records of open data: Wikipedia page views (Wikimedia Foundation) and news topics and countries (The GDELT Project). YouTube and news headlines are not part of the report.')}</p></section>`;
-    $('report').innerHTML = head + shared + body + glossary() + sources + (data.sample ? getYours() : '');
-    $('print').addEventListener('click', () => window.print());
+      .map(([h, note, out]) => `<section class="rsec${/^(Most-read|Rising)/.test(h) ? ' long' : ''}"><h2>${esc(L(h))}</h2><p class="note">${esc(L(note))}</p><div class="cols n${cs.length}">${cs.map((c, i) => `<div class="col">${cs.length > 1 ? `<h3>${esc(name(c.country))}</h3>` : ''}${out[i] || empty()}</div>`).join('')}</div></section>`)
+    if (shared) body.splice(1, 0, shared);
+    const srcText = L(cs.some((c) => c.ideas.length) ? 'Built by Like Polling from its own daily records of open data: Wikipedia page views (Wikimedia Foundation) and news topics and countries (The GDELT Project). Ideas are written by AI (Google Gemini) and can contain mistakes. YouTube and news headlines are not part of the report.' : 'Built by Like Polling from its own daily records of open data: Wikipedia page views (Wikimedia Foundation) and news topics and countries (The GDELT Project). YouTube and news headlines are not part of the report.');
+    const sources = `<section class="rsec sources"><h2>${L('Sources and limits')}</h2><p class="small">${srcText}</p></section>`;
+    $('report').innerHTML = head + body.join('') + glossary() + sources + (data.sample ? getYours() : '');
+    wire(data, ctx(data, { tag, title, subtitle: L(cs.length > 1 ? 'What these countries read and talked about.' : 'What this country read and talked about.'),
+      dates: allDays.length ? dateList(allDays[0], allDays[allDays.length - 1], data.generated_at) : [], sources: srcText, glossary: terms() }));
     show('report');
     window.scrollTo(0, 0);
   }

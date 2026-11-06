@@ -1,0 +1,300 @@
+// PowerPoint (also opens in Keynote and Google Slides) and Excel versions of a report, built in the buyer's browser.
+// Nothing about the buyer is sent anywhere. The two libraries load only when a button is pressed.
+(function () {
+  const RED = 'B0000E', INK = '1D1D1F', GREY = '6B6B6B', PALE = 'FBEAEC', CARD = 'F5F5F7', PINK = 'E2A3A8';
+  const COLORS = ['B0000E', '1D1D1F', '9A9A9A', 'D08A2E'];
+  const FONT = 'Arial';
+  const sum = (a) => a.reduce((t, n) => t + n, 0);
+  const pct = (a, b) => (b ? Math.round((a / b) * 100) : 0);
+  const cut = (s, n = 38) => (String(s).length > n ? `${String(s).slice(0, n - 1)}…` : String(s));
+  const plain = (x) => String(x).replace(/ \([^)]*\)$/, '');
+
+  const loaded = {};
+  const load = (src, global) => (loaded[src] ||= new Promise((ok, no) => {
+    if (window[global]) return ok(window[global]);
+    const s = document.createElement('script');
+    s.src = src;
+    s.onload = () => (window[global] ? ok(window[global]) : no(new Error('load')));
+    s.onerror = () => { delete loaded[src]; no(new Error('load')); };
+    document.head.appendChild(s);
+  }));
+  const save = (blob, file) => {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = file;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000);
+  };
+
+  // ---------- the deck: one idea per slide, shared by every report type ----------
+  function countryDeck(data, x) {
+    const { L, name, num, short, dshort } = x;
+    const cs = data.countries;
+    const names = cs.map((c) => name(c.country));
+    const f = (c) => {
+      const nd = c.news_daily || [];
+      return { nd, views: sum(c.wikipedia_daily_total || []), top: c.wikipedia[0], partner: c.news_partners[0], focus: c.news_focus,
+        busy: nd.reduce((m, d) => (!m || d.articles > m.articles ? d : m), null) };
+    };
+    const F = cs.map(f);
+    const slides = [];
+    slides.push({ type: 'kpis', title: L('At a glance'), note: L('The main numbers for the period, explained in the sections below.'),
+      groups: cs.map((c, i) => ({ head: cs.length > 1 ? names[i] : '', cards: [
+        F[i].views && { n: short(F[i].views), label: L('Wikipedia views'), sub: L('of the daily top 30 pages, all days added') },
+        F[i].focus.articles && { n: short(F[i].focus.articles), label: L('News articles'), sub: L('about the country, worldwide') },
+        F[i].focus.cooperation_pct != null && { n: `${F[i].focus.cooperation_pct}%`, label: L('Peaceful news'), sub: L('talks, deals, aid. The rest is tension or conflict') },
+        F[i].partner && { n: name(F[i].partner.country), label: L('Most in the news with'), sub: L('{n} articles together', { n: num(F[i].partner.articles) }) },
+        F[i].top && { n: cut(F[i].top.title, 26), label: L('Most-read page'), sub: L('{n} views', { n: num(F[i].top.views) }) },
+        c.wikipedia_rising.length && { n: String(c.wikipedia_rising.length), label: L('New this week'), sub: L('pages that just entered the top 30') },
+      ].filter(Boolean) })) });
+    if (data.shared && cs.length > 1) {
+      const pair = (head, a, b, fmt) => (a == null || b == null || (!a && !b) ? null : { head, kind: 'bar', labels: names, series: [{ name: head, values: [a, b] }], fmt, vary: true });
+      const both = data.shared.read_in_both;
+      slides.push({ type: 'charts', title: L('Side by side'), note: L('The same measures for both countries.'),
+        charts: [pair(L('News articles'), F[0].focus.articles, F[1].focus.articles), pair(L('Wikipedia views (top 30)'), F[0].views, F[1].views), pair(L('Peaceful news'), F[0].focus.cooperation_pct, F[1].focus.cooperation_pct, 'pct')].filter(Boolean),
+        take: `${L('{n} news articles mentioned both countries together.', { n: num(data.shared.articles_together) })} ${both.length === 0 ? L('No page was among the most-read in both countries.') : `${both.length === 1 ? L('1 page was among the most-read in both:') : L('{n} pages were among the most-read in both:', { n: both.length })} ${both.slice(0, 2).map((w) => cut(w.title, 30)).join(', ')}${both.length > 2 ? '…' : ''}`}` });
+    }
+    const days = (pick) => [...new Set(cs.flatMap((c) => pick(c).map((p) => p.day)))].sort();
+    const lineSlide = (title, note, pick, take) => {
+      const ds = days(pick);
+      if (ds.length < 2) return;
+      slides.push({ type: 'charts', title, note, charts: [{ kind: 'line', labels: ds.map(dshort), series: cs.map((c, i) => { const m = new Map(pick(c).map((p) => [p.day, p.value])); return { name: names[i], values: ds.map((d) => m.get(d) || 0) }; }) }], take });
+    };
+    lineSlide(L('News coverage per day'), L('How many news articles worldwide mentioned the country each day. Spikes usually mean a big event.'),
+      (c) => (c.news_daily || []).map((d) => ({ day: d.day, value: d.articles })),
+      F.map((k, i) => (k.busy ? `${cs.length > 1 ? `${names[i]}: ` : ''}${L('Busiest day: {day} with {n} articles', { day: dshort(k.busy.day), n: num(k.busy.articles) })}` : '')).filter(Boolean).join('   ·   '));
+    lineSlide(L('Wikipedia attention per day'), L('Total views of the 30 most-read pages each day. It shows how busy people were looking things up.'),
+      (c) => (c.wikipedia_days || []).map((d, i) => ({ day: d, value: c.wikipedia_daily_total[i] })));
+    const perCountry = (title, note, list, label, val, take) => {
+      const charts = cs.map((c, i) => { const it = list(c).slice(0, 8); return it.length ? { head: cs.length > 1 ? names[i] : '', kind: 'bar', horizontal: true, labels: it.map(label), series: [{ name: title, values: it.map(val) }] } : null; });
+      if (charts.some(Boolean)) slides.push({ type: 'charts', title, note, charts: charts.map((c) => c || { head: '', empty: true }), take });
+    };
+    perCountry(L('Most-read on Wikipedia'), L('Total views over the period.'), (c) => c.wikipedia, (w) => cut(w.title), (w) => w.views);
+    perCountry(L('Rising this week'), L('Pages that entered the daily top 30 only in the last 7 days. Often the best early signals.'), (c) => c.wikipedia_rising, (w) => cut(w.title), (w) => w.views);
+    if (cs.some((c) => c.news_focus.articles)) {
+      slides.push({ type: 'charts', title: L('Peaceful and tense news'), note: L('GDELT sorts every news event into 20 types. Talks, deals and aid count as peaceful. Protests and fighting count as tension or conflict.'),
+        charts: cs.map((c, i) => (c.news_focus.articles ? { head: cs.length > 1 ? names[i] : '', kind: 'doughnut', labels: [L('peaceful'), L('tension or conflict')], series: [{ name: names[i], values: [c.news_focus.cooperation_pct, 100 - c.news_focus.cooperation_pct] }] } : { head: '', empty: true })) });
+      perCountry(L('What the news talks about'), L('Share of all news articles about the country, by type of event.'), (c) => (c.news_focus.articles ? c.news_focus.topics : []), (t) => L(t.topic), (t) => t.pct, null);
+      slides[slides.length - 1].charts.forEach((ch) => { ch.fmt = 'pct'; });
+    }
+    perCountry(L('In the news with'), L('Countries that appeared in the same news articles most often. A sign of who the country deals with.'), (c) => c.news_partners, (p) => name(p.country), (p) => p.articles);
+    if (cs.some((c) => c.ideas.length)) {
+      slides.push({ type: 'list', title: L('Ideas to copy'), note: L('Written each week by AI from the data above. Use them as starting points.'),
+        groups: cs.map((c, i) => ({ head: cs.length > 1 ? names[i] : '', items: c.ideas.slice(0, 5).map((it) => ({ title: it.title, text: it.idea })) })) });
+    }
+    slides.push({ type: 'text', title: L('How to read the numbers'), terms: x.glossary, foot: x.sources });
+    return { slides, title: names.join(' vs '), file: `like-polling-${cs.map((c) => c.country.toLowerCase()).join('-')}-report` };
+  }
+
+  function entityDeck(data, x) {
+    const { L, num, short, dshort, langName, name } = x;
+    const artist = data.type === 'artist';
+    const s = { ...data.subject, title: plain(data.subject.title) };
+    const all = [{ ...s, me: true }, ...data.peers.map((p) => ({ ...p, title: plain(p.title) }))];
+    const langTotal = sum(data.languages.map((l) => l.views));
+    const abroad = 100 - pct(s.views, langTotal);
+    const slides = [];
+    slides.push({ type: 'kpis', title: L('At a glance'), groups: [{ head: '', cards: [
+      { n: `${short(s.views)}${s.change_pct == null ? '' : ` ${s.change_pct >= 0 ? '▲' : '▼'} ${Math.abs(s.change_pct)}%`}`, label: L('Wikipedia views'), sub: L('last 30 days, vs the 30 before') },
+      all.length > 1 && { n: L('#{r} of {n}', { r: s.rank, n: all.length }), label: L(artist ? 'Among similar artists' : 'Among similar brands'), sub: L('by views') },
+      { n: String(s.languages), label: L('Wikipedia languages'), sub: L('with a page about them') },
+      langTotal && { n: `${abroad}%`, label: L('Read outside English'), sub: L('of {n} views in {k} languages', { n: short(langTotal), k: data.languages.length }) },
+      s.peak && { n: dshort(s.peak.day), label: L('Busiest day'), sub: L('{n} views', { n: num(s.peak.views) }) },
+      data.countries.length && { n: String(data.countries.length), label: L('Countries trending'), sub: L('days in a daily top 30') },
+    ].filter(Boolean) }] });
+    const ds = s.series.map((d) => d.day);
+    if (ds.length > 1) {
+      slides.push({ type: 'charts', title: L('Attention, day by day'), note: L('English Wikipedia views per day.'),
+        charts: [{ kind: 'line', labels: ds.map(dshort), series: all.map((p) => { const m = new Map(p.series.map((d) => [d.day, d.views])); return { name: p.title, values: ds.map((d) => m.get(d) || 0) }; }) }] });
+    }
+    if (all.length > 1) {
+      const by = (k) => [...all].sort((a, b) => (b[k] ?? -1e9) - (a[k] ?? -1e9));
+      const bar = (head, k, fmt) => { const it = by(k); return { head, kind: 'bar', horizontal: true, labels: it.map((p) => cut(p.title, 24)), series: [{ name: head, values: it.map((p) => p[k] || 0) }], fmt }; };
+      const g = by('change_pct')[0];
+      slides.push({ type: 'charts', title: L('Side by side'), note: L('The same three measures for each.'),
+        charts: [bar(L('Views, 30 days'), 'views'), bar(L('Change vs last month'), 'change_pct', 'pct'), bar(L('Languages'), 'languages')],
+        take: L('Fastest growing: {a} ({p}).', { a: g.title, p: `${g.change_pct >= 0 ? '+' : ''}${g.change_pct ?? 0}%` }) });
+    }
+    if (langTotal) {
+      const top = data.languages.slice(0, 8);
+      slides.push({ type: 'charts', title: L('Where people read about {s}', { s: s.title }), note: L('Views by Wikipedia language, last 30 days.'),
+        charts: [{ head: '', kind: 'doughnut', labels: [langName('en'), L('other languages')], series: [{ name: s.title, values: [100 - abroad, abroad] }] },
+          { head: '', kind: 'bar', horizontal: true, labels: top.map((l) => langName(l.lang)), series: [{ name: L('Wikipedia views'), values: top.map((l) => l.views) }], wide: 2 }],
+        take: data.languages[1] ? L('After English, the most readers are in {l}.', { l: langName(data.languages[1].lang) }) : '' });
+    }
+    if (data.countries.length) {
+      const top = data.countries.slice(0, 10);
+      slides.push({ type: 'charts', title: L('Trending in countries'), note: L('Days the page was in a country\'s daily top 30.'),
+        charts: [{ kind: 'bar', horizontal: true, labels: top.map((c) => name(c.country)), series: [{ name: L('Countries trending'), values: top.map((c) => c.days) }] }] });
+    }
+    slides.push({ type: 'text', title: L('Sources'), foot: x.sources });
+    return { slides, title: s.title, file: `like-polling-${data.type}-${s.title.toLowerCase().normalize('NFD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-report` };
+  }
+
+  const deckOf = (data, x) => (data.type === 'artist' || data.type === 'company' ? entityDeck(data, x) : countryDeck(data, x));
+
+  // ---------- PowerPoint ----------
+  async function pptx(data, x) {
+    const PptxGenJS = await load('/assets/vendor/pptxgenjs-4.0.1.bundle.js', 'PptxGenJS');
+    const d = deckOf(data, x);
+    const p = new PptxGenJS();
+    p.layout = 'LAYOUT_WIDE'; // 13.33 x 7.5 in, 16:9
+    p.title = `${d.title} · ${x.tag}`;
+    p.company = 'Like Polling';
+    p.author = 'Like Polling';
+    p.theme = { headFontFace: FONT, bodyFontFace: FONT };
+    p.defineSlideMaster({ title: 'LP', background: { color: 'FFFFFF' },
+      objects: [{ rect: { x: 0.6, y: 0.5, w: 0.55, h: 0.07, fill: { color: RED } } },
+        { text: { text: `Like Polling · ${d.title}`, options: { x: 0.6, y: 6.95, w: 9, h: 0.3, fontFace: FONT, fontSize: 10, color: GREY } } }],
+      slideNumber: { x: 12.15, y: 6.95, w: 0.6, h: 0.3, fontFace: FONT, fontSize: 10, color: GREY, align: 'right' } });
+
+    // Cover
+    const c = p.addSlide();
+    c.background = { color: RED };
+    c.addText(x.tag.toUpperCase(), { x: 0.8, y: 0.8, w: 11.7, h: 0.4, fontFace: FONT, fontSize: 14, bold: true, color: 'FFFFFF', charSpacing: 2 });
+    c.addText(d.title, { x: 0.8, y: 1.5, w: 11.7, h: 1.5, fontFace: FONT, fontSize: 48, bold: true, color: 'FFFFFF', valign: 'top', fit: 'shrink' });
+    if (x.subtitle) c.addText(x.subtitle, { x: 0.8, y: 3.05, w: 11.7, h: 0.6, fontFace: FONT, fontSize: 18, color: 'FFFFFF' });
+    x.dates.forEach(([k, v], i) => {
+      c.addShape(p.ShapeType.roundRect, { x: 0.8 + i * 3.95, y: 4.1, w: 3.75, h: 1.0, fill: { color: 'FFFFFF', transparency: 88 }, line: { color: 'FFFFFF', transparency: 60 }, rectRadius: 0.12 });
+      c.addText([{ text: k.toUpperCase(), options: { fontSize: 11, bold: true, charSpacing: 1, breakLine: true } }, { text: v, options: { fontSize: 20, bold: true } }],
+        { x: 0.95 + i * 3.95, y: 4.15, w: 3.5, h: 0.9, fontFace: FONT, color: 'FFFFFF', valign: 'middle' });
+    });
+    c.addText(x.since, { x: 0.8, y: 5.45, w: 11.7, h: 0.8, fontFace: FONT, fontSize: 14, color: 'FFFFFF' });
+    c.addText('likepolling.com', { x: 0.8, y: 6.75, w: 6, h: 0.4, fontFace: FONT, fontSize: 12, bold: true, color: 'FFFFFF' });
+
+    const head = (sl, s) => {
+      sl.addText(s.title, { x: 0.6, y: 0.65, w: 12.1, h: 0.7, fontFace: FONT, fontSize: 30, bold: true, color: INK, fit: 'shrink' });
+      if (s.note) sl.addText(s.note, { x: 0.6, y: 1.32, w: 12.1, h: 0.5, fontFace: FONT, fontSize: 13, color: GREY, valign: 'top' });
+      if (s.take) {
+        sl.addShape(p.ShapeType.rect, { x: 0.6, y: 6.25, w: 0.06, h: 0.5, fill: { color: RED }, line: { color: RED } });
+        sl.addText(s.take, { x: 0.66, y: 6.25, w: 12.04, h: 0.5, fontFace: FONT, fontSize: 12, color: INK, fill: { color: 'FBF6F6' }, margin: [0, 10, 0, 10], valign: 'middle', fit: 'shrink' });
+      }
+    };
+    const fmtCode = (f) => (f === 'pct' ? '0"%"' : '#,##0');
+    const chart = (sl, ch, X, Y, W, H) => {
+      if (ch.head) { sl.addText(ch.head.toUpperCase(), { x: X, y: Y, w: W, h: 0.35, fontFace: FONT, fontSize: 12, bold: true, color: RED, charSpacing: 1 }); Y += 0.4; H -= 0.4; }
+      if (ch.empty) return;
+      const base = { x: X, y: Y, w: W, h: H, fontFace: FONT, catAxisLabelFontFace: FONT, valAxisLabelFontFace: FONT, catAxisLabelFontSize: 10, valAxisLabelFontSize: 10, catAxisLabelColor: GREY, valAxisLabelColor: GREY,
+        catAxisLineShow: false, valAxisLineShow: false, legendFontFace: FONT, legendFontSize: 11, legendColor: INK };
+      const rows = ch.series.map((s) => ({ name: s.name, labels: ch.labels, values: s.values }));
+      if (ch.kind === 'line') {
+        sl.addChart(p.ChartType.line, rows, { ...base, chartColors: COLORS, lineSize: 2.25, lineDataSymbol: 'none', valAxisLabelFormatCode: '#,##0', valGridLine: { color: 'ECECEC', size: 0.75 }, catGridLine: { style: 'none' },
+          catAxisLabelFrequency: Math.max(1, Math.ceil(ch.labels.length / 8)), showLegend: rows.length > 1, legendPos: 'b' });
+      } else if (ch.kind === 'doughnut') {
+        sl.addChart(p.ChartType.doughnut, rows, { ...base, chartColors: [RED, PINK], holeSize: 62, showPercent: true, showValue: false, dataLabelColor: 'FFFFFF', dataLabelFontSize: 13, dataLabelFontBold: true, showLegend: true, legendPos: 'b' });
+      } else {
+        const many = ch.labels.length;
+        sl.addChart(p.ChartType.bar, rows, { ...base, barDir: ch.horizontal ? 'bar' : 'col', chartColors: ch.vary ? COLORS : [RED], barGapWidthPct: many > 4 ? 45 : 80,
+          catAxisOrientation: ch.horizontal ? 'maxMin' : 'minMax', valAxisHidden: true, valGridLine: { style: 'none' }, showValue: true, dataLabelFormatCode: fmtCode(ch.fmt), dataLabelFontSize: 10, dataLabelColor: INK,
+          dataLabelPosition: 'outEnd', catAxisLabelFontSize: many > 8 ? 9 : 10, showLegend: false });
+      }
+    };
+    d.slides.forEach((s) => {
+      const sl = p.addSlide({ masterName: 'LP' });
+      head(sl, s);
+      const top = 1.95, bottom = s.take ? 6.1 : 6.75;
+      if (s.type === 'charts') {
+        const units = s.charts.reduce((t, ch) => t + (ch.wide || 1), 0);
+        const gap = 0.35, W = (12.1 - gap * (s.charts.length - 1)) / units;
+        let X = 0.6;
+        s.charts.forEach((ch) => { const w = W * (ch.wide || 1); chart(sl, ch, X, top, w, bottom - top); X += w + gap; });
+      } else if (s.type === 'kpis') {
+        const n = s.groups.length, gap = 0.35, GW = (12.1 - gap * (n - 1)) / n;
+        s.groups.forEach((g, gi) => {
+          const X0 = 0.6 + gi * (GW + gap);
+          let Y0 = top;
+          if (g.head) { sl.addText(g.head.toUpperCase(), { x: X0, y: Y0, w: GW, h: 0.35, fontFace: FONT, fontSize: 12, bold: true, color: RED, charSpacing: 1 }); Y0 += 0.42; }
+          const colsN = n > 1 ? 2 : 3, rowsN = Math.ceil(g.cards.length / colsN) || 1, cg = 0.2;
+          const cw = (GW - cg * (colsN - 1)) / colsN, chh = Math.min(1.9, (bottom - Y0 - cg * (rowsN - 1)) / rowsN);
+          g.cards.forEach((k, i) => {
+            const cx = X0 + (i % colsN) * (cw + cg), cy = Y0 + Math.floor(i / colsN) * (chh + cg);
+            sl.addShape(p.ShapeType.roundRect, { x: cx, y: cy, w: cw, h: chh, fill: { color: CARD }, line: { color: CARD }, rectRadius: 0.1 });
+            sl.addShape(p.ShapeType.rect, { x: cx + 0.2, y: cy + 0.2, w: 0.35, h: 0.05, fill: { color: RED }, line: { color: RED } });
+            sl.addText([{ text: k.n, options: { fontSize: n > 1 ? 22 : 28, bold: true, color: INK, breakLine: true } }, { text: k.label, options: { fontSize: 12, bold: true, color: INK, breakLine: true } }, { text: k.sub || '', options: { fontSize: 10, color: GREY } }],
+              { x: cx + 0.12, y: cy + 0.3, w: cw - 0.24, h: chh - 0.38, fontFace: FONT, valign: 'top', fit: 'shrink' });
+          });
+        });
+      } else if (s.type === 'list') {
+        const n = s.groups.length, gap = 0.35, GW = (12.1 - gap * (n - 1)) / n;
+        s.groups.forEach((g, gi) => {
+          const runs = [];
+          if (g.head) runs.push({ text: g.head.toUpperCase(), options: { fontSize: 12, bold: true, color: RED, breakLine: true, paraSpaceAfter: 6 } });
+          g.items.forEach((it, i) => { runs.push({ text: `${i + 1}. ${it.title}`, options: { fontSize: 13, bold: true, color: INK, breakLine: true } }); runs.push({ text: it.text, options: { fontSize: 11, color: GREY, breakLine: true, paraSpaceAfter: 8 } }); });
+          sl.addText(runs, { x: 0.6 + gi * (GW + gap), y: top, w: GW, h: bottom - top, fontFace: FONT, valign: 'top', fit: 'shrink' });
+        });
+      } else {
+        const runs = (s.terms || []).flatMap(([t, dd]) => [{ text: t, options: { fontSize: 14, bold: true, color: INK, breakLine: true } }, { text: dd, options: { fontSize: 12, color: GREY, breakLine: true, paraSpaceAfter: 10 } }]);
+        if (runs.length) sl.addText(runs, { x: 0.6, y: top, w: 12.1, h: 3.4, fontFace: FONT, valign: 'top', fit: 'shrink' });
+        sl.addText(s.foot, { x: 0.6, y: runs.length ? 5.5 : top, w: 12.1, h: 1.2, fontFace: FONT, fontSize: 11, color: GREY, valign: 'top' });
+      }
+    });
+    if (x.cta) {
+      const e = p.addSlide();
+      e.background = { color: RED };
+      e.addText(x.cta, { x: 0.8, y: 2.6, w: 11.7, h: 1.6, fontFace: FONT, fontSize: 30, bold: true, color: 'FFFFFF', align: 'center', valign: 'middle' });
+    }
+    const blob = await p.write({ outputType: 'blob' });
+    save(blob, `${d.file}.pptx`);
+  }
+
+  // ---------- Excel ----------
+  async function xlsx(data, x) {
+    const write = await load('/assets/vendor/write-excel-file-4.1.1.min.js', 'writeXlsxFile');
+    const { L, name, langName } = x;
+    const H = (v) => ({ value: v, fontWeight: 'bold', textColor: '#FFFFFF', backgroundColor: '#B0000E' });
+    const day = (iso) => ({ value: new Date(`${iso}T00:00:00Z`), format: 'yyyy-mm-dd' });
+    const n = (v) => (v == null ? null : { value: Number(v), format: '#,##0' });
+    const p100 = (v) => (v == null ? null : { value: Number(v) / 100, format: '0%' });
+    const link = (v) => (v ? { value: v } : null);
+    const sheets = [];
+    const sheet = (title, rows, widths) => { if (rows.length > 1) sheets.push({ sheet: cut(String(title).replace(/[[\]:*?/\\]/g, ' '), 31).replace(/…$/, ''), data: rows, columns: widths.map((w) => ({ width: w })), stickyRowsCount: 1 }); };
+    const about = [[H(L('Report')), H(x.tag)], [L('Name'), x.title], ...x.dates.map(([k, v]) => [k, v]), [L('Sources'), x.sources], ['', ''], [x.since, '']];
+    if (data.type === 'artist' || data.type === 'company') {
+      const all = [data.subject, ...data.peers];
+      sheets.push({ sheet: cut(L('Summary'), 31), data: about, columns: [{ width: 22 }, { width: 70 }] });
+      sheet(L('Side by side'), [[L('Rank'), L('Name'), L('Views, 30 days'), L('Previous 30 days'), L('Change vs last month'), L('Wikipedia languages'), L('Link')].map(H),
+        ...[...all].sort((a, b) => b.views - a.views).map((p, i) => [i + 1, plain(p.title), n(p.views), n(p.previous), p100(p.change_pct), n(p.languages), link(p.link)])], [8, 30, 16, 18, 22, 20, 50]);
+      const ds = data.subject.series.map((s) => s.day);
+      const maps = all.map((p) => new Map(p.series.map((s) => [s.day, s.views])));
+      sheet(L('Attention, day by day'), [[L('Day'), ...all.map((p) => plain(p.title))].map(H), ...ds.map((d) => [day(d), ...maps.map((m) => n(m.get(d) || 0))])], [14, ...all.map(() => 20)]);
+      const total = sum(data.languages.map((l) => l.views));
+      sheet(L('Languages'), [[L('Language'), L('Code'), L('Page title'), L('Views'), L('Share')].map(H), ...data.languages.map((l) => [langName(l.lang), l.lang, l.title, n(l.views), p100(pct(l.views, total))])], [22, 8, 34, 14, 10]);
+      sheet(L('Trending in countries'), [[L('Country'), L('Days in the daily top 30')].map(H), ...data.countries.map((c) => [name(c.country), n(c.days)])], [24, 22]);
+    } else {
+      const cs = data.countries;
+      const names = cs.map((c) => name(c.country));
+      sheets.push({ sheet: cut(L('Summary'), 31), data: about, columns: [{ width: 22 }, { width: 70 }] });
+      const facts = cs.map((c) => ({ views: sum(c.wikipedia_daily_total || []), f: c.news_focus, partner: c.news_partners[0], top: c.wikipedia[0] }));
+      sheet(L('At a glance'), [[L('Measure'), ...names].map(H),
+        [L('Wikipedia views (top 30)'), ...facts.map((k) => n(k.views))],
+        [L('News articles'), ...facts.map((k) => n(k.f.articles))],
+        [L('Peaceful news'), ...facts.map((k) => p100(k.f.cooperation_pct))],
+        [L('Most in the news with'), ...facts.map((k) => (k.partner ? name(k.partner.country) : null))],
+        [L('Most-read page'), ...facts.map((k) => (k.top ? k.top.title : null))],
+        [L('New this week'), ...cs.map((c) => n(c.wikipedia_rising.length))],
+        ...(data.shared ? [[L('Articles about both countries'), n(data.shared.articles_together)]] : [])], [34, ...names.map(() => 24)]);
+      const daily = (title, pick) => {
+        const ds = [...new Set(cs.flatMap((c) => pick(c).map((q) => q.day)))].sort();
+        const maps = cs.map((c) => new Map(pick(c).map((q) => [q.day, q.value])));
+        sheet(title, [[L('Day'), ...names].map(H), ...ds.map((d) => [day(d), ...maps.map((m) => n(m.has(d) ? m.get(d) : null))])], [14, ...names.map(() => 18)]);
+      };
+      daily(L('News coverage per day'), (c) => (c.news_daily || []).map((d) => ({ day: d.day, value: d.articles })));
+      daily(L('Wikipedia attention per day'), (c) => (c.wikipedia_days || []).map((d, i) => ({ day: d, value: c.wikipedia_daily_total[i] })));
+      const pages = (title, pick) => sheet(title, [[L('Country'), L('Rank'), L('Page'), L('Views'), L('Days in the daily top 30'), L('First seen'), L('Link')].map(H),
+        ...cs.flatMap((c, ci) => pick(c).map((w, i) => [names[ci], i + 1, w.title, n(w.views), n(w.days), w.first_day ? day(w.first_day) : null, link(w.link)]))], [18, 7, 40, 14, 22, 13, 60]);
+      pages(L('Most-read on Wikipedia'), (c) => c.wikipedia);
+      pages(L('Rising this week'), (c) => c.wikipedia_rising);
+      sheet(L('What the news talks about'), [[L('Country'), L('Topic'), L('Share')].map(H),
+        ...cs.flatMap((c, ci) => (c.news_focus.articles ? [[names[ci], L('Peaceful news'), p100(c.news_focus.cooperation_pct)], ...c.news_focus.topics.map((t) => [names[ci], L(t.topic), p100(t.pct)])] : []))], [18, 30, 10]);
+      sheet(L('In the news with'), [[L('Country'), L('Partner country'), L('Articles together')].map(H),
+        ...cs.flatMap((c, ci) => c.news_partners.map((q) => [names[ci], name(q.country), n(q.articles)]))], [18, 22, 18]);
+      sheet(L('Ideas to copy'), [[L('Country'), L('Title'), L('Idea'), L('Based on')].map(H),
+        ...cs.flatMap((c, ci) => c.ideas.map((i) => [names[ci], i.title, i.idea, i.based_on || '']))], [18, 30, 80, 40]);
+    }
+    const blob = await write(sheets).toBlob();
+    save(blob, `${deckOf(data, x).file}.xlsx`);
+  }
+
+  window.LP_EXPORT = { pptx, xlsx, deck: deckOf };
+})();
