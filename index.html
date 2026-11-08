@@ -100,6 +100,13 @@
     .lp-pp-card .svc-btn { margin-top: 4px; }
     @media (prefers-reduced-motion: reduce) { .lp-rep .lp-chip i, .lp-rep .lp-chip::after, .lp-pp-beat .l, .lp-pp-beat b::before { animation: none; } .lp-pp-beat .l { stroke-dasharray: none; } }
     @media (max-width: 700px) { .lp-rep .lp-free { display: grid; } .lp-row { display: grid; position: relative; gap: 6px; } .lp-pp { position: static; display: flex; min-width: 0; } .lp-rep .lp-chip { flex: 1; justify-content: space-between; gap: 6px; padding: 8px 14px; font-size: 10.5px; letter-spacing: .08em; } .lp-rep .lp-chip span { min-width: 0; overflow: hidden; text-overflow: ellipsis; } .lp-rep .lp-chip em { flex: none; padding: 2px 4px; font-size: 8px; letter-spacing: .08em; } .lp-rep .lp-chip i { display: none; } .lp-pp-card, .lp-pp-card.lp-pp-rep { left: 0; right: 0; width: auto; } }
+    @media (min-width: 701px) { #lp-rep { gap: 10px 16px; } #lp-rep .lp-free { gap: 5px; } #lp-rep .lp-chip { padding: 6px 9px; font-size: 10px; letter-spacing: .06em; } }
+    header.top > #lp-rep-form { flex: none; margin: 0 auto 0 22px; } #lp-rep-form #lp-rep-key { flex: none; width: 140px; } header.top > #lp-rep-form label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    @media (min-width: 981px) and (max-width: 1399px) { header.top .tagline { display: none; } }
+    @media (min-width: 981px) and (max-width: 1180px) { header.top > #lp-rep-form { margin-left: 14px; } #lp-rep-form #lp-rep-key { width: 130px; } }
+    @media (min-width: 521px) and (max-width: 980px) { header.top .tagline { display: none; } }
+    @media (min-width: 521px) and (max-width: 760px) { header.top > #lp-rep-form { order: 3; flex: 1 0 100%; margin: 0; } #lp-rep-form #lp-rep-key { flex: 1; width: auto; } header.top > .brand { margin-right: auto; } }
+    @media (min-width: 1240px) { #lp-rep { flex-wrap: nowrap; } #lp-rep .lp-free { flex: none; } }
     @keyframes yt-pulse { 0% { box-shadow: 0 0 0 0 rgba(255,255,255,.55); } 70%, 100% { box-shadow: 0 0 0 6px rgba(255,255,255,0); } }
     .yt-ticker-viewport { flex: 1; min-width: 0; display: flex; align-items: center; overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 28px, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(90deg, transparent, #000 28px, #000 calc(100% - 28px), transparent); }
     .yt-ticker-rail { display: flex; width: max-content; animation: yt-marquee var(--yt-duration, 120s) linear infinite; will-change: transform; }
@@ -658,7 +665,7 @@
     /* Tablets: not enough room for everything on one line, so the flags move to their own centred row (as on phones). */
     @media (min-width: 521px) and (max-width: 980px) {
       header.top { flex-wrap: wrap; row-gap: 26px; }
-      header.top > .brand { margin-right: auto; }
+      header.top > #lp-rep-form { margin-right: auto; }
       header.top::after { content: ''; order: 4; flex-basis: 100%; }
       header.top > .lp-lang { order: 5; margin: 0 auto; }
     }
@@ -667,7 +674,7 @@
     /* Phones: logo + title on the left, 24/7 on the right, flags centred below.
        Chrome extensions can't be installed on phones, so the extension button and card are desktop/tablet only. */
     @media (max-width: 520px) {
-      header.top { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "brand live" "lang lang"; column-gap: 10px; row-gap: 14px; align-items: center; }
+      header.top { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "brand live" "key key" "lang lang"; column-gap: 10px; row-gap: 14px; align-items: center; }
       header.top > .brand { grid-area: brand; min-width: 0; gap: 8px; white-space: nowrap; }
       header.top .brand-txt { overflow: hidden; }
       header.top .brand-txt > span:first-child { overflow: hidden; text-overflow: ellipsis; }
@@ -675,11 +682,12 @@
       header.top > .live { grid-area: live; margin: 0; padding: 4px 9px; }
       header.top > .live::after { font-size: 10px; }
       header.top > .lp-ext-wrap, #cp-pop { display: none !important; }
+      header.top > #lp-rep-form { grid-area: key; margin: 0; } #lp-rep-form #lp-rep-key { flex: 1; width: auto; }
       header.top > .lp-lang { grid-area: lang; justify-self: center; min-width: 0; max-width: 100%; overflow-x: auto; scrollbar-width: none; margin: 0; }
     }
     /* Strong zoom: 24/7 moves under the title so the two never collide. */
     @media (max-width: 260px) {
-      header.top { grid-template-columns: minmax(0, 1fr); grid-template-areas: "brand" "live" "lang"; row-gap: 8px; }
+      header.top { grid-template-columns: minmax(0, 1fr); grid-template-areas: "brand" "live" "key" "lang"; row-gap: 8px; }
       header.top > .live { justify-self: start; margin-left: 36px; }
     }
     /* Reports strip under the header: quiet product line + "Open your report" key box (opens /report#k=KEY). */
@@ -690,13 +698,13 @@
     .lp-rep > p span { color: #6e6e73; }
     .lp-rep > p a { color: var(--red); text-decoration: none; white-space: nowrap; margin-left: 10px; font-weight: 500; }
     .lp-rep > p a:hover { text-decoration: underline; }
-    .lp-rep > form { display: flex; align-items: center; gap: 6px; flex: 0 1 340px; min-width: 0; }
-    .lp-rep > form label { font-weight: 600; white-space: nowrap; }
-    .lp-rep > form input { flex: 1; min-width: 0; padding: 7px 12px; border: 1px solid #d2d2d7; border-radius: 999px; background: #fff; font: 13px Inter, system-ui, sans-serif; color: #1d1d1f; }
-    .lp-rep > form input:focus { outline: 2px solid var(--red); outline-offset: 1px; border-color: transparent; }
-    .lp-rep > form button { flex: none; padding: 7px 14px; border: 0; border-radius: 999px; background: var(--red); color: #fff; font: 600 13px Inter, system-ui, sans-serif; cursor: pointer; }
-    .lp-rep > form button:hover { background: var(--red-dark); }
-    @media (max-width: 700px) { .lp-rep { flex-direction: column; flex-wrap: nowrap; align-items: stretch; } .lp-rep { margin-bottom: 14px; } .lp-rep > form { flex-basis: auto; flex-wrap: wrap; } .lp-rep > form label { flex: 1 0 100%; } .lp-rep > p a { margin-left: 8px; } }
+    #lp-rep-form { display: flex; align-items: center; gap: 6px; flex: 0 1 340px; min-width: 0; }
+    #lp-rep-form label { font-weight: 600; white-space: nowrap; }
+    #lp-rep-form input { flex: 1; min-width: 0; padding: 7px 12px; border: 1px solid #d2d2d7; border-radius: 999px; background: #fff; font: 13px Inter, system-ui, sans-serif; color: #1d1d1f; }
+    #lp-rep-form input:focus { outline: 2px solid var(--red); outline-offset: 1px; border-color: transparent; }
+    #lp-rep-form button { flex: none; padding: 7px 14px; border: 0; border-radius: 999px; background: var(--red); color: #fff; font: 600 13px Inter, system-ui, sans-serif; cursor: pointer; }
+    #lp-rep-form button:hover { background: var(--red-dark); }
+    @media (max-width: 700px) { .lp-rep { flex-direction: column; flex-wrap: nowrap; align-items: stretch; } .lp-rep { margin-bottom: 14px; } .lp-rep > p a { margin-left: 8px; } }
     .earn-note { margin: 10px 0 0; font-size: 11.5px; line-height: 1.45; color: var(--muted); }
   </style>
   <link rel="alternate" type="text/markdown" href="/llms.txt" title="Like Polling data for AI">
@@ -715,6 +723,7 @@
     <div class="lp-head">
     <header class="top">
       <a class="brand" href="/" aria-label="Like Polling home"><svg class="brand-mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="var(--red)"/><polyline points="5,21 8,19 10.5,20.2 13.5,16.5 15.5,17.6 18.5,12.5 20.5,13.6 23,6" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="23" cy="6" r="1.9" fill="#fff"/></svg><span class="brand-txt"><span data-no-i18n>Like Polling</span><small class="tagline">Human + AI analytics for what the world watches</small></span></a>
+      <form id="lp-rep-form" action="/report"><label for="lp-rep-key">Open your report</label><input id="lp-rep-key" autocomplete="off" spellcheck="false" placeholder="Paste your key" required><button type="submit">Open</button></form>
       <div class="live">Live data, 24/7</div>
       <div class="lp-ext-wrap"><a class="lp-ext" href="https://chromewebstore.google.com/detail/creators-+/ibajjhdapncbacoinjjcagimpcjpahbn" target="_blank" rel="noopener" aria-label="Add to Chrome"><svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path d="M8 2v8m0 0L4.8 6.8M8 10l3.2-3.2M3 13h10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Add to Chrome</span></a><button type="button" class="lp-ext-info" id="cp-link" aria-controls="cp-pop" aria-expanded="false">Free Extension</button></div>
     </header>
@@ -723,7 +732,6 @@
         <div class="lp-row"><span class="lp-pp" data-pp="country"><a class="lp-chip" href="/pulse"><i aria-hidden="true"></i><span>Country pulse</span><em>Free</em></a></span> <span class="lp-pp" data-pp="artist"><a class="lp-chip" href="/pulse?artist="><i aria-hidden="true"></i><span>Artist pulse</span><em>Free</em></a></span> <span class="lp-pp" data-pp="company"><a class="lp-chip" href="/pulse?company="><i aria-hidden="true"></i><span>Company pulse</span><em>Free</em></a></span></div>
         <div class="lp-row"><span class="lp-pp lp-pp-paid" data-rep="country"><a class="lp-chip" href="/report" target="_blank" rel="noopener"><i aria-hidden="true"></i><span>Country report</span><em data-no-i18n>€8</em></a></span> <span class="lp-pp lp-pp-paid" data-rep="artist"><a class="lp-chip" href="/report" target="_blank" rel="noopener"><i aria-hidden="true"></i><span>Artist report</span><em data-no-i18n>€8</em></a></span> <span class="lp-pp lp-pp-paid" data-rep="company"><a class="lp-chip" href="/report" target="_blank" rel="noopener"><i aria-hidden="true"></i><span>Company report</span><em data-no-i18n>€8</em></a></span></div>
       </div>
-      <form id="lp-rep-form" action="/report"><label for="lp-rep-key">Open your report</label><input id="lp-rep-key" autocomplete="off" spellcheck="false" placeholder="Paste your key" required><button type="submit">Open</button></form>
     </div>
     </div>
 
