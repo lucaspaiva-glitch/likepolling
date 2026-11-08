@@ -180,7 +180,7 @@ export async function getDashboardData(): Promise<DashboardData> {
   let statementIds = new Set<string>();
   const likePollingVendors = new Map<string, string>();
   let geminiReading: GeminiReading | null = null;
-  // Like Polling's own money (store payouts sit in PayPal): shown in its section, not in your totals.
+  // Like Polling's own accounts (Gumroad sales, PayPal): shown in its section, not in your totals.
   let businessIds = new Set<string>();
   try {
     const [accRes, txs] = await Promise.all([
@@ -193,7 +193,7 @@ export async function getDashboardData(): Promise<DashboardData> {
     const reading = accounts.find((a) => a.external_id === GEMINI_READING_EXTERNAL_ID);
     if (reading) geminiReading = { eur: reading.balance, at: reading.updated_at };
     accounts = accounts.filter((a) => a.external_id !== GEMINI_READING_EXTERNAL_ID);
-    businessIds = new Set(accounts.filter((a) => /paypal/i.test(`${a.institution ?? ""} ${a.name}`)).map((a) => a.id));
+    businessIds = new Set(accounts.filter((a) => /paypal|gumroad/i.test(`${a.institution ?? ""} ${a.name}`)).map((a) => a.id));
     // In-person purchases abroad become Vacation, unless you picked a category for that transaction yourself.
     const rawInternal = internalTransferIds(txs);
     const vacation = vacationIds(txs, rawInternal);
@@ -274,9 +274,13 @@ export async function getDashboardData(): Promise<DashboardData> {
   let portfolio = 0;
   const buckets = new Map<string, number>();
   let businessCash = 0;
+  let hasBusinessCash = false;
   for (const a of accounts) {
     if (businessIds.has(a.id)) {
-      businessCash += a.balance;
+      if (/paypal/i.test(`${a.institution ?? ""} ${a.name}`)) {
+        businessCash += a.balance;
+        hasBusinessCash = true;
+      }
       continue;
     }
     if (isLiability(a.type) || a.balance < 0) {
@@ -373,7 +377,7 @@ export async function getDashboardData(): Promise<DashboardData> {
       d90: categoryTotals(transactions, since90, flows),
       m12: categoryTotals(transactions, since12, flows),
     },
-    likePolling: { ...likePollingSummary(transactions, likePollingVendors, todayIso), cash: businessIds.size ? businessCash : null },
+    likePolling: { ...likePollingSummary(transactions, likePollingVendors, todayIso), cash: hasBusinessCash ? businessCash : null },
     geminiCredit,
     insights,
     lastUpdated,

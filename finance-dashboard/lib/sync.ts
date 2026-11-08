@@ -4,6 +4,7 @@ import { getPlaid, plaidErrorMessage } from "@/lib/plaid";
 import { getServerSupabase } from "@/lib/db/server";
 import { recordSnapshots } from "@/lib/snapshots";
 import { isPayPalConfigured, syncPayPal } from "@/lib/paypal";
+import { isGumroadConfigured, syncGumroad } from "@/lib/gumroad";
 import { categorize, isLiability, plaidAccountType, prettyPlaidCategory, txType } from "@/lib/categorize";
 
 export type Item = { id: string; item_id: string; access_token: string; institution: string | null; cursor: string | null };
@@ -142,6 +143,13 @@ export async function syncItems(filter?: { itemId?: string }): Promise<SyncResul
       results.push({ ok: true, ...(await syncPayPal()) });
     } catch (err) {
       results.push({ ok: false, institution: "PayPal", error: (err as Error).message });
+    }
+  }
+  if (!filter?.itemId && isGumroadConfigured()) {
+    try {
+      results.push({ ok: true, ...(await syncGumroad()) });
+    } catch (err) {
+      results.push({ ok: false, institution: "Gumroad", error: (err as Error).message });
     }
   }
   return results;
