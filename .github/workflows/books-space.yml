@@ -1,0 +1,28 @@
+name: Books and space memory
+
+on:
+  schedule:
+    - cron: '17 5 * * *' # daily
+  workflow_dispatch:
+
+concurrency:
+  group: books-space-memory
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+      - name: Save Books memory
+        run: node scripts/books-routine.js
+      - name: Save Space memory
+        if: always()
+        run: node scripts/space-routine.js

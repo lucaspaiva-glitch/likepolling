@@ -53,6 +53,18 @@
         <div class="edu-sb"></div>
         <div class="ytt-foot">Recent videos from those channels plus the last 24 hours of Google News education headlines, sorted into subjects by AI (Google Gemini). One video counts as much as 3 headlines. Shows what is being talked about, not what people are enrolled in.</div>
       </section>
+    </div>
+    <div class="edu-grid edu-more">
+      <section class="ytt edu-bk" hidden>
+        <div class="ytt-head"><h3 class="ytt-title">Trending books</h3><span class="ytt-sym" data-no-i18n>BOOKS</span><span class="ytt-spacer"></span><span class="ytt-asof">Worldwide · this week</span></div>
+        <ol class="edu-bl" data-no-i18n></ol>
+        <div class="ytt-foot">The books most opened and saved on Open Library this week, worldwide. Shows curiosity, not sales. Saved every day.</div>
+      </section>
+      <section class="ytt edu-sp" hidden>
+        <div class="ytt-head"><h3 class="ytt-title">Space</h3><span class="ytt-sym" data-no-i18n>LAUNCH</span><span class="ytt-spacer"></span><span class="ytt-asof">Next launches · news</span></div>
+        <ul class="edu-sl" data-no-i18n></ul><ul class="edu-sn" data-no-i18n></ul>
+        <div class="ytt-foot">Launches from Launch Library 2 and headlines from Spaceflight News, both by The Space Devs. Launch dates often move. Saved every day.</div>
+      </section>
     </div>`;
   const select = mount.querySelector('.edu-select');
   const ib = mount.querySelector('.edu-ib');
@@ -119,7 +131,29 @@
     return codes.includes('US') ? 'US' : codes[0];
   }
 
+  // Trending books (Open Library) and space launches + headlines (The Space Devs), saved daily.
+  async function booksAndSpace() {
+    const bk = mount.querySelector('.edu-bk'), sp = mount.querySelector('.edu-sp');
+    const [books, launches, news] = await Promise.all([
+      get('books_daily?select=day,rank,title,author,cover_id,work_key&order=day.desc,rank.asc&limit=10').catch(() => []),
+      get(`space_launches?select=name,net,provider,site&net=gte.${new Date().toISOString()}&order=net.asc&limit=3`).catch(() => []),
+      get('space_news?select=title,url,site,published_at&order=published_at.desc&limit=5').catch(() => []),
+    ]);
+    const latest = books.filter((b) => b.day === (books[0] && books[0].day));
+    if (latest.length) {
+      bk.querySelector('.edu-bl').innerHTML = latest.map((b) => `<li><a href="https://openlibrary.org${esc(b.work_key)}" target="_blank" rel="noopener">${b.cover_id ? `<img src="https://covers.openlibrary.org/b/id/${b.cover_id}-S.jpg" alt="" loading="lazy">` : '<i></i>'}<span><b>${esc(b.title)}</b>${esc(b.author || '')}</span></a></li>`).join('');
+      bk.hidden = false;
+    }
+    if (launches.length || news.length) {
+      const inDays = (t) => { const ms = Date.parse(t) - Date.now(); return ms < 864e5 ? 'today' : ms < 2 * 864e5 ? 'tomorrow' : `in ${Math.floor(ms / 864e5)} days`; };
+      sp.querySelector('.edu-sl').innerHTML = launches.map((l) => `<li><b>${esc(inDays(l.net))}</b><span>${esc(l.name)}<small>${esc([l.provider, l.site].filter(Boolean).join(' · '))}</small></span></li>`).join('');
+      sp.querySelector('.edu-sn').innerHTML = news.map((n) => `<li><a href="${esc(n.url)}" target="_blank" rel="noopener">${esc(n.title)}</a><small>${esc(n.site || '')}</small></li>`).join('');
+      sp.hidden = false;
+    }
+  }
+
   (async () => {
+    booksAndSpace();
     try {
       const firsts = await get('education_videos?select=country_code&rank=eq.1');
       const codes = firsts.map((r) => r.country_code);

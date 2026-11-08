@@ -255,19 +255,23 @@ async function newsRoute(req, get) {
 }
 
 // The free "Country pulse": this week's Google Trends searches, next holidays, most-read Wikipedia pages,
-// share of peaceful news (GDELT) and yearly growth (World Bank). Aggregates only.
+// share of peaceful news (GDELT), yearly growth (World Bank), next rocket launch (Launch Library 2) and
+// the world's trending books (Open Library). Aggregates only.
 async function pulseRoute(req, get, deps) {
   const cc = String(req.query.country || '').toUpperCase();
   if (!COUNTRIES.includes(cc)) throw new HttpError(400, 'Use ?country= with one of the 41 country codes, e.g. ?country=BR.');
   const now = deps.now ? new Date(deps.now()) : new Date();
   const week = new Date(now.getTime() - 7 * 864e5).toISOString().slice(0, 10);
   const q = `country_code=eq.${cc}`;
-  const [trends, holidays, wiki, news, g] = await Promise.all([
+  const [trends, holidays, wiki, news, g, launchHere, launchWorld, books] = await Promise.all([
     get(`trends_daily?select=day,query,traffic&${q}&day=gte.${week}&order=traffic.desc.nullslast&limit=400`).catch(() => []),
     get(`holidays?select=day,local_name,name&${q}&day=gte.${now.toISOString().slice(0, 10)}&order=day.asc&limit=4`).catch(() => []),
     get(`wiki_top_daily?select=day,project,article,views_ceil&${q}&rank=lte.30&day=gte.${week}&order=day.desc&limit=1000`).catch(() => []),
     get(`gdelt_country_daily?select=day,root_code,articles&${q}&day=gte.${week}&limit=1000`).catch(() => []),
     report.gdp(deps.fetch || fetch, [cc], now).catch(() => ({})),
+    get(`space_launches?select=name,net,provider,site,mission,country_code&${q}&net=gte.${now.toISOString()}&order=net.asc&limit=1`).catch(() => []),
+    get(`space_launches?select=name,net,provider,site,mission,country_code&net=gte.${now.toISOString()}&order=net.asc&limit=1`).catch(() => []),
+    get('books_daily?select=day,rank,title,author,cover_id,work_key&order=day.desc,rank.asc&limit=5').catch(() => []),
   ]);
   const focus = report.newsFocus(news);
   return {
@@ -279,6 +283,8 @@ async function pulseRoute(req, get, deps) {
       wikipedia: report.wikipedia(wiki, now, 5).top.map((w) => ({ title: w.title, views: w.views, link: w.link })),
       news: { articles: focus.articles, peaceful_pct: focus.cooperation_pct },
       gdp: (g[cc] || []).filter((d) => d.growth_pct != null).slice(-6).map((d) => ({ year: d.year, growth_pct: d.growth_pct })),
+      launch: launchHere[0] || launchWorld[0] ? { here: Boolean(launchHere[0]), ...(launchHere[0] || launchWorld[0]) } : null,
+      books: books.filter((b) => b.day === (books[0] && books[0].day)).map((b) => ({ title: b.title, author: b.author, cover_id: b.cover_id, link: `https://openlibrary.org${b.work_key}` })),
     },
   };
 }

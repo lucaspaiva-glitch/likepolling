@@ -176,6 +176,8 @@ test('pulse: free country page data from saved aggregates only', async () => {
       : url.includes('holidays') ? [{ day: '2026-11-15', local_name: 'Proclamação da República', name: 'Republic Proclamation Day' }]
       : url.includes('wiki_top_daily') ? [{ day: '2026-11-05', project: 'pt.wikipedia', article: 'Lula', views_ceil: 900 }]
       : url.includes('gdelt_country_daily') ? [{ day: '2026-11-05', root_code: '04', articles: 70 }, { day: '2026-11-05', root_code: '19', articles: 30 }]
+      : url.includes('space_launches') ? (url.includes('country_code=eq.BR') ? [] : [{ name: 'Falcon 9 | X', net: '2026-11-10T03:03:00Z', provider: 'SpaceX', site: 'Cape Canaveral', mission: 'X', country_code: 'US' }])
+      : url.includes('books_daily') ? [{ day: '2026-11-07', rank: 1, title: 'Atomic Habits', author: 'James Clear', cover_id: 1, work_key: '/works/OL1W' }, { day: '2026-11-06', rank: 1, title: 'Old', author: null, cover_id: null, work_key: '/works/OL2W' }]
       : url.includes('worldbank') ? [{}, [{ indicator: { id: 'NY.GDP.MKTP.CD' }, country: { id: 'BR' }, date: '2024', value: 2e12 }, { indicator: { id: 'NY.GDP.MKTP.KD.ZG' }, country: { id: 'BR' }, date: '2024', value: 3.4 }, { indicator: { id: 'NY.GDP.MKTP.CD' }, country: { id: 'BR' }, date: '2023', value: 1.9e12 }, { indicator: { id: 'NY.GDP.MKTP.KD.ZG' }, country: { id: 'BR' }, date: '2023', value: 3.2 }, { indicator: { id: 'NY.GDP.MKTP.CD' }, country: { id: 'BR' }, date: '2022', value: 1.8e12 }]]
       : [];
     return { ok: true, status: 200, json: async () => body };
@@ -189,6 +191,8 @@ test('pulse: free country page data from saved aggregates only', async () => {
   assert.equal(res.body.wikipedia[0].title, 'Lula');
   assert.deepEqual(res.body.news, { articles: 100, peaceful_pct: 70 });
   assert.deepEqual(res.body.gdp, [{ year: 2023, growth_pct: 3.2 }, { year: 2024, growth_pct: 3.4 }]);
+  assert.deepEqual([res.body.launch.here, res.body.launch.provider], [false, 'SpaceX']);
+  assert.deepEqual(res.body.books, [{ title: 'Atomic Habits', author: 'James Clear', cover_id: 1, link: 'https://openlibrary.org/works/OL1W' }]);
   assert.match(res.headers['Cache-Control'], /s-maxage/);
   const bad = { ...res, headers: {}, setHeader(k, v) { this.headers[k] = v; } };
   await createHandler({ env: { SUPABASE_URL: 'https://db.test', SUPABASE_KEY: 'k' }, fetch: fetchImpl })({ method: 'GET', query: { route: 'pulse', country: 'XX' }, headers: {} }, bad);

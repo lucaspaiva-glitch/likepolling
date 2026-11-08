@@ -76,6 +76,23 @@
         <div class="pl-years">${g.map((x) => `<span>${x.year}</span>`).join('')}</div>
         ${learn('GDP is the size of a whole economy, not how rich each person is. For that, look at GDP per person.')}</section>`);
     }
+    const L = d.launch;
+    if (L) {
+      const ms = Date.parse(L.net) - Date.now(), days = Math.floor(ms / 864e5);
+      const when = ms < 864e5 ? T('today') : days === 1 ? T('tomorrow') : T('in {n} days', { n: days });
+      const t = new Date(L.net).toLocaleString(loc(), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZoneName: 'short' });
+      cards.push(`<section class="pl-card pl-launch"><span class="pl-tag">${T('Space')}</span><h2>${T(L.here ? 'Next rocket launch' : 'Next launch in the world')}</h2>
+        <div class="pl-rk" aria-hidden="true"><svg viewBox="0 0 24 48"><path d="M12 1 C18 8 18 22 16 32 L8 32 C6 22 6 8 12 1 Z" fill="#fff" stroke="#b0000e" stroke-width="1.6"/><circle cx="12" cy="14" r="2.6" fill="#b0000e"/><path d="M8 26 L3 36 L8 33 Z M16 26 L21 36 L16 33 Z" fill="#b0000e"/><path class="fl" d="M9 33 Q12 46 15 33 Z" fill="#ff3b30"/></svg></div>
+        <div class="pl-count pl-lc">${days > 1 ? days : esc(when)}<small>${days > 1 ? `${esc(when)} · ` : ''}${esc(t)}</small></div>
+        <p class="pl-lname" data-no-i18n><b>${esc(L.name)}</b>${esc([L.provider, L.site].filter(Boolean).join(' · '))}</p>
+        ${learn('Launch dates often move. A rocket waits for good weather and a final check, so the countdown can change.')}</section>`);
+    }
+    const B = d.books || [];
+    if (B.length) {
+      cards.push(`<section class="pl-card"><span class="pl-tag">${T('Books')}</span><h2>${T('What the world is reading')}</h2><p class="note">${T('Books trending on Open Library this week, worldwide.')}</p>
+        <ol class="pl-books" data-no-i18n>${B.map((b) => `<li><a href="${esc(b.link)}" target="_blank" rel="noopener">${b.cover_id ? `<img src="https://covers.openlibrary.org/b/id/${b.cover_id}-S.jpg" alt="" loading="lazy">` : '<i></i>'}<span><b>${esc(b.title)}</b>${b.author ? esc(b.author) : ''}</span></a></li>`).join('')}</ol>
+        ${learn('A trending book is one many people opened or saved this week. It shows curiosity, not sales.')}</section>`);
+    }
     const ticker = s.length ? `<div class="pl-ticker" aria-hidden="true"><div>${[...s, ...s].map((q) => `<span><b>${esc(c)}</b>${esc(q.query)}</span>`).join('')}</div></div>` : '';
     $('pulse').innerHTML = cards.length
       ? `${ticker}<button type="button" class="pl-share" id="share">${T('Share')} ↗</button><div class="pl-grid">${cards.join('')}</div>`
