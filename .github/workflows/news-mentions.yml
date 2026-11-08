@@ -1,12 +1,8 @@
 name: News mentions memory
 
+# Paused: GDELT's search API refuses cloud servers. To be replaced by a routine reading GDELT's raw GKG files.
 on:
-  schedule:
-    - cron: '41 4 * * *' # daily
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths: ['scripts/news-mentions-routine.js']
 
 concurrency:
   group: news-mentions-memory
