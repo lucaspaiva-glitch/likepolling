@@ -12,7 +12,7 @@
   const num = (n) => Number(n || 0).toLocaleString(loc());
   const esc = (t) => String(t).replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
   const SAMPLES = 'https://iyhaoagslsrwtkcrxylp.supabase.co/storage/v1/object/public/samples';
-  const setPdf = () => { $('pv-pdf').href = `${SAMPLES}/${lang()}/country-report.pdf?download=like-polling-country-report.pdf`; };
+  const setPdf = () => { $('pv-pdf').href = `${SAMPLES}/${lang()}/country-report.pdf?download=like-polling-country-report.pdf`; $('preview').href = `${SAMPLES}/${lang()}/country-report.pdf`; };
   setPdf();
   let data = null;
   document.addEventListener('lp:lang', () => { setPdf(); if (data) draw(data); });

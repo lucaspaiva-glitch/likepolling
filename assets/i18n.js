@@ -285,6 +285,8 @@
     "Country": ["País", "País", "Land", "Страна", "Країна", "국가", "国"],
     "Artist": ["Artista", "Artista", "Künstler", "Артист", "Артист", "아티스트", "アーティスト"],
     "Company": ["Empresa", "Empresa", "Unternehmen", "Компания", "Компанія", "기업", "企業"],
+    "See a sample": ["Ver um exemplo", "Ver un ejemplo", "Beispiel ansehen", "Посмотреть пример", "Переглянути приклад", "샘플 보기", "サンプルを見る"],
+    "Get the ad spot": ["Garantir o espaço", "Conseguir el espacio", "Werbeplatz holen", "Получить место", "Отримати місце", "광고 자리 받기", "広告枠を買う"],
     "Estimated: views × a typical rate per 1,000 views for the country and video type. YouTube doesn't publish real payouts.": ["Estimativa: visualizações × um valor típico por 1.000 visualizações para o país e o tipo de vídeo. O YouTube não publica os ganhos reais.", "Estimación: visitas × una tarifa típica por 1.000 visitas según el país y el tipo de vídeo. YouTube no publica los pagos reales.", "Geschätzt: Aufrufe × ein typischer Satz pro 1.000 Aufrufe für Land und Videotyp. YouTube veröffentlicht keine echten Auszahlungen.", "Оценка: просмотры × типичная ставка за 1000 просмотров для страны и типа видео. YouTube не публикует реальные выплаты.", "Оцінка: перегляди × типова ставка за 1000 переглядів для країни та типу відео. YouTube не публікує реальні виплати.", "추정치: 조회수 × 국가와 영상 유형별 1,000회당 일반 단가. YouTube는 실제 수익을 공개하지 않습니다.", "推定値：再生回数 × 国と動画の種類ごとの1,000回あたりの一般的な単価。YouTubeは実際の収益を公開していません。"],
     "Show": ["Mostrar", "Mostrar", "Zeigen", "Показать", "Показати", "보기", "表示"],
     "Pulse type": ["Tipo de pulso", "Tipo de pulso", "Puls-Art", "Тип пульса", "Тип пульсу", "펄스 유형", "パルスの種類"],

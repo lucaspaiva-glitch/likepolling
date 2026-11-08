@@ -1,6 +1,6 @@
 // Like Polling products, shown as cards on the homepage and /services (any element with [data-offers]).
 // Edit OFFERS to add, remove or rename a product; PRICE is shared by every report.
-// Computers: resting the mouse on a card opens it (like the sponsor card). Phones: a tap opens it.
+// Resting the mouse on a card shows the details; a click opens the content itself (sample PDF or the ad spot page) in a new tab.
 (function () {
   'use strict';
   const PRICE = '€8';
@@ -18,6 +18,7 @@
   ];
   const COUNTRIES = ['AR', 'AU', 'BD', 'BE', 'BR', 'CA', 'CL', 'CO', 'DE', 'DZ', 'EC', 'EG', 'ES', 'FR', 'GB', 'ID', 'IE', 'IN', 'IQ', 'IT', 'JP', 'KE',
     'KR', 'MA', 'MX', 'MY', 'NG', 'NL', 'PE', 'PH', 'PK', 'PL', 'PT', 'SA', 'TH', 'TR', 'TW', 'UA', 'US', 'VN', 'ZA'];
+  const AD = 'https://lucaspoll.gumroad.com/l/laijtn';
   const SAMPLES = 'https://iyhaoagslsrwtkcrxylp.supabase.co/storage/v1/object/public/samples';
   const tr = (s) => (window.LP_I18N ? window.LP_I18N.t(s) : s);
   const lang = () => (window.LP_I18N && window.LP_I18N.lang) || 'en';
@@ -84,13 +85,14 @@
       : `<a class="svc-btn" href="${esc(mailto(o.mail, 'Hi! I\'d like to know about sponsoring Like Polling.\n\nBrand:\nCountries we target:\nWebsite:'))}">${tr('Ask about the ad spot')}</a><p class="svc-fine">${tr('Like the Machu Picchu Energy card. Monthly views and clicks included.')}</p>`;
     const nm = tr(o.name);
     return `<section class="svc" id="offer-${o.id}" data-no-i18n>
-      <button type="button" class="svc-tab" aria-expanded="false" aria-controls="offer-${o.id}-body">
+      <a class="svc-tab" href="${esc(report ? `${SAMPLES}/${lang()}/${o.id}-report.pdf` : AD)}" target="_blank" rel="noopener">
         <span class="svc-top"><span class="svc-sym">${esc(tr(o.sym))}</span><span>${esc(o.top ? tr(o.top) : PRICE)}${o.top ? '' : '<span class="lp-local" data-eur="8"></span>'}</span></span>
         <span class="svc-name svc-glitch" data-text="${esc(nm)}">${esc(nm)}</span>
         <span class="svc-bar" aria-hidden="true"></span>
         <span class="svc-sub">${esc(tr(o.sub))}</span>
-        <span class="svc-more" aria-hidden="true">${tr(report ? 'What you get' : 'How it works')} <i>›</i></span>
-      </button>
+        <span class="svc-more">${tr(report ? 'See a sample' : 'Get the ad spot')} ↗</span>
+      </a>
+      <a class="svc-buy-m" href="${esc(report ? buyLink(o) : AD)}">${tr('Buy')} · ${report ? PRICE : '€18'}</a>
       <div class="svc-body" id="offer-${o.id}-body">
         <div class="svc-stats">${o.stats.map(([n, l]) => `<div><b>${esc(n)}</b><span>${esc(tr(l))}</span></div>`).join('')}</div>
         ${actions}
@@ -105,35 +107,19 @@
     cards.forEach(wire);
     cards.forEach(wireForm);
   }
-  function setOpen(c, on) {
-    c.classList.toggle('open', on);
-    c.querySelector('.svc-tab').setAttribute('aria-expanded', String(on));
-    if (!on) c.pinned = false;
-  }
+  function setOpen(c, on) { c.classList.toggle('open', on); }
   function wire(c) {
-    let t = 0;
-    c.querySelector('.svc-tab').addEventListener('click', () => {
-      clearTimeout(t);
-      if (fine && c.classList.contains('open') && !c.pinned) { c.pinned = true; return; }
-      const on = !c.classList.contains('open');
-      if (!fine) cards.forEach((x) => x !== c && setOpen(x, false));
-      setOpen(c, on);
-      c.pinned = on;
-    });
     if (!fine) return;
+    let t = 0;
     c.addEventListener('pointerenter', (e) => { if (e.pointerType !== 'mouse') return; clearTimeout(t); t = setTimeout(() => setOpen(c, true), 150); });
-    c.addEventListener('pointerleave', (e) => {
-      if (e.pointerType !== 'mouse') return;
-      clearTimeout(t);
-      t = setTimeout(() => { if (!c.pinned) setOpen(c, false); }, 350);
-    });
+    c.addEventListener('pointerleave', (e) => { if (e.pointerType !== 'mouse') return; clearTimeout(t); t = setTimeout(() => setOpen(c, false), 350); });
   }
   draw();
   document.addEventListener('lp:lang', draw);
   const fromHash = () => {
     const id = { '#report': 'country', '#sponsor': 'sponsor' }[location.hash] || location.hash.slice(1);
     const c = document.getElementById(`offer-${id}`);
-    if (c) { setOpen(c, true); c.pinned = true; c.scrollIntoView({ block: 'center' }); }
+    if (c) { setOpen(c, true); c.scrollIntoView({ block: 'center' }); }
   };
   addEventListener('hashchange', fromHash);
   fromHash();

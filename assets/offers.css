@@ -41,3 +41,11 @@
 @media (max-width: 960px) { .svc-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 560px) { .svc-grid { grid-template-columns: 1fr; } }
 @media (prefers-reduced-motion: reduce) { .svc-glitch::before, .svc-glitch::after, .svc-bar::after { animation: none; } }
+
+.svc-tab { text-decoration: none; }
+.svc-more i { display: none; }
+.svc-buy-m { display: none; }
+@media (hover: none) {
+  .svc-body { display: none; }
+  .svc-buy-m { display: block; margin: 0 14px 14px; padding: 9px 12px; border-radius: 10px; background: #b0000e; color: #fff; font-weight: 700; font-size: 14px; text-align: center; text-decoration: none; }
+}
