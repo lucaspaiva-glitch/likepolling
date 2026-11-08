@@ -251,7 +251,7 @@ test('parseChoice keeps a subject and up to 3 different peers', () => {
   assert.equal(entity.parseChoice('x'), null);
 });
 
-test('artist sample: Wikipedia data only, similar artists picked by type', async () => {
+test('artist sample: no YouTube data, similar artists picked by type', async () => {
   const f = db({ route: async (url) => wikiRoute(url) });
   const handler = createHandler({ env, fetch: f, now: () => NOW.getTime() });
   const res = mockRes();
@@ -265,7 +265,7 @@ test('artist sample: Wikipedia data only, similar artists picked by type', async
   assert.equal(res.body.subject.rank, 1);
   assert.equal(res.body.subject.languages, 5);
   assert.deepEqual(res.body.languages.map((l) => l.lang).sort(), ['en', 'pt']);
-  assert.ok(f.seen.every((u) => !/youtube|gdelt|news/i.test(u)));
+  assert.ok(f.seen.every((u) => !/youtube/i.test(u)));
 });
 
 test('Gumroad artist key: picks the artist once, then a signed instance reopens it', async () => {

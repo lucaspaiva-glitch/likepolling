@@ -41,6 +41,7 @@ async function parseBody(req) {
 
 // Keeps every state-level Google Trends result in region_interest_daily, so the history grows with each report.
 async function saveStates(env, fetchImpl, body) {
+  await saveMentions(env, fetchImpl, body);
   const st = body && body.states;
   if (!st || !body.subject) return;
   const day = String(body.generated_at || new Date().toISOString()).slice(0, 10);
@@ -49,6 +50,18 @@ async function saveStates(env, fetchImpl, body) {
   if (!rows.length || !subject) return;
   await fetchImpl(`${String(env.SUPABASE_URL).trim().replace(/\/$/, '')}/rest/v1/region_interest_daily?on_conflict=day,subject,country_code,region_code`, {
     method: 'POST', signal: AbortSignal.timeout(6000), body: JSON.stringify(rows),
+    headers: { apikey: env.SUPABASE_KEY.trim(), Authorization: `Bearer ${env.SUPABASE_KEY.trim()}`, 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=minimal' },
+  }).catch(() => null);
+}
+
+async function saveMentions(env, fetchImpl, body) {
+  const m = body && body.mentions;
+  if (!m || !body.subject) return;
+  const row = { day: String(body.generated_at || new Date().toISOString()).slice(0, 10), subject: String(body.subject.title || '').slice(0, 120),
+    news_articles: m.news ? m.news.articles : null, news_countries: m.news ? m.news.countries : null,
+    posts: m.social ? m.social.posts : null, post_likes: m.social ? m.social.likes : null, post_langs: m.social ? m.social.langs : null };
+  await fetchImpl(`${String(env.SUPABASE_URL).trim().replace(/\/$/, '')}/rest/v1/mentions_daily?on_conflict=day,subject`, {
+    method: 'POST', signal: AbortSignal.timeout(6000), body: JSON.stringify([row]),
     headers: { apikey: env.SUPABASE_KEY.trim(), Authorization: `Bearer ${env.SUPABASE_KEY.trim()}`, 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=minimal' },
   }).catch(() => null);
 }

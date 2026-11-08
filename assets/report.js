@@ -186,6 +186,7 @@
     vs: 'Compare like with like: same days, same source, same measure. Otherwise the comparison lies.',
     langs: 'Where people read is a hint of where fans or customers are, not proof.',
     ctry: 'More days in a country\'s top 30 means steady interest there, not just one viral moment.',
+  mentions: 'Many articles or posts mean people are talking, not that they like it. Check a few headlines before you act.',
   states: 'State numbers compare shares, not totals: a small state can score 100 when many of its searches are about this.',
   sponsors: 'A sponsor pays to be seen by a person\'s fans. The more people read about that person, in more languages, the further the brand travels.',
   field: 'Compare with real rivals, not with everyone. A small brand can lead its niche and still look tiny next to the giants.',
@@ -368,6 +369,36 @@
       <p class="take">${best}</p>${learn('states')}</section>`;
   };
 
+  // GDELT gives English country names; map them to codes so they show in the reader's language.
+  let byEn = null;
+  const cname = (en) => {
+    if (!byEn) {
+      byEn = new Map();
+      const d = new Intl.DisplayNames(['en'], { type: 'region' });
+      for (let a = 65; a < 91; a++) for (let b = 65; b < 91; b++) { const c = String.fromCharCode(a, b); try { const n = d.of(c); if (n && n !== c) byEn.set(n.toLowerCase(), c); } catch { /* not a region */ } }
+      [['united kingdom', 'GB'], ['south korea', 'KR'], ['russia', 'RU'], ['vietnam', 'VN'], ['czech republic', 'CZ'], ['turkey', 'TR']].forEach(([n, c]) => byEn.set(n, c));
+    }
+    const c = byEn.get(String(en).toLowerCase());
+    return c ? name(c) : en;
+  };
+  const mentionsSec = (data, title) => {
+    const m = data.mentions;
+    if (!m) return '';
+    const nw = m.news, so = m.social;
+    const posts = so ? `${num(so.posts)}${so.more ? '+' : ''}` : '';
+    const kp = `<div class="kpis">${[
+      nw ? kcard(short(nw.articles), L('News articles'), L('last 30 days, worldwide'), area(nw.days.map((d) => d.articles))) : '',
+      nw && nw.countries.length ? kcard(esc(cname(nw.countries[0].name)), L('Most news from'), L('{p}% of the articles', { p: nw.countries[0].share })) : '',
+      so ? kcard(posts, L('Bluesky posts'), L('public posts, last 30 days')) : '',
+      so ? kcard(short(so.likes), L('Likes on those posts'), L('{n} reposts', { n: num(so.reposts) })) : '',
+    ].join('')}</div>`;
+    const lists = [nw && nw.countries.length ? `<div class="col"><h3>${L('News by country')}</h3>${rank(nw.countries.slice(0, 6), (c) => c.share, (c) => esc(cname(c.name)), (c) => `<small>${L('{p}% of the articles', { p: c.share })}</small>`)}</div>` : '',
+      so && so.langs.length ? `<div class="col"><h3>${L('Posts by language')}</h3>${rank(so.langs, (l) => l.posts, (l) => esc(langName(l.lang)))}</div>` : ''].filter(Boolean);
+    const take = [nw ? L('{s} was in {n} news articles in 30 days.', { s: esc(title), n: `<b>${num(nw.articles)}</b>` }) : '', so ? L('{n} public Bluesky posts mentioned {s}.', { s: esc(title), n: `<b>${posts}</b>` }) : ''].filter(Boolean).join(' ');
+    return `<section class="rsec"><h2>${L('In the news and online')}</h2><p class="note">${L('Counts only, last 30 days: online news worldwide (GDELT) and public posts on Bluesky.')}</p>
+      ${kp}${lists.length ? `<div class="cols n${lists.length}">${lists.join('')}</div>` : ''}<p class="take">${take}</p>${learn('mentions')}</section>`;
+  };
+
   function renderBrand(data) {
     const s = data.subject;
     const plain = (x) => x.replace(/ \([^)]*\)$/, '');
@@ -404,9 +435,9 @@
     const gt = data.trends || [];
     const gtr = gt.length ? `<section class="rsec"><h2>${L('Trending on Google')}</h2><p class="note">${L('Days {s} was among the trending Google searches in each country (Google Trends).', { s: esc(s.title) })}</p>
       ${rank(gt.slice(0, 10), (t) => t.days, (t) => esc(name(t.country)))}${learn('searches')}</section>` : '';
-    const srcText = `${s.website ? `${L('Website: {u}.', { u: host(s.website) })} ` : ''}${L('Wikipedia page views and pages: Wikimedia Foundation (wikimedia.org), open data.')} ${L('Sponsors: Wikipedia infoboxes.')}${data.states ? ` ${L('States: Google Trends.')}` : ''}${gt.length ? ` ${L('Trending searches: Google Trends.')}` : ''} ${L('No YouTube or news data.')}`;
+    const srcText = `${s.website ? `${L('Website: {u}.', { u: host(s.website) })} ` : ''}${L('Wikipedia page views and pages: Wikimedia Foundation (wikimedia.org), open data.')} ${L('Sponsors: Wikipedia infoboxes.')}${data.states ? ` ${L('States: Google Trends.')}` : ''}${data.mentions ? ` ${L('News: The GDELT Project. Posts: Bluesky public API, counts only.')}` : ''}${gt.length ? ` ${L('Trending searches: Google Trends.')}` : ''} ${L(data.mentions ? 'No YouTube data.' : 'No YouTube or news data.')}`;
     const sources = `<section class="rsec sources"><h2>${L('Sources')}</h2><p class="small">${esc(srcText)}</p></section>`;
-    $('report').innerHTML = head + knowSec(know) + kpis + peopleSec + trend + fieldSec + statesSec(data, s.title) + gtr + sources;
+    $('report').innerHTML = head + knowSec(know) + kpis + peopleSec + trend + fieldSec + mentionsSec(data, s.title) + statesSec(data, s.title) + gtr + sources;
     plainWords();
     wire(data, ctx(data, { know, tag, title: s.title, subtitle: s.description || '', dates: dateList(data.from, data.to, data.generated_at), sources: srcText, fieldName: fn }));
     show('report');
@@ -493,7 +524,7 @@
     const sd = (data.sponsored || []).map((p, k) => ({ ...p, title: plain(p.title), color: k ? '#9a9a9a' : COLORS[0] }));
     const sdSec = sd.length ? `<section class="rsec"><h2>${L('People it sponsors')}</h2><p class="note">${L('Athletes and stars who name {s} as a sponsor on Wikipedia, ranked by English Wikipedia views, last 30 days.', { s: esc(s.title) })}</p>
       ${cbars(sd, (p) => p.views, short)}<p class="take">${L('{a} is the most-read of them, with {n} views.', { a: `<b>${esc(sd[0].title)}</b>`, n: num(sd[0].views) })}</p>${learn('sponsors')}</section>` : '';
-    const srcText = `${L('Wikipedia page views and pages: Wikimedia Foundation (wikimedia.org), open data.')} ${L(data.peers_chosen ? 'Comparisons chosen by the buyer.' : 'Similar pages picked by Wikipedia\'s "more like this" search.')}${gt.length ? ` ${L('Trending searches: Google Trends.')}` : ''} ${b ? ` ${L('Sales and profit: US SEC filings (EDGAR), public data.')}` : ''}${sp.length || sd.length ? ` ${L('Sponsors: Wikipedia infoboxes.')}` : ''}${data.states ? ` ${L('States: Google Trends.')}` : ''} ${L('No YouTube or news data.')}`;
+    const srcText = `${L('Wikipedia page views and pages: Wikimedia Foundation (wikimedia.org), open data.')} ${L(data.peers_chosen ? 'Comparisons chosen by the buyer.' : 'Similar pages picked by Wikipedia\'s "more like this" search.')}${gt.length ? ` ${L('Trending searches: Google Trends.')}` : ''} ${b ? ` ${L('Sales and profit: US SEC filings (EDGAR), public data.')}` : ''}${sp.length || sd.length ? ` ${L('Sponsors: Wikipedia infoboxes.')}` : ''}${data.states ? ` ${L('States: Google Trends.')}` : ''}${data.mentions ? ` ${L('News: The GDELT Project. Posts: Bluesky public API, counts only.')}` : ''} ${L(data.mentions ? 'No YouTube data.' : 'No YouTube or news data.')}`;
     const sources = `<section class="rsec sources"><h2>${L('Sources')}</h2><p class="small">${srcText}</p></section>`;
     const know = [];
     if (s.change_pct) know.push({ big: `${s.change_pct > 0 ? '+' : '−'}${Math.abs(s.change_pct)}%`, line: L(s.change_pct > 0 ? 'more Wikipedia views for {s} than the month before.' : 'fewer Wikipedia views for {s} than the month before.', { s: s.title }) });
@@ -503,7 +534,7 @@
     const avg = s.series.length > 2 ? sum(s.series.map((d) => d.views)) / s.series.length : 0;
     if (s.peak && avg && s.peak.views >= 1.5 * avg) know.push({ big: `${times(s.peak.views, avg)}×`, line: L('On {day}, views of {s} were {x}× a normal day.', { day: dshort(s.peak.day), s: s.title, x: times(s.peak.views, avg) }) });
     if (f) know.unshift({ big: L('#{r} of {n}', { r: f.rank, n: f.compared }), line: L('{s} in {f}, by Wikipedia views.', { s: s.title, f: fn }) });
-    $('report').innerHTML = head + knowSec(know.slice(0, 3)) + kpis + fieldSec + spSec + sdSec + bizSec + trend + vs + langs + ctry + statesSec(data, s.title) + gtr + sources + (data.sample ? getYours() : '');
+    $('report').innerHTML = head + knowSec(know.slice(0, 3)) + kpis + fieldSec + spSec + sdSec + bizSec + trend + vs + langs + ctry + mentionsSec(data, s.title) + statesSec(data, s.title) + gtr + sources + (data.sample ? getYours() : '');
     plainWords();
     wire(data, ctx(data, { know: know.slice(0, 3), fieldName: fn, fieldTake: ft, tag, title: s.title, subtitle: s.description, dates: dateList(data.from, data.to, data.generated_at), sources: srcText, bizNote, bizHeads, bizTake, bizUnit: unit }));
     show('report');

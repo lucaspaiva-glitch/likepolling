@@ -114,6 +114,18 @@
       take: L('{a} is the most-read of them, with {n} views.', { a: plain(rows[0].title), n: rows[0].views.toLocaleString() }) });
   }
 
+  function mentionsSlide(slides, data, title, x) {
+    const m = data.mentions;
+    if (!m) return;
+    const { L, short, num } = x;
+    const cards = [m.news && { n: short(m.news.articles), label: L('News articles'), sub: L('last 30 days, worldwide') },
+      m.social && { n: `${num(m.social.posts)}${m.social.more ? '+' : ''}`, label: L('Bluesky posts'), sub: L('public posts, last 30 days') },
+      m.social && { n: short(m.social.likes), label: L('Likes on those posts'), sub: L('{n} reposts', { n: num(m.social.reposts) }) }].filter(Boolean);
+    slides.push({ type: 'kpis', title: L('In the news and online'), groups: [{ head: '', cards }] });
+    if (m.news && m.news.countries.length) slides.push({ type: 'charts', title: L('News by country'), note: L('Counts only, last 30 days: online news worldwide (GDELT) and public posts on Bluesky.'),
+      charts: [{ kind: 'bar', horizontal: true, labels: m.news.countries.map((c) => cut(c.name, 22)), series: [{ name: L('News articles'), values: m.news.countries.map((c) => c.share) }], fmt: 'pct' }] });
+  }
+
   function statesSlide(slides, data, title, x) {
     const st = data.states || {};
     const cs = ['US', 'BR'].filter((c) => st[c] && st[c].length);
@@ -142,6 +154,7 @@
     if (f) slides.push({ type: 'charts', title: L('Top in its field'), note: L('{f}: the {n} biggest pages in this Wikipedia category, ranked by English Wikipedia views, last 30 days.', { f: x.fieldName, n: f.compared }),
       charts: [{ kind: 'bar', horizontal: true, labels: f.ranked.map((p) => cut(plain(p.title), 26)), series: [{ name: L('Views, 30 days'), values: f.ranked.map((p) => p.views) }] }],
       take: L('{a} leads {f} with {p}% of the attention.', { a: plain(f.ranked[0].title), f: x.fieldName, p: f.share_pct }) });
+    mentionsSlide(slides, data, s.title, x);
     statesSlide(slides, data, s.title, x);
     slides.push({ type: 'text', title: L('Sources'), foot: x.sources });
     return { slides, title: s.title, file: `like-polling-brand-${s.title.toLowerCase().normalize('NFD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-report` };
@@ -212,6 +225,7 @@
         charts: [{ kind: 'bar', horizontal: true, labels: top.map((t) => name(t.country)), series: [{ name: L('Days trending'), values: top.map((t) => t.days) }] }],
         take: top.length === 1 ? L('{s} was a trending Google search in {c}.', { s: s.title, c: name(top[0].country) }) : L('{s} was a trending Google search in {n} countries.', { s: s.title, n: data.trends.length }) });
     }
+    mentionsSlide(slides, data, s.title, x);
     statesSlide(slides, data, s.title, x);
     slides.push({ type: 'text', title: L('Sources'), foot: x.sources });
     return { slides, title: s.title, file: `like-polling-${data.type}-${s.title.toLowerCase().normalize('NFD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-report` };
@@ -369,6 +383,7 @@
       sheets.push({ sheet: cut(L('Summary'), 31), data: [...about, ...(data.subject.website ? [[L('Website'), data.subject.website]] : [])], columns: [{ width: 22 }, { width: 70 }] });
       sponsoredSheet(data.people);
       statesSheet();
+      if (data.mentions) sheet(L('In the news and online'), [[L('Measure'), L('Value')].map(H), ...(data.mentions.news ? [[L('News articles'), n(data.mentions.news.articles)], ...data.mentions.news.countries.map((c) => [`${L('News by country')}: ${c.name}`, p100(c.share)])] : []), ...(data.mentions.social ? [[L('Bluesky posts'), n(data.mentions.social.posts)], [L('Likes on those posts'), n(data.mentions.social.likes)]] : [])], [40, 16]);
       if (data.field) sheet(L('Top in its field'), [[L('Rank'), L('Name'), L('Views, 30 days'), L('Change vs last month')].map(H),
         ...data.field.ranked.map((p, i) => [i + 1, plain(p.title), n(p.views), p100(p.change_pct)])], [8, 34, 16, 22]);
       sheet(L('Trending on Google'), [[L('Country'), L('Days trending')].map(H), ...(data.trends || []).map((t) => [name(t.country), n(t.days)])], [24, 16]);
@@ -377,6 +392,7 @@
       sheet(L('Sponsors'), [[L('Name'), L('Website'), L('Link')].map(H), ...(data.sponsors || []).map((x) => [x.name, link(x.website), link(x.link)])], [30, 40, 50]);
       sponsoredSheet(data.sponsored);
       statesSheet();
+      if (data.mentions) sheet(L('In the news and online'), [[L('Measure'), L('Value')].map(H), ...(data.mentions.news ? [[L('News articles'), n(data.mentions.news.articles)], ...data.mentions.news.countries.map((c) => [`${L('News by country')}: ${c.name}`, p100(c.share)])] : []), ...(data.mentions.social ? [[L('Bluesky posts'), n(data.mentions.social.posts)], [L('Likes on those posts'), n(data.mentions.social.likes)]] : [])], [40, 16]);
       sheets.push({ sheet: cut(L('Summary'), 31), data: about, columns: [{ width: 22 }, { width: 70 }] });
       sheet(L('Side by side'), [[L('Rank'), L('Name'), L('Views, 30 days'), L('Previous 30 days'), L('Change vs last month'), L('Wikipedia languages'), L('Link')].map(H),
         ...[...all].sort((a, b) => b.views - a.views).map((p, i) => [i + 1, plain(p.title), n(p.views), n(p.previous), p100(p.change_pct), n(p.languages), link(p.link)])], [8, 30, 16, 18, 22, 20, 50]);
