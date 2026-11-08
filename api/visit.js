@@ -1,6 +1,6 @@
 // POST /api/visit {"kind":"visit","item":"home"} or {"kind":"buy","item":"country"}: counts one page visit
 // or Gumroad "Buy" click for today, per visitor country (Vercel's x-vercel-ip-country header).
-// No IP, cookie or user data is stored. Only the pages and products below are counted.
+// Answers with the visitor's country code. No IP, cookie or user data is stored. Only the pages and products below are counted.
 'use strict';
 const { allowed } = require('./search-count');
 
@@ -35,7 +35,7 @@ function createHandler(deps = {}) {
       });
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       res.setHeader('Cache-Control', 'no-store');
-      return res.status(204).end();
+      return res.status(200).json({ country }); // lets the page show prices in the visitor's currency
     } catch (err) {
       console.error('[visit]', err.message);
       return res.status(502).json({ error: 'Count not saved.' });

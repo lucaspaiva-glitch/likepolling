@@ -20,7 +20,8 @@ test('counts a visit or buy click with the visitor country and nothing personal'
   const res = mockRes();
   await handler(req({ kind: 'visit', item: 'pulse' }, { 'x-vercel-ip-country': 'br' }), res);
   await handler(req(JSON.stringify({ kind: 'buy', item: 'country' })), mockRes());
-  assert.equal(res.statusCode, 204);
+  assert.equal(res.statusCode, 200);
+  assert.deepEqual(res.body, { country: 'BR' });
   assert.equal(calls[0].url, 'https://db.test/rest/v1/rpc/bump_interest');
   assert.deepEqual(calls[0].body, { p_country: 'BR', p_kind: 'visit', p_item: 'pulse' });
   assert.deepEqual(calls[1].body, { p_country: 'XX', p_kind: 'buy', p_item: 'country' });

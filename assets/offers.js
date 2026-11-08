@@ -80,12 +80,12 @@
   const card = (o) => {
     const report = !o.mail;
     const actions = report
-      ? `<form class="svc-form" novalidate>${blank(o)}</form><a class="svc-btn" href="${esc(buyLink(o))}">${tr(o.buy ? 'Buy' : 'Order')} · ${PRICE}</a><a class="svc-link" href="${esc(pdf(o.id))}">${tr('Download a free sample (PDF) ›')}</a><p class="svc-fine">${tr('Gathered every day since 24 Oct 2026.')}</p>`
+      ? `<form class="svc-form" novalidate>${blank(o)}</form><a class="svc-btn" href="${esc(buyLink(o))}">${tr(o.buy ? 'Buy' : 'Order')} · ${PRICE}<span class="lp-local" data-eur="8"></span></a><a class="svc-link" href="${esc(pdf(o.id))}">${tr('Download a free sample (PDF) ›')}</a><p class="svc-fine">${tr('Gathered every day since 24 Oct 2026.')}</p>`
       : `<a class="svc-btn" href="${esc(mailto(o.mail, 'Hi! I\'d like to know about sponsoring Like Polling.\n\nBrand:\nCountries we target:\nWebsite:'))}">${tr('Ask about the ad spot')}</a><p class="svc-fine">${tr('Like the Machu Picchu Energy card. Monthly views and clicks included.')}</p>`;
     const nm = tr(o.name);
     return `<section class="svc" id="offer-${o.id}" data-no-i18n>
       <button type="button" class="svc-tab" aria-expanded="false" aria-controls="offer-${o.id}-body">
-        <span class="svc-top"><span class="svc-sym">${esc(tr(o.sym))}</span><span>${esc(o.top ? tr(o.top) : PRICE)}</span></span>
+        <span class="svc-top"><span class="svc-sym">${esc(tr(o.sym))}</span><span>${esc(o.top ? tr(o.top) : PRICE)}${o.top ? '' : '<span class="lp-local" data-eur="8"></span>'}</span></span>
         <span class="svc-name svc-glitch" data-text="${esc(nm)}">${esc(nm)}</span>
         <span class="svc-bar" aria-hidden="true"></span>
         <span class="svc-sub">${esc(tr(o.sub))}</span>

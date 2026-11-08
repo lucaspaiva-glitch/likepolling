@@ -53,7 +53,8 @@
         <div class="edu-sb"></div>
         <div class="ytt-foot">Recent videos from those channels plus the last 24 hours of Google News education headlines, sorted into subjects by AI (Google Gemini). One video counts as much as 3 headlines. Shows what is being talked about, not what people are enrolled in.</div>
       </section>
-    </div>`;
+    </div>
+    <section class="ytt edu-dw" hidden></section>`;
   const select = mount.querySelector('.edu-select');
   const ib = mount.querySelector('.edu-ib');
   const sb = mount.querySelector('.edu-sb');
@@ -119,7 +120,34 @@
     return codes.includes('US') ? 'US' : codes[0];
   }
 
+  // Data of the week: one real dataset (TidyTuesday, CC0) turned into a short lesson on reading data.
+  async function dataWeek() {
+    const box = mount.querySelector('.edu-dw');
+    try {
+      const [d] = await get('data_week?select=week,title,summary,questions,source_title,source_url,folder_url,image_url,image_alt&order=week.desc&limit=1');
+      if (!d) return;
+      const qs = Array.isArray(d.questions) ? d.questions : [];
+      box.innerHTML = `<div class="ytt-head"><h3 class="ytt-title">Data of the week</h3><span class="ytt-sym" data-no-i18n>DATA</span><span class="ytt-spacer"></span>
+          <span class="ytt-asof">Week of ${esc(new Date(`${d.week}T00:00:00Z`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' }))}</span></div>
+        <div class="edu-dwb">
+          ${d.image_url ? `<a class="edu-dwi" href="${esc(d.folder_url)}" target="_blank" rel="noopener"><img src="${esc(d.image_url)}" alt="${esc(d.image_alt || '')}" loading="lazy"></a>` : ''}
+          <div class="edu-dwt">
+            <h4 data-no-i18n>${esc(d.title)}</h4>
+            <p class="edu-dwl">What it is</p><p data-no-i18n>${esc(d.summary)}</p>
+            ${qs.length ? `<p class="edu-dwl">Try this</p><ol data-no-i18n>${qs.map((q) => `<li>${esc(q)}</li>`).join('')}</ol>` : ''}
+            <p class="edu-dwl">Learn</p><p>A dataset is a table: each row is one thing and each column is one fact about it. Pick a question, find the column that answers it, then sort or compare.</p>
+            <p class="edu-dwa"><a href="${esc(d.folder_url)}" target="_blank" rel="noopener">Open the data ›</a></p>
+        <p class="edu-dwc">From TidyTuesday, a free weekly dataset for learning (CC0).${d.source_title ? ` Original source: ${d.source_url ? `<a href="${esc(d.source_url)}" target="_blank" rel="noopener" data-no-i18n>${esc(d.source_title)}</a>` : `<span data-no-i18n>${esc(d.source_title)}</span>`}.` : ''} New every Wednesday.</p>
+          </div>
+        </div>`;
+      box.hidden = false;
+    } catch (err) {
+      console.error('Education widget (data of the week):', err);
+    }
+  }
+
   (async () => {
+    dataWeek();
     try {
       const firsts = await get('education_videos?select=country_code&rank=eq.1');
       const codes = firsts.map((r) => r.country_code);
