@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { AreaChart, Card, DonutChart } from "@tremor/react";
-import { fmtDate, fmtUsd } from "@/lib/format";
+import { fmtDate, fmtUsd, monthLabel } from "@/lib/format";
 import type { LikePollingSummary } from "@/lib/like-polling";
 import type { GeminiCredit } from "@/lib/gemini-credit";
 import GeminiCreditBox from "@/components/GeminiCreditBox";
@@ -48,6 +48,18 @@ export default function LikePollingCard({ data, gemini }: { data: LikePollingSum
         </div>
         <p className="text-lg font-semibold tabular-nums text-dark-tremor-content-strong">{fmtUsd(data.total)}</p>
       </div>
+      <div className="mt-2 grid grid-cols-3 gap-2 text-center">
+        {[
+          ["Costs", data.total, "text-dark-tremor-content-strong"],
+          ["Revenue", data.revenue, "text-blue-400"],
+          ["Profit", data.revenue - data.total, data.revenue - data.total < 0 ? "text-rose-400" : "text-emerald-400"],
+        ].map(([label, value, color]) => (
+          <div key={label as string} className="rounded border border-dark-tremor-border px-1 py-1">
+            <p className="text-[11px] text-dark-tremor-content">{label}</p>
+            <p className={`text-sm font-semibold tabular-nums ${color}`}>{fmtUsd(value as number)}</p>
+          </div>
+        ))}
+      </div>
       <GeminiCreditBox data={gemini} />
       {data.vendors.length === 0 ? (
         <p className="py-6 text-center text-xs text-dark-tremor-content-subtle">No Like Polling charges yet</p>
@@ -92,6 +104,28 @@ export default function LikePollingCard({ data, gemini }: { data: LikePollingSum
             showAnimation={false}
           />
         </>
+      )}
+      {data.months.length > 0 && (
+        <table className="mt-3 w-full text-xs tabular-nums">
+          <thead className="text-[11px] text-dark-tremor-content">
+            <tr>
+              <th className="py-1 text-left font-normal">Month</th>
+              <th className="py-1 text-right font-normal">Costs</th>
+              <th className="py-1 text-right font-normal">Revenue</th>
+              <th className="py-1 text-right font-normal">Profit</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-dark-tremor-border text-dark-tremor-content-emphasis">
+            {data.months.map((m) => (
+              <tr key={m.month}>
+                <td className="py-1">{monthLabel(m.month)}</td>
+                <td className="py-1 text-right">{fmtUsd(m.costs)}</td>
+                <td className="py-1 text-right">{fmtUsd(m.revenue)}</td>
+                <td className={`py-1 text-right ${m.revenue - m.costs < 0 ? "text-rose-400" : "text-emerald-400"}`}>{fmtUsd(m.revenue - m.costs)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       )}
     </Card>
   );

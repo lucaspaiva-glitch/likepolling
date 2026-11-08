@@ -3,7 +3,7 @@ import { getServerSupabase, isSupabaseConfigured } from "@/lib/db/server";
 import { isLiability } from "@/lib/categorize";
 import { internalTransferIds } from "@/lib/transfers";
 import { vacationIds } from "@/lib/vacation";
-import { LIKE_POLLING_CATEGORY, likePollingSummary, likePollingVendor, type LikePollingSummary } from "@/lib/like-polling";
+import { LIKE_POLLING_CATEGORY, LIKE_POLLING_REVENUE_CATEGORY, likePollingRevenueSource, likePollingSummary, likePollingVendor, type LikePollingSummary } from "@/lib/like-polling";
 import { BR_FOREIGN_INVESTMENT_RATE, TAX_ACCOUNT_EXTERNAL_ID, irpfFilingYear } from "@/lib/br-tax";
 import { fmtUsd } from "@/lib/format";
 import { GEMINI_READING_EXTERNAL_ID, emptyGeminiCredit, loadGeminiCredit, type GeminiCredit, type GeminiReading } from "@/lib/gemini-credit";
@@ -82,7 +82,7 @@ function emptyData(configured: boolean, error: string | null): DashboardData {
     portfolioSeries: [],
     snapshotsReady: false,
     categories: { d30: [], d90: [], m12: [] },
-    likePolling: { total: 0, since: null, today: isoDay(new Date()), vendors: [], daily: [] },
+    likePolling: { total: 0, since: null, today: isoDay(new Date()), vendors: [], daily: [], revenue: 0, months: [] },
     geminiCredit: emptyGeminiCredit(),
     insights: emptyInsights(),
     lastUpdated: null,
@@ -158,7 +158,8 @@ function categoryTotals(txs: Transaction[], since: string, flows: Map<string, Fl
   const totals = new Map<string, number>();
   for (const t of txs) {
     const f = flows.get(t.id);
-    if (!f || f.burn === 0 || t.date < since) continue;
+    // Like Polling costs are the business's, shown in its own section rather than your spending.
+    if (!f || f.burn === 0 || t.date < since || t.category === LIKE_POLLING_CATEGORY) continue;
     const c = t.category || "Uncategorized";
     totals.set(c, (totals.get(c) ?? 0) + f.burn);
   }
@@ -201,6 +202,7 @@ export async function getDashboardData(): Promise<DashboardData> {
       if (lt.locked === true) return t;
       // Like Polling running costs (Devin, Google Cloud, ...) get their own category.
       if (vendor && t.amount < 0) return { ...t, category: LIKE_POLLING_CATEGORY };
+      if (t.amount > 0 && likePollingRevenueSource(lt.payee, lt.descriptor)) return { ...t, category: LIKE_POLLING_REVENUE_CATEGORY };
       return vacation.has(t.id) ? { ...t, category: "Vacation" } : t;
     });
   } catch (err) {
