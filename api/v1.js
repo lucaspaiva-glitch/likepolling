@@ -7,10 +7,12 @@
 //   GET /api/v1/education?country=BR
 //   GET /api/v1/news?country=BR[&topic=world|fashion]
 //   GET /api/v1/pulse?country=BR   free public country page (/pulse): searches, holidays, reads, news mood, GDP
+//   GET /api/v1/entity?type=artist|company&title=Anitta (singer)   free Artist/Company pulse (last 7 days)
 // Every number is a stored value or one of the formulas listed in FORMULAS.
 const metrics = require('./metrics');
 const earnings = require('../assets/earnings.js');
 const report = require('../lib/report');
+const entity = require('../lib/entity-report');
 
 const COUNTRIES = ['AR', 'AU', 'BD', 'BE', 'BR', 'CA', 'CL', 'CO', 'DE', 'DZ', 'EC', 'EG', 'ES', 'FR', 'GB', 'ID', 'IE', 'IN', 'IQ', 'IT', 'JP', 'KE',
   'KR', 'MA', 'MX', 'MY', 'NG', 'NL', 'PE', 'PH', 'PK', 'PL', 'PT', 'SA', 'TH', 'TR', 'TW', 'UA', 'US', 'VN', 'ZA'];
@@ -289,6 +291,15 @@ async function pulseRoute(req, get, deps) {
   };
 }
 
+async function entityRoute(req, get, deps) {
+  const type = String(req.query.type || '');
+  const title = String(req.query.title || '').trim();
+  if (!title) throw new HttpError(400, 'Use ?title= with a Wikipedia page title.');
+  const now = deps.now ? new Date(deps.now()) : new Date();
+  const body = await entity.buildEntityPulse(type, title, { fetchImpl: deps.fetch || fetch, rest: get, now });
+  return { cache: 'public, max-age=3600, s-maxage=43200, stale-while-revalidate=86400', body };
+}
+
 function corsHeaders(req, res, env) {
   const origin = req.headers?.origin;
   const extra = String(env.CREATORS_PLUS_ORIGINS || '').split(',').map((s) => s.trim()).filter(Boolean);
@@ -320,8 +331,9 @@ function createHandler(deps = {}) {
         : route === 'education' ? await educationRoute(req, get)
         : route === 'news' ? await newsRoute(req, get)
         : route === 'pulse' ? await pulseRoute(req, get, deps)
+        : route === 'entity' ? await entityRoute(req, get, deps)
         : null;
-      if (!out) throw new HttpError(404, 'Unknown route. Try /api/v1/channel, /trending, /music, /worldwide, /education, /news or /pulse.');
+      if (!out) throw new HttpError(404, 'Unknown route. Try /api/v1/channel, /trending, /music, /worldwide, /education, /news, /pulse or /entity.');
       res.setHeader('Cache-Control', out.cache);
       return res.status(200).json(out.body);
     } catch (err) {

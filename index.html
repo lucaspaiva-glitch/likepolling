@@ -49,30 +49,13 @@
     button.yt-ticker-label:focus-visible { outline: 2px solid #fff; outline-offset: -4px; }
     .yt-info { display: inline-grid; place-items: center; width: 13px; height: 13px; border: 1px solid rgba(255,255,255,.6); border-radius: 50%; font: italic 700 9px/1 Georgia, serif; letter-spacing: 0; text-transform: none; opacity: .85; }
     .yt-note { position: fixed; top: var(--note-y, 42px); left: var(--note-x, 12px); z-index: 62; width: min(380px, calc(100vw - 24px)); font-size: 13.5px; line-height: 1.55; }
-    /* Same card as the Machu Picchu ad (.mpe-ad: neon title, scan bar, scanlines). */
-    .yt-note .yt-note-ad { cursor: default; padding-bottom: 14px; background: linear-gradient(160deg, #1c0004, #2c0007); }
-    /* Scanlines and grain only behind the title, so the explanation stays easy to read. */
-    .yt-note .yt-note-ad::before, .yt-note .yt-note-ad::after { bottom: auto; height: 74px; -webkit-mask-image: linear-gradient(#000 70%, transparent); mask-image: linear-gradient(#000 70%, transparent); }
-    .yt-note .mpe-name { margin: 12px 14px 0; font: 700 17px/1.2 'Chakra Petch', 'Inter', system-ui, sans-serif; letter-spacing: .06em; text-transform: uppercase; white-space: normal; color: #7df9ff; text-shadow: 0 0 2px rgba(125,249,255,.9), 0 0 10px rgba(0,229,255,.55); }
-    .yt-note .mpe-name::after { content: '\258D'; margin-left: 4px; color: #7df9ff; animation: yt-caret 1s steps(1) infinite; }
-    @keyframes yt-caret { 50% { opacity: 0; } }
-    @media (prefers-reduced-motion: reduce) { .yt-note .mpe-name::after { animation: none; } }
-    .yt-note .mpe-bar { margin: 10px 14px 4px; background: rgba(125,249,255,.14); }
-    .yt-note .mpe-bar::after { background: #7df9ff; box-shadow: 0 0 6px #00e5ff; }
-    /* One look: Chakra Petch (as on the ad and truck) throughout, cyan accents; red only on the card's border and glow. */
-    .yt-note .mpe-top { color: rgba(190,240,245,.7); font-family: 'Chakra Petch', 'Inter', system-ui, sans-serif; font-weight: 700; }
-    .yt-note .mpe-sym { background: rgba(125,249,255,.12); color: #7df9ff; }
-    .yt-note-in { padding: 0 14px; }
     .yt-note[hidden] { display: none; }
-    .yt-note h2 { letter-spacing: .03em; }
-    /* Chakra Petch text (Inter for Cyrillic, which Chakra Petch lacks). */
-    .yt-note p { margin: 9px 0 0; padding-left: 14px; text-indent: -14px; font: 400 14.5px/1.55 'Chakra Petch', 'Inter', system-ui, sans-serif; letter-spacing: .01em; color: #e8f3f4; }
-    .yt-note p::before { content: '› '; color: #7df9ff; }
-    @media (max-width: 560px) {
-      .yt-note .mpe-name { margin-top: 10px; font-size: 14px; }
-      .yt-note .mpe-bar { margin-top: 8px; }
-      .yt-note p { margin-top: 7px; padding-left: 12px; text-indent: -12px; font-size: 12.5px; line-height: 1.5; }
-    }
+    .yt-note { width: min(280px, calc(100vw - 24px)); }
+    .yt-note-card { padding: 12px 14px; border-radius: 12px; background: #fff; color: #1d1d1f; border: 1px solid #ececec; box-shadow: 0 12px 28px -12px rgba(0,0,0,.3); font: 400 13.5px/1.45 Inter, system-ui, sans-serif; }
+    .yt-note-card b { display: block; margin-bottom: 4px; font-weight: 700; color: #b0000e; }
+    .yt-note-card p { margin: 0; }
+    .lp-free { margin: 18px 0 0; text-align: center; font-size: 14px; color: #6b6b6b; }
+    .lp-free a { color: #b0000e; font-weight: 600; }
     @keyframes yt-pulse { 0% { box-shadow: 0 0 0 0 rgba(255,255,255,.55); } 70%, 100% { box-shadow: 0 0 0 6px rgba(255,255,255,0); } }
     .yt-ticker-viewport { flex: 1; min-width: 0; display: flex; align-items: center; overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 28px, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(90deg, transparent, #000 28px, #000 calc(100% - 28px), transparent); }
     .yt-ticker-rail { display: flex; width: max-content; animation: yt-marquee var(--yt-duration, 120s) linear infinite; will-change: transform; }
@@ -685,16 +668,7 @@
     <div class="yt-ticker-meta" id="yt-updated"></div>
   </div>
   <div class="yt-note" id="yt-note" role="dialog" aria-labelledby="yt-note-h" hidden>
-    <div class="mpe-ad yt-note-ad">
-      <div class="mpe-top"><span class="mpe-sym" data-no-i18n>LIVE · EST.</span></div>
-      <h2 class="mpe-name" id="yt-note-h">What these numbers mean</h2>
-      <div class="mpe-bar" aria-hidden="true"></div>
-      <div class="yt-note-in">
-    <p>An estimate of how many people are watching YouTube at the same moment in each country, on any screen: phones, computers, tablets and TVs. It counts people, not devices or monthly users.</p>
-    <p>Modelled, not measured: YouTube does not publish live viewer counts. Each figure is YouTube users in that country (Google's ad-reach figures, late 2025, via DataReportal) × about 80 minutes of viewing per person per day, spread over the day by a typical hourly viewing pattern.</p>
-    <p>Recalculated every 15 minutes for each country's local time. Large countries (United States, Canada, Brazil, Mexico, Australia, Indonesia) are split across their time zones by population. Read the figures as an order of magnitude, not an exact count.</p>
-      </div>
-    </div>
+    <div class="yt-note-card"><b id="yt-note-h">Estimated, not exact</b><p>YouTube users in each country × average daily viewing time. Updated every 15 minutes.</p></div>
   </div>
   <div class="wrap">
     <div class="lp-head">
@@ -807,8 +781,9 @@ ENERGY</div>
   </aside>
   <section class="lp-offers" id="offers" aria-labelledby="offers-h">
     <h2 id="offers-h">Extended reports.</h2>
-    <p>Based on Like Polling's analysis of its history data, gathered every day since 24 October 2026, the day we started.</p>
+    <p>Everything Like Polling has saved on one country, artist or company, since 24 October 2026.</p>
     <div data-offers></div>
+    <p class="lp-free">Free every day: <a href="/pulse">Country pulse</a> · <a href="/pulse?artist=">Artist pulse</a> · <a href="/pulse?company=">Company pulse</a></p>
   </section>
   <footer><div class="foot-tag">Human + AI analytics for what the world watches</div><div class="foot-src">Sources: YouTube Data API · Google News · Google Gemini (AI)</div>Like Polling · Data via YouTube Data API · Earnings are estimates (by country, topic and Shorts)<span aria-hidden="true"> · </span><a href="/data">Open data for AI</a><span aria-hidden="true"> · </span><a href="/services">Services</a></footer>
 
@@ -845,7 +820,7 @@ ENERGY</div>
         rail.innerHTML = `<div class="yt-ticker-group">${items}</div><div class="yt-ticker-group" aria-hidden="true">${items}</div>`;
         if (updated_at) $('yt-updated').textContent = `As of ${new Date(updated_at).toISOString().slice(11, 16)} UTC`;
         const width = rail.firstElementChild.getBoundingClientRect().width;
-        rail.style.setProperty('--yt-duration', `${Math.max(30, width / 45).toFixed(1)}s`);
+        rail.style.setProperty('--yt-duration', `${Math.max(40, width / 30).toFixed(1)}s`);
       } catch (err) {
         console.error('Active users ticker:', err);
         $('yt-ticker').hidden = true;
@@ -989,7 +964,7 @@ ENERGY</div>
           <div class="metric ${leads.comments ? 'lead' : ''}"><div class="label">Comments ${tag('comments')}</div><div class="value">${fmt(metric?.comment_volume)}</div><div class="hint">Last 30 days</div></div>
           <div class="metric ${leads.views ? 'lead' : ''}"><div class="label">Est. earnings ${tag('views')}</div><div class="value">$${fmt(e.low)}–${fmt(e.high)}</div><div class="hint">Per month, USD</div><div class="hint" data-no-i18n>$${e.rpm_low.toFixed(2)}–$${e.rpm_high.toFixed(2)} / 1K</div></div>
         </div>
-        <p class="earn-note">How we estimate earnings: last-30-day views × a rate per 1,000 views. Long videos use the channel's country (about &#36;3–&#36;5 in the US, UK or Germany, &#36;1.20–&#36;2 in Brazil or Mexico, &#36;0.45–&#36;0.75 in India or Nigeria). Shorts use &#36;0.04–&#36;0.07. Education, science and how-to videos count ×1.3; music, gaming and comedy ×0.7. YouTube doesn't publish real payouts, so this is an estimate.</p>
+        <p class="earn-note">Estimated: views × a typical rate per 1,000 views for the country and video type. YouTube doesn't publish real payouts.</p>
         ${intel(entity, metric?.details)}
         ${warning ? `<div class="notice">${esc(warning)}</div>` : ''}
         <div class="card-foot">Updated ${esc(updated)}</div>

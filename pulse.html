@@ -18,14 +18,16 @@
     </div>
     <header class="pl-hero">
       <span class="pl-live"><i></i>Live</span>
-      <h1 class="pl-title" data-text="Country pulse">Country pulse</h1>
-      <p class="lead">What a country searches, reads, celebrates and feels. Free, updated every day.</p>
+      <h1 class="pl-title" id="pl-h">Country pulse</h1>
+      <p class="lead" id="pl-lead">What a country searches, reads, celebrates and feels. Free, updated every day.</p>
+      <div class="pl-modes" id="modes" role="tablist" aria-label="Pulse type"><button type="button" role="tab" data-m="country">Country</button><button type="button" role="tab" data-m="artist">Artist</button><button type="button" role="tab" data-m="company">Company</button></div>
       <div class="pl-pick" id="pick" role="listbox" aria-label="Pick a country"></div>
+      <form class="pl-find" id="find" hidden><input id="q" list="q-sug" autocomplete="off" aria-label="Name"><datalist id="q-sug"></datalist><button type="submit" class="btn">Show</button></form>
     </header>
     <div id="pulse" aria-live="polite"><p class="muted">Loading…</p></div>
     <section class="pl-cta">
-      <p>Want the full picture? The Country report has 30 days of charts, side by side with another country. From €8, no sign-up.</p>
-      <a class="btn" href="/services#country">See the reports</a>
+      <p id="cta-t">Everything we have saved on this country, in one Extended report. €8.</p>
+      <a class="btn" id="cta-b" href="/services#country">Get the Extended report</a>
     </section>
     <p class="small muted pl-src">Sources: Google Trends, Nager.Date, Wikimedia, The GDELT Project, World Bank, Open Library, The Space Devs. Gathered by Like Polling every day.</p>
   </main>

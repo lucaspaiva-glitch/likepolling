@@ -198,3 +198,30 @@ test('pulse: free country page data from saved aggregates only', async () => {
   await createHandler({ env: { SUPABASE_URL: 'https://db.test', SUPABASE_KEY: 'k' }, fetch: fetchImpl })({ method: 'GET', query: { route: 'pulse', country: 'XX' }, headers: {} }, bad);
   assert.equal(bad.statusCode, 400);
 });
+
+test('entity: free artist/company pulse from Wikimedia + saved records, no AI', async () => {
+  const { createHandler } = require('../api/v1');
+  const seen = [];
+  const fetchImpl = async (url) => {
+    const u = String(url); seen.push(u);
+    const body = u.includes('pageimages') ? { query: { pages: [{ title: 'Anitta (singer)', description: 'Brazilian singer', fullurl: 'https://en.wikipedia.org/wiki/Anitta_(singer)' }] } }
+      : u.includes('pageviews') ? { items: [{ timestamp: '2026-10-30', views: 50 }, { timestamp: '2026-11-02', views: 100 }, { timestamp: '2026-11-03', views: 100 }].map((x) => ({ ...x, timestamp: x.timestamp.replace(/-/g, '') + '00' })) }
+      : u.includes('langlinks') ? { query: { pages: [{ langlinks: [{ lang: 'pt', title: 'Anitta (cantora)' }] }] } }
+      : u.includes('wiki_top_daily') ? [{ country_code: 'BR', day: '2026-11-02' }, { country_code: 'BR', day: '2026-11-03' }]
+      : u.includes('trends_daily') ? [{ country_code: 'PT', day: '2026-11-03', query: 'anitta show', traffic: 500 }]
+      : {};
+    return { ok: true, status: 200, json: async () => body };
+  };
+  const res = { headers: {}, setHeader(k, v) { this.headers[k] = v; }, status(c) { this.statusCode = c; return this; }, json(b) { this.body = b; return this; }, end() { return this; } };
+  await createHandler({ env: { SUPABASE_URL: 'https://db.test', SUPABASE_KEY: 'k' }, fetch: fetchImpl, now: () => Date.parse('2026-11-08T10:00:00Z') })({ method: 'GET', query: { route: 'entity', type: 'artist', title: 'Anitta (singer)' }, headers: {} }, res);
+  assert.equal(res.statusCode, 200, JSON.stringify(res.body));
+  assert.equal(res.body.subject.title, 'Anitta (singer)');
+  assert.equal(res.body.views.week, 200);
+  assert.deepEqual(res.body.countries.find((c) => c.country === 'BR'), { country: 'BR', read_days: 2, search_days: 0 });
+  assert.deepEqual(res.body.searches, [{ query: 'anitta show', traffic: 500 }]);
+  assert.ok(!seen.some((u) => /generativelanguage|gemini/i.test(u)));
+  assert.match(res.headers['Cache-Control'], /s-maxage=43200/);
+  const bad = { ...res, headers: {}, setHeader(k, v) { this.headers[k] = v; } };
+  await createHandler({ env: { SUPABASE_URL: 'https://db.test', SUPABASE_KEY: 'k' }, fetch: fetchImpl })({ method: 'GET', query: { route: 'entity', type: 'band', title: 'X' }, headers: {} }, bad);
+  assert.equal(bad.statusCode, 400);
+});
