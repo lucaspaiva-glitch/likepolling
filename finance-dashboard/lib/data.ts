@@ -7,6 +7,7 @@ import { LIKE_POLLING_CATEGORY, likePollingSummary, likePollingVendor, type Like
 import { BR_FOREIGN_INVESTMENT_RATE, TAX_ACCOUNT_EXTERNAL_ID, irpfFilingYear } from "@/lib/br-tax";
 import { fmtUsd } from "@/lib/format";
 import { emptyGeminiCredit, loadGeminiCredit, type GeminiCredit } from "@/lib/gemini-credit";
+import { emptyInsights, loadCompanyInsights, type CompanyInsights } from "@/lib/company-insights";
 import type { Account, Transaction } from "@/lib/types";
 
 export interface CategoryPoint {
@@ -45,6 +46,7 @@ export interface DashboardData {
   categories: { d30: CategoryPoint[]; d90: CategoryPoint[]; m12: CategoryPoint[] };
   likePolling: LikePollingSummary;
   geminiCredit: GeminiCredit;
+  insights: CompanyInsights;
   lastUpdated: string | null;
 }
 
@@ -82,6 +84,7 @@ function emptyData(configured: boolean, error: string | null): DashboardData {
     categories: { d30: [], d90: [], m12: [] },
     likePolling: { total: 0, since: null, today: isoDay(new Date()), vendors: [], daily: [] },
     geminiCredit: emptyGeminiCredit(),
+    insights: emptyInsights(),
     lastUpdated: null,
   };
 }
@@ -312,11 +315,14 @@ export async function getDashboardData(): Promise<DashboardData> {
   const since90 = isoDay(new Date(today.getTime() - 90 * 864e5));
   const lastUpdated = accounts.reduce<string | null>((max, a) => (!max || a.updated_at > max ? a.updated_at : max), null);
 
-  const geminiCredit = await loadGeminiCredit(
-    transactions
-      .filter((t) => t.amount < 0 && likePollingVendors.get(t.id)?.startsWith("Google Cloud"))
-      .map((t) => ({ date: t.date, amount: -t.amount })),
-  );
+  const [geminiCredit, insights] = await Promise.all([
+    loadGeminiCredit(
+      transactions
+        .filter((t) => t.amount < 0 && likePollingVendors.get(t.id)?.startsWith("Google Cloud"))
+        .map((t) => ({ date: t.date, amount: -t.amount })),
+    ),
+    loadCompanyInsights(today),
+  ]);
   return {
     configured: true,
     error: null,
@@ -347,6 +353,7 @@ export async function getDashboardData(): Promise<DashboardData> {
     },
     likePolling: likePollingSummary(transactions, likePollingVendors, todayIso),
     geminiCredit,
+    insights,
     lastUpdated,
   };
 }

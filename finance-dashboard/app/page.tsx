@@ -3,6 +3,7 @@ import AllocationChart from "@/components/AllocationChart";
 import CategoryBreakdown from "@/components/CategoryBreakdown";
 import CsvDropzone from "@/components/CsvDropzone";
 import KpiStrip from "@/components/KpiStrip";
+import CompanyInsightsCard from "@/components/CompanyInsightsCard";
 import LikePollingCard from "@/components/LikePollingCard";
 import PlaidConnect from "@/components/PlaidConnect";
 import PortfolioChart from "@/components/PortfolioChart";
@@ -58,6 +59,7 @@ export default async function Page() {
         </div>
         <div className="flex flex-col gap-2 lg:col-span-3">
           <LikePollingCard data={data.likePolling} gemini={data.geminiCredit} />
+          <CompanyInsightsCard data={data.insights} />
           <div className="flex-1">
             <CsvDropzone accounts={data.accounts} />
           </div>

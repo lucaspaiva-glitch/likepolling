@@ -23,7 +23,12 @@ export default function GeminiCreditBox({ data }: { data: GeminiCredit }) {
           </p>
         </div>
         {data.left != null && (
-          <p className={`text-base font-semibold tabular-nums ${left <= 0 ? "text-rose-400" : "text-emerald-400"}`}>{fmtUsd2(left)}</p>
+          <div className="text-right">
+            <p className={`text-base font-semibold tabular-nums ${left <= 0 ? "text-rose-400" : "text-emerald-400"}`}>{fmtUsd2(left)}</p>
+            {data.usdToEur != null && (
+              <p className="text-[11px] tabular-nums text-dark-tremor-content">≈ €{(left * data.usdToEur).toFixed(2)}</p>
+            )}
+          </div>
         )}
       </div>
       {data.error && <p className="mt-1 text-[11px] text-rose-400">Couldn&apos;t read Gemini usage: {data.error}</p>}

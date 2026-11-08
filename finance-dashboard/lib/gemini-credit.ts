@@ -18,21 +18,33 @@ export interface GeminiCredit {
   left: number | null;
   outOfCredit: boolean;
   outSince: string | null;
+  usdToEur: number | null; // ECB rate via Frankfurter, since AI Studio shows the credit in euros
 }
 
 export const emptyGeminiCredit = (configured = false, error: string | null = null): GeminiCredit => ({
-  configured, error, topUp: null, topUpDate: null, spent: 0, requests: 0, left: null, outOfCredit: false, outSince: null,
+  configured, error, topUp: null, topUpDate: null, spent: 0, requests: 0, left: null, outOfCredit: false, outSince: null, usdToEur: null,
 });
 
 type UsageRow = { model: string; input_tokens: number; output_tokens: number };
 
 // Reads Like Polling's private gemini_usage table (its own Supabase project) with its server key.
-async function lp<T>(query: string): Promise<T> {
+export async function lp<T>(query: string): Promise<T> {
   const url = (process.env.LP_SUPABASE_URL ?? "").trim().replace(/\/$/, "");
   const key = (process.env.LP_SUPABASE_KEY ?? "").trim();
   const res = await fetch(`${url}/rest/v1/${query}`, { headers: { apikey: key, Authorization: `Bearer ${key}` }, cache: "no-store" });
   if (!res.ok) throw new Error(`Like Polling usage: HTTP ${res.status}`);
   return res.json() as Promise<T>;
+}
+
+// Free ECB rates, no key (github.com/lineofflight/frankfurter). Cached for a day; null if unreachable.
+async function usdToEur(): Promise<number | null> {
+  try {
+    const res = await fetch("https://api.frankfurter.dev/v1/latest?base=USD&symbols=EUR", { next: { revalidate: 86400 } });
+    const rate = (await res.json())?.rates?.EUR;
+    return typeof rate === "number" && rate > 0 ? rate : null;
+  } catch {
+    return null;
+  }
 }
 
 export function requestCost(r: UsageRow) {
@@ -46,12 +58,13 @@ export async function loadGeminiCredit(topUps: Array<{ date: string; amount: num
   try {
     const topUpDate = topUps.reduce<string | null>((d, t) => (!d || t.date > d ? t.date : d), null);
     const since = topUpDate ? `${topUpDate}T00:00:00Z` : "";
+    const ratePromise = usdToEur();
     const [lastOk, lastOut] = await Promise.all(
       ["ok", "no_credit"].map((s) => lp<Array<{ at: string }>>(`gemini_usage?select=at&status=eq.${s}&order=at.desc&limit=1`)),
     );
     const outAt = lastOut[0]?.at ?? null;
     const outOfCredit = !!outAt && new Date(outAt) > new Date(lastOk[0]?.at ?? 0) && new Date(outAt) > new Date(since || 0);
-    const base = { ...emptyGeminiCredit(true), outOfCredit, outSince: outOfCredit ? outAt : null };
+    const base = { ...emptyGeminiCredit(true), outOfCredit, outSince: outOfCredit ? outAt : null, usdToEur: await ratePromise };
     if (!topUpDate) return base;
 
     let spent = 0;
