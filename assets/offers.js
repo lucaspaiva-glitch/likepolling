@@ -102,13 +102,15 @@
   const fine = matchMedia('(hover: hover) and (pointer: fine)').matches;
   let cards = [];
   function draw() {
-    roots.forEach((r) => { r.classList.add('svc-grid'); r.innerHTML = OFFERS.map(card).join(''); });
+    roots.forEach((r) => { r.classList.add('svc-grid'); r.innerHTML = OFFERS.filter((o) => r.dataset.offers !== 'reports' || !o.mail).map(card).join(''); });
     cards = [...document.querySelectorAll('.svc')];
     cards.forEach(wire);
     cards.forEach(wireForm);
   }
   function setOpen(c, on) { c.classList.toggle('open', on); }
   function wire(c) {
+    // Homepage shows titles only: on touch screens the first tap opens a card, the next tap opens its content.
+    if (!fine && c.closest('.lp-offers')) c.querySelector('.svc-tab').addEventListener('click', (e) => { if (!c.classList.contains('open')) { e.preventDefault(); cards.forEach((x) => setOpen(x, x === c)); } });
     if (!fine) return;
     let t = 0;
     c.addEventListener('pointerenter', (e) => { if (e.pointerType !== 'mouse') return; clearTimeout(t); t = setTimeout(() => setOpen(c, true), 150); });

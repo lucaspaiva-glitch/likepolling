@@ -118,3 +118,6 @@
   .pl-card { opacity: 1 !important; transform: none !important; box-shadow: none; break-inside: avoid; }
   body { background: #fff; }
 }
+.pl-alt { margin: 8px 0 0; font-size: 13px; color: #6b6b6b; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.pl-alt button { border: 1.5px solid #ececec; background: #fff; border-radius: 999px; padding: 5px 11px; font: 600 13px Inter, sans-serif; color: #111; cursor: pointer; }
+.pl-alt button:hover { border-color: #b0000e; color: #b0000e; }

@@ -293,6 +293,10 @@ test('Gumroad artist key: picks the artist once, then a signed instance reopens 
   assert.equal(res.statusCode, 404);
   assert.equal(state.uses, undefined, 'a wrong name does not use up the key');
   res = await call({ key: GKEY, choice: { subject: 'Anitta (singer)', peers: ['Ludmilla (singer)'] } });
+  assert.equal(res.statusCode, 409);
+  assert.equal(res.body.confirm.title, 'Anitta (singer)', 'a typed name is confirmed before the key is used');
+  assert.equal(state.uses, undefined);
+  res = await call({ key: GKEY, choice: { subject: 'Anitta (singer)', peers: ['Ludmilla (singer)'], confirm: true } });
   assert.equal(res.statusCode, 200);
   assert.equal(state.uses, 1);
   assert.match(res.body.instance_id, /^g-a\.[A-Za-z0-9_-]+\.[0-9a-f]{32}$/);
@@ -351,4 +355,26 @@ test('searches adds up Google Trends traffic and trending days per search', () =
   const s = report.searches([{ day: '2026-11-05', query: 'Flamengo', traffic: 500 }, { day: '2026-11-06', query: 'flamengo', traffic: 2000 }, { day: '2026-11-06', query: 'Enem', traffic: 1000 }]);
   assert.deepEqual(s.top, [{ query: 'Flamengo', days: 2, traffic: 2500 }, { query: 'Enem', days: 1, traffic: 1000 }]);
   assert.equal(s.days, 2);
+});
+
+test('typed names resolve to the right page: "Nike" -> Nike, Inc.; "Apple" as a company -> Apple Inc.', async () => {
+  const pagesFor = { Nike: { title: 'Nike', description: 'Topics referred to by the same term', pageprops: { disambiguation: '' } }, Apple: { title: 'Apple', description: 'Edible fruit' }, Shakira: { title: 'Shakira', description: 'Colombian singer-songwriter' } };
+  const results = {
+    Nike: [{ title: 'Nike (mythology)', description: 'Greek goddess of victory' }, { title: 'Nike, Inc.', description: 'American athletic footwear and apparel company' }, { title: 'Nike', description: 'Topics referred to by the same term', pageprops: {} }],
+    Apple: [{ title: 'Apple', description: 'Edible fruit' }, { title: 'Apple Inc.', description: 'American multinational technology company' }, { title: 'List of apple cultivars', description: '' }],
+    Shakira: [{ title: 'Shakira', description: 'Colombian singer-songwriter' }, { title: 'Shakira discography', description: '' }],
+  };
+  const fetchImpl = async (url) => {
+    const q = Object.fromEntries(new URL(url).searchParams);
+    const body = q.generator === 'search' ? { query: { pages: results[q.gsrsearch].map((p, i) => ({ ...p, index: i + 1 })) } } : { query: { pages: [pagesFor[q.titles]] } };
+    return { ok: true, status: 200, json: async () => body };
+  };
+  const nike = await entity.resolveSubject('company', 'Nike', { fetchImpl });
+  assert.equal(nike.page.title, 'Nike, Inc.');
+  assert.ok(!nike.options.some((o) => o.title === 'Nike' || o.title === 'Nike, Inc.'));
+  const apple = await entity.resolveSubject('company', 'Apple', { fetchImpl });
+  assert.equal(apple.page.title, 'Apple Inc.');
+  assert.deepEqual(apple.options.map((o) => o.title), ['Apple']);
+  const shakira = await entity.resolveSubject('artist', 'Shakira', { fetchImpl });
+  assert.equal(shakira.page.title, 'Shakira');
 });

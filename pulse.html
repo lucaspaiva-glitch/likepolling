@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="/assets/fonts/fonts.css">
   <link rel="stylesheet" href="/assets/commerce.css">
   <link rel="stylesheet" href="/assets/pulse.css">
+  <link rel="stylesheet" href="/assets/suggest.css">
 </head>
 <body>
   <main>
@@ -22,7 +23,7 @@
       <p class="lead" id="pl-lead">What a country searches, reads, celebrates and feels. Free, updated every day.</p>
       <div class="pl-modes" id="modes" role="tablist" aria-label="Pulse type"><button type="button" role="tab" data-m="country">Country</button><button type="button" role="tab" data-m="artist">Artist</button><button type="button" role="tab" data-m="company">Company</button></div>
       <div class="pl-pick" id="pick" role="listbox" aria-label="Pick a country"></div>
-      <form class="pl-find" id="find" hidden><input id="q" list="q-sug" autocomplete="off" aria-label="Name"><datalist id="q-sug"></datalist><button type="submit" class="btn">Show</button></form>
+      <form class="pl-find" id="find" hidden><input id="q" autocomplete="off" aria-label="Name"><button type="submit" class="btn">Show</button></form>
     </header>
     <div id="pulse" aria-live="polite"><p class="muted">Loading…</p></div>
     <section class="pl-cta">
@@ -32,6 +33,7 @@
     <p class="small muted pl-src">Sources: Google Trends, Nager.Date, Wikimedia, The GDELT Project, World Bank, Open Library, The Space Devs. Gathered by Like Polling every day.</p>
   </main>
   <script src="/assets/i18n.js"></script>
+  <script src="/assets/suggest.js" defer></script>
   <script src="/assets/pulse.js" defer></script>
   <script defer src="/_vercel/insights/script.js"></script>
   <script src="/assets/interest.js" defer></script>

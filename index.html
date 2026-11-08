@@ -643,6 +643,16 @@
     .lp-offers { max-width: 1080px; margin: 36px auto 36px; padding: 0; }
     .lp-offers > h2 { margin: 0; font: 700 26px/1.15 Inter, system-ui, sans-serif; letter-spacing: -.01em; color: #1d1d1f; text-align: center; }
     .lp-offers > p { margin: 6px 0 20px; font-size: 14px; color: #6e6e73; text-align: center; }
+    .lp-offers .svc:not(.open) :is(.svc-top, .svc-bar, .svc-sub, .svc-more, .svc-buy-m) { display: none; }
+    .lp-offers .svc:not(.open) .svc-name { margin: 16px 14px 2px; }
+    @media (min-width: 561px) { .lp-offers .svc-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+    .lp-offers .svc.open :is(.svc-top, .svc-bar, .svc-sub, .svc-more, .svc-buy-m, .svc-body) { animation: lp-reveal .22s ease both; }
+    @keyframes lp-reveal { from { opacity: 0; transform: translateY(-4px); } }
+    @media (hover: hover) and (pointer: fine) {
+      .lp-offers .svc-grid { grid-auto-rows: 84px; }
+      .lp-offers .svc { z-index: 1; }
+      .lp-offers .svc.open { z-index: 5; }
+    }
     .lp-head { grid-column: 1 / -1; grid-row: 1; min-width: 0; }
     .lp-rep { display: flex; align-items: center; justify-content: space-between; gap: 14px 24px; flex-wrap: wrap; margin: 14px 0 -16px; padding: 12px 16px; border-radius: 14px; background: #f5f5f7; font-size: 13px; color: #1d1d1f; }
     .lp-rep p { margin: 0; line-height: 1.45; }
@@ -685,7 +695,7 @@
     <section class="lp-offers" id="offers" aria-labelledby="offers-h">
       <h2 id="offers-h">Extended reports.</h2>
       <p>Everything Like Polling has saved on one country, artist or company, since 24 October 2026.</p>
-      <div data-offers></div>
+      <div data-offers="reports"></div>
     </section>
     </div>
 

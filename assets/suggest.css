@@ -1,0 +1,24 @@
+.lp-sug-wrap { position: relative; display: block; flex: 1; min-width: 0; }
+.lp-sug-wrap > input { width: 100%; box-sizing: border-box; font-size: 16px; }
+.lp-sug { position: absolute; z-index: 50; left: 0; right: 0; top: calc(100% + 6px); margin: 0; padding: 6px; list-style: none; background: #fff; border: 1px solid #ececec; border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,.12); max-height: min(60vh, 380px); overflow-y: auto; -webkit-overflow-scrolling: touch; text-align: left; }
+.lp-sug[hidden] { display: none; }
+.lp-sug li { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px; cursor: pointer; min-height: 44px; }
+.lp-sug li[aria-selected="true"] { background: #f6f6f6; }
+.lp-sug img, .lp-sug i { flex: none; width: 36px; height: 36px; border-radius: 8px; object-fit: cover; background: #f1f1f1; }
+.lp-sug i { display: grid; place-items: center; font: 700 15px Inter, sans-serif; font-style: normal; color: #b0000e; }
+.lp-sug span { min-width: 0; display: flex; flex-direction: column; }
+.lp-sug b { font: 400 15px Inter, sans-serif; color: #111; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lp-sug b strong { font-weight: 700; }
+.lp-sug small { font: 400 12.5px Inter, sans-serif; color: #6b6b6b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#pe-ok { margin-top: 10px; display: grid; gap: 6px; }
+#pe-ok[hidden] { display: none; }
+#pe-ok p { margin: 6px 0 0; }
+.pe-opt { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 10px; min-height: 48px; border: 1.5px solid #ececec; border-radius: 12px; background: #fff; text-align: left; cursor: pointer; font: inherit; }
+.pe-opt:hover { border-color: #b0000e; }
+.pe-opt.me { border-color: #b0000e; background: #fff5f5; }
+.pe-opt img, .pe-opt i { flex: none; width: 40px; height: 40px; border-radius: 8px; object-fit: cover; background: #f1f1f1; display: grid; place-items: center; font: 700 15px Inter, sans-serif; font-style: normal; color: #b0000e; }
+.pe-opt span { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.pe-opt b { font-size: 15px; color: #111; }
+.pe-opt small { font-size: 12.5px; color: #6b6b6b; }
+.pe-opt em { flex: none; font-style: normal; font-weight: 700; font-size: 13px; color: #b0000e; }
+@media (max-width: 520px) { .pe-opt { flex-wrap: wrap; } .pe-opt em { width: 100%; text-align: right; } }

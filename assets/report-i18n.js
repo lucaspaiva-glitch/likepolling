@@ -2,6 +2,9 @@
 // pt-PT uses 'pt' plus the overrides below. English (and en-GB) use the keys as they are.
 window.LP_REPORT_DICT = {
 "pt": {
+"Yes, this one": "Sim, este",
+"Or one of these:": "Ou um destes:",
+"Did you mean:": "Você quis dizer:",
 "A search spike shows curiosity, not love. People also search for things they fear or just heard about.": "Um pico de buscas mostra curiosidade, não amor. As pessoas também buscam o que temem ou acabaram de ouvir falar.",
 "On holidays people shop, travel and go online differently. Plan posts a week or two ahead.": "Nos feriados as pessoas compram, viajam e usam a internet de outro jeito. Planeje os posts com uma ou duas semanas de antecedência.",
 "Searched on Google": "Buscado no Google",
@@ -243,6 +246,9 @@ window.LP_REPORT_DICT = {
 "Mass violence": "Violência em massa"
 },
 "es": {
+"Yes, this one": "Sí, este",
+"Or one of these:": "O uno de estos:",
+"Did you mean:": "Quizás quisiste decir:",
 "A search spike shows curiosity, not love. People also search for things they fear or just heard about.": "Un pico de búsquedas muestra curiosidad, no amor. La gente también busca lo que teme o lo que acaba de oír.",
 "On holidays people shop, travel and go online differently. Plan posts a week or two ahead.": "En los festivos la gente compra, viaja y se conecta de otra manera. Planifica las publicaciones con una o dos semanas de antelación.",
 "Searched on Google": "Buscado en Google",
@@ -484,6 +490,9 @@ window.LP_REPORT_DICT = {
 "Mass violence": "Violencia masiva"
 },
 "de": {
+"Yes, this one": "Ja, genau das",
+"Or one of these:": "Oder eines davon:",
+"Did you mean:": "Meinten Sie:",
 "A search spike shows curiosity, not love. People also search for things they fear or just heard about.": "Ein Suchanstieg zeigt Neugier, keine Liebe. Man sucht auch nach Dingen, die man fürchtet oder gerade gehört hat.",
 "On holidays people shop, travel and go online differently. Plan posts a week or two ahead.": "An Feiertagen kaufen, reisen und surfen Menschen anders. Plane Posts ein bis zwei Wochen im Voraus.",
 "Searched on Google": "Bei Google gesucht",
@@ -725,6 +734,9 @@ window.LP_REPORT_DICT = {
 "Mass violence": "Massengewalt"
 },
 "ru": {
+"Yes, this one": "Да, это",
+"Or one of these:": "Или один из этих:",
+"Did you mean:": "Возможно, вы имели в виду:",
 "A search spike shows curiosity, not love. People also search for things they fear or just heard about.": "Всплеск поиска — это любопытство, а не любовь. Люди ищут и то, чего боятся или о чём только что услышали.",
 "On holidays people shop, travel and go online differently. Plan posts a week or two ahead.": "В праздники люди иначе покупают, путешествуют и сидят в интернете. Планируйте публикации за одну-две недели.",
 "Searched on Google": "Искали в Google",
@@ -966,6 +978,9 @@ window.LP_REPORT_DICT = {
 "Mass violence": "Массовое насилие"
 },
 "uk": {
+"Yes, this one": "Так, це",
+"Or one of these:": "Або один із цих:",
+"Did you mean:": "Можливо, ви мали на увазі:",
 "A search spike shows curiosity, not love. People also search for things they fear or just heard about.": "Сплеск пошуку — це цікавість, а не любов. Люди шукають і те, чого бояться або про що щойно почули.",
 "On holidays people shop, travel and go online differently. Plan posts a week or two ahead.": "У свята люди інакше купують, подорожують і сидять в інтернеті. Плануйте дописи за тиждень-два.",
 "Searched on Google": "Шукали в Google",
@@ -1207,6 +1222,9 @@ window.LP_REPORT_DICT = {
 "Mass violence": "Масове насильство"
 },
 "ko": {
+"Yes, this one": "네, 이거예요",
+"Or one of these:": "또는 다음 중 하나:",
+"Did you mean:": "혹시 이것을 찾으셨나요:",
 "A search spike shows curiosity, not love. People also search for things they fear or just heard about.": "검색 급증은 사랑이 아니라 호기심입니다. 사람들은 두려운 것이나 방금 들은 것도 검색합니다.",
 "On holidays people shop, travel and go online differently. Plan posts a week or two ahead.": "공휴일에는 쇼핑, 여행, 온라인 이용 방식이 달라집니다. 게시물은 1~2주 전에 계획하세요.",
 "Searched on Google": "구글 검색어",
@@ -1448,6 +1466,9 @@ window.LP_REPORT_DICT = {
 "Mass violence": "대규모 폭력"
 },
 "ja": {
+"Yes, this one": "はい、これです",
+"Or one of these:": "またはこちら:",
+"Did you mean:": "もしかして:",
 "A search spike shows curiosity, not love. People also search for things they fear or just heard about.": "検索の急増は好きの証ではなく好奇心の証。怖いことや聞いたばかりのことも検索されます。",
 "On holidays people shop, travel and go online differently. Plan posts a week or two ahead.": "祝日は買い物や旅行、ネットの使い方が変わります。投稿は1〜2週間前に計画しましょう。",
 "Searched on Google": "Googleで検索されたこと",

@@ -41,15 +41,11 @@
     if (push) history.replaceState(null, '', m === 'country' ? `?c=${cc}` : `?${m}=${encodeURIComponent(who[m])}`);
   }
   $('modes').addEventListener('click', (e) => { const b = e.target.closest('button[data-m]'); if (b && b.dataset.m !== mode) { setMode(b.dataset.m, true); load(); } });
-  let sugT = 0;
-  $('q').addEventListener('input', () => {
-    clearTimeout(sugT);
-    const v = $('q').value.trim();
-    if (v.length < 2) return;
-    sugT = setTimeout(() => fetch(`https://en.wikipedia.org/w/api.php?action=opensearch&format=json&namespace=0&limit=8&origin=*&search=${encodeURIComponent(v)}`)
-      .then((r) => r.json()).then((j) => { $('q-sug').innerHTML = (j[1] || []).map((t) => `<option value="${esc(t)}">`).join(''); }).catch(() => {}), 250);
-  });
-  $('find').addEventListener('submit', (e) => { e.preventDefault(); const v = $('q').value.trim(); if (!v) return; who[mode] = v; setMode(mode, true); load(); });
+  const show = (v) => { who[mode] = v; setMode(mode, true); load(); };
+  window.LPSuggest($('q'), { type: () => mode, onPick: (it) => show(it.title) });
+  $('find').addEventListener('submit', (e) => { e.preventDefault(); const v = $('q').value.trim(); if (v) show(v); });
+  const alts = (o) => (o && o.length ? `<p class="pl-alt">${esc(T('Not this one?'))} ${o.map((x) => `<button type="button" data-t="${esc(x.title)}" title="${esc(x.description)}">${esc(x.title)}</button>`).join('')}</p>` : '');
+  $('pulse').addEventListener('click', (e) => { const b = e.target.closest('.pl-alt button[data-t]'); if (b) show(b.dataset.t); });
   $('pick').setAttribute('data-no-i18n', '');
   $('pulse').setAttribute('data-no-i18n', '');
   $('pick').addEventListener('click', (e) => {
@@ -142,7 +138,7 @@
   function renderEntity(d) {
     const s = d.subject, v = d.views, cards = [];
     cards.push(`<section class="pl-card wide pl-ent">${s.image ? `<img src="${esc(s.image)}" alt="" loading="lazy">` : ''}<div><h2 data-no-i18n>${esc(s.title)}</h2>
-      <p class="note" data-no-i18n>${esc(s.description)}</p><p class="pl-ent-k"><b>${num(s.languages)}</b> ${esc(T('Wikipedia languages'))} · <a href="${esc(s.link)}" target="_blank" rel="noopener">Wikipedia ↗</a></p></div></section>`);
+      <p class="note" data-no-i18n>${esc(s.description)}</p><p class="pl-ent-k"><b>${num(s.languages)}</b> ${esc(T('Wikipedia languages'))} · <a href="${esc(s.link)}" target="_blank" rel="noopener">Wikipedia ↗</a></p>${alts(d.options)}</div></section>`);
     const days = v.days || [], max = Math.max(1, ...days.map((x) => x.views));
     const ch = v.change_pct;
     cards.push(`<section class="pl-card"><span class="pl-tag">${T('This week')}</span><h2>${T('Wikipedia views')}</h2>
@@ -161,6 +157,7 @@
     }
     $('pulse').innerHTML = `${tools()}<div class="pl-grid">${cards.join('')}</div>`;
     document.querySelectorAll('.pl-card').forEach((el) => el.classList.add('in'));
+    if (s.title !== who[mode]) { who[mode] = s.title; setMode(mode, true); }
     wireTools(`${T(HEAD[mode][0])} · ${s.title}`);
     document.title = `${s.title} · ${T(HEAD[mode][0])} · Like Polling`;
   }
@@ -169,9 +166,9 @@
     if (mode !== 'country') {
       $('pulse').innerHTML = `<p class="muted">${T('Loading…')}</p>`;
       const m = mode;
-      return fetch(`/api/v1/entity?type=${m}&title=${encodeURIComponent(who[m])}`).then((r) => r.json().then((j) => (r.ok ? j : Promise.reject(j.error))))
+      return fetch(`/api/v1/entity?type=${m}&title=${encodeURIComponent(who[m])}`).then((r) => r.json().then((j) => (r.ok ? j : Promise.reject(j))))
         .then((j) => { if (mode === m) { data = j; renderEntity(j); } })
-        .catch((err) => { if (mode === m) $('pulse').innerHTML = `<p class="muted">${esc(typeof err === 'string' ? err : T('No data for this yet.'))}</p>`; });
+        .catch((err) => { if (mode === m) $('pulse').innerHTML = `<p class="muted">${esc(err && err.error ? err.error : T('No data for this yet.'))}</p>${alts(err && err.options)}`; });
     }
     $('pulse').innerHTML = `<p class="muted">${T('Loading…')}</p>`;
     fetch(`/api/v1/pulse?country=${cc}`).then((r) => (r.ok ? r.json() : Promise.reject(r.status)))

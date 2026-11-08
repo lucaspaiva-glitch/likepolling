@@ -158,6 +158,11 @@ async function unlockGumroad(env, fetchImpl, { key, instance, countries, choice 
     if (v.uses > 0) throw fail(409, USED_ELSEWHERE);
     picked = entity.parseChoice(choice);
     if (!picked) throw fail(409, `Pick the ${type} for your report.`, { need_choice: type });
+    if (!picked.confirm) {
+      const r = await entity.resolveSubject(type, picked.subject, { fetchImpl });
+      if (!r.page) throw fail(404, `We couldn't find "${picked.subject}" on Wikipedia. Pick it from the suggestions.`, { need_choice: type, options: r.options });
+      throw fail(409, 'Is this the one? Your report is set once per key.', { need_choice: type, confirm: r.page, options: r.options });
+    }
   }
   const body = await build(type, picked);
   if (first) await gumroadVerify(env, fetchImpl, key, true, id);

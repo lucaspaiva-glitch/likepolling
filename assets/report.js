@@ -44,6 +44,7 @@
   async function open(body) {
     show('loading');
     error('');
+    $('pe-ok').hidden = true;
     try {
       const res = await fetch('/api/report', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       const data = await res.json();
@@ -62,6 +63,18 @@
           if (pre && pre.subject) {
             if (!$('e1').value) $('e1').value = pre.subject;
             if (!body.choice) return open({ ...body, choice: { subject: String(pre.subject).slice(0, 120), peers: [] } });
+          }
+          const opt = (o, me) => `<button type="button" class="pe-opt${me ? ' me' : ''}" data-t="${esc(o.title)}">${o.image ? `<img src="${esc(o.image)}" alt="">` : `<i>${esc(o.title[0])}</i>`}<span><b>${esc(o.title)}</b><small>${esc(o.description || '')}</small></span>${me ? `<em>${esc(L('Yes, this one'))} ›</em>` : ''}</button>`;
+          const others = data.options || [];
+          if (data.confirm || others.length) {
+            $('pe-ok').innerHTML = (data.confirm ? opt(data.confirm, true) : '') + (others.length ? `<p class="small muted">${esc(L(data.confirm ? 'Or one of these:' : 'Did you mean:'))}</p>${others.map((o) => opt(o)).join('')}` : '');
+            $('pe-ok').hidden = false;
+            $('pe-ok').onclick = (e) => {
+              const b = e.target.closest('.pe-opt');
+              if (!b) return;
+              $('e1').value = b.dataset.t;
+              open({ ...body, choice: { subject: b.dataset.t, peers: (body.choice && body.choice.peers) || [], confirm: true } });
+            };
           }
         }
         error(data.error);
@@ -409,15 +422,8 @@
     window.scrollTo(0, 0);
   }
 
-  // Wikipedia title suggestions for the artist/company fields (straight from Wikipedia; nothing goes to Like Polling).
-  let sugT = 0;
-  ['e1', 'e2', 'e3', 'e4'].forEach((id) => $(id).addEventListener('input', (e) => {
-    clearTimeout(sugT);
-    const q = e.target.value.trim();
-    if (q.length < 2) return;
-    sugT = setTimeout(() => fetch(`https://en.wikipedia.org/w/api.php?action=opensearch&format=json&namespace=0&limit=8&origin=*&search=${encodeURIComponent(q)}`)
-      .then((r) => r.json()).then((j) => { $('e-sug').innerHTML = (j[1] || []).map((t) => `<option value="${esc(t)}">`).join(''); }).catch(() => {}), 250);
-  }));
+  // Google-style name suggestions for the artist/company fields (straight from Wikipedia; nothing goes to Like Polling).
+  ['e1', 'e2', 'e3', 'e4'].forEach((id) => window.LPSuggest($(id), { type: () => $('pick-e').dataset.kind }));
 
   let last = null;
   document.addEventListener('lp:lang', () => { if (last && !$('report').hidden) render(last); });
@@ -487,6 +493,7 @@
     const countries = $('pick').hidden ? '' : [$('p1').value, $('p2').value].filter(Boolean).join(',');
     if (countries) localStorage.setItem('lp_report_countries', countries);
     const choice = $('pick-e').hidden ? undefined : { subject: $('e1').value.trim(), peers: ['e2', 'e3', 'e4'].map((id) => $(id).value.trim()).filter(Boolean) };
+    if (choice && choice.subject && $('e1').dataset.picked === choice.subject) choice.confirm = true;
     if (choice && !choice.subject) { error($('pick-e').dataset.kind === 'company' ? 'Type the company for your report.' : 'Type the artist for your report.'); return; }
     open({ key, countries: countries || String(localStorage.getItem('lp_report_countries') || ''), choice });
   });
