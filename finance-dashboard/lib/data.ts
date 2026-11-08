@@ -6,7 +6,7 @@ import { vacationIds } from "@/lib/vacation";
 import { LIKE_POLLING_CATEGORY, likePollingSummary, likePollingVendor, type LikePollingSummary } from "@/lib/like-polling";
 import { BR_FOREIGN_INVESTMENT_RATE, TAX_ACCOUNT_EXTERNAL_ID, irpfFilingYear } from "@/lib/br-tax";
 import { fmtUsd } from "@/lib/format";
-import { emptyGeminiCredit, loadGeminiCredit, type GeminiCredit } from "@/lib/gemini-credit";
+import { GEMINI_READING_EXTERNAL_ID, emptyGeminiCredit, loadGeminiCredit, type GeminiCredit, type GeminiReading } from "@/lib/gemini-credit";
 import { emptyInsights, loadCompanyInsights, type CompanyInsights } from "@/lib/company-insights";
 import type { Account, Transaction } from "@/lib/types";
 
@@ -178,6 +178,7 @@ export async function getDashboardData(): Promise<DashboardData> {
   let transactions: Transaction[];
   let statementIds = new Set<string>();
   const likePollingVendors = new Map<string, string>();
+  let geminiReading: GeminiReading | null = null;
   try {
     const [accRes, txs] = await Promise.all([
       getServerSupabase().from("accounts").select("id, name, type, institution, balance, currency, updated_at, external_id").order("balance", { ascending: false }),
@@ -185,6 +186,10 @@ export async function getDashboardData(): Promise<DashboardData> {
     ]);
     if (accRes.error) throw new Error(accRes.error.message);
     accounts = ((accRes.data ?? []) as Account[]).map((a) => ({ ...a, balance: Number(a.balance) }));
+    // Not money you hold: only feeds the Gemini credit box.
+    const reading = accounts.find((a) => a.external_id === GEMINI_READING_EXTERNAL_ID);
+    if (reading) geminiReading = { eur: reading.balance, at: reading.updated_at };
+    accounts = accounts.filter((a) => a.external_id !== GEMINI_READING_EXTERNAL_ID);
     // In-person purchases abroad become Vacation, unless you picked a category for that transaction yourself.
     const vacation = vacationIds(txs, internalTransferIds(txs));
     // Totals copied from a brokerage statement for the period before the CSV history (external_id "stmt:...").
@@ -320,6 +325,7 @@ export async function getDashboardData(): Promise<DashboardData> {
       transactions
         .filter((t) => t.amount < 0 && likePollingVendors.get(t.id)?.startsWith("Google Cloud"))
         .map((t) => ({ date: t.date, amount: -t.amount })),
+      geminiReading,
     ),
     loadCompanyInsights(today),
   ]);

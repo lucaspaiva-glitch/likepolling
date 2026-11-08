@@ -7,7 +7,14 @@ const PRICES: Record<string, [input: number, output: number]> = {
 };
 const FALLBACK_PRICE: [number, number] = [0.3, 2.5]; // unknown model: the dearer price, so "left" is never too high
 
-// Credit left counts from the latest Google Cloud top-up in the bank; credit left over from before it is not known.
+// Balance typed from Google AI Studio (EUR), stored as a hidden manual account row; newer than the last bank top-up wins.
+export const GEMINI_READING_EXTERNAL_ID = "csv:manual:gemini credit";
+export interface GeminiReading {
+  eur: number;
+  at: string; // when the balance was read in AI Studio
+}
+
+// Credit left counts from the latest AI Studio reading, or else the latest Google Cloud top-up in the bank.
 export interface GeminiCredit {
   configured: boolean;
   error: string | null;
@@ -19,10 +26,13 @@ export interface GeminiCredit {
   outOfCredit: boolean;
   outSince: string | null;
   usdToEur: number | null; // ECB rate via Frankfurter, since AI Studio shows the credit in euros
+  reading: GeminiReading | null; // set when "left" counts from an AI Studio reading
+  leftEur: number | null;
 }
 
 export const emptyGeminiCredit = (configured = false, error: string | null = null): GeminiCredit => ({
   configured, error, topUp: null, topUpDate: null, spent: 0, requests: 0, left: null, outOfCredit: false, outSince: null, usdToEur: null,
+  reading: null, leftEur: null,
 });
 
 type UsageRow = { model: string; input_tokens: number; output_tokens: number };
@@ -53,11 +63,16 @@ export function requestCost(r: UsageRow) {
 }
 
 // topUps: Google Cloud charges from the bank (date, positive amount).
-export async function loadGeminiCredit(topUps: Array<{ date: string; amount: number }>): Promise<GeminiCredit> {
+export async function loadGeminiCredit(
+  topUps: Array<{ date: string; amount: number }>,
+  reading: GeminiReading | null = null,
+): Promise<GeminiCredit> {
   if (!process.env.LP_SUPABASE_URL || !process.env.LP_SUPABASE_KEY) return emptyGeminiCredit(false);
   try {
     const topUpDate = topUps.reduce<string | null>((d, t) => (!d || t.date > d ? t.date : d), null);
-    const since = topUpDate ? `${topUpDate}T00:00:00Z` : "";
+    // A top-up charged on or before the reading's day is already part of the reading.
+    const useReading = !!reading && (!topUpDate || reading.at.slice(0, 10) >= topUpDate);
+    const since = useReading ? new Date(reading!.at).toISOString() : topUpDate ? `${topUpDate}T00:00:00Z` : "";
     const ratePromise = usdToEur();
     const [lastOk, lastOut] = await Promise.all(
       ["ok", "no_credit"].map((s) => lp<Array<{ at: string }>>(`gemini_usage?select=at&status=eq.${s}&order=at.desc&limit=1`)),
@@ -65,7 +80,7 @@ export async function loadGeminiCredit(topUps: Array<{ date: string; amount: num
     const outAt = lastOut[0]?.at ?? null;
     const outOfCredit = !!outAt && new Date(outAt) > new Date(lastOk[0]?.at ?? 0) && new Date(outAt) > new Date(since || 0);
     const base = { ...emptyGeminiCredit(true), outOfCredit, outSince: outOfCredit ? outAt : null, usdToEur: await ratePromise };
-    if (!topUpDate) return base;
+    if (!useReading && !topUpDate) return base;
 
     let spent = 0;
     let requests = 0;
@@ -77,8 +92,14 @@ export async function loadGeminiCredit(topUps: Array<{ date: string; amount: num
       requests += rows.length;
       if (rows.length < 1000) break;
     }
+    const rate = base.usdToEur;
+    if (useReading) {
+      const leftEur = reading!.eur - (rate ? spent * rate : 0);
+      return { ...base, reading, spent, requests, leftEur, left: rate ? leftEur / rate : null };
+    }
     const topUp = topUps.filter((t) => t.date === topUpDate).reduce((s, t) => s + t.amount, 0);
-    return { ...base, topUp, topUpDate, spent, requests, left: topUp - spent };
+    const left = topUp - spent;
+    return { ...base, topUp, topUpDate, spent, requests, left, leftEur: rate ? left * rate : null };
   } catch (err) {
     return emptyGeminiCredit(true, err instanceof Error ? err.message : String(err));
   }
