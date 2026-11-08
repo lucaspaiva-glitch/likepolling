@@ -82,7 +82,7 @@ function emptyData(configured: boolean, error: string | null): DashboardData {
     portfolioSeries: [],
     snapshotsReady: false,
     categories: { d30: [], d90: [], m12: [] },
-    likePolling: { total: 0, since: null, today: isoDay(new Date()), vendors: [], daily: [], revenue: 0, months: [] },
+    likePolling: { total: 0, since: null, today: isoDay(new Date()), vendors: [], daily: [], revenue: 0, months: [], cash: null },
     geminiCredit: emptyGeminiCredit(),
     insights: emptyInsights(),
     lastUpdated: null,
@@ -180,6 +180,8 @@ export async function getDashboardData(): Promise<DashboardData> {
   let statementIds = new Set<string>();
   const likePollingVendors = new Map<string, string>();
   let geminiReading: GeminiReading | null = null;
+  // Like Polling's own money (store payouts sit in PayPal): shown in its section, not in your totals.
+  let businessIds = new Set<string>();
   try {
     const [accRes, txs] = await Promise.all([
       getServerSupabase().from("accounts").select("id, name, type, institution, balance, currency, updated_at, external_id").order("balance", { ascending: false }),
@@ -191,8 +193,10 @@ export async function getDashboardData(): Promise<DashboardData> {
     const reading = accounts.find((a) => a.external_id === GEMINI_READING_EXTERNAL_ID);
     if (reading) geminiReading = { eur: reading.balance, at: reading.updated_at };
     accounts = accounts.filter((a) => a.external_id !== GEMINI_READING_EXTERNAL_ID);
+    businessIds = new Set(accounts.filter((a) => /paypal/i.test(`${a.institution ?? ""} ${a.name}`)).map((a) => a.id));
     // In-person purchases abroad become Vacation, unless you picked a category for that transaction yourself.
-    const vacation = vacationIds(txs, internalTransferIds(txs));
+    const rawInternal = internalTransferIds(txs);
+    const vacation = vacationIds(txs, rawInternal);
     // Totals copied from a brokerage statement for the period before the CSV history (external_id "stmt:...").
     statementIds = new Set(txs.filter((t) => t.external_id?.startsWith("stmt:")).map((t) => t.id));
     transactions = txs.map((lt) => {
@@ -200,6 +204,11 @@ export async function getDashboardData(): Promise<DashboardData> {
       const vendor = likePollingVendor(lt.payee, lt.descriptor);
       if (vendor) likePollingVendors.set(t.id, vendor);
       if (lt.locked === true) return t;
+      if (t.account_id && businessIds.has(t.account_id) && !rawInternal.has(t.id)) {
+        if (t.amount > 0) return { ...t, category: LIKE_POLLING_REVENUE_CATEGORY };
+        likePollingVendors.set(t.id, vendor ?? t.payee ?? "PayPal");
+        return { ...t, category: LIKE_POLLING_CATEGORY };
+      }
       // Like Polling running costs (Devin, Google Cloud, ...) get their own category.
       if (vendor && t.amount < 0) return { ...t, category: LIKE_POLLING_CATEGORY };
       if (t.amount > 0 && likePollingRevenueSource(lt.payee, lt.descriptor)) return { ...t, category: LIKE_POLLING_REVENUE_CATEGORY };
@@ -264,7 +273,12 @@ export async function getDashboardData(): Promise<DashboardData> {
   let estimatedTaxes = 0;
   let portfolio = 0;
   const buckets = new Map<string, number>();
+  let businessCash = 0;
   for (const a of accounts) {
+    if (businessIds.has(a.id)) {
+      businessCash += a.balance;
+      continue;
+    }
     if (isLiability(a.type) || a.balance < 0) {
       liabilities += Math.abs(a.balance);
       if (a.type === "credit") cardOwed += Math.abs(a.balance);
@@ -359,7 +373,7 @@ export async function getDashboardData(): Promise<DashboardData> {
       d90: categoryTotals(transactions, since90, flows),
       m12: categoryTotals(transactions, since12, flows),
     },
-    likePolling: likePollingSummary(transactions, likePollingVendors, todayIso),
+    likePolling: { ...likePollingSummary(transactions, likePollingVendors, todayIso), cash: businessIds.size ? businessCash : null },
     geminiCredit,
     insights,
     lastUpdated,

@@ -60,6 +60,12 @@ export default function LikePollingCard({ data, gemini }: { data: LikePollingSum
           </div>
         ))}
       </div>
+      {data.cash != null && (
+        <div className="mt-2 flex items-center justify-between rounded border border-dark-tremor-border px-2 py-1.5 text-xs">
+          <span className="text-dark-tremor-content-emphasis">PayPal balance</span>
+          <span className="font-semibold tabular-nums text-emerald-400">{fmtUsd(data.cash)}</span>
+        </div>
+      )}
       <GeminiCreditBox data={gemini} />
       {data.vendors.length === 0 ? (
         <p className="py-6 text-center text-xs text-dark-tremor-content-subtle">No Like Polling charges yet</p>

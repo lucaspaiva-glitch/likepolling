@@ -39,6 +39,7 @@ export interface LikePollingSummary {
   daily: Array<{ date: string; spent: number }>;
   revenue: number;
   months: Array<{ month: string; costs: number; revenue: number }>; // newest first
+  cash?: number | null; // Like Polling's PayPal balance, when connected
 }
 
 export function likePollingSummary(txs: Transaction[], vendorOf: Map<string, string>, today: string): LikePollingSummary {
