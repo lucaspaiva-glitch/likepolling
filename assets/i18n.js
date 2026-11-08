@@ -332,6 +332,7 @@
     "Free every day:": ["Grátis todo dia:", "Gratis cada día:", "Jeden Tag kostenlos:", "Бесплатно каждый день:", "Безкоштовно щодня:", "매일 무료:", "毎日無料:"],
     "Estimated, not exact": ["Estimativa, não exato", "Estimado, no exacto", "Geschätzt, nicht exakt", "Оценка, не точно", "Оцінка, не точно", "추정치, 정확하지 않음", "推定値（正確ではありません）"],
     "YouTube users in each country × average daily viewing time. Updated every 15 minutes.": ["Usuários do YouTube em cada país × tempo médio de visualização por dia. Atualizado a cada 15 minutos.", "Usuarios de YouTube en cada país × tiempo medio de visualización diario. Se actualiza cada 15 minutos.", "YouTube-Nutzer pro Land × durchschnittliche tägliche Sehdauer. Alle 15 Minuten aktualisiert.", "Пользователи YouTube в стране × среднее время просмотра в день. Обновляется каждые 15 минут.", "Користувачі YouTube у країні × середній час перегляду на день. Оновлюється кожні 15 хвилин.", "각 나라의 YouTube 사용자 × 하루 평균 시청 시간. 15분마다 업데이트.", "各国のYouTube利用者数 × 1日の平均視聴時間。15分ごとに更新。"],
+    "Pulses & reports": ["Pulsos e relatórios", "Pulsos e informes", "Pulse und Berichte", "Пульсы и отчёты", "Пульси та звіти", "맥박과 리포트", "いまとレポート"],
     "Ad spot": ["Anúncio", "Anuncio", "Werbeplatz", "Реклама", "Реклама", "광고", "広告枠"],
     "Buy": ["Comprar", "Comprar", "Kaufen", "Купить", "Купити", "구매", "購入"],
     "Show me": ["Quero ver", "Quiero ver", "Zeig mir", "Покажите", "Покажіть", "보기:", "表示:"],

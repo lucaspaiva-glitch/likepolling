@@ -100,6 +100,16 @@
     .lp-pp-card .svc-btn { margin-top: 4px; }
     @media (prefers-reduced-motion: reduce) { .lp-rep .lp-chip i, .lp-rep .lp-chip::after, .lp-pp-beat .l, .lp-pp-beat b::before { animation: none; } .lp-pp-beat .l { stroke-dasharray: none; } }
     @media (max-width: 700px) { .lp-rep .lp-free { display: grid; } .lp-row { display: grid; position: relative; gap: 6px; } .lp-pp { position: static; display: flex; min-width: 0; } .lp-rep .lp-chip { flex: 1; justify-content: space-between; gap: 6px; padding: 8px 14px; font-size: 10.5px; letter-spacing: .08em; } .lp-rep .lp-chip span { min-width: 0; overflow: hidden; text-overflow: ellipsis; } .lp-rep .lp-chip em { flex: none; padding: 2px 4px; font-size: 8px; letter-spacing: .08em; } .lp-rep .lp-chip i { display: none; } .lp-pp-card, .lp-pp-card.lp-pp-rep { left: 0; right: 0; width: auto; } }
+    .lp-fold { display: none; }
+    @media (max-width: 700px) {
+      .lp-fold { display: flex; align-items: center; gap: 8px; width: 100%; padding: 9px 14px; border: 1px solid #ff2a3c; border-radius: 999px; background: linear-gradient(160deg, #240005, #3a0009); color: #ff6b78; font: 700 10.5px/1 'Chakra Petch', Inter, sans-serif; letter-spacing: .08em; text-transform: uppercase; cursor: pointer; }
+      .lp-fold i { width: 7px; height: 7px; border-radius: 50%; background: #ff4a5c; animation: lp-free-ping 1.6s ease-out infinite; }
+      .lp-fold::after { content: ''; margin-left: auto; width: 7px; height: 7px; border: solid currentColor; border-width: 0 2px 2px 0; transform: translateY(-2px) rotate(45deg); transition: transform .2s; }
+      .lp-fold[aria-expanded="true"] { color: #fff; box-shadow: 0 0 18px -2px rgba(255,42,60,.95); }
+      .lp-fold[aria-expanded="true"]::after { transform: translateY(2px) rotate(-135deg); }
+      .lp-rep:not(.unfold) .lp-free { display: none; }
+      .lp-rep.unfold .lp-free { margin-top: 6px; }
+    }
     @media (min-width: 701px) { #lp-rep { gap: 10px 16px; } #lp-rep .lp-free { gap: 5px; } #lp-rep .lp-chip { padding: 6px 9px; font-size: 10px; letter-spacing: .06em; } }
     header.top > #lp-rep-form { flex: none; margin: 0 auto 0 22px; } #lp-rep-form #lp-rep-key { flex: none; width: 140px; } header.top > #lp-rep-form label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
     @media (min-width: 981px) and (max-width: 1399px) { header.top .tagline { display: none; } }
@@ -728,13 +738,20 @@
       <div class="lp-ext-wrap"><a class="lp-ext" href="https://chromewebstore.google.com/detail/creators-+/ibajjhdapncbacoinjjcagimpcjpahbn" target="_blank" rel="noopener" aria-label="Add to Chrome"><svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path d="M8 2v8m0 0L4.8 6.8M8 10l3.2-3.2M3 13h10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Add to Chrome</span></a><button type="button" class="lp-ext-info" id="cp-link" aria-controls="cp-pop" aria-expanded="false">Free Extension</button></div>
     </header>
     <div class="lp-rep" id="lp-rep">
-      <div class="lp-free">
+      <button type="button" class="lp-fold" aria-expanded="false" aria-controls="lp-free"><i aria-hidden="true"></i><span>Pulses &amp; reports</span></button>
+      <div class="lp-free" id="lp-free">
         <div class="lp-row"><span class="lp-pp" data-pp="country"><a class="lp-chip" href="/pulse"><i aria-hidden="true"></i><span>Country pulse</span><em>Free</em></a></span> <span class="lp-pp" data-pp="artist"><a class="lp-chip" href="/pulse?artist="><i aria-hidden="true"></i><span>Artist pulse</span><em>Free</em></a></span> <span class="lp-pp" data-pp="company"><a class="lp-chip" href="/pulse?company="><i aria-hidden="true"></i><span>Company pulse</span><em>Free</em></a></span></div>
         <div class="lp-row"><span class="lp-pp lp-pp-paid" data-rep="country"><a class="lp-chip" href="/report" target="_blank" rel="noopener"><i aria-hidden="true"></i><span>Country report</span><em class="lp-price" data-eur="8" data-no-i18n>€8</em></a></span> <span class="lp-pp lp-pp-paid" data-rep="artist"><a class="lp-chip" href="/report" target="_blank" rel="noopener"><i aria-hidden="true"></i><span>Artist report</span><em class="lp-price" data-eur="8" data-no-i18n>€8</em></a></span> <span class="lp-pp lp-pp-paid" data-rep="company"><a class="lp-chip" href="/report" target="_blank" rel="noopener"><i aria-hidden="true"></i><span>Company report</span><em class="lp-price" data-eur="8" data-no-i18n>€8</em></a></span></div>
       </div>
     </div>
     </div>
 
+    <script>
+      (function () {
+        const rep = document.getElementById('lp-rep'), btn = rep && rep.querySelector('.lp-fold');
+        if (btn) btn.addEventListener('click', () => btn.setAttribute('aria-expanded', String(rep.classList.toggle('unfold'))));
+      })();
+    </script>
     <section class="nw nw-front" id="news-front" aria-label="World News: top news headlines in each country"></section>
     <section id="ai-age" aria-label="Who am I in the age of AI? Stories of people using AI for good in each country" data-supabase-url="https://iyhaoagslsrwtkcrxylp.supabase.co" data-supabase-key="sb_publishable_ZnV9HrtfDqeKlBftnDxH2Q_YK6XWJTp"></section>
     <section class="ytt" id="yt-trending" aria-label="YouTube Trending: most popular videos in each country" data-supabase-url="https://iyhaoagslsrwtkcrxylp.supabase.co" data-supabase-key="sb_publishable_ZnV9HrtfDqeKlBftnDxH2Q_YK6XWJTp"></section>
