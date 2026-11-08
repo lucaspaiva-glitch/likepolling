@@ -54,8 +54,9 @@
     .yt-note-card { padding: 12px 14px; border-radius: 12px; background: #fff; color: #1d1d1f; border: 1px solid #ececec; box-shadow: 0 12px 28px -12px rgba(0,0,0,.3); font: 400 13.5px/1.45 Inter, system-ui, sans-serif; }
     .yt-note-card b { display: block; margin-bottom: 4px; font-weight: 700; color: #b0000e; }
     .yt-note-card p { margin: 0; }
-    .lp-free { margin: 18px 0 0; text-align: center; font-size: 14px; color: #6b6b6b; }
-    .lp-free a { color: #b0000e; font-weight: 600; }
+    .lp-rep .lp-free { margin: 0; font-size: 14px; color: #6b6b6b; }
+    .lp-rep .lp-free a { display: inline-block; margin-left: 0; margin: 4px 2px; padding: 7px 14px; border-radius: 999px; background: #b0000e; color: #fff; font-weight: 600; text-decoration: none; }
+    .lp-rep .lp-free a:hover { background: #7f000a; text-decoration: none; }
     @keyframes yt-pulse { 0% { box-shadow: 0 0 0 0 rgba(255,255,255,.55); } 70%, 100% { box-shadow: 0 0 0 6px rgba(255,255,255,0); } }
     .yt-ticker-viewport { flex: 1; min-width: 0; display: flex; align-items: center; overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 28px, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(90deg, transparent, #000 28px, #000 calc(100% - 28px), transparent); }
     .yt-ticker-rail { display: flex; width: max-content; animation: yt-marquee var(--yt-duration, 120s) linear infinite; will-change: transform; }
@@ -639,7 +640,7 @@
       header.top > .live { justify-self: start; margin-left: 36px; }
     }
     /* Reports strip under the header: quiet product line + "Open your report" key box (opens /report#k=KEY). */
-    .lp-offers { max-width: 1080px; margin: 8px auto 40px; padding: 0 24px; }
+    .lp-offers { max-width: 1080px; margin: 36px auto 36px; padding: 0; }
     .lp-offers > h2 { margin: 0; font: 700 26px/1.15 Inter, system-ui, sans-serif; letter-spacing: -.01em; color: #1d1d1f; text-align: center; }
     .lp-offers > p { margin: 6px 0 20px; font-size: 14px; color: #6e6e73; text-align: center; }
     .lp-head { grid-column: 1 / -1; grid-row: 1; min-width: 0; }
@@ -678,9 +679,14 @@
       <div class="lp-ext-wrap"><a class="lp-ext" href="https://chromewebstore.google.com/detail/creators-+/ibajjhdapncbacoinjjcagimpcjpahbn" target="_blank" rel="noopener" aria-label="Add to Chrome"><svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path d="M8 2v8m0 0L4.8 6.8M8 10l3.2-3.2M3 13h10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Add to Chrome</span></a><button type="button" class="lp-ext-info" id="cp-link" aria-controls="cp-pop" aria-expanded="false">Free Extension</button></div>
     </header>
     <div class="lp-rep" id="lp-rep">
-      <p><b>Extended reports.</b> <span>Countries, artists and companies. From €8.</span><a href="#offers">Learn more ›</a></p>
+      <p class="lp-free">Free every day: <a href="/pulse">Country pulse</a> · <a href="/pulse?artist=">Artist pulse</a> · <a href="/pulse?company=">Company pulse</a></p>
       <form id="lp-rep-form" action="/report"><label for="lp-rep-key">Open your report</label><input id="lp-rep-key" autocomplete="off" spellcheck="false" placeholder="Paste your key" required><button type="submit">Open</button></form>
     </div>
+    <section class="lp-offers" id="offers" aria-labelledby="offers-h">
+      <h2 id="offers-h">Extended reports.</h2>
+      <p>Everything Like Polling has saved on one country, artist or company, since 24 October 2026.</p>
+      <div data-offers></div>
+    </section>
     </div>
 
     <section class="nw nw-front" id="news-front" aria-label="World News: top news headlines in each country"></section>
@@ -779,12 +785,6 @@ ENERGY</div>
 
       <main id="results" aria-live="polite"></main>
   </aside>
-  <section class="lp-offers" id="offers" aria-labelledby="offers-h">
-    <h2 id="offers-h">Extended reports.</h2>
-    <p>Everything Like Polling has saved on one country, artist or company, since 24 October 2026.</p>
-    <div data-offers></div>
-    <p class="lp-free">Free every day: <a href="/pulse">Country pulse</a> · <a href="/pulse?artist=">Artist pulse</a> · <a href="/pulse?company=">Company pulse</a></p>
-  </section>
   <footer><div class="foot-tag">Human + AI analytics for what the world watches</div><div class="foot-src">Sources: YouTube Data API · Google News · Google Gemini (AI)</div>Like Polling · Data via YouTube Data API · Earnings are estimates (by country, topic and Shorts)<span aria-hidden="true"> · </span><a href="/data">Open data for AI</a><span aria-hidden="true"> · </span><a href="/services">Services</a></footer>
 
   <script src="/assets/earnings.js"></script>
