@@ -54,26 +54,6 @@
     flag.before(grp);
     sel.classList.add('lp-cs-sel');
     grp.append(...(flag === sel ? [] : [flag]), name, pos, sel);
-    // World News strip: a "Country pulse" chip that opens the free page for the chosen country.
-    let chip = null;
-    if (root === '#news-front') {
-      if (!document.getElementById('lp-pulse-css')) {
-        const st = document.createElement('style');
-        st.id = 'lp-pulse-css';
-        st.textContent = `.lp-pulse-chip { display: inline-flex; align-items: center; gap: 6px; margin-left: 8px; padding: 5px 11px; border-radius: 999px; background: linear-gradient(160deg, #240005, #3a0009); border: 1px solid #ff2a3c; color: #ff6b78; font: 700 11px/1 'Chakra Petch', Inter, sans-serif; letter-spacing: .12em; text-transform: uppercase; text-decoration: none; white-space: nowrap; box-shadow: 0 0 12px -4px rgba(255,42,60,.8); vertical-align: middle; }
-.lp-pulse-chip i { width: 7px; height: 7px; border-radius: 50%; background: #ff4a5c; animation: lp-pulse-ping 1.6s ease-out infinite; }
-.lp-pulse-chip:hover, .lp-pulse-chip:focus-visible { color: #fff; border-color: #ff4a5c; }
-@keyframes lp-pulse-ping { 0% { box-shadow: 0 0 0 0 rgba(255,74,92,.7); } 70%, 100% { box-shadow: 0 0 0 7px rgba(255,74,92,0); } }
-@media (prefers-reduced-motion: reduce) { .lp-pulse-chip i { animation: none; } }`;
-        document.head.appendChild(st);
-      }
-      chip = document.createElement('a');
-      chip.className = 'lp-pulse-chip';
-      chip.href = '/pulse';
-      chip.innerHTML = '<i aria-hidden="true"></i><span>Country pulse</span>';
-      grp.after(chip);
-    }
-
     function refresh() {
       const list = [...sel.options].filter((o) => !o.disabled);
       const k = list.findIndex((o) => o.value === sel.value);
@@ -83,7 +63,6 @@
       pos.innerHTML = !code ? '' : k < 0 ? `<b>${code}</b>` : `<b>${code}</b><span>${k + 1}/${list.length}</span>`;
       const o = sel.options[sel.selectedIndex];
       name.textContent = o ? o.textContent.trim() : '';
-      if (chip && /^[A-Z]{2}$/.test(code)) chip.href = `/pulse?c=${code}`;
     }
     // Widgets often rebuild the options and then set .value (no event), so read after they finish.
     const later = () => setTimeout(refresh, 0);

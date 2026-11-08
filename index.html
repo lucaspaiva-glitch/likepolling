@@ -54,9 +54,20 @@
     .yt-note-card { padding: 12px 14px; border-radius: 12px; background: #fff; color: #1d1d1f; border: 1px solid #ececec; box-shadow: 0 12px 28px -12px rgba(0,0,0,.3); font: 400 13.5px/1.45 Inter, system-ui, sans-serif; }
     .yt-note-card b { display: block; margin-bottom: 4px; font-weight: 700; color: #b0000e; }
     .yt-note-card p { margin: 0; }
-    .lp-rep .lp-free { margin: 0; font-size: 14px; color: #6b6b6b; }
-    .lp-rep .lp-free a { display: inline-block; margin-left: 0; margin: 4px 2px; padding: 7px 14px; border-radius: 999px; background: #b0000e; color: #fff; font-weight: 600; text-decoration: none; }
-    .lp-rep .lp-free a:hover { background: #7f000a; text-decoration: none; }
+    .lp-rep .lp-free { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 14px; color: #6b6b6b; }
+    .lp-rep .lp-free a { position: relative; display: inline-flex; align-items: center; gap: 7px; margin: 0; padding: 8px 14px; overflow: hidden; border-radius: 999px; background: linear-gradient(160deg, #240005, #3a0009); border: 1px solid #ff2a3c; color: #ff6b78; font: 700 12px/1 'Chakra Petch', Inter, sans-serif; letter-spacing: .12em; text-transform: uppercase; text-decoration: none; white-space: nowrap; box-shadow: 0 0 12px -4px rgba(255,42,60,.8); transition: color .2s, box-shadow .2s, transform .2s; }
+    .lp-rep .lp-free a i { width: 7px; height: 7px; border-radius: 50%; background: #ff4a5c; animation: lp-free-ping 1.6s ease-out infinite; }
+    .lp-rep .lp-free a:nth-of-type(2) i { animation-delay: .53s; }
+    .lp-rep .lp-free a:nth-of-type(3) i { animation-delay: 1.06s; }
+    .lp-rep .lp-free a::after { content: ''; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 30%, rgba(255,120,135,.35) 50%, transparent 70%); transform: translateX(-120%); animation: lp-free-shine 6s ease-in-out infinite; pointer-events: none; }
+    .lp-rep .lp-free a:nth-of-type(2)::after { animation-delay: .25s; }
+    .lp-rep .lp-free a:nth-of-type(3)::after { animation-delay: .5s; }
+    .lp-rep .lp-free a:hover, .lp-rep .lp-free a:focus-visible { color: #fff; border-color: #ff4a5c; box-shadow: 0 0 18px -2px rgba(255,42,60,.95); transform: translateY(-1px); text-decoration: none; }
+    @keyframes lp-free-ping { 0% { box-shadow: 0 0 0 0 rgba(255,74,92,.7); } 70%, 100% { box-shadow: 0 0 0 7px rgba(255,74,92,0); } }
+    @keyframes lp-free-shine { 0%, 70% { transform: translateX(-120%); } 85%, 100% { transform: translateX(120%); } }
+    @media (prefers-reduced-motion: reduce) { .lp-rep .lp-free a i, .lp-rep .lp-free a::after { animation: none; } }
+    .lp-rep .lp-free a span { color: inherit; }
+    @media (max-width: 700px) { .lp-rep .lp-free > span { flex: 1 0 100%; } .lp-rep .lp-free a { flex: 1 1 auto; justify-content: center; padding: 9px 10px; font-size: 11px; } }
     @keyframes yt-pulse { 0% { box-shadow: 0 0 0 0 rgba(255,255,255,.55); } 70%, 100% { box-shadow: 0 0 0 6px rgba(255,255,255,0); } }
     .yt-ticker-viewport { flex: 1; min-width: 0; display: flex; align-items: center; overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 28px, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(90deg, transparent, #000 28px, #000 calc(100% - 28px), transparent); }
     .yt-ticker-rail { display: flex; width: max-content; animation: yt-marquee var(--yt-duration, 120s) linear infinite; will-change: transform; }
@@ -689,7 +700,7 @@
       <div class="lp-ext-wrap"><a class="lp-ext" href="https://chromewebstore.google.com/detail/creators-+/ibajjhdapncbacoinjjcagimpcjpahbn" target="_blank" rel="noopener" aria-label="Add to Chrome"><svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path d="M8 2v8m0 0L4.8 6.8M8 10l3.2-3.2M3 13h10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Add to Chrome</span></a><button type="button" class="lp-ext-info" id="cp-link" aria-controls="cp-pop" aria-expanded="false">Free Extension</button></div>
     </header>
     <div class="lp-rep" id="lp-rep">
-      <p class="lp-free">Free every day: <a href="/pulse">Country pulse</a> · <a href="/pulse?artist=">Artist pulse</a> · <a href="/pulse?company=">Company pulse</a></p>
+      <p class="lp-free"><span>Free every day:</span> <a href="/pulse"><i aria-hidden="true"></i><span>Country pulse</span></a> <a href="/pulse?artist="><i aria-hidden="true"></i><span>Artist pulse</span></a> <a href="/pulse?company="><i aria-hidden="true"></i><span>Company pulse</span></a></p>
       <form id="lp-rep-form" action="/report"><label for="lp-rep-key">Open your report</label><input id="lp-rep-key" autocomplete="off" spellcheck="false" placeholder="Paste your key" required><button type="submit">Open</button></form>
     </div>
     <section class="lp-offers" id="offers" aria-labelledby="offers-h">
