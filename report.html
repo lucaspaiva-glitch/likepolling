@@ -99,6 +99,14 @@
     .ehead { display: flex; align-items: center; gap: 16px; margin-top: 10px; }
     .ehead img { width: 76px; height: 76px; border-radius: 50%; object-fit: cover; flex: none; background: #f1f1f1; }
     .ehead h1 { margin: 0; }
+    .bsite { margin: 6px 0 0; font-size: 14px; font-weight: 600; }
+    .bsite a { color: #fff; text-decoration: underline; text-underline-offset: 3px; }
+    .kpi b .kurl { font-size: 17px; word-break: break-all; }
+    ul.chips { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; padding: 0; margin: 4px 0 0; }
+    ul.chips li { display: flex; flex-direction: column; padding: 8px 12px; border: 1.5px solid #ececec; border-radius: 12px; font-size: 14px; font-weight: 600; }
+    ul.chips a { color: #1d1d1f; text-decoration: none; }
+    ul.chips a:hover { color: #b0000e; }
+    ul.chips small { font-weight: 400; color: #8a8a8a; font-size: 12px; }
     .kpi b em { font-style: normal; font-size: 13px; font-weight: 700; margin-left: 6px; vertical-align: middle; }
     em.up { color: #0a7d32; } em.down { color: #b0000e; }
     .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; list-style: none; padding: 0; margin: 8px 0 0; font-size: 13px; }
@@ -185,7 +193,7 @@
         </div>
         <div id="pick-e" hidden>
           <p class="small" style="margin:0 0 8px" id="pe-msg">Pick your report's artist. This is set once per key.</p>
-          <div><label for="e1" id="pe-l">Artist</label><input id="e1" autocomplete="off" spellcheck="false"></div>
+          <div><label for="e1" id="pe-l">Person</label><input id="e1" autocomplete="off" spellcheck="false"></div>
           <div id="pe-ok" hidden></div>
           <div style="margin-top:10px"><label for="e2">Compare with <span class="muted">(optional: leave empty and we pick similar ones)</span></label><input id="e2" autocomplete="off"><input id="e3" autocomplete="off"><input id="e4" autocomplete="off"></div>
         </div>

@@ -39,6 +39,20 @@ async function parseBody(req) {
   return body || {};
 }
 
+// Keeps every state-level Google Trends result in region_interest_daily, so the history grows with each report.
+async function saveStates(env, fetchImpl, body) {
+  const st = body && body.states;
+  if (!st || !body.subject) return;
+  const day = String(body.generated_at || new Date().toISOString()).slice(0, 10);
+  const subject = String(body.subject.title || '').slice(0, 120);
+  const rows = Object.entries(st).flatMap(([cc, list]) => list.map((r) => ({ day, subject, country_code: cc, region_code: r.code, region_name: r.name, value: r.value })));
+  if (!rows.length || !subject) return;
+  await fetchImpl(`${String(env.SUPABASE_URL).trim().replace(/\/$/, '')}/rest/v1/region_interest_daily?on_conflict=day,subject,country_code,region_code`, {
+    method: 'POST', signal: AbortSignal.timeout(6000), body: JSON.stringify(rows),
+    headers: { apikey: env.SUPABASE_KEY.trim(), Authorization: `Bearer ${env.SUPABASE_KEY.trim()}`, 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=minimal' },
+  }).catch(() => null);
+}
+
 function fail(status, message, extra) {
   return Object.assign(new report.HttpError(status, message), { extra });
 }
@@ -160,6 +174,8 @@ async function unlockGumroad(env, fetchImpl, { key, instance, countries, choice 
     if (!picked) throw fail(409, `Pick the ${type} for your report.`, { need_choice: type });
     if (!picked.confirm) {
       const r = await entity.resolveSubject(type, picked.subject, { fetchImpl });
+      const brand = !r.page && type === 'company' ? await entity.findBrandSubject(picked.subject, { fetchImpl, rest: report.rest(env, fetchImpl) }).catch(() => null) : null;
+      if (brand) throw fail(409, 'Is this the one? Your report is set once per key.', { need_choice: type, confirm: { title: brand.title, description: brand.description || brand.website || '', image: brand.image, brand: true }, options: r.options });
       if (!r.page) throw fail(404, `We couldn't find "${picked.subject}" on Wikipedia. Pick it from the suggestions.`, { need_choice: type, options: r.options });
       throw fail(409, 'Is this the one? Your report is set once per key.', { need_choice: type, confirm: r.page, options: r.options });
     }
@@ -203,6 +219,7 @@ function createHandler(deps = {}) {
       const get = report.rest(env, fetchImpl);
       if (req.method === 'GET' && entity.TYPES[req.query.type]) {
         const body = await entity.buildEntityReport(get, req.query.type, entity.SAMPLES[req.query.type], { fetchImpl, rest: get, now: new Date(now) });
+        await saveStates(env, fetchImpl, body);
         res.setHeader('Cache-Control', 'public, max-age=300, s-maxage=21600, stale-while-revalidate=86400');
         return res.status(200).json({ ...body, sample: true });
       }
@@ -226,6 +243,7 @@ function createHandler(deps = {}) {
         const build = (type, picked) => entity.buildEntityReport(get, type, picked, { fetchImpl, rest: get, now: new Date(now) });
         const access = await (lemon ? unlock(env, fetchImpl, args) : unlockGumroad(env, fetchImpl, args, build));
         const body = access.body || await report.buildReport(get, access.countries, new Date(now), { fetchImpl });
+        if (access.body) await saveStates(env, fetchImpl, access.body);
         res.setHeader('Cache-Control', 'no-store');
         return res.status(200).json({ ...body, sample: false, instance_id: access.instance_id, expires_at: access.expires_at });
       }

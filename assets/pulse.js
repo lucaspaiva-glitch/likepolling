@@ -29,7 +29,7 @@
   }
   const HEAD = {
     country: ['Country pulse', 'What a country searches, reads, celebrates and feels. Free, updated every day.', 'Everything we have saved on this country, in one Extended report. €8.'],
-    artist: ['Artist pulse', 'Who is looking up an artist this week, and where. Free, updated every day.', 'Everything we have saved on this artist, in one Extended report. €8.'],
+    artist: ['People pulse', 'Who is looking up a person this week, and where. Free, updated every day.', 'Everything we have saved on this person, in one Extended report. €8.'],
     company: ['Company pulse', 'Who is looking up a company or brand this week, and where. Free, updated every day.', 'Everything we have saved on this company, in one Extended report. €8.'],
   };
   function setMode(m, push) {
@@ -38,7 +38,7 @@
     $('cta-b').href = `/services#${m}`;
     $('modes').querySelectorAll('button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.m === m)));
     $('pick').hidden = m !== 'country'; $('find').hidden = m === 'country';
-    if (m !== 'country') { $('q').value = who[m]; $('q').placeholder = T(m === 'artist' ? 'Type an artist' : 'Type a company or brand'); }
+    if (m !== 'country') { $('q').value = who[m]; $('q').placeholder = T(m === 'artist' ? 'Type a person' : 'Type a company or brand'); }
     if (push) history.replaceState(null, '', m === 'country' ? `?c=${cc}` : `?${m}=${encodeURIComponent(who[m])}`);
   }
   $('modes').addEventListener('click', (e) => { const b = e.target.closest('button[data-m]'); if (b && b.dataset.m !== mode) { setMode(b.dataset.m, true); load(); } });

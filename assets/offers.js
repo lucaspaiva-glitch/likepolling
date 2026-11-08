@@ -9,8 +9,8 @@
   const OFFERS = [
     { id: 'country', sym: 'Country', name: 'COUNTRY\nREPORT', sub: 'Everything we saved on a country, next to another.', buy: 'https://lucaspoll.gumroad.com/l/udjsyu', sample: '/samples/country-report.pdf',
       stats: [['41', 'countries'], ['30', 'days of history'], ['2', 'side by side']] },
-    { id: 'artist', sym: 'Artist', name: 'ARTIST\nREPORT', sub: 'Everything we saved on an artist, next to similar artists.', buy: 'https://lucaspoll.gumroad.com/l/ijixxs', sample: '/samples/artist-report.pdf',
-      stats: [['4', 'artists compared'], ['17', 'languages'], ['30', 'days, day by day']] },
+    { id: 'artist', sym: 'Person', name: 'PEOPLE\nREPORT', sub: 'Everything we saved on an artist, athlete or star, next to similar people.', buy: 'https://lucaspoll.gumroad.com/l/ijixxs', sample: '/samples/artist-report.pdf',
+      stats: [['4', 'people compared'], ['17', 'languages'], ['30', 'days, day by day']] },
     { id: 'company', sym: 'Company', name: 'COMPANY\nREPORT', sub: 'Everything we saved on a company, next to its rivals.', buy: 'https://lucaspoll.gumroad.com/l/linzh', sample: '/samples/company-report.pdf',
       stats: [['4', 'brands compared'], ['17', 'languages'], ['30', 'days, day by day']] },
     { id: 'sponsor', sym: 'Ad spot', top: 'Launch rate', name: 'YOUR BRAND\nHERE', sub: 'A card on Like Polling, seen in 41 countries.', mail: 'Sponsoring Like Polling',
@@ -59,7 +59,7 @@
     }
     let v = '';
     try { v = JSON.parse(saved.get(choiceKey(o.id)) || '{}').subject || ''; } catch { /* ignore */ }
-    const ph = o.id === 'artist' ? 'artist name' : 'company or brand';
+    const ph = o.id === 'artist' ? 'person\'s name' : 'company or brand';
     return `<p>${tr('A report on')} <input name="subject" value="${esc(v)}" placeholder="${esc(tr(ph))}" maxlength="120" autocomplete="off" spellcheck="false" required>.</p>`;
   };
   // Buy: the blank must be filled; the answer is saved locally and Gumroad opens.

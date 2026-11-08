@@ -419,3 +419,23 @@ test('company business: Like Polling\'s saved history comes before the live SEC'
   assert.equal(nike.years[1].profit, null);
   assert.ok(!seen.some((u) => u.includes('data.sec.gov')));
 });
+
+test('people reports: sponsors come from the Wikipedia infobox, with links where the page links them', async () => {
+  const wikitext = "{{Infobox surfer\n| name = John John Florence\n| sponsors = Florence, Machu Picchu Energy, VEIA Supplies<ref>x</ref>, [[Yeti Holdings|Yeti]] and Pyzel surfboards\n| website = x\n}}";
+  const get = async (url) => (new URL(url).searchParams.get('action') === 'parse' ? { parse: { wikitext } } : null);
+  const list = await entity.sponsorsOf(get, 'John John Florence');
+  assert.deepEqual(list.map((x) => x.name), ['Florence', 'Machu Picchu Energy', 'VEIA Supplies', 'Yeti', 'Pyzel surfboards']);
+  assert.equal(list[3].link, 'https://en.wikipedia.org/wiki/Yeti_Holdings');
+  assert.deepEqual(await entity.sponsorsOf(async () => ({ parse: { wikitext: '{{Infobox person\n| name = X\n}}' } }), 'X'), []);
+});
+
+test('company business: no SEC number on Wikidata -> the same name in the saved SEC list', async () => {
+  const rest = async () => [{ cik: 1341766, name: 'Celsius Holdings, Inc.' }, { cik: 9, name: 'Celsius Coffee Co' }];
+  assert.equal(await entity.cikByName(rest, 'Celsius Holdings'), '1341766');
+  assert.equal(await entity.cikByName(async () => [{ cik: 317540, name: 'COCA-COLA CONSOLIDATED, INC.' }], 'Coca-Cola'), null);
+});
+
+test('a confirmed brand without a Wikipedia page keeps its brand flag', () => {
+  assert.deepEqual(entity.parseChoice({ subject: 'Machu Picchu Energy', confirm: true, brand: true }), { subject: 'Machu Picchu Energy', peers: [], confirm: true, brand: true });
+  assert.equal(entity.parseChoice({ subject: 'X', brand: 'yes' }).brand, undefined);
+});

@@ -7,7 +7,7 @@
     'KR', 'MA', 'MX', 'MY', 'NG', 'NL', 'PE', 'PH', 'PK', 'PL', 'PT', 'SA', 'TH', 'TR', 'TW', 'UA', 'US', 'VN', 'ZA'];
   const INFO = {
     country: ['What a country searches, reads and celebrates today.', 'Pick a country'],
-    artist: ['Who looks up an artist this week, and where.', 'Pick an artist', 'Type an artist'],
+    artist: ['Who looks up a person this week, and where.', 'Pick a person', 'Type a person'],
     company: ['Who looks up a company or brand this week, and where.', 'Pick a company or brand', 'Type a company or brand'],
   };
   const BEAT = 'M0 30 H34 l5 -4 l5 4 H54 l4 6 l6 -30 l6 36 l5 -12 H92 l7 -6 l7 6 H154 l5 -4 l5 4 H174 l4 6 l6 -30 l6 36 l5 -12 H212 l7 -6 l7 6 H260';

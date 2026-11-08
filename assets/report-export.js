@@ -106,7 +106,49 @@
     return { slides, title: names.join(' vs '), file: `like-polling-${cs.map((c) => c.country.toLowerCase()).join('-')}-report` };
   }
 
+  const host = (u) => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return u; } };
+  function sponsoredSlide(slides, people, title, L) {
+    const rows = people.slice(0, 10);
+    slides.push({ type: 'charts', title: L('People it sponsors'), note: L('Athletes and stars who name {s} as a sponsor on Wikipedia, ranked by English Wikipedia views, last 30 days.', { s: title }),
+      charts: [{ kind: 'bar', horizontal: true, labels: rows.map((p) => cut(plain(p.title), 26)), series: [{ name: L('Views, 30 days'), values: rows.map((p) => p.views) }] }],
+      take: L('{a} is the most-read of them, with {n} views.', { a: plain(rows[0].title), n: rows[0].views.toLocaleString() }) });
+  }
+
+  function statesSlide(slides, data, title, x) {
+    const st = data.states || {};
+    const cs = ['US', 'BR'].filter((c) => st[c] && st[c].length);
+    if (!cs.length) return;
+    slides.push({ type: 'charts', title: x.L('Top states'), note: x.L('Google searches by state, last 30 days. 100 is the state where it is searched most for its size.'),
+      charts: cs.map((c) => ({ head: x.name(c), kind: 'bar', horizontal: true, labels: st[c].slice(0, 8).map((r) => cut(r.name, 22)), series: [{ name: x.name(c), values: st[c].slice(0, 8).map((r) => r.value) }] })),
+      take: cs.map((c) => x.L('{s} is searched most in {r}, {c}.', { s: title, r: st[c][0].name, c: x.name(c) })).join(' ') });
+  }
+
+  // Brand without a Wikipedia page: kpis, the people it sponsors, their attention, its category.
+  function brandDeck(data, x) {
+    const { L, short, dshort } = x;
+    const s = data.subject, ppl = data.people || [], f = data.field;
+    const slides = [];
+    const total = sum(ppl.map((p) => p.views));
+    slides.push({ type: 'kpis', title: L('At a glance'), groups: [{ head: '', cards: [
+      s.website && { n: host(s.website), label: L('Website'), sub: '' },
+      ppl.length && { n: String(ppl.length), label: L('Sponsored people'), sub: L('named on Wikipedia') },
+      total && { n: short(total), label: L('Their Wikipedia views'), sub: L('last 30 days, all added') },
+      f && { n: plain(f.ranked[0].title), label: L('Category leader'), sub: x.fieldName },
+    ].filter(Boolean) }] });
+    if (ppl.length) sponsoredSlide(slides, ppl, s.title, L);
+    const ds = ppl.length ? ppl[0].series.map((d) => d.day) : [];
+    if (ds.length > 1) slides.push({ type: 'charts', title: L('Attention, day by day'), note: L('English Wikipedia views per day.'),
+      charts: [{ kind: 'line', labels: ds.map(dshort), series: ppl.slice(0, 4).map((p) => { const m = new Map(p.series.map((d) => [d.day, d.views])); return { name: plain(p.title), values: ds.map((d) => m.get(d) || 0) }; }) }] });
+    if (f) slides.push({ type: 'charts', title: L('Top in its field'), note: L('{f}: the {n} biggest pages in this Wikipedia category, ranked by English Wikipedia views, last 30 days.', { f: x.fieldName, n: f.compared }),
+      charts: [{ kind: 'bar', horizontal: true, labels: f.ranked.map((p) => cut(plain(p.title), 26)), series: [{ name: L('Views, 30 days'), values: f.ranked.map((p) => p.views) }] }],
+      take: L('{a} leads {f} with {p}% of the attention.', { a: plain(f.ranked[0].title), f: x.fieldName, p: f.share_pct }) });
+    statesSlide(slides, data, s.title, x);
+    slides.push({ type: 'text', title: L('Sources'), foot: x.sources });
+    return { slides, title: s.title, file: `like-polling-brand-${s.title.toLowerCase().normalize('NFD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-report` };
+  }
+
   function entityDeck(data, x) {
+    if (data.brand) return brandDeck(data, x);
     const { L, num, short, dshort, langName, name } = x;
     const artist = data.type === 'artist';
     const s = { ...data.subject, title: plain(data.subject.title) };
@@ -117,11 +159,11 @@
     slides.push({ type: 'kpis', title: L('At a glance'), groups: [{ head: '', cards: [
       { n: `${short(s.views)}${s.change_pct == null ? '' : ` ${s.change_pct >= 0 ? '▲' : '▼'} ${Math.abs(s.change_pct)}%`}`, label: L('Wikipedia views'), sub: L('last 30 days, vs the 30 before') },
       data.field ? { n: L('#{r} of {n}', { r: data.field.rank, n: data.field.compared }), label: L('In its field'), sub: x.fieldName }
-        : all.length > 1 && { n: L('#{r} of {n}', { r: s.rank, n: all.length }), label: L(artist ? 'Among similar artists' : 'Among similar brands'), sub: L('by views') },
+        : all.length > 1 && { n: L('#{r} of {n}', { r: s.rank, n: all.length }), label: L(artist ? 'Among similar people' : 'Among similar brands'), sub: L('by views') },
       { n: String(s.languages), label: L('Wikipedia languages'), sub: L('with a page about them') },
       langTotal && { n: `${abroad}%`, label: L('Read outside English'), sub: L('of {n} views in {k} languages', { n: short(langTotal), k: data.languages.length }) },
       s.peak && { n: dshort(s.peak.day), label: L('Busiest day'), sub: L('{n} views', { n: num(s.peak.views) }) },
-      data.countries.length && { n: String(data.countries.length), label: L('Countries trending'), sub: L('days in a daily top 30') },
+      data.countries.length && { n: String(data.countries.length), label: L('Countries trending'), sub: L('days in a daily top 100') },
     ].filter(Boolean) }] });
     if (data.field) {
       const fl = data.field;
@@ -129,6 +171,10 @@
       slides.push({ type: 'charts', title: L('Top in its field'), note: L('{f}: the {n} biggest pages in this Wikipedia category, ranked by English Wikipedia views, last 30 days.', { f: x.fieldName, n: fl.compared }),
         charts: [{ kind: 'bar', horizontal: true, labels: rows.map((p) => cut(plain(p.title), 26)), series: [{ name: L('Views, 30 days'), values: rows.map((p) => p.views) }] }], take: x.fieldTake || '' });
     }
+    const sp = data.sponsors || [];
+    if (sp.length) slides.push({ type: 'list', title: L('Sponsors'), note: L('Brands named as {s}\'s sponsors on Wikipedia.', { s: s.title }),
+      groups: [{ head: '', items: sp.map((x) => ({ title: x.name, text: x.website ? host(x.website) : '' })) }], take: L(sp.length === 1 ? '{s} has 1 sponsor named on Wikipedia.' : '{s} has {n} sponsors named on Wikipedia.', { s: s.title, n: sp.length }) });
+    if ((data.sponsored || []).length) sponsoredSlide(slides, data.sponsored, s.title, L);
     if (data.business) {
       const yrs = data.business.years, u = x.bizUnit || 1e9;
       const yc = (head, k) => ({ head, kind: 'bar', labels: yrs.map((y) => String(y.year)), series: [{ name: head, values: yrs.map((y) => (y[k] == null ? 0 : Math.round((y[k] / u) * 10) / 10)) }] });
@@ -156,7 +202,7 @@
     }
     if (data.countries.length) {
       const top = data.countries.slice(0, 10);
-      slides.push({ type: 'charts', title: L('Trending in countries'), note: L('Days the page was in a country\'s daily top 30.'),
+      slides.push({ type: 'charts', title: L('Trending in countries'), note: L('Days the page was in a country\'s daily top 100.'),
         charts: [{ kind: 'bar', horizontal: true, labels: top.map((c) => name(c.country)), series: [{ name: L('Countries trending'), values: top.map((c) => c.days) }] }],
         take: L('{s} is followed most in {c}.', { s: s.title, c: name(top[0].country) }) });
     }
@@ -166,6 +212,7 @@
         charts: [{ kind: 'bar', horizontal: true, labels: top.map((t) => name(t.country)), series: [{ name: L('Days trending'), values: top.map((t) => t.days) }] }],
         take: top.length === 1 ? L('{s} was a trending Google search in {c}.', { s: s.title, c: name(top[0].country) }) : L('{s} was a trending Google search in {n} countries.', { s: s.title, n: data.trends.length }) });
     }
+    statesSlide(slides, data, s.title, x);
     slides.push({ type: 'text', title: L('Sources'), foot: x.sources });
     return { slides, title: s.title, file: `like-polling-${data.type}-${s.title.toLowerCase().normalize('NFD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-report` };
   }
@@ -314,8 +361,22 @@
     const sheet = (title, rows, widths) => { if (rows.length > 1) sheets.push({ sheet: cut(String(title).replace(/[[\]:*?/\\]/g, ' '), 31).replace(/…$/, ''), data: rows, columns: widths.map((w) => ({ width: w })), stickyRowsCount: 1 }); };
     const about = [[H(L('Report')), H(x.tag)], [L('Name'), x.title], ...x.dates.map(([k, v]) => [k, v]), [L('Sources'), x.sources], ['', ''], [x.since, ''],
       ...(x.know && x.know.length ? [['', ''], [H(L('In plain words')), H('')], ...x.know.map((k) => [k.big, k.line])] : [])];
-    if (data.type === 'artist' || data.type === 'company') {
+    const statesSheet = () => sheet(L('Top states'), [[L('Country'), L('State'), L('Interest (0-100)')].map(H),
+      ...Object.entries(data.states || {}).flatMap(([c, list]) => list.map((r) => [name(c), r.name, n(r.value)]))], [18, 28, 16]);
+    const sponsoredSheet = (people) => sheet(L('People it sponsors'), [[L('Rank'), L('Name'), L('Views, 30 days'), L('Change vs last month'), L('Link')].map(H),
+      ...(people || []).map((p, i) => [i + 1, plain(p.title), n(p.views), p100(p.change_pct), link(p.link)])], [8, 30, 16, 22, 50]);
+    if (data.brand) {
+      sheets.push({ sheet: cut(L('Summary'), 31), data: [...about, ...(data.subject.website ? [[L('Website'), data.subject.website]] : [])], columns: [{ width: 22 }, { width: 70 }] });
+      sponsoredSheet(data.people);
+      statesSheet();
+      if (data.field) sheet(L('Top in its field'), [[L('Rank'), L('Name'), L('Views, 30 days'), L('Change vs last month')].map(H),
+        ...data.field.ranked.map((p, i) => [i + 1, plain(p.title), n(p.views), p100(p.change_pct)])], [8, 34, 16, 22]);
+      sheet(L('Trending on Google'), [[L('Country'), L('Days trending')].map(H), ...(data.trends || []).map((t) => [name(t.country), n(t.days)])], [24, 16]);
+    } else if (data.type === 'artist' || data.type === 'company') {
       const all = [data.subject, ...data.peers];
+      sheet(L('Sponsors'), [[L('Name'), L('Website'), L('Link')].map(H), ...(data.sponsors || []).map((x) => [x.name, link(x.website), link(x.link)])], [30, 40, 50]);
+      sponsoredSheet(data.sponsored);
+      statesSheet();
       sheets.push({ sheet: cut(L('Summary'), 31), data: about, columns: [{ width: 22 }, { width: 70 }] });
       sheet(L('Side by side'), [[L('Rank'), L('Name'), L('Views, 30 days'), L('Previous 30 days'), L('Change vs last month'), L('Wikipedia languages'), L('Link')].map(H),
         ...[...all].sort((a, b) => b.views - a.views).map((p, i) => [i + 1, plain(p.title), n(p.views), n(p.previous), p100(p.change_pct), n(p.languages), link(p.link)])], [8, 30, 16, 18, 22, 20, 50]);
@@ -328,7 +389,7 @@
       const total = sum(data.languages.map((l) => l.views));
       sheet(L('Languages'), [[L('Language'), L('Code'), L('Page title'), L('Views'), L('Share')].map(H), ...data.languages.map((l) => [langName(l.lang), l.lang, l.title, n(l.views), p100(pct(l.views, total))])], [22, 8, 34, 14, 10]);
       sheet(L('Trending on Google'), [[L('Country'), L('Days trending'), L('Approx. searches')].map(H), ...(data.trends || []).map((t) => [name(t.country), n(t.days), n(t.traffic)])], [24, 16, 18]);
-      sheet(L('Trending in countries'), [[L('Country'), L('Days in the daily top 30')].map(H), ...data.countries.map((c) => [name(c.country), n(c.days)])], [24, 22]);
+      sheet(L('Trending in countries'), [[L('Country'), L('Days in the daily top 100')].map(H), ...data.countries.map((c) => [name(c.country), n(c.days)])], [24, 22]);
     } else {
       const cs = data.countries;
       const names = cs.map((c) => name(c.country));
