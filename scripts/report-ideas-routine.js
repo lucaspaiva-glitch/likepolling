@@ -4,6 +4,7 @@
 // creator from another country could adapt. Saved in public.report_insights (private).
 //   node scripts/report-ideas-routine.js        Env: SUPABASE_URL, SUPABASE_KEY (secret), GEMINI_API_KEY
 'use strict';
+const { logGemini, isNoCredit } = require('../lib/gemini-usage');
 const report = require('../lib/report');
 
 const GEMINI_MODELS = ['gemini-3.1-flash-lite', 'gemini-3.5-flash-lite'];
@@ -16,8 +17,11 @@ function geminiJson(apiKey) {
   return async (prompt) => {
     for (;;) {
       try {
-        return JSON.parse((await ai.models.generateContent({ model: GEMINI_MODELS[m], contents: prompt, config: { responseMimeType: 'application/json' } })).text);
+        const res = await ai.models.generateContent({ model: GEMINI_MODELS[m], contents: prompt, config: { responseMimeType: 'application/json' } });
+        await logGemini({ model: GEMINI_MODELS[m], usage: res.usageMetadata });
+        return JSON.parse(res.text);
       } catch (err) {
+        if (isNoCredit(err)) await logGemini({ model: GEMINI_MODELS[m], status: 'no_credit' });
         if (m < GEMINI_MODELS.length - 1 && /NOT_FOUND|\b404\b/.test(String(err && err.message))) m++;
         else throw err;
       }

@@ -1,4 +1,5 @@
 'use strict';
+const { logGemini, isNoCredit } = require('../lib/gemini-usage');
 // Automatic ad spot. Up to 4 paid wagons at a time next to the house card, 7 days each, queued by activation time.
 //   GET  /api/ad                         live paid cards (up to 4), free wagons, and when the next one frees up
 //   POST /api/ad {key, brand, kind, website, tagline?, instagram?}   activate a paid Gumroad key
@@ -90,6 +91,7 @@ Answer JSON only: {"verdict":"safe"|"unsafe"|"unclear","reason":"short reason"}.
       });
       if (r.status === 404) continue;
       const j = await r.json();
+      if (r.ok || r.status === 402) await logGemini({ source: 'ad', model: m, usage: j && j.usageMetadata, status: r.ok ? 'ok' : 'no_credit' }, { env, fetchImpl });
       const out = JSON.parse(j.candidates[0].content.parts[0].text);
       return { verdict: ['safe', 'unsafe'].includes(out.verdict) ? out.verdict : 'unclear', reason: clean(out.reason).slice(0, 200) };
     } catch { break; }

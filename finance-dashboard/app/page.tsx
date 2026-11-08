@@ -57,7 +57,7 @@ export default async function Page() {
           <CategoryBreakdown categories={data.categories} />
         </div>
         <div className="flex flex-col gap-2 lg:col-span-3">
-          <LikePollingCard data={data.likePolling} />
+          <LikePollingCard data={data.likePolling} gemini={data.geminiCredit} />
           <div className="flex-1">
             <CsvDropzone accounts={data.accounts} />
           </div>

@@ -4,6 +4,8 @@ import { useMemo } from "react";
 import { AreaChart, Card, DonutChart } from "@tremor/react";
 import { fmtDate, fmtUsd } from "@/lib/format";
 import type { LikePollingSummary } from "@/lib/like-polling";
+import type { GeminiCredit } from "@/lib/gemini-credit";
+import GeminiCreditBox from "@/components/GeminiCreditBox";
 
 const COLORS = ["emerald", "blue", "cyan", "indigo", "lime", "sky", "teal", "green"];
 const DOT: Record<string, string> = {
@@ -19,7 +21,7 @@ const DOT: Record<string, string> = {
 
 const iso = (d: Date) => d.toISOString().slice(0, 10);
 
-export default function LikePollingCard({ data }: { data: LikePollingSummary }) {
+export default function LikePollingCard({ data, gemini }: { data: LikePollingSummary; gemini: GeminiCredit }) {
   // Running total from the first charge to today, so the chart keeps growing.
   const points = useMemo(() => {
     if (!data.since) return [];
@@ -46,6 +48,7 @@ export default function LikePollingCard({ data }: { data: LikePollingSummary }) 
         </div>
         <p className="text-lg font-semibold tabular-nums text-dark-tremor-content-strong">{fmtUsd(data.total)}</p>
       </div>
+      <GeminiCreditBox data={gemini} />
       {data.vendors.length === 0 ? (
         <p className="py-6 text-center text-xs text-dark-tremor-content-subtle">No Like Polling charges yet</p>
       ) : (

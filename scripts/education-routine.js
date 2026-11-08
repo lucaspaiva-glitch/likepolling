@@ -12,6 +12,7 @@
 // Env: YOUTUBE_API_KEY, SUPABASE_URL, SUPABASE_KEY, GEMINI_API_KEY (optional:
 // without it only the videos are refreshed).
 'use strict';
+const { logGemini, isNoCredit } = require('../lib/gemini-usage');
 
 const { fetchJson, QuotaError } = require('./trending-routine');
 const { parseItems, fetchText } = require('./news-wire-routine');
@@ -142,9 +143,11 @@ function geminiClassifier(apiKey) {
       const config = { responseMimeType: 'application/json', ...(thinking ? { thinkingConfig: { thinkingLevel: 'MINIMAL' } } : {}) };
       try {
         res = await ai.models.generateContent({ model: GEMINI_MODELS[m], contents: prompt, config });
+        await logGemini({ model: GEMINI_MODELS[m], usage: res.usageMetadata });
         break;
       } catch (err) {
         const msg = String(err && err.message);
+        if (isNoCredit(err)) await logGemini({ model: GEMINI_MODELS[m], status: 'no_credit' });
         if (thinking && /thinking/i.test(msg)) thinking = false;
         else if (m < GEMINI_MODELS.length - 1 && /NOT_FOUND|\b404\b/.test(msg)) m++;
         else throw err;

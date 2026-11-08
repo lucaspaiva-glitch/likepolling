@@ -18,6 +18,7 @@ const TOPUP_LOOKUPS_PER_RUN = 400;
 // Headlines are translated once into every site language and reused afterwards.
 const SITE_LANGS = ['en', 'pt', 'pt-PT', 'es', 'de', 'ru', 'uk', 'ko', 'ja'];
 // Cheapest suitable models first; the next is used if one is retired.
+const { logGemini, isNoCredit } = require('../lib/gemini-usage');
 const GEMINI_MODELS = ['gemini-3.1-flash-lite', 'gemini-3.5-flash-lite'];
 const TRANSLATE_BATCH = 40;
 const TRANSLATIONS_PER_RUN = 800;
@@ -172,9 +173,12 @@ function geminiJson(apiKey) {
     for (;;) {
       const config = { responseMimeType: 'application/json', ...(thinking ? { thinkingConfig: { thinkingLevel: 'MINIMAL' } } : {}) };
       try {
-        return JSON.parse((await ai.models.generateContent({ model: GEMINI_MODELS[m], contents: prompt, config })).text);
+        const res = await ai.models.generateContent({ model: GEMINI_MODELS[m], contents: prompt, config });
+        await logGemini({ model: GEMINI_MODELS[m], usage: res.usageMetadata });
+        return JSON.parse(res.text);
       } catch (err) {
         const msg = String(err && err.message);
+        if (isNoCredit(err)) await logGemini({ model: GEMINI_MODELS[m], status: 'no_credit' });
         if (thinking && /thinking/i.test(msg)) thinking = false;
         else if (m < GEMINI_MODELS.length - 1 && /NOT_FOUND|\b404\b/.test(msg)) m++;
         else throw err;
