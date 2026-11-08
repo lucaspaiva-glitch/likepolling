@@ -55,10 +55,9 @@
     .yt-note-card { padding: 12px 14px; border-radius: 12px; background: #fff; color: #1d1d1f; border: 1px solid #ececec; box-shadow: 0 12px 28px -12px rgba(0,0,0,.3); font: 400 13.5px/1.45 Inter, system-ui, sans-serif; }
     .yt-note-card b { display: block; margin-bottom: 4px; font-weight: 700; color: #b0000e; }
     .yt-note-card p { margin: 0; }
-    .lp-rep .lp-free { margin: 0; display: grid; gap: 8px; font-size: 14px; color: #6b6b6b; }
-    .lp-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-    .lp-rep .lp-lab { width: 136px; font-weight: 400; color: #6b6b6b; }
-    .lp-rep .lp-chip em { padding: 3px 5px; border-radius: 4px; background: rgba(255,74,92,.2); color: #ffc2c8; font: 700 9px/1 ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-style: normal; letter-spacing: .1em; }
+    .lp-rep .lp-free { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 14px; color: #6b6b6b; }
+    .lp-row { display: contents; }
+    .lp-rep .lp-chip em { padding: 2px 4px; border-radius: 4px; background: rgba(255,74,92,.2); color: #ffc2c8; font: 700 8px/1 ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-style: normal; letter-spacing: .1em; }
     .lp-rep .lp-pp-paid .lp-chip { background: #fff; border-color: #b0000e; color: #b0000e; box-shadow: 0 6px 16px -10px rgba(176,0,14,.6); }
     .lp-rep .lp-pp-paid .lp-chip i { border-radius: 2px; background: #b0000e; animation: none; }
     .lp-rep .lp-pp-paid .lp-chip::after { background: linear-gradient(100deg, transparent 30%, rgba(176,0,14,.12) 50%, transparent 70%); }
@@ -68,7 +67,7 @@
     .lp-pp-card.lp-pp-rep { width: 320px; padding: 0; border: 0; background: none; box-shadow: none; }
     .lp-pp-rep .svc { border-color: rgba(176,0,14,.45); box-shadow: 0 1px 2px rgba(0,0,0,.04), 0 22px 44px -18px rgba(176,0,14,.45); }
     .lp-pp { position: relative; display: inline-flex; }
-    .lp-rep .lp-chip { position: relative; display: inline-flex; align-items: center; gap: 7px; padding: 8px 14px; overflow: hidden; border-radius: 999px; background: linear-gradient(160deg, #240005, #3a0009); border: 1px solid #ff2a3c; color: #ff6b78; font: 700 12px/1 'Chakra Petch', Inter, sans-serif; letter-spacing: .12em; text-transform: uppercase; text-decoration: none; white-space: nowrap; box-shadow: 0 0 12px -4px rgba(255,42,60,.8); transition: color .2s, box-shadow .2s, transform .2s; }
+    .lp-rep .lp-chip { position: relative; display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; overflow: hidden; border-radius: 999px; background: linear-gradient(160deg, #240005, #3a0009); border: 1px solid #ff2a3c; color: #ff6b78; font: 700 10.5px/1 'Chakra Petch', Inter, sans-serif; letter-spacing: .08em; text-transform: uppercase; text-decoration: none; white-space: nowrap; box-shadow: 0 0 12px -4px rgba(255,42,60,.8); transition: color .2s, box-shadow .2s, transform .2s; }
     .lp-rep .lp-chip span { color: inherit; }
     .lp-rep .lp-chip i { width: 7px; height: 7px; border-radius: 50%; background: #ff4a5c; animation: lp-free-ping 1.6s ease-out infinite; }
     .lp-pp:nth-of-type(2) .lp-chip i { animation-delay: .53s; }
@@ -100,7 +99,7 @@
     .lp-pp-card .lp-sug-wrap { flex: none; }
     .lp-pp-card .svc-btn { margin-top: 4px; }
     @media (prefers-reduced-motion: reduce) { .lp-rep .lp-chip i, .lp-rep .lp-chip::after, .lp-pp-beat .l, .lp-pp-beat b::before { animation: none; } .lp-pp-beat .l { stroke-dasharray: none; } }
-    @media (max-width: 700px) { .lp-row { position: relative; gap: 6px; align-items: stretch; } .lp-pp { display: flex; } .lp-rep .lp-chip { border-radius: 12px; } .lp-rep .lp-lab { width: auto; flex: 1 0 100%; } .lp-pp { position: static; flex: 1 1 0; min-width: 0; } .lp-rep .lp-chip { flex: 1; flex-direction: column; justify-content: center; gap: 5px; padding: 9px 4px; font-size: 10.5px; line-height: 1.15; letter-spacing: .08em; white-space: normal; text-align: center; } .lp-rep .lp-chip i { display: none; } .lp-pp-card, .lp-pp-card.lp-pp-rep { left: 0; right: 0; width: auto; } }
+    @media (max-width: 700px) { .lp-rep .lp-free { display: grid; } .lp-row { display: grid; position: relative; gap: 6px; } .lp-pp { position: static; display: flex; min-width: 0; } .lp-rep .lp-chip { flex: 1; justify-content: space-between; gap: 6px; padding: 8px 14px; font-size: 10.5px; letter-spacing: .08em; } .lp-rep .lp-chip span { min-width: 0; overflow: hidden; text-overflow: ellipsis; } .lp-rep .lp-chip em { flex: none; padding: 2px 4px; font-size: 8px; letter-spacing: .08em; } .lp-rep .lp-chip i { display: none; } .lp-pp-card, .lp-pp-card.lp-pp-rep { left: 0; right: 0; width: auto; } }
     @keyframes yt-pulse { 0% { box-shadow: 0 0 0 0 rgba(255,255,255,.55); } 70%, 100% { box-shadow: 0 0 0 6px rgba(255,255,255,0); } }
     .yt-ticker-viewport { flex: 1; min-width: 0; display: flex; align-items: center; overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 28px, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(90deg, transparent, #000 28px, #000 calc(100% - 28px), transparent); }
     .yt-ticker-rail { display: flex; width: max-content; animation: yt-marquee var(--yt-duration, 120s) linear infinite; will-change: transform; }
@@ -721,8 +720,8 @@
     </header>
     <div class="lp-rep" id="lp-rep">
       <div class="lp-free">
-        <div class="lp-row"><b class="lp-lab">Free every day:</b> <span class="lp-pp" data-pp="country"><a class="lp-chip" href="/pulse"><i aria-hidden="true"></i><span>Country pulse</span><em>Free</em></a></span> <span class="lp-pp" data-pp="artist"><a class="lp-chip" href="/pulse?artist="><i aria-hidden="true"></i><span>Artist pulse</span><em>Free</em></a></span> <span class="lp-pp" data-pp="company"><a class="lp-chip" href="/pulse?company="><i aria-hidden="true"></i><span>Company pulse</span><em>Free</em></a></span></div>
-        <div class="lp-row"><b class="lp-lab">Extended reports:</b> <span class="lp-pp lp-pp-paid" data-rep="country"><a class="lp-chip" href="/report" target="_blank" rel="noopener"><i aria-hidden="true"></i><span>Country report</span><em data-no-i18n>€8</em></a></span> <span class="lp-pp lp-pp-paid" data-rep="artist"><a class="lp-chip" href="/report" target="_blank" rel="noopener"><i aria-hidden="true"></i><span>Artist report</span><em data-no-i18n>€8</em></a></span> <span class="lp-pp lp-pp-paid" data-rep="company"><a class="lp-chip" href="/report" target="_blank" rel="noopener"><i aria-hidden="true"></i><span>Company report</span><em data-no-i18n>€8</em></a></span></div>
+        <div class="lp-row"><span class="lp-pp" data-pp="country"><a class="lp-chip" href="/pulse"><i aria-hidden="true"></i><span>Country pulse</span><em>Free</em></a></span> <span class="lp-pp" data-pp="artist"><a class="lp-chip" href="/pulse?artist="><i aria-hidden="true"></i><span>Artist pulse</span><em>Free</em></a></span> <span class="lp-pp" data-pp="company"><a class="lp-chip" href="/pulse?company="><i aria-hidden="true"></i><span>Company pulse</span><em>Free</em></a></span></div>
+        <div class="lp-row"><span class="lp-pp lp-pp-paid" data-rep="country"><a class="lp-chip" href="/report" target="_blank" rel="noopener"><i aria-hidden="true"></i><span>Country report</span><em data-no-i18n>€8</em></a></span> <span class="lp-pp lp-pp-paid" data-rep="artist"><a class="lp-chip" href="/report" target="_blank" rel="noopener"><i aria-hidden="true"></i><span>Artist report</span><em data-no-i18n>€8</em></a></span> <span class="lp-pp lp-pp-paid" data-rep="company"><a class="lp-chip" href="/report" target="_blank" rel="noopener"><i aria-hidden="true"></i><span>Company report</span><em data-no-i18n>€8</em></a></span></div>
       </div>
       <form id="lp-rep-form" action="/report"><label for="lp-rep-key">Open your report</label><input id="lp-rep-key" autocomplete="off" spellcheck="false" placeholder="Paste your key" required><button type="submit">Open</button></form>
     </div>
