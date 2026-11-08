@@ -1,7 +1,7 @@
 // Education widget: Education Index (fastest recent uploads of tracked education
-// channels) + Most talked-about subjects (YouTube + Google News, sorted by AI).
+// channels), plus trending books and space.
 //   <section id="edu" data-supabase-url="…" data-supabase-key="sb_publishable_…"></section>
-// Reads public.education_videos / education_subjects (scripts/education-routine.js)
+// Reads public.education_videos (scripts/education-routine.js)
 // with the publishable key. Hides itself if there is no data.
 (function () {
   'use strict';
@@ -17,12 +17,6 @@
     document.head.appendChild(css);
   }
 
-  const SUBJECTS = {
-    ai_tech: 'AI & Technology', space_physics: 'Space & Physics', math: 'Math', health_biology: 'Health & Biology',
-    chemistry: 'Chemistry', climate_environment: 'Climate & Environment', history_geography: 'History & Geography',
-    engineering: 'Engineering & How things work', exams_admissions: 'Exams & Admissions', schools_policy: 'Schools & Policy',
-    money_careers: 'Money & Careers', languages_culture: 'Languages & Arts',
-  };
   const compact = new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 });
   const fmt = (n) => (n == null || isNaN(n) ? '—' : compact.format(Number(n)));
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -36,22 +30,16 @@
   }
 
   mount.classList.add('edu');
-  mount.setAttribute('aria-label', 'Education: learning videos and subjects in each country');
+  mount.setAttribute('aria-label', 'Education: learning videos in each country');
   mount.innerHTML = `
-    <div class="edu-top"><h2 class="edu-h">Education</h2><p class="edu-p">What the world is learning on YouTube and talking about in the news.</p></div>
-    <div class="edu-grid">
+    <div class="edu-top"><h2 class="edu-h">Education</h2><p class="edu-p">What the world is learning on YouTube.</p></div>
+    <div class="edu-grid edu-one">
       <section class="ytt edu-idx">
         <div class="ytt-head"><h3 class="ytt-title">Education Index</h3><span class="ytt-sym">EDU</span><span class="ytt-spacer"></span>
           <select class="ytt-select edu-select" aria-label="Country"></select><span class="ytt-asof"></span></div>
         <div class="edu-ib"></div>
         <div class="ytt-foot">Fastest-growing uploads of the last 30 days from the education channels we track in this country, at most 2 per channel. Speed = views per hour since upload. Refreshed twice a day.</div>
         <div class="ytt-foot">Countries with fewer than 5 videos look back 60 days, with up to 3 per channel.</div>
-      </section>
-      <section class="ytt edu-sub">
-        <div class="ytt-head"><h3 class="ytt-title">Most talked-about subjects</h3><span class="ytt-sym" data-no-i18n>YT + NEWS</span><span class="ytt-spacer"></span>
-          <span class="edu-key"><i class="edu-yt"></i><span data-no-i18n>YouTube</span><i class="edu-nw"></i><span>News</span></span></div>
-        <div class="edu-sb"></div>
-        <div class="ytt-foot">Recent videos from those channels plus the last 24 hours of Google News education headlines, sorted into subjects by AI (Google Gemini). One video counts as much as 3 headlines. Shows what is being talked about, not what people are enrolled in.</div>
       </section>
     </div>
     <div class="edu-grid edu-more">
@@ -68,7 +56,6 @@
     </div>`;
   const select = mount.querySelector('.edu-select');
   const ib = mount.querySelector('.edu-ib');
-  const sb = mount.querySelector('.edu-sb');
   const asof = mount.querySelector('.ytt-asof');
   let token = 0;
 
@@ -87,34 +74,18 @@
           <td class="n ytt-likes"><span class="ytt-num">${fmt(r.view_count)}</span></td></tr>`).join('')}</tbody></table>` : ''}`;
   }
 
-  function subjects(rows) {
-    if (!rows.length) return '<div class="ytt-empty">No education data for this country yet.</div>';
-    const max = Math.max(...rows.map((s) => s.score), 1);
-    return `<ol class="edu-list">${rows.map((s) => `<li class="edu-s">
-        <div class="edu-sh"><span class="ytt-rank">${pad(s.rank)}</span><b>${esc(SUBJECTS[s.subject] || s.subject)}</b>
-          <span class="edu-ct"><i class="edu-yt"></i><span class="edu-n" data-no-i18n>${s.video_count}</span> <span>${s.video_count === 1 ? 'video' : 'videos'}</span><i class="edu-nw"></i><span class="edu-n" data-no-i18n>${s.news_count}</span> <span>news</span></span></div>
-        <div class="edu-bar"><span class="edu-byt" style="width:${(s.video_count * 3 / max * 100).toFixed(1)}%"></span><span class="edu-bnw" style="width:${(s.news_count / max * 100).toFixed(1)}%"></span></div>
-        <div class="edu-ex" data-no-i18n>${s.example_video_id ? `<a href="${watch(s.example_video_id)}" target="_blank" rel="noopener"><i class="edu-yt"></i>${esc(s.example_video_title)}</a>` : ''}
-          ${s.example_news_link ? `<a href="${esc(s.example_news_link)}" target="_blank" rel="noopener"><i class="edu-nw"></i>${esc(s.example_news_title)}${s.example_news_source ? ` <em>· ${esc(s.example_news_source)}</em>` : ''}</a>` : ''}</div>
-      </li>`).join('')}</ol>`;
-  }
-
   async function show(code) {
     const mine = ++token;
     try {
       const cc = encodeURIComponent(code);
-      const [vids, subs] = await Promise.all([
-        get(`education_videos?select=rank,video_id,title,channel_title,thumbnail_url,view_count,views_per_hour,fetched_at&country_code=eq.${cc}&order=rank&limit=8`),
-        get(`education_subjects?select=rank,subject,score,video_count,news_count,example_video_id,example_video_title,example_news_title,example_news_link,example_news_source&country_code=eq.${cc}&order=rank&limit=6`),
-      ]);
+      const vids = await get(`education_videos?select=rank,video_id,title,channel_title,thumbnail_url,view_count,views_per_hour,fetched_at&country_code=eq.${cc}&order=rank&limit=8`);
       if (mine !== token) return;
       ib.innerHTML = index(vids);
-      sb.innerHTML = subjects(subs);
       asof.textContent = vids[0] ? `As of ${new Date(vids[0].fetched_at).toISOString().slice(11, 16)} UTC` : '';
     } catch (err) {
       if (mine !== token) return;
       console.error('Education widget:', err);
-      ib.innerHTML = sb.innerHTML = '<div class="ytt-empty">Education data is unavailable right now.</div>';
+      ib.innerHTML = '<div class="ytt-empty">Education data is unavailable right now.</div>';
       asof.textContent = '';
     }
   }
