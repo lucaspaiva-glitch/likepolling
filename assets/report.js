@@ -189,6 +189,7 @@
   searches: 'A search spike shows curiosity, not love. People also search for things they fear or just heard about.',
   holidays: 'On holidays people shop, travel and go online differently. Plan posts a week or two ahead.',
   gdp: 'GDP is the size of a whole economy, not how rich each person is. For that, look at GDP per person.',
+  biz: 'Sales are all the money customers paid. Profit is what is left after every cost and tax. High sales with low profit can still be a weak year.',
   };
   const tip = (id) => L(TIPS[id]);
   const learn = (id) => `<p class="learn"><b>${L('Learn')}</b> ${esc(tip(id))}</p>`;
@@ -368,6 +369,23 @@
     const fRows = f ? [...f.ranked, ...(f.ranked.some((p) => p.me) ? [] : [{ title: data.subject.title, views: s.views, me: true }])].map((p) => ({ title: plain(p.title), views: p.views, me: p.me, color: p.me ? COLORS[0] : '#9a9a9a' })) : [];
     const fieldSec = f ? `<section class="rsec"><h2>${L('Top in its field')}</h2><p class="note">${L('{f}: the {n} biggest pages in this Wikipedia category, ranked by English Wikipedia views, last 30 days.', { f: esc(fn), n: f.compared })}</p>
       ${cbars(fRows, (it) => it.views, short)}<p class="take">${esc(ft)}</p>${learn('field')}</section>` : '';
+    const b = data.business;
+    const unit = b && Math.max(...b.years.map((y) => Math.abs(y.revenue || 0))) >= 1e9 ? 1e9 : 1e6;
+    const money = (v) => (v / unit).toLocaleString(loc(), { maximumFractionDigits: 1 });
+    const bizHeads = unit === 1e9 ? [L('Sales, US$ billions'), L('Profit, US$ billions')] : [L('Sales, US$ millions'), L('Profit, US$ millions')];
+    const bizNote = b ? `${L('Yearly results {s} reports to the US regulator (SEC). Its business year may end in any month.', { s: s.title })}${b.exchange && b.ticker ? ` ${L('Shares trade on {x} as {t}.', { x: b.exchange, t: b.ticker })}` : ''}` : '';
+    let bizTake = '';
+    if (b) {
+      const y0 = b.years[0], y1 = b.years[b.years.length - 1];
+      const g = y0.revenue ? Math.round(((y1.revenue - y0.revenue) / Math.abs(y0.revenue)) * 100) : null;
+      const t = [];
+      if (g != null) t.push(L(g >= 0 ? 'Sales grew {p}% from {a} to {b}.' : 'Sales fell {p}% from {a} to {b}.', { p: Math.abs(g).toLocaleString(loc()), a: y0.year, b: y1.year }));
+      if (y1.profit != null && y1.revenue) t.push(y1.profit >= 0 ? L('In {y}, {n} of every 100 dollars of sales was profit.', { y: y1.year, n: Math.round((y1.profit / y1.revenue) * 100) }) : L('In {y}, it lost money.', { y: y1.year }));
+      bizTake = t.join(' ');
+    }
+    const bizSec = b ? `<section class="rsec"><h2>${L('How the business is doing')}</h2><p class="note">${esc(bizNote)}</p>
+      <div class="vs n2">${[['revenue', bizHeads[0]], ['profit', bizHeads[1]]].map(([k, h]) => { const c = yearBars([{ gdp: b.years }], k, money); return c ? `<div><h3>${h}</h3>${c}</div>` : ''; }).join('')}</div>
+      ${bizTake ? `<p class="take">${esc(bizTake)}</p>` : ''}${learn('biz')}</section>` : '';
     document.title = `${s.title} · ${tag} · Like Polling`;
     const head = `<header class="rhead"><span class="tag">${data.sample ? `${L('Free sample')} · ${tag}` : tag}</span>
       <div class="ehead">${s.image ? `<img src="${esc(s.image)}" alt="">` : ''}<div><h1>${esc(s.title)}</h1><p class="muted" style="margin:4px 0 0">${esc(s.description)}</p></div></div>
@@ -405,7 +423,7 @@
     const gt = data.trends || [];
     const gtr = gt.length ? `<section class="rsec"><h2>${L('Trending on Google')}</h2><p class="note">${L('Days {s} was among the trending Google searches in each country (Google Trends).', { s: esc(s.title) })}</p>
       ${rank(gt.slice(0, 10), (t) => t.days, (t) => esc(name(t.country)))}<p class="take">${gt.length === 1 ? L('{s} was a trending Google search in {c}.', { s: esc(s.title), c: esc(name(gt[0].country)) }) : L('{s} was a trending Google search in {n} countries.', { s: esc(s.title), n: gt.length })}</p>${learn('searches')}</section>` : '';
-    const srcText = `${L('Wikipedia page views and pages: Wikimedia Foundation (wikimedia.org), open data.')} ${L(data.peers_chosen ? 'Comparisons chosen by the buyer.' : 'Similar pages picked by Wikipedia\'s "more like this" search.')}${gt.length ? ` ${L('Trending searches: Google Trends.')}` : ''} ${L('No YouTube or news data.')}`;
+    const srcText = `${L('Wikipedia page views and pages: Wikimedia Foundation (wikimedia.org), open data.')} ${L(data.peers_chosen ? 'Comparisons chosen by the buyer.' : 'Similar pages picked by Wikipedia\'s "more like this" search.')}${gt.length ? ` ${L('Trending searches: Google Trends.')}` : ''} ${b ? ` ${L('Sales and profit: US SEC filings (EDGAR), public data.')}` : ''} ${L('No YouTube or news data.')}`;
     const sources = `<section class="rsec sources"><h2>${L('Sources')}</h2><p class="small">${srcText}</p></section>`;
     const know = [];
     if (s.change_pct) know.push({ big: `${s.change_pct > 0 ? '+' : '−'}${Math.abs(s.change_pct)}%`, line: L(s.change_pct > 0 ? 'more Wikipedia views for {s} than the month before.' : 'fewer Wikipedia views for {s} than the month before.', { s: s.title }) });
@@ -415,9 +433,9 @@
     const avg = s.series.length > 2 ? sum(s.series.map((d) => d.views)) / s.series.length : 0;
     if (s.peak && avg && s.peak.views >= 1.5 * avg) know.push({ big: `${times(s.peak.views, avg)}×`, line: L('On {day}, views of {s} were {x}× a normal day.', { day: dshort(s.peak.day), s: s.title, x: times(s.peak.views, avg) }) });
     if (f) know.unshift({ big: L('#{r} of {n}', { r: f.rank, n: f.compared }), line: L('{s} in {f}, by Wikipedia views.', { s: s.title, f: fn }) });
-    $('report').innerHTML = head + knowSec(know.slice(0, 3)) + kpis + fieldSec + trend + vs + langs + ctry + gtr + sources + (data.sample ? getYours() : '');
+    $('report').innerHTML = head + knowSec(know.slice(0, 3)) + kpis + fieldSec + bizSec + trend + vs + langs + ctry + gtr + sources + (data.sample ? getYours() : '');
     plainWords();
-    wire(data, ctx(data, { know: know.slice(0, 3), fieldName: fn, fieldTake: ft, tag, title: s.title, subtitle: s.description, dates: dateList(data.from, data.to, data.generated_at), sources: srcText }));
+    wire(data, ctx(data, { know: know.slice(0, 3), fieldName: fn, fieldTake: ft, tag, title: s.title, subtitle: s.description, dates: dateList(data.from, data.to, data.generated_at), sources: srcText, bizNote, bizHeads, bizTake, bizUnit: unit }));
     show('report');
     window.scrollTo(0, 0);
   }

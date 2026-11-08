@@ -129,6 +129,11 @@
       slides.push({ type: 'charts', title: L('Top in its field'), note: L('{f}: the {n} biggest pages in this Wikipedia category, ranked by English Wikipedia views, last 30 days.', { f: x.fieldName, n: fl.compared }),
         charts: [{ kind: 'bar', horizontal: true, labels: rows.map((p) => cut(plain(p.title), 26)), series: [{ name: L('Views, 30 days'), values: rows.map((p) => p.views) }] }], take: x.fieldTake || '' });
     }
+    if (data.business) {
+      const yrs = data.business.years, u = x.bizUnit || 1e9;
+      const yc = (head, k) => ({ head, kind: 'bar', labels: yrs.map((y) => String(y.year)), series: [{ name: head, values: yrs.map((y) => (y[k] == null ? 0 : Math.round((y[k] / u) * 10) / 10)) }] });
+      slides.push({ type: 'charts', title: L('How the business is doing'), note: x.bizNote || '', charts: [yc(x.bizHeads[0], 'revenue'), yc(x.bizHeads[1], 'profit')], take: x.bizTake || '' });
+    }
     const ds = s.series.map((d) => d.day);
     if (ds.length > 1) {
       slides.push({ type: 'charts', title: L('Attention, day by day'), note: L('English Wikipedia views per day.'),
@@ -165,7 +170,7 @@
     return { slides, title: s.title, file: `like-polling-${data.type}-${s.title.toLowerCase().normalize('NFD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-report` };
   }
 
-  const TIP_OF = ['Searched on Google:searches', 'Holidays coming up:holidays', 'Trending on Google:searches', 'Top in its field:field', 'The economy:gdp', 'At a glance:glance', 'News coverage per day:line', 'Wikipedia attention per day:line', 'Attention, day by day:line', 'Most-read on Wikipedia:top', 'Rising this week:rising',
+  const TIP_OF = ['Searched on Google:searches', 'Holidays coming up:holidays', 'Trending on Google:searches', 'Top in its field:field', 'The economy:gdp', 'How the business is doing:biz', 'At a glance:glance', 'News coverage per day:line', 'Wikipedia attention per day:line', 'Attention, day by day:line', 'Most-read on Wikipedia:top', 'Rising this week:rising',
     'Peaceful and tense news:topics', 'What the news talks about:topics', 'In the news with:partners', 'Side by side:vs', 'Languages:langs', 'Trending in countries:ctry'];
   const deckOf = (data, x) => {
     const d = data.type === 'artist' || data.type === 'company' ? entityDeck(data, x) : countryDeck(data, x);
@@ -318,6 +323,7 @@
       const maps = all.map((p) => new Map(p.series.map((s) => [s.day, s.views])));
       if (data.field) sheet(L('Top in its field'), [[L('Rank'), L('Name'), L('Views, 30 days'), L('Change vs last month')].map(H),
         ...data.field.ranked.map((p, i) => [i + 1, plain(p.title), n(p.views), p100(p.change_pct)])], [8, 34, 16, 22]);
+      if (data.business) sheet(L('How the business is doing'), [[L('Year'), L('Sales, US$'), L('Profit, US$')].map(H), ...data.business.years.map((y) => [y.year, n(y.revenue), n(y.profit)])], [8, 22, 22]);
       sheet(L('Attention, day by day'), [[L('Day'), ...all.map((p) => plain(p.title))].map(H), ...ds.map((d) => [day(d), ...maps.map((m) => n(m.get(d) || 0))])], [14, ...all.map(() => 20)]);
       const total = sum(data.languages.map((l) => l.views));
       sheet(L('Languages'), [[L('Language'), L('Code'), L('Page title'), L('Views'), L('Share')].map(H), ...data.languages.map((l) => [langName(l.lang), l.lang, l.title, n(l.views), p100(pct(l.views, total))])], [22, 8, 34, 14, 10]);

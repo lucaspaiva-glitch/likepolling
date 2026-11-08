@@ -378,3 +378,44 @@ test('typed names resolve to the right page: "Nike" -> Nike, Inc.; "Apple" as a 
   const shakira = await entity.resolveSubject('artist', 'Shakira', { fetchImpl });
   assert.equal(shakira.page.title, 'Shakira');
 });
+
+// Fake Wikipedia -> Wikidata (SEC CIK, stock exchange) -> SEC EDGAR for the company business section.
+function secRoute(url) {
+  const u = new URL(url);
+  const q = Object.fromEntries(u.searchParams);
+  if (u.host === 'en.wikipedia.org') return json({ query: { pages: [{ title: q.titles, pageprops: q.titles === 'Nike, Inc.' ? { wikibase_item: 'Q483915' } : { wikibase_item: 'Q147662' } }] } });
+  if (u.host === 'www.wikidata.org' && q.action === 'wbgetclaims') {
+    if (q.entity !== 'Q483915') return json({ claims: {} });
+    if (q.property === 'P5531') return json({ claims: { P5531: [{ rank: 'normal', mainsnak: { datavalue: { value: '0000320187' } } }] } });
+    return json({ claims: { P414: [{ rank: 'normal', mainsnak: { datavalue: { value: { id: 'Q13677' } } }, qualifiers: { P249: [{ datavalue: { value: 'NKE' } }] } }] } });
+  }
+  if (u.host === 'www.wikidata.org') return json({ entities: { Q13677: { labels: { en: { value: 'New York Stock Exchange' } } } } });
+  if (u.host === 'data.sec.gov') {
+    const c = u.pathname.split('/').pop().replace('.json', '');
+    const fy = (y, val, form = '10-K') => ({ start: `${y - 1}-06-01`, end: `${y}-05-31`, val, form, filed: `${y}-07-20` });
+    if (c === 'SalesRevenueNet') return json({ units: { USD: [fy(2015, 30e9), fy(2016, 32e9)] } });
+    if (c === 'RevenueFromContractWithCustomerExcludingAssessedTax') return json({ units: { USD: [fy(2017, 34e9), fy(2018, 36e9), { ...fy(2018, 9e9), start: '2018-03-01' }, fy(2019, 39e9, '10-Q')] } });
+    if (c === 'NetIncomeLoss') return json({ units: { USD: [fy(2016, 3.8e9), fy(2017, 4.2e9), fy(2018, -1e9)] } });
+    return json({}, 404);
+  }
+  return json({}, 404);
+}
+
+test('company business: yearly SEC sales and profit via Wikidata, none for companies without SEC filings', async () => {
+  const get = async (url) => { const r = secRoute(url); return r.status === 404 ? null : r.json(); };
+  const nike = await entity.business(get, 'Nike, Inc.');
+  assert.equal(nike.ticker, 'NKE');
+  assert.equal(nike.exchange, 'New York Stock Exchange');
+  assert.deepEqual(nike.years, [{ year: 2015, revenue: 30e9, profit: null }, { year: 2016, revenue: 32e9, profit: 3.8e9 }, { year: 2017, revenue: 34e9, profit: 4.2e9 }, { year: 2018, revenue: 36e9, profit: -1e9 }]);
+  assert.equal(await entity.business(get, 'Zara (retailer)'), null);
+});
+
+test('company business: Like Polling\'s saved history comes before the live SEC', async () => {
+  const seen = [];
+  const get = async (url) => { seen.push(url); const r = secRoute(url); return r.status === 404 ? null : r.json(); };
+  const rest = async (path) => (path.startsWith('company_financials') && path.includes('cik=eq.320187') && path.includes('offset=0') ? [{ year: 2026, revenue: 46e9, profit: 3e9 }, { year: 2025, revenue: 46e9, profit: null }, { year: 2024, revenue: 51e9, profit: 5e9 }] : []);
+  const nike = await entity.business(get, 'Nike, Inc.', rest);
+  assert.deepEqual(nike.years.map((y) => y.year), [2024, 2025, 2026]);
+  assert.equal(nike.years[1].profit, null);
+  assert.ok(!seen.some((u) => u.includes('data.sec.gov')));
+});
