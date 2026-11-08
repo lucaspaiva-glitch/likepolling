@@ -13,6 +13,7 @@
   const dshort = (d) => new Date(`${d}T00:00:00Z`).toLocaleDateString(loc(), { day: 'numeric', month: 'short', timeZone: 'UTC' });
   const PLANE = '<svg viewBox="0 0 34 24" aria-hidden="true"><path d="M2 12 L24 9 Q33 9 33 12 Q33 15 24 15 Z" fill="#b0000e"/><path d="M12 10 L18 1 L21 1 L18 10 Z M12 14 L18 23 L21 23 L18 14 Z M3 11 L1 5 L4 5 L7 11 Z" fill="#8e000b"/><circle cx="27" cy="12" r="1.4" fill="#fff"/></svg>';
   const qs = new URLSearchParams(location.search);
+  let autoPdf = qs.get('pdf') === '1';
   const SAMPLE = { artist: 'Anitta (singer)', company: 'Nike, Inc.' };
   let mode = qs.get('artist') != null ? 'artist' : qs.get('company') != null ? 'company' : 'country';
   let who = { artist: qs.get('artist') || SAMPLE.artist, company: qs.get('company') || SAMPLE.company };
@@ -133,6 +134,7 @@
       try { if (navigator.share) await navigator.share({ title, url: location.href }); else { await navigator.clipboard.writeText(location.href); sh.textContent = T('Link copied'); } } catch {}
     });
     $('pdf').addEventListener('click', () => { document.querySelectorAll('.pl-card').forEach((el) => el.classList.add('in')); window.print(); });
+    if (autoPdf) { autoPdf = false; history.replaceState(null, '', location.search.replace(/[?&]pdf=1/, '').replace(/^&/, '?') || location.pathname); setTimeout(() => $('pdf').click(), 900); }
   }
   const fl = (c) => `<img src="/assets/flags/${c.toLowerCase()}.svg" alt="" onerror="this.remove()">`;
   function renderEntity(d) {

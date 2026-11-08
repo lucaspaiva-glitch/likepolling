@@ -12,6 +12,7 @@
   <link rel="preload" href="/assets/fonts/inter-var-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/assets/fonts/fonts.css">
   <link rel="stylesheet" href="/assets/offers.css">
+  <link rel="stylesheet" href="/assets/suggest.css">
   <link rel="stylesheet" href="/assets/news-wire-widget.css">
   <link rel="stylesheet" href="/assets/trending-widget.css">
   <link rel="stylesheet" href="/assets/music-chart-widget.css">
@@ -54,20 +55,52 @@
     .yt-note-card { padding: 12px 14px; border-radius: 12px; background: #fff; color: #1d1d1f; border: 1px solid #ececec; box-shadow: 0 12px 28px -12px rgba(0,0,0,.3); font: 400 13.5px/1.45 Inter, system-ui, sans-serif; }
     .yt-note-card b { display: block; margin-bottom: 4px; font-weight: 700; color: #b0000e; }
     .yt-note-card p { margin: 0; }
-    .lp-rep .lp-free { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 14px; color: #6b6b6b; }
-    .lp-rep .lp-free a { position: relative; display: inline-flex; align-items: center; gap: 7px; margin: 0; padding: 8px 14px; overflow: hidden; border-radius: 999px; background: linear-gradient(160deg, #240005, #3a0009); border: 1px solid #ff2a3c; color: #ff6b78; font: 700 12px/1 'Chakra Petch', Inter, sans-serif; letter-spacing: .12em; text-transform: uppercase; text-decoration: none; white-space: nowrap; box-shadow: 0 0 12px -4px rgba(255,42,60,.8); transition: color .2s, box-shadow .2s, transform .2s; }
-    .lp-rep .lp-free a i { width: 7px; height: 7px; border-radius: 50%; background: #ff4a5c; animation: lp-free-ping 1.6s ease-out infinite; }
-    .lp-rep .lp-free a:nth-of-type(2) i { animation-delay: .53s; }
-    .lp-rep .lp-free a:nth-of-type(3) i { animation-delay: 1.06s; }
-    .lp-rep .lp-free a::after { content: ''; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 30%, rgba(255,120,135,.35) 50%, transparent 70%); transform: translateX(-120%); animation: lp-free-shine 6s ease-in-out infinite; pointer-events: none; }
-    .lp-rep .lp-free a:nth-of-type(2)::after { animation-delay: .25s; }
-    .lp-rep .lp-free a:nth-of-type(3)::after { animation-delay: .5s; }
-    .lp-rep .lp-free a:hover, .lp-rep .lp-free a:focus-visible { color: #fff; border-color: #ff4a5c; box-shadow: 0 0 18px -2px rgba(255,42,60,.95); transform: translateY(-1px); text-decoration: none; }
+    .lp-rep .lp-free { margin: 0; display: grid; gap: 8px; font-size: 14px; color: #6b6b6b; }
+    .lp-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+    .lp-rep .lp-lab { width: 136px; font-weight: 400; color: #6b6b6b; }
+    .lp-rep .lp-chip em { padding: 3px 5px; border-radius: 4px; background: rgba(255,74,92,.2); color: #ffc2c8; font: 700 9px/1 ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-style: normal; letter-spacing: .1em; }
+    .lp-rep .lp-pp-paid .lp-chip { background: #fff; border-color: #b0000e; color: #b0000e; box-shadow: 0 6px 16px -10px rgba(176,0,14,.6); }
+    .lp-rep .lp-pp-paid .lp-chip i { border-radius: 2px; background: #b0000e; animation: none; }
+    .lp-rep .lp-pp-paid .lp-chip::after { background: linear-gradient(100deg, transparent 30%, rgba(176,0,14,.12) 50%, transparent 70%); }
+    .lp-rep .lp-pp-paid .lp-chip em { background: #b0000e; color: #fff; }
+    .lp-rep .lp-pp-paid .lp-chip:hover, .lp-rep .lp-pp-paid .lp-chip:focus-visible, .lp-rep .lp-pp-paid.open .lp-chip { background: #b0000e; border-color: #b0000e; color: #fff; box-shadow: 0 8px 20px -8px rgba(176,0,14,.7); }
+    .lp-rep .lp-pp-paid .lp-chip:hover :is(i, em), .lp-rep .lp-pp-paid .lp-chip:focus-visible :is(i, em), .lp-rep .lp-pp-paid.open .lp-chip :is(i, em) { background: #fff; color: #b0000e; }
+    .lp-pp-card.lp-pp-rep { width: 320px; padding: 0; border: 0; background: none; box-shadow: none; }
+    .lp-pp-rep .svc { border-color: rgba(176,0,14,.45); box-shadow: 0 1px 2px rgba(0,0,0,.04), 0 22px 44px -18px rgba(176,0,14,.45); }
+    .lp-pp { position: relative; display: inline-flex; }
+    .lp-rep .lp-chip { position: relative; display: inline-flex; align-items: center; gap: 7px; padding: 8px 14px; overflow: hidden; border-radius: 999px; background: linear-gradient(160deg, #240005, #3a0009); border: 1px solid #ff2a3c; color: #ff6b78; font: 700 12px/1 'Chakra Petch', Inter, sans-serif; letter-spacing: .12em; text-transform: uppercase; text-decoration: none; white-space: nowrap; box-shadow: 0 0 12px -4px rgba(255,42,60,.8); transition: color .2s, box-shadow .2s, transform .2s; }
+    .lp-rep .lp-chip span { color: inherit; }
+    .lp-rep .lp-chip i { width: 7px; height: 7px; border-radius: 50%; background: #ff4a5c; animation: lp-free-ping 1.6s ease-out infinite; }
+    .lp-pp:nth-of-type(2) .lp-chip i { animation-delay: .53s; }
+    .lp-pp:nth-of-type(3) .lp-chip i { animation-delay: 1.06s; }
+    .lp-rep .lp-chip::after { content: ''; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 30%, rgba(255,120,135,.35) 50%, transparent 70%); transform: translateX(-120%); animation: lp-free-shine 6s ease-in-out infinite; pointer-events: none; }
+    .lp-pp:nth-of-type(2) .lp-chip::after { animation-delay: .25s; }
+    .lp-pp:nth-of-type(3) .lp-chip::after { animation-delay: .5s; }
+    .lp-rep .lp-chip:hover, .lp-rep .lp-chip:focus-visible, .lp-pp.open .lp-chip { color: #fff; border-color: #ff4a5c; box-shadow: 0 0 18px -2px rgba(255,42,60,.95); transform: translateY(-1px); text-decoration: none; }
     @keyframes lp-free-ping { 0% { box-shadow: 0 0 0 0 rgba(255,74,92,.7); } 70%, 100% { box-shadow: 0 0 0 7px rgba(255,74,92,0); } }
     @keyframes lp-free-shine { 0%, 70% { transform: translateX(-120%); } 85%, 100% { transform: translateX(120%); } }
-    @media (prefers-reduced-motion: reduce) { .lp-rep .lp-free a i, .lp-rep .lp-free a::after { animation: none; } }
-    .lp-rep .lp-free a span { color: inherit; }
-    @media (max-width: 700px) { .lp-rep .lp-free > span { flex: 1 0 100%; } .lp-rep .lp-free a { flex: 1 1 auto; justify-content: center; padding: 9px 10px; font-size: 11px; } }
+    .lp-pp-card { position: absolute; z-index: 60; top: calc(100% + 10px); left: 0; width: 290px; display: grid; gap: 8px; padding: 0 14px 14px; border: 1px solid rgba(176,0,14,.45); border-radius: 14px; background: #fff; color: #1d1d1f; font: 14px/1.4 Inter, system-ui, sans-serif; text-align: left; box-shadow: 0 1px 2px rgba(0,0,0,.04), 0 22px 44px -18px rgba(176,0,14,.45); opacity: 0; visibility: hidden; transform: translateY(-6px); transition: opacity .2s, transform .2s, visibility 0s .2s; }
+    .lp-pp-card::before { content: ''; position: absolute; left: 0; right: 0; top: -12px; height: 12px; }
+    .lp-pp.open .lp-pp-card { opacity: 1; visibility: visible; transform: none; transition: opacity .2s, transform .2s; }
+    .lp-pp-top { display: flex; justify-content: space-between; align-items: center; padding-top: 12px; color: #737373; font: 600 10px/1 ui-monospace, 'SF Mono', Menlo, Consolas, monospace; letter-spacing: .12em; text-transform: uppercase; }
+    .lp-pp-beat { position: relative; height: 54px; margin: 2px 0 0; overflow: hidden; border-radius: 10px; border: 1px solid #ff2a3c; background: linear-gradient(160deg, #1a0003, #3a0009); background-image: linear-gradient(rgba(255,42,60,.12) 1px, transparent 1px), linear-gradient(90deg, rgba(255,42,60,.12) 1px, transparent 1px), linear-gradient(160deg, #1a0003, #3a0009); background-size: 12px 12px, 12px 12px, auto; box-shadow: inset 0 0 18px rgba(255,42,60,.25), 0 0 14px -6px rgba(255,42,60,.9); }
+    .lp-pp-beat svg { position: absolute; inset: 5px 0; width: 100%; height: calc(100% - 10px); overflow: visible; }
+    .lp-pp-beat path { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+    .lp-pp-beat .g { stroke: rgba(255,74,92,.22); stroke-width: 1.5; }
+    .lp-pp-beat .l { stroke: #ff4a5c; stroke-width: 2.2; stroke-dasharray: 34 66; stroke-dashoffset: 100; filter: drop-shadow(0 0 3px #ff2a3c) drop-shadow(0 0 6px rgba(255,42,60,.8)); animation: lp-beat var(--d, 1.6s) linear infinite; }
+    .lp-pp-beat b { position: absolute; top: 6px; right: 8px; display: flex; align-items: center; gap: 5px; color: #ff6b78; font: 700 9px/1 'Chakra Petch', Inter, sans-serif; letter-spacing: .16em; }
+    .lp-pp-beat b::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #ff4a5c; animation: lp-free-ping 1.6s ease-out infinite; }
+    @keyframes lp-beat { to { stroke-dashoffset: 0; } }
+    .lp-pp-name { margin-top: 4px; font: italic 900 23px/.98 'Kanit', 'Arial Black', system-ui, sans-serif; letter-spacing: .02em; color: #b0000e; text-transform: uppercase; }
+    .lp-pp-sub { margin: 0; color: #1d1d1f; }
+    .lp-rep .lp-pp-lab { margin-top: 2px; font: 600 12px/1 Inter, system-ui, sans-serif; color: #6e6e73; }
+    .lp-rep .lp-pp-free :is(input, select) { flex: none; box-sizing: border-box; width: 100%; padding: 9px 12px; border: 1.5px solid #ececec; border-radius: 10px; background: #fff; font: 600 14px Inter, system-ui, sans-serif; color: #111; outline: 0; }
+    .lp-rep .lp-pp-free :is(input, select):focus { border-color: #b0000e; outline: 0; }
+    .lp-rep .lp-pp-free .need { border-color: #ff5a1f; background: #fff3ec; }
+    .lp-pp-card .lp-sug-wrap { flex: none; }
+    .lp-pp-card .svc-btn { margin-top: 4px; }
+    @media (prefers-reduced-motion: reduce) { .lp-rep .lp-chip i, .lp-rep .lp-chip::after, .lp-pp-beat .l, .lp-pp-beat b::before { animation: none; } .lp-pp-beat .l { stroke-dasharray: none; } }
+    @media (max-width: 700px) { .lp-row { position: relative; gap: 6px; align-items: stretch; } .lp-pp { display: flex; } .lp-rep .lp-chip { border-radius: 12px; } .lp-rep .lp-lab { width: auto; flex: 1 0 100%; } .lp-pp { position: static; flex: 1 1 0; min-width: 0; } .lp-rep .lp-chip { flex: 1; flex-direction: column; justify-content: center; gap: 5px; padding: 9px 4px; font-size: 10.5px; line-height: 1.15; letter-spacing: .08em; white-space: normal; text-align: center; } .lp-rep .lp-chip i { display: none; } .lp-pp-card, .lp-pp-card.lp-pp-rep { left: 0; right: 0; width: auto; } }
     @keyframes yt-pulse { 0% { box-shadow: 0 0 0 0 rgba(255,255,255,.55); } 70%, 100% { box-shadow: 0 0 0 6px rgba(255,255,255,0); } }
     .yt-ticker-viewport { flex: 1; min-width: 0; display: flex; align-items: center; overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 28px, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(90deg, transparent, #000 28px, #000 calc(100% - 28px), transparent); }
     .yt-ticker-rail { display: flex; width: max-content; animation: yt-marquee var(--yt-duration, 120s) linear infinite; will-change: transform; }
@@ -651,33 +684,20 @@
       header.top > .live { justify-self: start; margin-left: 36px; }
     }
     /* Reports strip under the header: quiet product line + "Open your report" key box (opens /report#k=KEY). */
-    .lp-offers { max-width: 1080px; margin: 36px auto 36px; padding: 0; }
-    .lp-offers > h2 { margin: 0; font: 700 26px/1.15 Inter, system-ui, sans-serif; letter-spacing: -.01em; color: #1d1d1f; text-align: center; }
-    .lp-offers > p { margin: 6px 0 20px; font-size: 14px; color: #6e6e73; text-align: center; }
-    .lp-offers .svc:not(.open) :is(.svc-top, .svc-bar, .svc-sub, .svc-more, .svc-buy-m) { display: none; }
-    .lp-offers .svc:not(.open) .svc-name { margin: 16px 14px 2px; }
-    @media (min-width: 561px) { .lp-offers .svc-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-    .lp-offers .svc.open :is(.svc-top, .svc-bar, .svc-sub, .svc-more, .svc-buy-m, .svc-body) { animation: lp-reveal .22s ease both; }
-    @keyframes lp-reveal { from { opacity: 0; transform: translateY(-4px); } }
-    @media (hover: hover) and (pointer: fine) {
-      .lp-offers .svc-grid { grid-auto-rows: 84px; }
-      .lp-offers .svc { z-index: 1; }
-      .lp-offers .svc.open { z-index: 5; }
-    }
     .lp-head { grid-column: 1 / -1; grid-row: 1; min-width: 0; }
     .lp-rep { display: flex; align-items: center; justify-content: space-between; gap: 14px 24px; flex-wrap: wrap; margin: 14px 0 -16px; padding: 12px 16px; border-radius: 14px; background: #f5f5f7; font-size: 13px; color: #1d1d1f; }
-    .lp-rep p { margin: 0; line-height: 1.45; }
-    .lp-rep p b { font-weight: 650; }
-    .lp-rep p span { color: #6e6e73; }
-    .lp-rep p a { color: var(--red); text-decoration: none; white-space: nowrap; margin-left: 10px; font-weight: 500; }
-    .lp-rep p a:hover { text-decoration: underline; }
-    .lp-rep form { display: flex; align-items: center; gap: 6px; flex: 0 1 340px; min-width: 0; }
-    .lp-rep label { font-weight: 600; white-space: nowrap; }
-    .lp-rep input { flex: 1; min-width: 0; padding: 7px 12px; border: 1px solid #d2d2d7; border-radius: 999px; background: #fff; font: 13px Inter, system-ui, sans-serif; color: #1d1d1f; }
-    .lp-rep input:focus { outline: 2px solid var(--red); outline-offset: 1px; border-color: transparent; }
-    .lp-rep button { flex: none; padding: 7px 14px; border: 0; border-radius: 999px; background: var(--red); color: #fff; font: 600 13px Inter, system-ui, sans-serif; cursor: pointer; }
-    .lp-rep button:hover { background: var(--red-dark); }
-    @media (max-width: 700px) { .lp-rep { flex-direction: column; flex-wrap: nowrap; align-items: stretch; } .lp-rep { margin-bottom: 14px; } .lp-rep form { flex-basis: auto; flex-wrap: wrap; } .lp-rep label { flex: 1 0 100%; } .lp-rep p a { margin-left: 8px; } }
+    .lp-rep > p { margin: 0; line-height: 1.45; }
+    .lp-rep > p b { font-weight: 650; }
+    .lp-rep > p span { color: #6e6e73; }
+    .lp-rep > p a { color: var(--red); text-decoration: none; white-space: nowrap; margin-left: 10px; font-weight: 500; }
+    .lp-rep > p a:hover { text-decoration: underline; }
+    .lp-rep > form { display: flex; align-items: center; gap: 6px; flex: 0 1 340px; min-width: 0; }
+    .lp-rep > form label { font-weight: 600; white-space: nowrap; }
+    .lp-rep > form input { flex: 1; min-width: 0; padding: 7px 12px; border: 1px solid #d2d2d7; border-radius: 999px; background: #fff; font: 13px Inter, system-ui, sans-serif; color: #1d1d1f; }
+    .lp-rep > form input:focus { outline: 2px solid var(--red); outline-offset: 1px; border-color: transparent; }
+    .lp-rep > form button { flex: none; padding: 7px 14px; border: 0; border-radius: 999px; background: var(--red); color: #fff; font: 600 13px Inter, system-ui, sans-serif; cursor: pointer; }
+    .lp-rep > form button:hover { background: var(--red-dark); }
+    @media (max-width: 700px) { .lp-rep { flex-direction: column; flex-wrap: nowrap; align-items: stretch; } .lp-rep { margin-bottom: 14px; } .lp-rep > form { flex-basis: auto; flex-wrap: wrap; } .lp-rep > form label { flex: 1 0 100%; } .lp-rep > p a { margin-left: 8px; } }
     .earn-note { margin: 10px 0 0; font-size: 11.5px; line-height: 1.45; color: var(--muted); }
   </style>
   <link rel="alternate" type="text/markdown" href="/llms.txt" title="Like Polling data for AI">
@@ -700,14 +720,12 @@
       <div class="lp-ext-wrap"><a class="lp-ext" href="https://chromewebstore.google.com/detail/creators-+/ibajjhdapncbacoinjjcagimpcjpahbn" target="_blank" rel="noopener" aria-label="Add to Chrome"><svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path d="M8 2v8m0 0L4.8 6.8M8 10l3.2-3.2M3 13h10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Add to Chrome</span></a><button type="button" class="lp-ext-info" id="cp-link" aria-controls="cp-pop" aria-expanded="false">Free Extension</button></div>
     </header>
     <div class="lp-rep" id="lp-rep">
-      <p class="lp-free"><span>Free every day:</span> <a href="/pulse"><i aria-hidden="true"></i><span>Country pulse</span></a> <a href="/pulse?artist="><i aria-hidden="true"></i><span>Artist pulse</span></a> <a href="/pulse?company="><i aria-hidden="true"></i><span>Company pulse</span></a></p>
+      <div class="lp-free">
+        <div class="lp-row"><b class="lp-lab">Free every day:</b> <span class="lp-pp" data-pp="country"><a class="lp-chip" href="/pulse"><i aria-hidden="true"></i><span>Country pulse</span><em>Free</em></a></span> <span class="lp-pp" data-pp="artist"><a class="lp-chip" href="/pulse?artist="><i aria-hidden="true"></i><span>Artist pulse</span><em>Free</em></a></span> <span class="lp-pp" data-pp="company"><a class="lp-chip" href="/pulse?company="><i aria-hidden="true"></i><span>Company pulse</span><em>Free</em></a></span></div>
+        <div class="lp-row"><b class="lp-lab">Extended reports:</b> <span class="lp-pp lp-pp-paid" data-rep="country"><a class="lp-chip" href="/report" target="_blank" rel="noopener"><i aria-hidden="true"></i><span>Country report</span><em data-no-i18n>€8</em></a></span> <span class="lp-pp lp-pp-paid" data-rep="artist"><a class="lp-chip" href="/report" target="_blank" rel="noopener"><i aria-hidden="true"></i><span>Artist report</span><em data-no-i18n>€8</em></a></span> <span class="lp-pp lp-pp-paid" data-rep="company"><a class="lp-chip" href="/report" target="_blank" rel="noopener"><i aria-hidden="true"></i><span>Company report</span><em data-no-i18n>€8</em></a></span></div>
+      </div>
       <form id="lp-rep-form" action="/report"><label for="lp-rep-key">Open your report</label><input id="lp-rep-key" autocomplete="off" spellcheck="false" placeholder="Paste your key" required><button type="submit">Open</button></form>
     </div>
-    <section class="lp-offers" id="offers" aria-labelledby="offers-h">
-      <h2 id="offers-h">Extended reports.</h2>
-      <p>Everything Like Polling has saved on one country, artist or company, since 24 October 2026.</p>
-      <div data-offers="reports"></div>
-    </section>
     </div>
 
     <section class="nw nw-front" id="news-front" aria-label="World News: top news headlines in each country"></section>
@@ -1400,6 +1418,8 @@ ENERGY</div>
     });
   </script>
   <script src="/assets/offers.js" defer></script>
+  <script src="/assets/suggest.js" defer></script>
+  <script src="/assets/pulse-pop.js" defer></script>
   <script src="/assets/ad-sign.js" defer></script>
   <script src="/assets/video-thumbs.js" defer></script>
   <script src="/assets/trending-widget.js" defer></script>

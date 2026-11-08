@@ -19,6 +19,20 @@
 
   // English UI string -> [pt, es, de, ru, uk, ko, ja]
   const DICT = {
+    "What a country searches, reads and celebrates today.": ["O que um país pesquisa, lê e celebra hoje.", "Lo que un país busca, lee y celebra hoy.", "Was ein Land heute sucht, liest und feiert.", "Что страна ищет, читает и празднует сегодня.", "Що країна шукає, читає і святкує сьогодні.", "한 나라가 오늘 검색하고, 읽고, 기념하는 것.", "その国が今日、検索し、読み、祝っていること。"],
+    "Who looks up an artist this week, and where.": ["Quem procura um artista esta semana, e onde.", "Quién busca a un artista esta semana, y dónde.", "Wer diese Woche nach einem Künstler sucht, und wo.", "Кто ищет артиста на этой неделе и где.", "Хто шукає артиста цього тижня і де.", "이번 주 누가 어디서 아티스트를 찾는지.", "今週、どこで誰がアーティストを調べているか。"],
+    "Who looks up a company or brand this week, and where.": ["Quem procura uma empresa ou marca esta semana, e onde.", "Quién busca una empresa o marca esta semana, y dónde.", "Wer diese Woche nach einem Unternehmen oder einer Marke sucht, und wo.", "Кто ищет компанию или бренд на этой неделе и где.", "Хто шукає компанію чи бренд цього тижня і де.", "이번 주 누가 어디서 기업이나 브랜드를 찾는지.", "今週、どこで誰が企業やブランドを調べているか。"],
+    "Extended reports:": ["Relatórios completos:", "Informes ampliados:", "Erweiterte Berichte:", "Расширенные отчёты:", "Розширені звіти:", "확장 리포트:", "詳細レポート:"],
+    "Country report": ["Relatório de país", "Informe de país", "Länderbericht", "Отчёт о стране", "Звіт про країну", "국가 리포트", "国レポート"],
+    "Artist report": ["Relatório de artista", "Informe de artista", "Künstlerbericht", "Отчёт об артисте", "Звіт про артиста", "아티스트 리포트", "アーティストレポート"],
+    "Company report": ["Relatório de empresa", "Informe de empresa", "Unternehmensbericht", "Отчёт о компании", "Звіт про компанію", "기업 리포트", "企業レポート"],
+    "Free": ["Grátis", "Gratis", "Kostenlos", "Бесплатно", "Безкоштовно", "무료", "無料"],
+    "Pick a country": ["Escolha um país", "Elige un país", "Land wählen", "Выберите страну", "Оберіть країну", "나라 선택", "国を選ぶ"],
+    "Pick an artist": ["Escolha um artista", "Elige un artista", "Künstler wählen", "Выберите артиста", "Оберіть артиста", "아티스트 선택", "アーティストを選ぶ"],
+    "Pick a company or brand": ["Escolha uma empresa ou marca", "Elige una empresa o marca", "Unternehmen oder Marke wählen", "Выберите компанию или бренд", "Оберіть компанію чи бренд", "기업 또는 브랜드 선택", "企業・ブランドを選ぶ"],
+    "Download PDF": ["Baixar PDF", "Descargar PDF", "PDF herunterladen", "Скачать PDF", "Завантажити PDF", "PDF 다운로드", "PDFをダウンロード"],
+    "Open the page": ["Abrir a página", "Abrir la página", "Seite öffnen", "Открыть страницу", "Відкрити сторінку", "페이지 열기", "ページを開く"],
+    "Updated daily": ["Atualizado todo dia", "Actualizado cada día", "Täglich aktualisiert", "Обновляется каждый день", "Оновлюється щодня", "매일 업데이트", "毎日更新"],
     "Country pulse": ["Pulso do país", "Pulso del país", "Länderpuls", "Пульс страны", "Пульс країни", "나라의 맥박", "国のいま"],
     "What a country searches, reads, celebrates and feels. Free, updated every day.": ["O que um país busca, lê, comemora e sente. Grátis, atualizado todo dia.", "Lo que un país busca, lee, celebra y siente. Gratis, actualizado cada día.", "Was ein Land sucht, liest, feiert und fühlt. Kostenlos, jeden Tag aktuell.", "Что страна ищет, читает, празднует и чувствует. Бесплатно, обновляется каждый день.", "Що країна шукає, читає, святкує і відчуває. Безкоштовно, оновлюється щодня.", "한 나라가 검색하고, 읽고, 기념하고, 느끼는 것. 무료, 매일 업데이트.", "国が検索し、読み、祝い、感じていること。無料、毎日更新。"],
     "Live": ["Ao vivo", "En vivo", "Live", "В эфире", "Наживо", "라이브", "ライブ"],

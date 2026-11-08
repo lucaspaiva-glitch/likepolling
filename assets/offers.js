@@ -24,7 +24,8 @@
   const lang = () => (window.LP_I18N && window.LP_I18N.lang) || 'en';
   const pdf = (id) => `${SAMPLES}/${lang()}/${id}-report.pdf?download=like-polling-${id}-report.pdf`;
   const roots = document.querySelectorAll('[data-offers]');
-  if (!roots.length) return;
+  const tabs = document.querySelectorAll('.lp-pp[data-rep]'); // homepage report tabs: the card opens under the tab
+  if (!roots.length && !tabs.length) return;
   const loc = () => (lang() === 'pt' ? 'pt-BR' : lang());
   const cname = (c) => { try { return new Intl.DisplayNames([loc()], { type: 'region' }).of(c) || c; } catch { return c; } };
   // The buyer's choice is kept in this browser only; /report reads it after they paste their key.
@@ -103,9 +104,23 @@
   let cards = [];
   function draw() {
     roots.forEach((r) => { r.classList.add('svc-grid'); r.innerHTML = OFFERS.filter((o) => r.dataset.offers !== 'reports' || !o.mail).map(card).join(''); });
-    cards = [...document.querySelectorAll('.svc')];
+    tabs.forEach((w) => {
+      const o = OFFERS.find((x) => x.id === w.dataset.rep);
+      let pop = w.querySelector('.lp-pp-card');
+      if (!pop) {
+        pop = document.createElement('div');
+        pop.className = 'lp-pp-card lp-pp-rep';
+        pop.id = `lp-pp-${o.id}-report`;
+        pop.setAttribute('role', 'dialog');
+        w.append(pop);
+        w.querySelector('.lp-chip').setAttribute('aria-controls', pop.id);
+      }
+      pop.innerHTML = card(o).replace('class="svc"', 'class="svc open"');
+      w.querySelector('.lp-chip').href = `${SAMPLES}/${lang()}/${o.id}-report.pdf`;
+    });
+    cards = [...document.querySelectorAll('[data-offers] .svc')];
     cards.forEach(wire);
-    cards.forEach(wireForm);
+    document.querySelectorAll('.svc').forEach(wireForm);
   }
   function setOpen(c, on) { c.classList.toggle('open', on); }
   function wire(c) {
@@ -121,7 +136,7 @@
   const fromHash = () => {
     const id = { '#report': 'country', '#sponsor': 'sponsor' }[location.hash] || location.hash.slice(1);
     const c = document.getElementById(`offer-${id}`);
-    if (c) { setOpen(c, true); c.scrollIntoView({ block: 'center' }); }
+    if (c) { setOpen(c, true); const w = c.closest('.lp-pp'); if (w) w.classList.add('open'); c.scrollIntoView({ block: 'center' }); }
   };
   addEventListener('hashchange', fromHash);
   fromHash();

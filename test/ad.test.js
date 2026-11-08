@@ -73,7 +73,7 @@ test('a safe paid card goes live for 7 days; 4 wagons fill, the 5th waits and ta
   assert.equal(w.rows[0].status, 'done');
 });
 
-test('unclear cards are held for the owner; unsafe ones and bad keys are refused', async () => {
+test('cards are held only when Gemini gives no answer; unsafe ones and bad keys are refused', async () => {
   let w = world({ verdict: 'unclear' });
   let r = await call(w, 'POST', card());
   assert.equal(r.body.status, 'held');

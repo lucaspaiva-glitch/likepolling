@@ -5,7 +5,8 @@ const { logGemini, isNoCredit } = require('../lib/gemini-usage');
 //   POST /api/ad {key, brand, kind, website, tagline?, instagram?}   activate a paid Gumroad key
 //   GET  /api/ad?admin=TOKEN / POST {admin, id, action: approve|remove}   owner controls (AD_ADMIN_TOKEN)
 // Checks before a card can go live: paid, unused key; a real HTTPS site that names the brand; text
-// rules; a blocklist (gambling, adult, scams, weapons, drugs); and a Gemini safety pass. Unclear = held.
+// rules; a blocklist (gambling, adult, scams, weapons, drugs); and one Gemini safety pass that says safe (goes live
+// right away) or unsafe (refused). Only if Gemini can't answer at all is the card held for the owner.
 const crypto = require('crypto');
 
 const VERIFY = 'https://api.gumroad.com/v2/licenses/verify';
@@ -76,13 +77,14 @@ async function checkSite(v, fetchImpl) {
   return { title, desc, host: final.hostname };
 }
 
-// Gemini safety pass. Any error or doubt is "unclear", which holds the card for the owner.
+// Gemini safety pass: a yes/no decision. "unclear" only when no model answered.
 async function aiCheck(env, fetchImpl, v, site) {
   const key = String(env.GEMINI_API_KEY || '').trim();
   if (!key) return { verdict: 'unclear', reason: 'No safety check available' };
   const prompt = `You review ads for a public website whose audience includes teenagers. Rules: no gambling or betting, no adult or sexual content, no weapons, drugs, tobacco or vaping, no scams, crypto or get-rich offers, no hate, no political ads, no fake or impersonated brands, nothing misleading.
 Ad: brand "${v.brand}", kind "${v.kind}", tagline "${v.tagline}", website ${site.host} (title "${site.title}", description "${site.desc}").
-Answer JSON only: {"verdict":"safe"|"unsafe"|"unclear","reason":"short reason"}. Use "unclear" if you are not sure.`;
+Decide now, no human will review it: "unsafe" only if it clearly breaks a rule, otherwise "safe".
+Answer JSON only: {"verdict":"safe"|"unsafe","reason":"short reason"}.`;
   for (const m of GEMINI_MODELS) {
     try {
       const r = await fetchImpl(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${encodeURIComponent(key)}`, {
@@ -93,8 +95,8 @@ Answer JSON only: {"verdict":"safe"|"unsafe"|"unclear","reason":"short reason"}.
       const j = await r.json();
       if (r.ok || r.status === 402) await logGemini({ source: 'ad', model: m, usage: j && j.usageMetadata, status: r.ok ? 'ok' : 'no_credit' }, { env, fetchImpl });
       const out = JSON.parse(j.candidates[0].content.parts[0].text);
-      return { verdict: ['safe', 'unsafe'].includes(out.verdict) ? out.verdict : 'unclear', reason: clean(out.reason).slice(0, 200) };
-    } catch { break; }
+      if (['safe', 'unsafe'].includes(out.verdict)) return { verdict: out.verdict, reason: clean(out.reason).slice(0, 200) };
+    } catch { /* try the next model */ }
   }
   return { verdict: 'unclear', reason: 'Safety check didn\'t answer' };
 }
