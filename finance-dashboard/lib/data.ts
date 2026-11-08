@@ -204,7 +204,7 @@ export async function getDashboardData(): Promise<DashboardData> {
       const vendor = likePollingVendor(lt.payee, lt.descriptor);
       if (vendor) likePollingVendors.set(t.id, vendor);
       if (lt.locked === true) return t;
-      if (t.account_id && businessIds.has(t.account_id) && !rawInternal.has(t.id)) {
+      if (t.account_id && businessIds.has(t.account_id) && !rawInternal.has(t.id) && t.category !== "Transfer") {
         if (t.amount > 0) return { ...t, category: LIKE_POLLING_REVENUE_CATEGORY };
         likePollingVendors.set(t.id, vendor ?? t.payee ?? "PayPal");
         return { ...t, category: LIKE_POLLING_CATEGORY };
