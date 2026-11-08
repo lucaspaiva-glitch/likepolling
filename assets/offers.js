@@ -93,7 +93,7 @@
         <span class="svc-sub">${esc(tr(o.sub))}</span>
         <span class="svc-more">${tr(report ? 'See a sample' : 'Get the ad spot')} ↗</span>
       </a>
-      <a class="svc-buy-m" href="${esc(report ? buyLink(o) : AD)}">${tr('Buy')} · ${report ? PRICE : '€18'}</a>
+      <a class="svc-buy-m" href="${esc(report ? buyLink(o) : AD)}">${tr('Buy')} · ${report ? PRICE : '€18'}<span class="lp-local" data-eur="${report ? 8 : 18}"></span></a>
       <div class="svc-body" id="offer-${o.id}-body">
         <div class="svc-stats">${o.stats.map(([n, l]) => `<div><b>${esc(n)}</b><span>${esc(tr(l))}</span></div>`).join('')}</div>
         ${actions}

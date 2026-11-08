@@ -45,6 +45,9 @@
   style.textContent = css;
   document.head.appendChild(style);
   const letters = (w) => [...w].map((c) => `<b>${c}</b>`).join('');
+  const SIGN = { en: ['YOUR', 'AD', 'HERE'], pt: ['SEU', 'ANÚNCIO', 'AQUI'], es: ['TU', 'ANUNCIO', 'AQUÍ'], de: ['IHRE', 'WERBUNG', 'HIER'],
+    ru: ['ВАША', 'РЕКЛАМА', 'ЗДЕСЬ'], uk: ['ВАША', 'РЕКЛАМА', 'ТУТ'], ko: ['광고', '문의'], ja: ['広告', '募集'] };
+  const sign = () => { const l = window.LP_I18N ? window.LP_I18N.lang : 'en'; return (SIGN[l] || SIGN[l.slice(0, 2)] || SIGN.en).map(letters).join('<i></i>'); };
   const root = document.createElement('div');
   root.className = 'lp-sign';
   root.setAttribute('data-no-i18n', '');
@@ -52,7 +55,7 @@
   let open = false, hover = false, t = 0;
   function draw() {
     const mail = `mailto:${MAIL}?subject=${encodeURIComponent('Sponsoring Like Polling')}&body=${encodeURIComponent('Hi! I\'d like to know about the ad spot on Like Polling.\n\nBrand:\nCountries we target:\nWebsite:')}`;
-    root.innerHTML = `<button type="button" class="lp-sign-tab" aria-expanded="${open}" aria-controls="lp-sign-pop" aria-label="${tr('Ad spot')}: ${tr('YOUR BRAND\nHERE').replace(/\n/g, ' ')}"><svg class="plane" viewBox="0 0 30 34" aria-hidden="true"><path d="M15 1c1.6 0 2.6 1.6 2.6 4v7l11 6v3.2l-11-3v7.3l3.6 2.8V31l-6.2-1.6L8.8 31v-2.7l3.6-2.8v-7.3l-11 3V18l11-6V5C12.4 2.6 13.4 1 15 1Z" fill="#b0000e"/><path d="M15 3.2c.8 0 1.2.9 1.2 2.2v3h-2.4v-3c0-1.3.4-2.2 1.2-2.2Z" fill="#fff"/><rect x="3" y="18.4" width="6" height="1.4" rx=".7" fill="#fff" transform="rotate(-16 6 19)"/><rect x="21" y="18.4" width="6" height="1.4" rx=".7" fill="#fff" transform="rotate(16 24 19)"/></svg><span class="rope"></span><span class="flag">${letters('YOUR')}<i></i>${letters('AD')}<i></i>${letters('HERE')}</span></button>
+    root.innerHTML = `<button type="button" class="lp-sign-tab" aria-expanded="${open}" aria-controls="lp-sign-pop" aria-label="${tr('Ad spot')}: ${tr('YOUR BRAND\nHERE').replace(/\n/g, ' ')}"><svg class="plane" viewBox="0 0 30 34" aria-hidden="true"><path d="M15 1c1.6 0 2.6 1.6 2.6 4v7l11 6v3.2l-11-3v7.3l3.6 2.8V31l-6.2-1.6L8.8 31v-2.7l3.6-2.8v-7.3l-11 3V18l11-6V5C12.4 2.6 13.4 1 15 1Z" fill="#b0000e"/><path d="M15 3.2c.8 0 1.2.9 1.2 2.2v3h-2.4v-3c0-1.3.4-2.2 1.2-2.2Z" fill="#fff"/><rect x="3" y="18.4" width="6" height="1.4" rx=".7" fill="#fff" transform="rotate(-16 6 19)"/><rect x="21" y="18.4" width="6" height="1.4" rx=".7" fill="#fff" transform="rotate(16 24 19)"/></svg><span class="rope"></span><span class="flag">${sign()}</span></button>
       <div class="lp-sign-pop" id="lp-sign-pop" ${open ? '' : 'hidden'}><section class="svc open">
         <div class="svc-tab" style="cursor:default"><span class="svc-top"><span class="svc-sym">${tr('Ad spot')}</span><span>${tr('Launch rate')}</span></span>
         <span class="svc-name svc-glitch" data-text="${tr('YOUR BRAND\nHERE')}">${tr('YOUR BRAND\nHERE')}</span><span class="svc-bar" aria-hidden="true"></span>
