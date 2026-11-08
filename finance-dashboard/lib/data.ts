@@ -352,7 +352,7 @@ export async function getDashboardData(): Promise<DashboardData> {
   return {
     configured: true,
     error: null,
-    accounts,
+    accounts: accounts.filter((a) => a.external_id !== "gumroad:sales"),
     transactions,
     kpis: {
       checking,
