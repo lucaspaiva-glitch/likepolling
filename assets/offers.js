@@ -3,7 +3,7 @@
 // Computers: resting the mouse on a card opens it (like the sponsor card). Phones: a tap opens it.
 (function () {
   'use strict';
-  const PRICE = '€18';
+  const PRICE = '€8';
   const MAIL = 'lucaspaiva@likepolling.com';
   // buy: Gumroad product link. Empty = the button opens an order email instead.
   const OFFERS = [

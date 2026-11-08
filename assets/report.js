@@ -263,7 +263,7 @@
   const since = (extra) => `<p class="since"><b>${L('Gathered since day one.')}</b> ${L('Like Polling has recorded its sources every day since {date}, the day we started.', { date: dlong(STARTED) })}${extra ? ` ${L(extra)}` : ''}</p>`;
   const isoDay = (iso) => String(iso).slice(0, 10);
   const dates = (from, to, printed) => `<dl class="dates"><div><dt>${L('Gathered from')}</dt><dd>${dlong(from)}</dd></div><div><dt>${L('Latest data')}</dt><dd>${dlong(to)}</dd></div><div><dt>${L('Printed')}</dt><dd>${dlong(isoDay(printed))}</dd></div></dl>`;
-  const getYours = () => `<p class="print-only"><span>${L('Get your own report at {site}. From €18, no sign-up.', { site: '<b>likepolling.com/services</b>' })}</span></p>`;
+  const getYours = () => `<p class="print-only"><span>${L('Get your own report at {site}. From €8, no sign-up.', { site: '<b>likepolling.com/services</b>' })}</span></p>`;
   const exportBar = (data, own) => `<div class="actions exports"><span class="exl">${L('Download as')}</span>
     <button class="btn" type="button" data-ex="pdf">PDF</button>
     <button class="btn ghost" type="button" data-ex="pptx">${L('Presentation')}<small>PowerPoint · Keynote · Google Slides</small></button>
@@ -272,7 +272,7 @@
   const plainWords = () => $('report').querySelectorAll('.take').forEach((t) => t.insertAdjacentHTML('afterbegin', `<b class="wtm">${L('What this means')}</b>`));
   const ctx = (data, extra) => ({ L, name, langName, num, short, dshort, tip, wtm: L('What this means'), learnL: L('Learn'),
     since: `${L('Gathered since day one.')} ${L('Like Polling has recorded its sources every day since {date}, the day we started.', { date: dlong(STARTED) })}`,
-    cta: data.sample ? L('Get your own report at {site}. From €18, no sign-up.', { site: 'likepolling.com/services' }) : '', ...extra });
+    cta: data.sample ? L('Get your own report at {site}. From €8, no sign-up.', { site: 'likepolling.com/services' }) : '', ...extra });
   const dateList = (from, to, printed) => [[L('Gathered from'), dlong(from)], [L('Latest data'), dlong(to)], [L('Printed'), dlong(isoDay(printed))]];
   let busy = false;
   function wire(data, x) {
