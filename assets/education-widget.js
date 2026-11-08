@@ -1,5 +1,5 @@
 // Education widget: Education Index (fastest recent uploads of tracked education
-// channels), plus trending books and space.
+// channels), plus trending books and a live/next space launch.
 //   <section id="edu" data-supabase-url="…" data-supabase-key="sb_publishable_…"></section>
 // Reads public.education_videos (scripts/education-routine.js)
 // with the publishable key. Hides itself if there is no data.
@@ -49,9 +49,9 @@
         <div class="ytt-foot">The books most opened and saved on Open Library this week, worldwide. Shows curiosity, not sales. Saved every day.</div>
       </section>
       <section class="ytt edu-sp" hidden>
-        <div class="ytt-head"><h3 class="ytt-title">Space</h3><span class="ytt-sym" data-no-i18n>LAUNCH</span><span class="ytt-spacer"></span><span class="ytt-asof">Next launches · news</span></div>
-        <ul class="edu-sl" data-no-i18n></ul><ul class="edu-sn" data-no-i18n></ul>
-        <div class="ytt-foot">Launches from Launch Library 2 and headlines from Spaceflight News, both by The Space Devs. Launch dates often move. Saved every day.</div>
+        <div class="ytt-head"><h3 class="ytt-title">Space</h3><span class="ytt-sym" data-no-i18n>LAUNCH</span></div>
+        <div class="edu-sl"></div>
+        <div class="ytt-foot">Launches from Launch Library 2, by The Space Devs.</div>
       </section>
     </div>`;
   const select = mount.querySelector('.edu-select');
@@ -102,29 +102,65 @@
     return codes.includes('US') ? 'US' : codes[0];
   }
 
-  // Trending books (Open Library) and space launches + headlines (The Space Devs), saved daily.
-  async function booksAndSpace() {
-    const bk = mount.querySelector('.edu-bk'), sp = mount.querySelector('.edu-sp');
-    const [books, launches, news] = await Promise.all([
-      get('books_daily?select=day,rank,title,author,cover_id,work_key&order=day.desc,rank.asc&limit=10').catch(() => []),
-      get(`space_launches?select=name,net,provider,site&net=gte.${new Date().toISOString()}&order=net.asc&limit=3`).catch(() => []),
-      get('space_news?select=title,url,site,published_at&order=published_at.desc&limit=5').catch(() => []),
-    ]);
-    const latest = books.filter((b) => b.day === (books[0] && books[0].day));
+  // Space: a launch streaming right now (YouTube when it has one), else just the next launch date.
+  // Asks Launch Library 2 live (cached 5 min per visitor); falls back to our saved space_launches.
+  const LL = 'https://ll.thespacedevs.com/2.3.0/launches/';
+  const ll = async (path) => { const r = await fetch(LL + path, { signal: AbortSignal.timeout(4000) }); if (!r.ok) throw new Error(`LL2 ${r.status}`); return r.json(); };
+  const ytId = (u) => { const m = /(?:youtube\.com\/(?:watch\?(?:.*&)?v=|live\/|embed\/)|youtu\.be\/)([\w-]{11})/.exec(u || ''); return m ? m[1] : null; };
+  async function launchNow() {
+    try { const c = JSON.parse(sessionStorage.getItem('lp-launch') || 'null'); if (c && Date.now() - c.at < 3e5) return c.v; } catch (e) { /* storage blocked */ }
+    const up = (await ll('upcoming/?limit=5&mode=normal')).results || [];
+    const v = { next: (up.find((l) => Date.parse(l.net) > Date.now()) || {}).net || null, live: null };
+    const now = up.find((l) => l.webcast_live || (l.status && l.status.abbrev === 'In Flight'));
+    if (now) {
+      const vids = (await ll(`${now.id}/?mode=detailed`)).vid_urls || [];
+      const yt = vids.filter((x) => ytId(x.url));
+      const pick = yt.find((x) => x.live) || yt[0];
+      v.live = { name: now.name, yt: pick ? ytId(pick.url) : null, url: (vids.find((x) => x.live) || vids[0] || {}).url || null };
+    }
+    try { sessionStorage.setItem('lp-launch', JSON.stringify({ at: Date.now(), v })); } catch (e) { /* storage blocked */ }
+    return v;
+  }
+  async function space() {
+    const sp = mount.querySelector('.edu-sp'), box = sp.querySelector('.edu-sl');
+    let v = await launchNow().catch(() => null);
+    if (!v || (!v.live && !v.next)) {
+      const saved = await get(`space_launches?select=net&net=gte.${new Date().toISOString()}&order=net.asc&limit=1`).catch(() => []);
+      v = { live: null, next: saved[0] ? saved[0].net : null };
+    }
+    const render = () => {
+      const lang = document.documentElement.lang;
+      const L = v.live;
+      sp.querySelector('.ytt-sym').textContent = L ? 'LIVE' : 'LAUNCH';
+      if (L) {
+        box.innerHTML = `<p class="edu-live"><i></i><span>Live now</span><b data-no-i18n>${esc(L.name)}</b></p>${L.yt
+          ? `<div class="edu-frame"><iframe src="https://www.youtube-nocookie.com/embed/${L.yt}?autoplay=1&mute=1&playsinline=1" title="${esc(L.name)}" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen loading="lazy"></iframe></div>`
+          : L.url ? `<p class="edu-next"><a href="${esc(L.url)}" target="_blank" rel="noopener">Watch live ↗</a></p>` : ''}`;
+      } else {
+        const when = new Intl.DateTimeFormat(lang || undefined, { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).format(new Date(v.next));
+        box.innerHTML = `<p class="edu-next"><span>Next launch</span><b data-no-i18n>${esc(when)}</b></p>`;
+      }
+    };
+    if (!v.live && !v.next) return;
+    render();
+    sp.hidden = false;
+    document.addEventListener('lp:lang', render);
+  }
+
+  // Trending books (Open Library), saved daily.
+  async function books() {
+    const bk = mount.querySelector('.edu-bk');
+    const rows = await get('books_daily?select=day,rank,title,author,cover_id,work_key&order=day.desc,rank.asc&limit=10').catch(() => []);
+    const latest = rows.filter((b) => b.day === (rows[0] && rows[0].day));
     if (latest.length) {
       bk.querySelector('.edu-bl').innerHTML = latest.map((b) => `<li><a href="https://openlibrary.org${esc(b.work_key)}" target="_blank" rel="noopener">${b.cover_id ? `<img src="https://covers.openlibrary.org/b/id/${b.cover_id}-S.jpg" alt="" loading="lazy">` : '<i></i>'}<span><b>${esc(b.title)}</b>${esc(b.author || '')}</span></a></li>`).join('');
       bk.hidden = false;
     }
-    if (launches.length || news.length) {
-      const inDays = (t) => { const ms = Date.parse(t) - Date.now(); return ms < 864e5 ? 'today' : ms < 2 * 864e5 ? 'tomorrow' : `in ${Math.floor(ms / 864e5)} days`; };
-      sp.querySelector('.edu-sl').innerHTML = launches.map((l) => `<li><b>${esc(inDays(l.net))}</b><span>${esc(l.name)}<small>${esc([l.provider, l.site].filter(Boolean).join(' · '))}</small></span></li>`).join('');
-      sp.querySelector('.edu-sn').innerHTML = news.map((n) => `<li><a href="${esc(n.url)}" target="_blank" rel="noopener">${esc(n.title)}</a><small>${esc(n.site || '')}</small></li>`).join('');
-      sp.hidden = false;
-    }
   }
 
   (async () => {
-    booksAndSpace();
+    books();
+    space();
     try {
       const firsts = await get('education_videos?select=country_code&rank=eq.1');
       const codes = firsts.map((r) => r.country_code);
