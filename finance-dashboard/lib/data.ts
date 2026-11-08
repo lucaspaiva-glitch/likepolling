@@ -193,7 +193,7 @@ export async function getDashboardData(): Promise<DashboardData> {
     const reading = accounts.find((a) => a.external_id === GEMINI_READING_EXTERNAL_ID);
     if (reading) geminiReading = { eur: reading.balance, at: reading.updated_at };
     accounts = accounts.filter((a) => a.external_id !== GEMINI_READING_EXTERNAL_ID);
-    businessIds = new Set(accounts.filter((a) => /paypal|gumroad|lemon squeezy/i.test(`${a.institution ?? ""} ${a.name}`)).map((a) => a.id));
+    businessIds = new Set(accounts.filter((a) => /paypal|gumroad/i.test(`${a.institution ?? ""} ${a.name}`)).map((a) => a.id));
     // In-person purchases abroad become Vacation, unless you picked a category for that transaction yourself.
     const rawInternal = internalTransferIds(txs);
     const vacation = vacationIds(txs, rawInternal);
@@ -352,7 +352,7 @@ export async function getDashboardData(): Promise<DashboardData> {
   return {
     configured: true,
     error: null,
-    accounts: accounts.filter((a) => !/^(gumroad|lemonsqueezy):sales$/.test(a.external_id ?? "")),
+    accounts: accounts.filter((a) => a.external_id !== "gumroad:sales"),
     transactions,
     kpis: {
       checking,
