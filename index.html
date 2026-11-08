@@ -1047,7 +1047,7 @@ ENERGY</div>
       document.querySelectorAll('#results [data-date]').forEach((el) => { el.textContent = dfmt(el.dataset.date, el.dataset.dopt); });
       document.querySelectorAll('#results [data-region]').forEach((el) => { el.textContent = region(el.dataset.region); });
     }));
-    const watch = (id) => `https://www.youtube.com/watch?v=${encodeURIComponent(id)}`;
+    const watch = (id, ids) => { const i = Math.max(0, ids.indexOf(id)); return `https://www.youtube.com/watch_videos?video_ids=${ids.slice(i).concat(ids.slice(0, i)).slice(0, 50).map(encodeURIComponent).join(',')}`; };
     const thumb = (id) => `https://i.ytimg.com/vi/${encodeURIComponent(id)}/mqdefault.jpg`;
     const isShort = (v) => v.d != null && v.d <= SHORT_MAX;
 
@@ -1091,7 +1091,7 @@ ENERGY</div>
         </div>
         <div>
           <h3 class="ci-h"><span>Top 5 · last 30 days</span></h3>
-          <div class="ci-top" style="margin-top:10px">${top.map((v, i) => `<a class="ci-tv" href="${watch(v.id)}" target="_blank" rel="noopener">
+          <div class="ci-top" style="margin-top:10px">${top.map((v, i) => `<a class="ci-tv" href="${watch(v.id, top.map((x) => x.id))}" target="_blank" rel="noopener">
             <span class="ci-th"><img src="${thumb(v.id)}" alt="" loading="lazy"><b class="ci-rk" data-no-i18n>0${i + 1}</b>${isShort(v) ? '<i data-no-i18n>≤3 MIN</i>' : ''}${window.lpVph && lpVph(v.v, v.p) != null ? `<i class="lp-vph" data-no-i18n>${fmt(lpVph(v.v, v.p))}/h</i>` : ''}</span>
             <span class="ci-tt" data-no-i18n>${esc(v.t)}</span>
             <span class="ci-tn"><b data-no-i18n>${fmt(v.v)}</b> <span>views</span></span></a>`).join('')}</div>
@@ -1120,7 +1120,7 @@ ENERGY</div>
       if (dot) dot.classList.add('on');
       const guide = svg.querySelector('.ci-guide');
       if (guide && dot) { guide.style.left = dot.style.left; guide.hidden = false; }
-      chart.querySelector('.ci-pick').innerHTML = `<a class="ci-pv" href="${watch(v.id)}" target="_blank" rel="noopener"><img src="${thumb(v.id)}" alt="" loading="lazy">
+      chart.querySelector('.ci-pick').innerHTML = `<a class="ci-pv" href="${watch(v.id, vids.map((x) => x.id))}" target="_blank" rel="noopener"><img src="${thumb(v.id)}" alt="" loading="lazy">
         <span><b class="ci-pt" data-no-i18n>${esc(v.t)}</b><span class="ci-pm" data-no-i18n>${dspan(v.p, 'dmy')}${isShort(v) ? ' · ≤3 MIN' : ''}</span>
         <span class="ci-pn"><b data-no-i18n>${fmt(v.v)}</b> <span>views</span> · <b data-no-i18n>${fmt(v.l)}</b> <span>likes</span> · <b data-no-i18n>${fmt(v.c)}</b> <span>comments</span></span></span></a>`;
     }

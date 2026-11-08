@@ -21,7 +21,8 @@
   const fmt = (n) => (n == null || isNaN(n) ? '—' : compact.format(Number(n)));
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const pad = (n) => String(n).padStart(2, '0');
-  const watch = (id) => `https://www.youtube.com/watch?v=${encodeURIComponent(id)}`;
+  // Opens the whole list as a YouTube quick playlist (no login), starting at the clicked video.
+  const watch = (id, ids) => { const i = Math.max(0, ids.indexOf(id)); return `https://www.youtube.com/watch_videos?video_ids=${ids.slice(i).concat(ids.slice(0, i)).slice(0, 50).map(encodeURIComponent).join(',')}`; };
   const headers = { apikey: key, Authorization: `Bearer ${key}` };
   async function get(path) {
     const res = await fetch(`${base}/rest/v1/${path}`, { headers });
@@ -62,13 +63,14 @@
   function index(rows) {
     if (!rows.length) return '<div class="ytt-empty">No education data for this country yet.</div>';
     const top = Math.max(...rows.map((r) => Number(r.views_per_hour) || 0), 1);
-    return `<div class="ytt-cards">${rows.slice(0, 5).map((r) => `<a class="ytt-card" href="${watch(r.video_id)}" target="_blank" rel="noopener">
+    const ids = rows.map((r) => r.video_id);
+    return `<div class="ytt-cards">${rows.slice(0, 5).map((r) => `<a class="ytt-card" href="${watch(r.video_id, ids)}" target="_blank" rel="noopener">
         <span class="ytt-cth"><img src="https://i.ytimg.com/vi/${encodeURIComponent(r.video_id)}/mqdefault.jpg" alt="" loading="lazy"><b class="ytt-crk">${pad(r.rank)}</b><i class="ytt-cvw">${fmt(r.views_per_hour)}/h</i></span>
         <span class="ytt-ctt" title="${esc(r.title)}">${esc(r.title)}</span><span class="ytt-cch">${esc(r.channel_title)}</span></a>`).join('')}</div>
       ${rows.length > 5 ? `<table class="ytt-table"><colgroup><col class="ytt-rank-col"><col><col class="ytt-vol-col"><col class="ytt-likes-col"></colgroup>
         <thead><tr><th>#</th><th>Video</th><th class="n">Speed</th><th class="n ytt-likes">Views</th></tr></thead>
         <tbody>${rows.slice(5).map((r) => `<tr><td><span class="ytt-rank">${pad(r.rank)}</span></td>
-          <td><a class="ytt-video" href="${watch(r.video_id)}" target="_blank" rel="noopener"><span class="lp-rth" style="--i:${r.rank - 6}"><img src="https://i.ytimg.com/vi/${encodeURIComponent(r.video_id)}/mqdefault.jpg" alt="" loading="lazy"><b>${pad(r.rank)}</b></span>
+          <td><a class="ytt-video" href="${watch(r.video_id, ids)}" target="_blank" rel="noopener"><span class="lp-rth" style="--i:${r.rank - 6}"><img src="https://i.ytimg.com/vi/${encodeURIComponent(r.video_id)}/mqdefault.jpg" alt="" loading="lazy"><b>${pad(r.rank)}</b></span>
             <span class="ytt-text"><span class="ytt-vt" title="${esc(r.title)}">${esc(r.title)}</span><span class="ytt-ch">${esc(r.channel_title)}</span></span></a></td>
           <td class="n ytt-vol"><span class="ytt-num">${fmt(r.views_per_hour)}/h</span><div class="ytt-bar" style="width:${Math.max(4, Math.round((Number(r.views_per_hour) || 0) / top * 100))}%"></div></td>
           <td class="n ytt-likes"><span class="ytt-num">${fmt(r.view_count)}</span></td></tr>`).join('')}</tbody></table>` : ''}`;

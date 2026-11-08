@@ -52,6 +52,8 @@
   const select = mount.querySelector('.ytt-select');
   const body = mount.querySelector('.ytt-body');
   const asof = mount.querySelector('.ytt-asof');
+  // A click opens the whole list as a YouTube quick playlist (no login), starting at the clicked video.
+  const plist = (id, ids) => { const i = Math.max(0, ids.indexOf(id)); return `https://www.youtube.com/watch_videos?video_ids=${ids.slice(i).concat(ids.slice(0, i)).slice(0, 50).map(encodeURIComponent).join(',')}`; };
   let token = 0;
 
   async function show(code) {
@@ -65,8 +67,9 @@
         return;
       }
       const top = Math.max(...rows.map((r) => Number(r.view_count) || 0), 1);
+      const ids = rows.map((r) => r.video_id);
       body.innerHTML = `
-        <div class="ytt-cards">${rows.slice(0, 5).map((r) => `<a class="ytt-card" href="https://www.youtube.com/watch?v=${encodeURIComponent(r.video_id)}" target="_blank" rel="noopener">
+        <div class="ytt-cards">${rows.slice(0, 5).map((r) => `<a class="ytt-card" href="${plist(r.video_id, ids)}" target="_blank" rel="noopener">
             <span class="ytt-cth"><img src="https://i.ytimg.com/vi/${encodeURIComponent(r.video_id)}/mqdefault.jpg" alt="" loading="lazy"><b class="ytt-crk">${String(r.rank).padStart(2, '0')}</b><i class="ytt-cvw">${fmt(r.view_count)}</i>${window.lpVph && lpVph(r.view_count, r.published_at, r.fetched_at) != null ? `<i class="lp-vph">${fmt(lpVph(r.view_count, r.published_at, r.fetched_at))}/h</i>` : ''}</span>
             <span class="ytt-ctt" title="${esc(r.title)}">${esc(r.title)}</span>
             <span class="ytt-cch">${esc(r.channel_title)}</span></a>`).join('')}</div>
@@ -76,7 +79,7 @@
           <tbody>${rows.slice(5).map((r) => `
             <tr>
               <td><span class="ytt-rank">${String(r.rank).padStart(2, '0')}</span></td>
-              <td><a class="ytt-video" href="https://www.youtube.com/watch?v=${encodeURIComponent(r.video_id)}" target="_blank" rel="noopener">
+              <td><a class="ytt-video" href="${plist(r.video_id, ids)}" target="_blank" rel="noopener">
                 <span class="lp-rth" style="--i:${r.rank - 6}"><img src="https://i.ytimg.com/vi/${encodeURIComponent(r.video_id)}/mqdefault.jpg" alt="" loading="lazy"><b>${String(r.rank).padStart(2, '0')}</b></span>
                 <span class="ytt-text"><span class="ytt-vt" title="${esc(r.title)}">${esc(r.title)}</span><span class="ytt-ch">${esc(r.channel_title)}</span></span>
               </a></td>
