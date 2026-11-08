@@ -381,6 +381,19 @@
     const c = byEn.get(String(en).toLowerCase());
     return c ? name(c) : en;
   };
+  // News tone per day like a stock chart: a line around zero, green above, red below.
+  const toneChart = (pts) => {
+    const W = 600, H = 210, LM = 36, R = 10, T = 14, B = 28;
+    const m = Math.max(1, ...pts.map((p) => Math.abs(p.tone)));
+    const x = (i) => LM + (i * (W - LM - R)) / (pts.length - 1);
+    const y = (v) => T + ((H - T - B) * (m - v)) / (2 * m);
+    const line = pts.map((p, i) => `${x(i).toFixed(1)},${y(p.tone).toFixed(1)}`).join(' ');
+    const ticks = [0, Math.floor((pts.length - 1) / 2), pts.length - 1].map((i) => `<text x="${x(i)}" y="${H - 8}" text-anchor="${i === 0 ? 'start' : i === pts.length - 1 ? 'end' : 'middle'}">${dshort(pts[i].day)}</text>`).join('');
+    const grid = [m, 0, -m].map((v) => `<line x1="${LM}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" class="g"/><text x="${LM - 6}" y="${y(v) + 4}" text-anchor="end">${v > 0 ? '+' : ''}${Math.round(v)}</text>`).join('');
+    const clip = (id, y0, y1) => `<clipPath id="${id}"><rect x="0" y="${y0}" width="${W}" height="${y1 - y0}"/></clipPath>`;
+    return `<figure class="chart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(L('News tone per day'))}"><defs>${clip('tup', 0, y(0))}${clip('tdn', y(0), H)}</defs>${grid}${ticks}
+      <polyline points="${line}" fill="none" stroke="#1a7f37" stroke-width="2.5" clip-path="url(#tup)"/><polyline points="${line}" fill="none" stroke="#b0000e" stroke-width="2.5" clip-path="url(#tdn)"/></svg></figure>`;
+  };
   const mentionsSec = (data, title) => {
     const m = data.mentions;
     if (!m) return '';
@@ -389,14 +402,18 @@
     const kp = `<div class="kpis">${[
       nw ? kcard(short(nw.articles), L('News articles'), L('last 30 days, worldwide'), area(nw.days.map((d) => d.articles))) : '',
       nw && nw.countries.length ? kcard(esc(cname(nw.countries[0].name)), L('Most news from'), L('{p}% of the articles', { p: nw.countries[0].share })) : '',
+      nw && nw.tone != null ? kcard(`${nw.tone > 0 ? '+' : ''}${nw.tone.toLocaleString(loc(), { maximumFractionDigits: 1 })}`, L(nw.tone > 0.5 ? 'Mostly positive news' : nw.tone < -0.5 ? 'Mostly negative news' : 'Mixed news'), L('average tone, -10 to +10')) : '',
       so ? kcard(posts, L('Bluesky posts'), L('public posts, last 30 days')) : '',
       so ? kcard(short(so.likes), L('Likes on those posts'), L('{n} reposts', { n: num(so.reposts) })) : '',
     ].join('')}</div>`;
+    const toned = nw ? nw.days.filter((d) => d.tone != null) : [];
+    const charts = nw && nw.days.length > 1 ? `<div class="vs n2"><div><h3>${L('News articles per day')}</h3>${lineChart(nw.days.map((d) => ({ day: d.day, value: d.articles })), L('News articles'))}</div>
+      ${toned.length > 1 ? `<div><h3>${L('News tone per day')}</h3>${toneChart(toned)}</div>` : ''}</div>` : '';
     const lists = [nw && nw.countries.length ? `<div class="col"><h3>${L('News by country')}</h3>${rank(nw.countries.slice(0, 6), (c) => c.share, (c) => esc(cname(c.name)), (c) => `<small>${L('{p}% of the articles', { p: c.share })}</small>`)}</div>` : '',
       so && so.langs.length ? `<div class="col"><h3>${L('Posts by language')}</h3>${rank(so.langs, (l) => l.posts, (l) => esc(langName(l.lang)))}</div>` : ''].filter(Boolean);
-    const take = [nw ? L('{s} was in {n} news articles in 30 days.', { s: esc(title), n: `<b>${num(nw.articles)}</b>` }) : '', so ? L('{n} public Bluesky posts mentioned {s}.', { s: esc(title), n: `<b>${posts}</b>` }) : ''].filter(Boolean).join(' ');
+    const take = [nw ? L('{s} was in {n} news articles in 30 days.', { s: esc(title), n: `<b>${num(nw.articles)}</b>` }) : '', nw && nw.tone != null ? L(nw.tone > 0.5 ? 'Most of that news was positive.' : nw.tone < -0.5 ? 'Most of that news was negative.' : 'That news was mixed.') : '', so ? L('{n} public Bluesky posts mentioned {s}.', { s: esc(title), n: `<b>${posts}</b>` }) : ''].filter(Boolean).join(' ');
     return `<section class="rsec"><h2>${L('In the news and online')}</h2><p class="note">${L('Counts only, last 30 days: online news worldwide (GDELT) and public posts on Bluesky.')}</p>
-      ${kp}${lists.length ? `<div class="cols n${lists.length}">${lists.join('')}</div>` : ''}<p class="take">${take}</p>${learn('mentions')}</section>`;
+      ${kp}${charts}${lists.length ? `<div class="cols n${lists.length}">${lists.join('')}</div>` : ''}<p class="take">${take}</p>${learn('mentions')}</section>`;
   };
 
   function renderBrand(data) {

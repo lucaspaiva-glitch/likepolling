@@ -2,6 +2,15 @@
 // pt-PT uses 'pt' plus the overrides below. English (and en-GB) use the keys as they are.
 window.LP_REPORT_DICT = {
 "pt": {
+"Mostly positive news": "Notícias mais positivas",
+"Mostly negative news": "Notícias mais negativas",
+"Mixed news": "Notícias mistas",
+"average tone, -10 to +10": "tom médio, de -10 a +10",
+"News articles per day": "Notícias por dia",
+"News tone per day": "Tom das notícias por dia",
+"Most of that news was positive.": "A maior parte dessas notícias foi positiva.",
+"Most of that news was negative.": "A maior parte dessas notícias foi negativa.",
+"That news was mixed.": "Essas notícias foram mistas.",
 "In the news and online": "Nas notícias e online",
 "Counts only, last 30 days: online news worldwide (GDELT) and public posts on Bluesky.": "Só contagens, últimos 30 dias: notícias online no mundo todo (GDELT) e posts públicos no Bluesky.",
 "last 30 days, worldwide": "últimos 30 dias, no mundo",
@@ -313,6 +322,15 @@ window.LP_REPORT_DICT = {
 "Mass violence": "Violência em massa"
 },
 "es": {
+"Mostly positive news": "Noticias sobre todo positivas",
+"Mostly negative news": "Noticias sobre todo negativas",
+"Mixed news": "Noticias mixtas",
+"average tone, -10 to +10": "tono medio, de -10 a +10",
+"News articles per day": "Noticias por día",
+"News tone per day": "Tono de las noticias por día",
+"Most of that news was positive.": "La mayoría de esas noticias fue positiva.",
+"Most of that news was negative.": "La mayoría de esas noticias fue negativa.",
+"That news was mixed.": "Esas noticias fueron mixtas.",
 "In the news and online": "En las noticias y en línea",
 "Counts only, last 30 days: online news worldwide (GDELT) and public posts on Bluesky.": "Solo recuentos, últimos 30 días: noticias en línea de todo el mundo (GDELT) y publicaciones públicas en Bluesky.",
 "last 30 days, worldwide": "últimos 30 días, en el mundo",
@@ -624,6 +642,15 @@ window.LP_REPORT_DICT = {
 "Mass violence": "Violencia masiva"
 },
 "de": {
+"Mostly positive news": "Überwiegend positive Nachrichten",
+"Mostly negative news": "Überwiegend negative Nachrichten",
+"Mixed news": "Gemischte Nachrichten",
+"average tone, -10 to +10": "durchschnittlicher Ton, -10 bis +10",
+"News articles per day": "Nachrichtenartikel pro Tag",
+"News tone per day": "Ton der Nachrichten pro Tag",
+"Most of that news was positive.": "Die meisten dieser Nachrichten waren positiv.",
+"Most of that news was negative.": "Die meisten dieser Nachrichten waren negativ.",
+"That news was mixed.": "Diese Nachrichten waren gemischt.",
 "In the news and online": "In den Nachrichten und online",
 "Counts only, last 30 days: online news worldwide (GDELT) and public posts on Bluesky.": "Nur Zahlen, letzte 30 Tage: Online-Nachrichten weltweit (GDELT) und öffentliche Bluesky-Beiträge.",
 "last 30 days, worldwide": "letzte 30 Tage, weltweit",
@@ -935,6 +962,15 @@ window.LP_REPORT_DICT = {
 "Mass violence": "Massengewalt"
 },
 "ru": {
+"Mostly positive news": "В основном позитивные новости",
+"Mostly negative news": "В основном негативные новости",
+"Mixed news": "Смешанные новости",
+"average tone, -10 to +10": "средний тон, от -10 до +10",
+"News articles per day": "Новостей в день",
+"News tone per day": "Тон новостей по дням",
+"Most of that news was positive.": "Большая часть этих новостей была позитивной.",
+"Most of that news was negative.": "Большая часть этих новостей была негативной.",
+"That news was mixed.": "Эти новости были смешанными.",
 "In the news and online": "В новостях и в сети",
 "Counts only, last 30 days: online news worldwide (GDELT) and public posts on Bluesky.": "Только числа, за 30 дней: онлайн-новости со всего мира (GDELT) и публичные посты в Bluesky.",
 "last 30 days, worldwide": "за 30 дней, по всему миру",
@@ -1246,6 +1282,15 @@ window.LP_REPORT_DICT = {
 "Mass violence": "Массовое насилие"
 },
 "uk": {
+"Mostly positive news": "Переважно позитивні новини",
+"Mostly negative news": "Переважно негативні новини",
+"Mixed news": "Змішані новини",
+"average tone, -10 to +10": "середній тон, від -10 до +10",
+"News articles per day": "Новин на день",
+"News tone per day": "Тон новин за днями",
+"Most of that news was positive.": "Більшість цих новин була позитивною.",
+"Most of that news was negative.": "Більшість цих новин була негативною.",
+"That news was mixed.": "Ці новини були змішаними.",
 "In the news and online": "У новинах і в мережі",
 "Counts only, last 30 days: online news worldwide (GDELT) and public posts on Bluesky.": "Лише кількість, за 30 днів: онлайн-новини з усього світу (GDELT) і публічні дописи в Bluesky.",
 "last 30 days, worldwide": "за 30 днів, у всьому світі",
@@ -1557,6 +1602,15 @@ window.LP_REPORT_DICT = {
 "Mass violence": "Масове насильство"
 },
 "ko": {
+"Mostly positive news": "대체로 긍정적인 뉴스",
+"Mostly negative news": "대체로 부정적인 뉴스",
+"Mixed news": "엇갈린 뉴스",
+"average tone, -10 to +10": "평균 논조, -10~+10",
+"News articles per day": "일별 뉴스 기사",
+"News tone per day": "일별 뉴스 논조",
+"Most of that news was positive.": "그 뉴스는 대부분 긍정적이었습니다.",
+"Most of that news was negative.": "그 뉴스는 대부분 부정적이었습니다.",
+"That news was mixed.": "그 뉴스는 엇갈렸습니다.",
 "In the news and online": "뉴스와 온라인",
 "Counts only, last 30 days: online news worldwide (GDELT) and public posts on Bluesky.": "최근 30일 수치만: 전 세계 온라인 뉴스(GDELT)와 블루스카이 공개 게시물.",
 "last 30 days, worldwide": "최근 30일, 전 세계",
@@ -1868,6 +1922,15 @@ window.LP_REPORT_DICT = {
 "Mass violence": "대규모 폭력"
 },
 "ja": {
+"Mostly positive news": "おおむね好意的なニュース",
+"Mostly negative news": "おおむね否定的なニュース",
+"Mixed news": "賛否が分かれるニュース",
+"average tone, -10 to +10": "平均トーン、-10〜+10",
+"News articles per day": "1日あたりのニュース記事",
+"News tone per day": "ニュースのトーン（日別）",
+"Most of that news was positive.": "そのニュースの多くは好意的でした。",
+"Most of that news was negative.": "そのニュースの多くは否定的でした。",
+"That news was mixed.": "そのニュースは賛否が分かれました。",
 "In the news and online": "ニュースとオンライン",
 "Counts only, last 30 days: online news worldwide (GDELT) and public posts on Bluesky.": "件数のみ、過去30日：世界のオンラインニュース（GDELT）とBlueskyの公開投稿。",
 "last 30 days, worldwide": "過去30日、世界全体",
