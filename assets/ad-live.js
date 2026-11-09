@@ -1,4 +1,4 @@
-// Homepage truck: up to 4 paid wagons (GET /api/ad) join the house sponsor wagon, each with its own card.
+// Homepage truck: up to 6 paid wagons (GET /api/ad) join the house sponsor wagon, each with its own card.
 (function () {
   'use strict';
   const rail = document.getElementById('lp-rail'), tab0 = document.getElementById('ad-tab'), pop0 = document.getElementById('ad-pop');
@@ -91,8 +91,8 @@
 
   fetch('/api/ad').then((r) => (r.ok ? r.json() : null)).then((j) => {
     const all = (j && Array.isArray(j.live) ? j.live : []).filter((a) => a && /^https:\/\//.test(a.website));
-    flyby(all.filter((a) => a.placement === 'plane' || a.placement === 'both').slice(0, 4));
-    const ads = all.filter((a) => a.placement !== 'plane').slice(0, 4);
+    flyby(all.filter((a) => a.placement === 'plane' || a.placement === 'both').slice(0, 10));
+    const ads = all.filter((a) => a.placement !== 'plane').slice(0, 6);
     if (!ads.length) return;
     const n = 3 + ads.length;
     const st = document.createElement('style');

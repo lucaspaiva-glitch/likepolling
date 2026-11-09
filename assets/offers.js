@@ -14,7 +14,7 @@
     { id: 'company', sym: 'Company', name: 'COMPANY\nREPORT', sub: 'Everything we saved on a company, next to its rivals.', buy: 'https://lucaspoll.gumroad.com/l/linzh', sample: '/samples/company-report.pdf',
       stats: [['4', 'brands compared'], ['17', 'languages'], ['30', 'days, day by day']] },
     { id: 'sponsor', sym: 'Ad spot', top: 'Launch rate', name: 'YOUR BRAND\nHERE', sub: 'A card on Like Polling, seen in 41 countries.', mail: 'Sponsoring Like Polling',
-      stats: [['41', 'countries'], ['2×', 'updated a day'], ['4', 'brands at a time']] },
+      stats: [['41', 'countries'], ['2×', 'updated a day'], ['16', 'brands at a time']] },
   ];
   const COUNTRIES = ['AR', 'AU', 'BD', 'BE', 'BR', 'CA', 'CL', 'CO', 'DE', 'DZ', 'EC', 'EG', 'ES', 'FR', 'GB', 'ID', 'IE', 'IN', 'IQ', 'IT', 'JP', 'KE',
     'KR', 'MA', 'MX', 'MY', 'NG', 'NL', 'PE', 'PH', 'PK', 'PL', 'PT', 'SA', 'TH', 'TR', 'TW', 'UA', 'US', 'VN', 'ZA'];

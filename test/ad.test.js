@@ -53,7 +53,7 @@ test('text rules block bogus and unsafe cards', () => {
   assert.equal(checkText(card()).instagram, 'acme.coffee');
 });
 
-test('a safe paid card goes live for 7 days; 4 wagons fill, the 5th waits and takes over', async () => {
+test('a safe paid card goes live for 7 days; 6 wagons fill, the 7th waits and takes over', async () => {
   const w = world();
   let r = await call(w, 'POST', card());
   assert.equal(r.statusCode, 200); assert.equal(r.body.status, 'live');
@@ -62,14 +62,15 @@ test('a safe paid card goes live for 7 days; 4 wagons fill, the 5th waits and ta
   assert.notEqual(w.rows[0].key_hash, KEY);
   assert.equal((await call(w, 'POST', card())).statusCode, 409);
   r = await call(w, 'GET');
-  assert.deepEqual(r.body.wagons, { free: 3, next_at: null }); assert.deepEqual(r.body.planes, { free: 4, next_at: null });
-  ['B1', 'B2', 'B3', 'B4'].forEach((brand, i) => w.rows.push({ id: 90 + i, key_hash: brand, brand, kind: 'Shop', website: 'https://b.example', status: 'queued', created_at: new Date(NOW + 50 + i).toISOString() }));
+  assert.deepEqual(r.body.wagons, { free: 5, next_at: null }); assert.deepEqual(r.body.planes, { free: 10, next_at: null });
+  assert.deepEqual(r.body.slots, { wagon: 6, plane: 10 });
+  ['B1', 'B2', 'B3', 'B4', 'B5', 'B6'].forEach((brand, i) => w.rows.push({ id: 90 + i, key_hash: brand, brand, kind: 'Shop', website: 'https://b.example', status: 'queued', created_at: new Date(NOW + 50 + i).toISOString() }));
   r = await call(w, 'GET', undefined, {}, NOW + 864e5);
-  assert.deepEqual(r.body.live.map((a) => a.brand), ['Acme Coffee', 'B1', 'B2', 'B3']);
+  assert.deepEqual(r.body.live.map((a) => a.brand), ['Acme Coffee', 'B1', 'B2', 'B3', 'B4', 'B5']);
   assert.equal(r.body.live[0].key_hash, undefined);
-  assert.deepEqual(r.body.wagons, { free: 0, next_at: new Date(NOW + 8 * 864e5).toISOString() }); assert.equal(r.body.planes.free, 4);
+  assert.deepEqual(r.body.wagons, { free: 0, next_at: new Date(NOW + 8 * 864e5).toISOString() }); assert.equal(r.body.planes.free, 10);
   r = await call(w, 'GET', undefined, {}, NOW + 7.5 * 864e5);
-  assert.deepEqual(r.body.live.map((a) => a.brand), ['B1', 'B2', 'B3', 'B4']);
+  assert.deepEqual(r.body.live.map((a) => a.brand), ['B1', 'B2', 'B3', 'B4', 'B5', 'B6']);
   assert.equal(w.rows[0].status, 'done');
 });
 
@@ -93,13 +94,13 @@ test('cards are held only when Gemini gives no answer; unsafe ones and bad keys 
   assert.equal(r.statusCode, 422); assert.match(r.body.error, /brand name/);
 });
 
-test('the Gumroad option picks the lane: Wagon or Plane, 4 spots each', async () => {
+test('the Gumroad option picks the lane: 6 Wagon spots, 10 Plane spots', async () => {
   let w = world({ purchase: { variants: '(Plane)' } });
   assert.equal((await call(w, 'POST', card())).body.placement, 'plane');
   let r = await call(w, 'GET');
-  assert.equal(r.body.live[0].placement, 'plane'); assert.equal(r.body.planes.free, 3); assert.equal(r.body.wagons.free, 4);
+  assert.equal(r.body.live[0].placement, 'plane'); assert.equal(r.body.planes.free, 9); assert.equal(r.body.wagons.free, 6);
   w = world({ purchase: { variants: '(Wagon)' } });
   assert.equal((await call(w, 'POST', card())).body.placement, 'wagon');
   r = await call(w, 'GET');
-  assert.equal(r.body.planes.free, 4); assert.equal(r.body.wagons.free, 3);
+  assert.equal(r.body.planes.free, 10); assert.equal(r.body.wagons.free, 5);
 });

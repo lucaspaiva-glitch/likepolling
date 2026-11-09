@@ -1,7 +1,7 @@
 'use strict';
 const { logGemini, isNoCredit } = require('../lib/gemini-usage');
-// Automatic ad spot. Up to 4 paid wagons at a time next to the house card, 7 days each, queued by activation time.
-//   GET  /api/ad                         live paid cards (up to 4), free wagons, and when the next one frees up
+// Automatic ad spot. Up to 6 paid wagons and 10 paid plane brands at a time, 7 days each, queued by activation time.
+//   GET  /api/ad                         live paid cards (up to 6 wagons, 10 planes), free spots, and when the next one frees up
 //   POST /api/ad {key, brand, kind, website, tagline?, instagram?}   activate a paid Gumroad key
 //   GET  /api/ad?admin=TOKEN / POST {admin, id, action: approve|remove}   owner controls (AD_ADMIN_TOKEN)
 // Checks before a card can go live: paid, unused key; a real HTTPS site that names the brand; text
@@ -11,7 +11,7 @@ const crypto = require('crypto');
 
 const VERIFY = 'https://api.gumroad.com/v2/licenses/verify';
 const WEEK = 7 * 864e5;
-const SLOTS = 4; // per lane: paid wagons on the left truck, paid plane flybys on the right
+const SLOTS = { wagon: 6, plane: 10 }; // paid wagons on the left truck, paid plane flybys on the right
 const LANES = { wagon: ['wagon', 'both'], plane: ['plane', 'both'] };
 const uses = (r, lane) => LANES[lane].includes(r.placement || 'wagon');
 // Gumroad version name -> placement: "Plane" (or Avião / Avión) gets the flyby, anything else a wagon.
@@ -140,7 +140,7 @@ async function advance(q, now) {
     if (Date.parse(r.ends_at) <= now) await q('PATCH', `sponsors?id=eq.${r.id}`, { status: 'done' });
     else live.push(r);
   }
-  const room = (lane) => SLOTS - live.filter((r) => uses(r, lane)).length;
+  const room = (lane) => SLOTS[lane] - live.filter((r) => uses(r, lane)).length;
   if (room('wagon') > 0 || room('plane') > 0) {
     for (const n of await q('GET', 'sponsors?status=eq.queued&order=created_at.asc&limit=20')) {
       if (!Object.keys(LANES).every((l) => !uses(n, l) || room(l) > 0)) continue;
@@ -152,14 +152,14 @@ async function advance(q, now) {
 }
 
 // When a card with `ahead` queued cards in front of it gets a spot in one lane.
-function startsAt(live, ahead, now) {
-  const free = Array.from({ length: SLOTS }, (_, i) => (live[i] ? Date.parse(live[i].ends_at) : now)).sort((a, b) => a - b);
+function startsAt(live, ahead, now, slots) {
+  const free = Array.from({ length: slots }, (_, i) => (live[i] ? Date.parse(live[i].ends_at) : now)).sort((a, b) => a - b);
   let t = now;
   for (let k = 0; k <= ahead; k++) { t = free.shift(); free.push(t + WEEK); free.sort((a, b) => a - b); }
   return t;
 }
 const laneStart = (live, ahead, placement, now) => Math.max(...Object.keys(LANES).filter((l) => uses({ placement }, l))
-  .map((l) => startsAt(live.filter((r) => uses(r, l)).sort((a, b) => Date.parse(a.ends_at) - Date.parse(b.ends_at)), ahead.filter((r) => uses(r, l)).length, now)));
+  .map((l) => startsAt(live.filter((r) => uses(r, l)).sort((a, b) => Date.parse(a.ends_at) - Date.parse(b.ends_at)), ahead.filter((r) => uses(r, l)).length, now, SLOTS[l])));
 
 async function activate(env, fetchImpl, q, body, now) {
   const key = clean(body.key);
@@ -214,7 +214,7 @@ function createHandler(deps = {}) {
       const live = await advance(q, now);
       const waiting = await q('GET', 'sponsors?select=id,placement&status=eq.queued');
       const lane = (l) => {
-        const free = Math.max(0, SLOTS - live.filter((r) => uses(r, l)).length - waiting.filter((r) => uses(r, l)).length);
+        const free = Math.max(0, SLOTS[l] - live.filter((r) => uses(r, l)).length - waiting.filter((r) => uses(r, l)).length);
         return { free, next_at: free ? null : new Date(laneStart(live, waiting, l, now)).toISOString() };
       };
       return res.status(200).json({ live: live.map(pick), slots: SLOTS, wagons: lane('wagon'), planes: lane('plane') });

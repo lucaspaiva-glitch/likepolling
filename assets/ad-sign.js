@@ -60,7 +60,7 @@
         <div class="svc-tab" style="cursor:default"><span class="svc-top"><span class="svc-sym">${tr('Ad spot')}</span><span>${tr('Launch rate')}</span></span>
         <span class="svc-name svc-glitch" data-text="${tr('YOUR BRAND\nHERE')}">${tr('YOUR BRAND\nHERE')}</span><span class="svc-bar" aria-hidden="true"></span>
         <span class="svc-sub">${tr('A card on Like Polling, seen in 41 countries.')}</span></div>
-        <div class="svc-body"><div class="svc-stats"><div><b>41</b><span>${tr('countries')}</span></div><div><b>2×</b><span>${tr('updated a day')}</span></div><div><b>4</b><span>${tr('brands at a time')}</span></div></div>
+        <div class="svc-body"><div class="svc-stats"><div><b>41</b><span>${tr('countries')}</span></div><div><b>2×</b><span>${tr('updated a day')}</span></div><div><b>16</b><span>${tr('brands at a time')}</span></div></div>
         <form class="lp-sign-form" novalidate><p>${tr('We are')} <input name="brand" placeholder="${tr('brand name')}" autocomplete="organization" required>, ${tr('a')} <input name="kind" placeholder="${tr('kind of')}" required> ${tr('company, at')} <input name="site" placeholder="${tr('website')}" inputmode="url" autocomplete="url" required>.</p>
         <a class="svc-btn" href="#">${tr('Buy')} · ${tr('1 week')} · ${PRICE}<span class="lp-local" data-eur="18"></span></a></form><p class="svc-fine lp-ad-line" hidden></p><p class="svc-fine">${tr('Like the Machu Picchu Energy card. Weekly views and clicks included.')} ${tr('No gambling or betting brands.')}</p><p class="svc-fine"><a href="/ad">${tr('Already paid? Activate your ad')} →</a></p></div>
       </section></div>`;
@@ -69,10 +69,11 @@
       const el = root.querySelector('.lp-ad-line');
       if (!el || !j || !j.wagons || !j.planes) return;
       const line = (name, l) => {
+        const t = String((j.slots && j.slots[name.toLowerCase()]) || '');
         const d = l.next_at && new Date(l.next_at).toLocaleDateString(window.LP_I18N ? window.LP_I18N.locale() : 'en', { day: 'numeric', month: 'long' });
         const row = document.createElement('span'), b = document.createElement('b');
         b.textContent = `${tr(name)}: `;
-        row.append(b, l.free ? tr('{n} of 4 spots free. Yours starts right away.').replace('{n}', l.free) : tr('All 4 spots are taken. If you buy now, yours starts on {d}.').replace('{d}', d));
+        row.append(b, l.free ? tr('{n} of {t} spots free. Yours starts right away.').replace('{n}', l.free).replace('{t}', t) : tr('All {t} spots are taken. If you buy now, yours starts on {d}.').replace('{t}', t).replace('{d}', d));
         row.style.display = 'block';
         return row;
       };
