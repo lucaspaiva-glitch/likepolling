@@ -156,10 +156,10 @@ const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '
 
 function html(d) {
   const table = (head, rows) => rows && rows.length
-    ? `<table><thead><tr>${head.map((h) => `<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.map((r) => `<tr>${r.map((c) => `<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table>` : '<p class="muted">No data right now.</p>';
+    ? `<table><thead><tr>${head.map((h) => `<th>${h}</th>`).join('')}</tr></thead><tbody data-no-i18n>${rows.map((r) => `<tr>${r.map((c) => `<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table>` : '<p class="muted">No data right now.</p>';
   const news = (r) => [r.rank, `<a href="${esc(r.link)}">${esc(r.title)}</a>${en(r) ? `<br><small>${esc(en(r))}</small>` : ''}`, esc(r.source)];
   const vid = (r) => [r.rank, `<a href="${yt(r.video_id)}">${esc(r.title)}</a>`, esc(r.channel_title), fmt(r.view_count)];
-  const sections = d.countries.map((c) => `<section id="${c.code}"><h2>${esc(c.name)} <small>${c.code}</small></h2>
+  const sections = d.countries.map((c) => `<section id="${c.code}"><h2 data-no-i18n>${esc(c.name)} <small>${c.code}</small></h2>
 <p>Est. watching YouTube now: <b>${fmt(c.live)}</b></p>
 <h3>YouTube Trending videos</h3>${table(['#', 'Video', 'Channel', 'Views'], (d.trending[c.code] || []).map(vid))}
 <h3>YouTube Music</h3>${table(['#', 'Video', 'Channel', 'Views'], (d.music[c.code] || []).map(vid))}
@@ -171,19 +171,19 @@ function html(d) {
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Like Polling data: what the world watches on YouTube</title>
 <meta name="description" content="${esc(ABOUT[0])}">
-<link rel="canonical" href="${SITE}/data"><link rel="alternate" type="text/markdown" href="/llms-full.txt" title="Like Polling data (Markdown)">
-<style>body{font:15px/1.5 system-ui,sans-serif;max-width:960px;margin:0 auto;padding:16px;color:#16181d}a{color:#b0001c}h1{margin:.2em 0}h2{margin-top:2em;border-top:2px solid #b0001c;padding-top:.6em}small,.muted{color:#6b7280}table{border-collapse:collapse;width:100%;font-size:14px}th,td{text-align:left;padding:4px 6px;border-bottom:1px solid #e5e7eb;vertical-align:top}th{background:#f6f6f7}nav a{display:inline-block;margin:0 8px 4px 0}</style></head><body>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2028%2028%22%3E%3Crect%20width%3D%2228%22%20height%3D%2228%22%20rx%3D%227%22%20fill%3D%22%23b0000e%22/%3E%3Cpolyline%20points%3D%225%2C21%208%2C19%2010.5%2C20.2%2013.5%2C16.5%2015.5%2C17.6%2018.5%2C12.5%2020.5%2C13.6%2023%2C6%22%20fill%3D%22none%22%20stroke%3D%22white%22%20stroke-width%3D%222.4%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22/%3E%3C/svg%3E"><link rel="canonical" href="${SITE}/data"><link rel="alternate" type="text/markdown" href="/llms-full.txt" title="Like Polling data (Markdown)">
+<style>body{font:15px/1.5 system-ui,sans-serif;max-width:960px;margin:0 auto;padding:16px;color:#16181d}a{color:#b0001c}h1{margin:.2em 0}h2{margin-top:2em;border-top:2px solid #b0001c;padding-top:.6em}small,.muted{color:#6b7280}table{border-collapse:collapse;width:100%;font-size:14px}th,td{text-align:left;padding:4px 6px;border-bottom:1px solid #e5e7eb;vertical-align:top;overflow-wrap:anywhere}th{background:#f6f6f7}nav a{display:inline-block;margin:0 8px 4px 0}</style></head><body>
 <p><a href="/">← Like Polling</a></p><h1>What the world watches on YouTube: open data</h1>
-<p>${esc(ABOUT[0])} ${esc(ABOUT[1])}</p>
-<h2>What each section is</h2><ul>${SECTIONS.map(([k, v]) => `<li><b>${esc(k)}</b>: ${esc(v)}</li>`).join('')}</ul>
-<p>Estimated people watching YouTube now in these ${d.countries.length} countries: <b>about ${short(d.live)}</b> (${utc(d.liveAt)}). Trending updated ${utc(d.trendingAt)}.</p>
+<p>${esc(ABOUT[0])}</p><p>${esc(ABOUT[1])}</p>
+<h2>What each section is</h2><ul>${SECTIONS.map(([k, v]) => `<li><b>${esc(k)}</b>: <span>${esc(v)}</span></li>`).join('')}</ul>
+<p><span>Est. watching YouTube now:</span> <b>${short(d.live)}</b> <small data-no-i18n>(${utc(d.liveAt)} · Trending ${utc(d.trendingAt)})</small></p>
 <h2>YouTube Trending videos in the most countries (videos, not news)</h2>${table(['#', 'Video', 'Channel', 'Countries'], d.worldwide.map((v, i) => [i + 1, `<a href="${yt(v.id)}">${esc(v.title)}</a>`, esc(v.channel), `${v.countries.length}: ${v.countries.join(', ')}`]))}
 <h2>Estimated people watching YouTube now</h2>${table(['Country', 'Code', 'Est. watching now'], [...d.countries].sort((a, b) => b.live - a.live).map((c) => [`<a href="#${c.code}">${esc(c.name)}</a>`, c.code, fmt(c.live)]))}
-<h2>Countries</h2><nav>${d.countries.map((c) => `<a href="#${c.code}">${esc(c.name)}</a>`).join('')}</nav>
+<h2>Countries</h2><nav data-no-i18n>${d.countries.map((c) => `<a href="#${c.code}">${esc(c.name)}</a>`).join('')}</nav>
 ${sections}
 <h2>Method</h2><ul>${METHOD.map((m) => `<li>${esc(m)}</li>`).join('')}</ul>
-<h2>More data</h2><ul>${LINKS.map(([u, t]) => `<li><a href="${u}">${u.replace(SITE, '')}</a>: ${esc(t)}</li>`).join('')}</ul>
-</body></html>`;
+<h2>More data</h2><ul>${LINKS.map(([u, t]) => `<li><a href="${u}" data-no-i18n>${u.replace(SITE, '')}</a>: <span>${esc(t)}</span></li>`).join('')}</ul>
+<script src="/assets/i18n.js"></script></body></html>`;
 }
 
 function createHandler(deps = {}) {

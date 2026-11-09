@@ -137,6 +137,21 @@
     if (autoPdf) { autoPdf = false; history.replaceState(null, '', location.search.replace(/[?&]pdf=1/, '').replace(/^&/, '?') || location.pathname); setTimeout(() => $('pdf').click(), 900); }
   }
   const fl = (c) => `<img src="/assets/flags/${c.toLowerCase()}.svg" alt="" onerror="this.remove()">`;
+  // Wikipedia's short description in the reader's language, from Wikidata (free, no key). English stays as sent.
+  const WD = { pt: 'pt-br|pt', 'pt-PT': 'pt|pt-br', es: 'es', de: 'de', ru: 'ru', uk: 'uk', ko: 'ko', ja: 'ja' };
+  const descs = {};
+  function localDesc(s) {
+    const wl = WD[I() ? I().lang : 'en'], m = /wikipedia\.org\/wiki\/(.+)$/.exec(s.link || '');
+    if (!wl || !m) return;
+    const title = decodeURIComponent(m[1]).replace(/_/g, ' '), key = `${wl}|${title}`;
+    const put = (t) => { const el = document.querySelector('.pl-ent .note'); if (t && el) el.textContent = t; };
+    if (key in descs) return put(descs[key]);
+    fetch(`https://www.wikidata.org/w/api.php?action=wbgetentities&sites=enwiki&titles=${encodeURIComponent(title)}&props=descriptions&languages=${wl}&format=json&origin=*`)
+      .then((r) => r.json()).then((j) => {
+        const d = (Object.values(j.entities || {})[0] || {}).descriptions || {};
+        put(descs[key] = (wl.split('|').map((l) => d[l]).find(Boolean) || {}).value || '');
+      }).catch(() => {});
+  }
   function renderEntity(d) {
     const s = d.subject, v = d.views, cards = [];
     cards.push(`<section class="pl-card wide pl-ent">${s.image ? `<img src="${esc(s.image)}" alt="" loading="lazy">` : ''}<div><h2 data-no-i18n>${esc(s.title)}</h2>
@@ -161,6 +176,7 @@
     document.querySelectorAll('.pl-card').forEach((el) => el.classList.add('in'));
     if (s.title !== who[mode]) { who[mode] = s.title; setMode(mode, true); }
     wireTools(`${T(HEAD[mode][0])} · ${s.title}`);
+    localDesc(s);
     document.title = `${s.title} · ${T(HEAD[mode][0])} · Like Polling`;
   }
 
