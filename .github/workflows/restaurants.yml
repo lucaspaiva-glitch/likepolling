@@ -1,0 +1,25 @@
+name: Restaurants memory
+
+on:
+  schedule:
+    - cron: '23 6 * * 1' # weekly, Monday
+  workflow_dispatch:
+
+concurrency:
+  group: restaurants-memory
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+      - name: Save Michelin-starred restaurants from Wikidata
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: node scripts/restaurants-routine.js
