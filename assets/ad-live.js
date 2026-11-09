@@ -14,13 +14,15 @@
     pop.querySelector('.mpe-sym').textContent = (words.length > 1 ? words.map((w) => w[0]).join('') : a.brand).slice(0, 3).toUpperCase();
     const name = pop.querySelector('.mpe-name');
     name.textContent = name.dataset.text = a.brand.toUpperCase();
+    pop.querySelectorAll('.mpe-slogan').forEach((x) => x.remove());
     if (a.tagline) {
       const t = document.createElement('div');
+      t.className = 'mpe-slogan';
       t.textContent = a.tagline;
       t.setAttribute('data-no-i18n', '');
-      t.style.cssText = 'padding:0 12px 9px;font:500 12px/1.35 Inter,system-ui,sans-serif;color:#ffd0d5';
       pop.querySelector('.mpe-bar').after(t);
     }
+    pop.querySelectorAll('.mpe-vid').forEach((x) => x.remove());
     if (/^[A-Za-z0-9_-]{11}$/.test(a.video || '')) {
       const v = document.createElement('a');
       v.className = 'mpe-vid'; v.href = `https://www.youtube.com/watch?v=${a.video}`; v.target = '_blank'; v.rel = 'sponsored noopener';
@@ -103,12 +105,7 @@
     if (!ads.length) return;
     const n = 3 + ads.length;
     const st = document.createElement('style');
-    st.textContent = `.mpe-vid { display: block; margin: 0 12px 10px; }
-      .mpe-vid .lp-rth { width: 100%; border-radius: 6px; background: #1f0004; box-shadow: 0 0 0 1px rgba(255,42,60,.35); }
-      .mpe-play { position: absolute; left: 50%; top: 50%; width: 34px; height: 24px; margin: -12px 0 0 -17px; border-radius: 7px; background: rgba(176,0,14,.92); }
-      .lp-rth:has(.lp-prev.on) .mpe-play { display: none; }
-      .mpe-play::after { content: ''; position: absolute; left: 13px; top: 6px; border: 6px solid transparent; border-left: 10px solid #fff; border-right: 0; }
-      #lp-rail .lp-tab .lp-mq { height: clamp(24px, calc((100vh - 330px) / ${n} - 40px), 104px); }
+    st.textContent = `#lp-rail .lp-tab .lp-mq { height: clamp(24px, calc((100vh - 330px) / ${n} - 40px), 104px); }
       @media (max-width: 560px) { #lp-rail .lp-tab .lp-mq { height: clamp(22px, calc((100vh - 310px) / ${n} - 32px), 96px); } }`;
     document.head.appendChild(st);
     let lastTab = tab0, lastPop = pop0;

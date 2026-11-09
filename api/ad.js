@@ -70,13 +70,13 @@ function checkText(b) {
   if (v.video === undefined) throw fail(422, 'Video: paste a YouTube link, e.g. https://youtu.be/abc123XYZ_0.');
   if (v.brand.length < 2 || v.brand.length > 24) throw fail(422, 'Brand name: 2 to 24 characters.');
   if (v.kind.length < 2 || v.kind.length > 30) throw fail(422, 'Kind of company: 2 to 30 characters.');
-  if (v.tagline.length > 60) throw fail(422, 'Tagline: 60 characters at most.');
+  if (v.tagline.length > 60) throw fail(422, 'Slogan: 60 characters at most.');
   if (v.instagram && !/^[A-Za-z0-9._]{1,30}$/.test(v.instagram)) throw fail(422, 'Instagram: just the @name, e.g. @yourbrand.');
   const text = `${v.brand} ${v.kind} ${v.tagline}`;
   if (/https?:|www\.|\.[a-z]{2,}\/|@/i.test(text)) throw fail(422, 'No links or @names in the text. Put the website and Instagram in their own boxes.');
   if (/\p{Extended_Pictographic}/u.test(text)) throw fail(422, 'No emojis, please. The card is text only.');
   const caps = v.tagline.replace(/[^A-Za-z]/g, '');
-  if (caps.length > 8 && caps === caps.toUpperCase()) throw fail(422, 'Tagline: no ALL CAPS, please.');
+  if (caps.length > 8 && caps === caps.toUpperCase()) throw fail(422, 'Slogan: no ALL CAPS, please.');
   if (/(.)\1{4,}/.test(text)) throw fail(422, 'That text looks like spam. Write it as a normal sentence.');
   if (blocked(v.brand, v.kind, v.tagline)) throw fail(422, 'We don\'t take ads for gambling, betting, adult content, weapons, drugs or get-rich offers.');
   let u;
