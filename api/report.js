@@ -42,6 +42,7 @@ async function parseBody(req) {
 // Keeps every state-level Google Trends result in region_interest_daily, so the history grows with each report.
 async function saveStates(env, fetchImpl, body) {
   await saveMentions(env, fetchImpl, body);
+  await saveExtras(env, fetchImpl, body);
   const st = body && body.states;
   if (!st || !body.subject) return;
   const day = String(body.generated_at || new Date().toISOString()).slice(0, 10);
@@ -50,6 +51,16 @@ async function saveStates(env, fetchImpl, body) {
   if (!rows.length || !subject) return;
   await fetchImpl(`${String(env.SUPABASE_URL).trim().replace(/\/$/, '')}/rest/v1/region_interest_daily?on_conflict=day,subject,country_code,region_code`, {
     method: 'POST', signal: AbortSignal.timeout(6000), body: JSON.stringify(rows),
+    headers: { apikey: env.SUPABASE_KEY.trim(), Authorization: `Bearer ${env.SUPABASE_KEY.trim()}`, 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=minimal' },
+  }).catch(() => null);
+}
+
+async function saveExtras(env, fetchImpl, body) {
+  if (!body || !body.subject || !(body.profile || body.releases || body.searches || body.moments)) return;
+  const row = { day: String(body.generated_at || new Date().toISOString()).slice(0, 10), subject: String(body.subject.title || '').slice(0, 120),
+    profile: body.profile || null, releases: body.releases || null, searches: body.searches || null, moments: body.moments || null };
+  await fetchImpl(`${String(env.SUPABASE_URL).trim().replace(/\/$/, '')}/rest/v1/entity_extras_daily?on_conflict=day,subject`, {
+    method: 'POST', signal: AbortSignal.timeout(6000), body: JSON.stringify([row]),
     headers: { apikey: env.SUPABASE_KEY.trim(), Authorization: `Bearer ${env.SUPABASE_KEY.trim()}`, 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=minimal' },
   }).catch(() => null);
 }
