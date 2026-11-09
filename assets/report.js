@@ -572,7 +572,7 @@
     </div>${growth[0] && growth[0].change_pct > 0 ? `<p class="take">${L('Fastest growing: {a} ({p}).', { a: `<b>${esc(growth[0].title)}</b>`, p: `${growth[0].change_pct >= 0 ? '+' : ''}${growth[0].change_pct ?? 0}%` })}</p>` : ''}${learn('vs')}</section>`;
     const langs = `<section class="rsec"><h2>${L('Where people read about {s}', { s: esc(s.title) })}</h2><p class="note">${L('Views by Wikipedia language, last 30 days.')}</p>
       ${langTotal ? `<div class="split"><i style="--w:${100 - abroad}%"></i></div><div class="splitl"><span><b>${100 - abroad}%</b> ${esc(langName('en'))}</span><span><b>${abroad}%</b> ${L('other languages')}</span></div>` : ''}
-      ${rank(data.languages.slice(0, 10), (l) => l.views, (l) => esc(langName(l.lang)), (l) => `<small>${L('{p}% of all views', { p: pct(l.views, langTotal) })}</small>`)}
+      ${rank(data.languages.slice(0, 8), (l) => l.views, (l) => esc(langName(l.lang)), (l) => `<small>${L('{p}% of all views', { p: pct(l.views, langTotal) })}</small>`)}
       ${data.languages[1] ? `<p class="take">${L('After English, the most readers are in {l}.', { l: `<b>${esc(langName(data.languages[1].lang))}</b>` })}</p>` : ''}${learn('langs')}</section>`;
     const ctry = data.countries.length ? `<section class="rsec"><h2>${L('Trending in countries')}</h2><p class="note">${L('Days the page was in a country\'s daily top 100.')}</p>
       ${rank(data.countries.slice(0, 10), (c) => c.days, (c) => esc(name(c.country)))}<p class="take">${L('{s} is followed most in {c}.', { s: esc(s.title), c: `<b>${esc(name(data.countries[0].country))}</b>` })}</p>${learn('ctry')}</section>` : '';
