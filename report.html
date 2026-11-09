@@ -91,7 +91,7 @@
     .srcfoot { margin-top: 18px; padding-top: 10px; border-top: 1px solid #eee; } .srcfoot h3 { font-size: 12px; color: #6b6b6b; letter-spacing: .04em; text-transform: uppercase; margin: 0 0 4px; } .srcfoot p { margin: 0; font-size: 12px; }
     dl.facts { display: grid; grid-template-columns: max-content 1fr; gap: 6px 18px; margin: 8px 0 0; font-size: 15px; } dl.facts dt { color: #6b6b6b; } dl.facts dd { margin: 0; font-weight: 600; }
     h3.sub { font-size: 13px; color: #6b6b6b; letter-spacing: .04em; text-transform: uppercase; margin: 16px 0 6px; }
-    ol.plain { margin: 0; padding-left: 18px; font-size: 14px; } ol.plain li { margin: 4px 0; } .vs.n1 { grid-template-columns: 1fr; } p.big { font-size: 34px; font-weight: 700; margin: 6px 0 0; }
+    ol.plain { margin: 0; padding-left: 18px; font-size: 14px; } ol.plain li { margin: 4px 0; } .vs.n1 { grid-template-columns: 1fr; } .vs.n1 .chart { max-width: 560px; } p.big { font-size: 34px; font-weight: 700; margin: 6px 0 0; }
     .since { margin: 14px 0 0; padding: 10px 14px; border-radius: 12px; background: #fbeaec; color: #5c0007; font-size: 14px; line-height: 1.45; }
     .since b { color: #b0000e; }
     .print-only { display: none; }
@@ -136,6 +136,7 @@
       .rsec.long { break-inside: auto; }
       .rsec h2, .rsec .note, .col h3 { break-after: avoid; }
       .col, .kpi, ol.rank li, .chart, table.cmp { break-inside: avoid; }
+      .chart svg { max-height: 3.3in; } .ybars svg { max-height: 2.6in; }
       * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     }
     /* The report is laid out as a deck: a red cover, then one slide per idea. */
