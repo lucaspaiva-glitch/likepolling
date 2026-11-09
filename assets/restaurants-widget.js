@@ -17,14 +17,17 @@
   let cc = COUNTRIES.includes(guess) ? guess : 'PT';
   let day = null;
   mount.hidden = true;
+  mount.classList.add('rst');
   mount.innerHTML = `
     <div class="fsh-top"><div><h2 class="fsh-h">Restaurants</h2><p class="fsh-p">Michelin-starred restaurants in each country. Click one to visit its website.</p></div>
       <select class="ytt-select rst-select" aria-label="Country"></select></div>
     <section class="ytt"><div class="ytt-head"><h3 class="ytt-title">Michelin stars</h3><span class="ytt-sym" data-no-i18n>STAR</span></div>
+      <div class="rst-sum" data-no-i18n></div>
       <ul class="rst-list" data-no-i18n></ul>
       <p class="ytt-foot">Stars as recorded in Wikidata (open data), checked weekly. Not an official Michelin Guide list.</p></section>`;
   const select = mount.querySelector('.rst-select');
   const list = mount.querySelector('.rst-list');
+  const sum = mount.querySelector('.rst-sum');
   const fill = () => { select.innerHTML = COUNTRIES.map((c) => `<option value="${c}"${c === cc ? ' selected' : ''}>${esc(region(c))}</option>`).join(''); };
   async function show() {
     try {
@@ -32,7 +35,8 @@
       if (!day) return;
       const rows = await get(`restaurants_michelin?select=name,city,stars,website,wiki&country_code=eq.${cc}&day=eq.${day}&order=stars.desc,name.asc&limit=200`);
       list.innerHTML = rows.map((r) => { const u = r.website || r.wiki; const inner = `<b>${esc(r.name)}</b><span>${esc(r.city || '')}</span><em aria-label="${r.stars} Michelin star${r.stars > 1 ? 's' : ''}">${'★'.repeat(r.stars)}</em>`;
-        return `<li>${u ? `<a href="${esc(u)}" target="_blank" rel="noopener">${inner}</a>` : `<div>${inner}</div>`}</li>`; }).join('');
+        return `<li class="rst-t${r.stars}">${u ? `<a href="${esc(u)}" target="_blank" rel="noopener">${inner}</a>` : `<div>${inner}</div>`}</li>`; }).join('');
+      sum.innerHTML = [3, 2, 1].map((n) => [n, rows.filter((r) => r.stars === n).length]).filter(([, c]) => c).map(([n, c]) => `<span class="rst-t${n}"><em>${'★'.repeat(n)}</em>${c}</span>`).join('');
       mount.hidden = !rows.length;
     } catch { mount.hidden = true; }
   }
