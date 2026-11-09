@@ -119,9 +119,9 @@
     @media (min-width: 1240px) { #lp-rep { flex-wrap: nowrap; } #lp-rep .lp-free { flex: none; } }
     @keyframes yt-pulse { 0% { box-shadow: 0 0 0 0 rgba(255,255,255,.55); } 70%, 100% { box-shadow: 0 0 0 6px rgba(255,255,255,0); } }
     .yt-ticker-viewport { flex: 1; min-width: 0; display: flex; align-items: center; overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 28px, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(90deg, transparent, #000 28px, #000 calc(100% - 28px), transparent); }
-    .yt-ticker-rail { display: flex; width: max-content; animation: yt-marquee var(--yt-duration, 120s) linear infinite; will-change: transform; }
-    .yt-ticker:hover .yt-ticker-rail, .yt-ticker:focus-within .yt-ticker-rail { animation-play-state: paused; }
-    @keyframes yt-marquee { from { transform: translate3d(0,0,0); } to { transform: translate3d(-50%,0,0); } }
+    .yt-ticker-viewport { touch-action: pan-y; user-select: none; -webkit-user-select: none; }
+    .yt-ticker-viewport img { pointer-events: none; }
+    .yt-ticker-rail { display: flex; width: max-content; will-change: transform; }
     .yt-ticker-group { display: flex; flex: none; }
     .yt-ticker-item { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
     .yt-ticker-item::after { content: '\2022'; padding: 0 16px; color: rgba(255,255,255,.32); }
@@ -415,7 +415,7 @@
     .lp-tab .lp-mq span { transform: none; }
     .lp-mq-t { display: block; inline-size: max-content; animation: lp-mq 14s linear infinite; will-change: transform; }
     .lp-mq i { font-style: normal; padding-inline: 10px; opacity: .55; }
-    .lp-tab:hover .lp-mq-t, .lp-tab:focus-visible .lp-mq-t { animation-play-state: paused; }
+    @media (hover: hover) and (pointer: fine) { .lp-tab:hover .lp-mq-t { animation-play-state: paused; } }
     @keyframes lp-mq { to { transform: translateY(-50%); } }
     #search-tab, #search-tab:hover, #search-tab:focus-visible, #search-tab[aria-expanded="true"] { background: linear-gradient(90deg, #4c000b, #5e000e 60%, #680011); color: #fff; border: 1px solid rgba(255,42,60,.75); border-left: 0; box-shadow: inset 0 1px 0 rgba(255,255,255,.14), 0 6px 16px -10px rgba(0,0,0,.4); }
     #search-tab:hover, #search-tab:focus-visible, #search-tab[aria-expanded="true"] { filter: brightness(1.15); }
@@ -883,12 +883,36 @@ ENERGY</div>
         ).join('');
         rail.innerHTML = `<div class="yt-ticker-group">${items}</div><div class="yt-ticker-group" aria-hidden="true">${items}</div>`;
         if (updated_at) $('yt-updated').textContent = `As of ${new Date(updated_at).toISOString().slice(11, 16)} UTC`;
-        const width = rail.firstElementChild.getBoundingClientRect().width;
-        rail.style.setProperty('--yt-duration', `${Math.max(40, width / 30).toFixed(1)}s`);
+        runTicker(rail);
       } catch (err) {
         console.error('Active users ticker:', err);
         $('yt-ticker').hidden = true;
       }
+    }
+
+    // Moved by script, not a CSS animation: Chrome can leave a resumed CSS marquee stuck after a click.
+    // Keeps moving after taps and clicks, pauses only while a mouse rests on it, and can be swiped.
+    function runTicker(rail) {
+      if (rail.lpTick || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      rail.lpTick = true;
+      const vp = rail.parentElement;
+      let x = 0, last = 0, hover = false, drag = null;
+      const step = (t) => {
+        const w = rail.firstElementChild ? rail.firstElementChild.offsetWidth : 0, dt = Math.min(50, t - (last || t)) / 1000;
+        last = t;
+        if (w) {
+          if (!hover && !drag) x -= (w / Math.max(40, w / 30)) * dt;
+          x = ((x % w) - w) % w;
+          rail.style.transform = `translate3d(${x.toFixed(1)}px,0,0)`;
+        }
+        requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+      vp.addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse') hover = true; });
+      vp.addEventListener('pointerleave', () => { hover = false; });
+      vp.addEventListener('pointerdown', (e) => { drag = { id: e.pointerId, x0: e.clientX, start: x }; });
+      vp.addEventListener('pointermove', (e) => { if (drag && drag.id === e.pointerId) x = drag.start + e.clientX - drag.x0; });
+      ['pointerup', 'pointercancel'].forEach((n) => vp.addEventListener(n, () => { drag = null; }));
     }
 
     const ytNote = $('yt-note'), ytInfo = $('yt-info-btn');
@@ -901,8 +925,9 @@ ENERGY</div>
       ytNote.style.setProperty('--note-y', Math.round(r.bottom + 6) + 'px');
       ytNote.style.setProperty('--note-x', Math.round(Math.max(8, Math.min(r.left + 6, document.documentElement.clientWidth - ytNote.offsetWidth - 8))) + 'px');
     }
+    let noteY = 0;
     function setNote(open) {
-      if (!open) { nHover = false; clearTimeout(nT); }
+      if (!open) { nHover = false; clearTimeout(nT); } else noteY = scrollY;
       ytNote.hidden = !open;
       ytInfo.setAttribute('aria-expanded', String(open));
       placeNote();
@@ -914,7 +939,7 @@ ENERGY</div>
       });
     }
     ytInfo.addEventListener('click', (e) => { e.stopPropagation(); if (nHover) { nHover = false; clearTimeout(nT); return; } setNote(ytNote.hidden); });
-    addEventListener('scroll', placeNote, { passive: true });
+    addEventListener('scroll', () => { if (!ytNote.hidden && Math.abs(scrollY - noteY) > 24) setNote(false); else placeNote(); }, { passive: true });
     addEventListener('resize', placeNote);
     document.addEventListener('click', (e) => { if (!ytNote.hidden && !ytNote.contains(e.target)) setNote(false); });
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !ytNote.hidden) { setNote(false); ytInfo.focus(); } });
@@ -1198,7 +1223,7 @@ ENERGY</div>
       const sPop = $('search-pop'), sIn = $('sp-input'), sOut = $('sp-out');
       const cpTab = $('cp-link'), cpPop = $('cp-pop');
       const trTab = $('tr-tab'), trPop = $('tr-pop');
-      let raf = 0, idle = 0, cur = null, target = 0, glide = 0, spin = 0;
+      let raf = 0, idle = 0, cur = null, target = 0, glide = 0, spin = 0, popY = 0;
       const still = matchMedia('(prefers-reduced-motion: reduce)');
       const cab = rail.querySelector('.lp-truck-cab');
       // Ease the rail toward its scroll position each frame; wheels turn by the distance travelled.
@@ -1258,6 +1283,12 @@ ENERGY</div>
       const queue = () => { if (!raf) raf = requestAnimationFrame(place); };
       addEventListener('scroll', () => {
         queue();
+        // Scrolling away closes the small cards (search keeps its card while the visitor types).
+        if (Math.abs(scrollY - popY) > 40) {
+          if (!adPop.hidden) setAd(false);
+          if (!cpPop.hidden) setCp(false);
+          if (!trPop.hidden) setTr(false);
+        }
         rail.classList.add('moving');
         clearTimeout(idle);
         idle = setTimeout(() => rail.classList.remove('moving'), 700);
@@ -1267,7 +1298,7 @@ ENERGY</div>
       place();
       function setAd(on) {
         if (!on) hoverOpen = false;
-        if (on) { setSearch(false); setCp(false); setTr(false); }
+        if (on) { setSearch(false); setCp(false); setTr(false); popY = scrollY; }
         adPop.hidden = !on;
         adTab.setAttribute('aria-expanded', String(on));
         placePop();
@@ -1366,7 +1397,7 @@ ENERGY</div>
       let cHover = false, cT = 0;
       function setCp(on) {
         if (!on) { cHover = false; clearTimeout(cT); }
-        if (on) { setAd(false); setSearch(false); setTr(false); }
+        if (on) { setAd(false); setSearch(false); setTr(false); popY = scrollY; }
         cpPop.hidden = !on;
         cpTab.setAttribute('aria-expanded', String(on));
         placeCpPop();
@@ -1383,7 +1414,7 @@ ENERGY</div>
       let tHover = false, tT = 0;
       function setTr(on) {
         if (!on) { tHover = false; clearTimeout(tT); }
-        if (on) { setAd(false); setSearch(false); setCp(false); }
+        if (on) { setAd(false); setSearch(false); setCp(false); popY = scrollY; }
         trPop.hidden = !on;
         trTab.setAttribute('aria-expanded', String(on));
         placeTrPop();

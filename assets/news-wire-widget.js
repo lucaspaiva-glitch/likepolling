@@ -617,7 +617,8 @@
     }
     const find = ev.target.closest('.nw-find');
     if (find) { searchChannel(find.dataset.q); return; }
-    if (ev.target.closest('a') || card.classList.contains('nw-row')) return;
+    // Only the pause button stops the motion: a stray tap while scrolling never freezes a card.
+    if (!ev.target.closest('.nw-pp')) return;
     setPaused(card, !card.classList.contains('nw-paused'));
   };
   const onImgError = (ev) => {
