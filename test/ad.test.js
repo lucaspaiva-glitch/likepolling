@@ -104,3 +104,14 @@ test('the Gumroad option picks the lane: 6 Wagon spots, 10 Plane spots', async (
   r = await call(w, 'GET');
   assert.equal(r.body.planes.free, 10); assert.equal(r.body.wagons.free, 5);
 });
+
+test('video: YouTube links become the 11-character id; other links are refused', () => {
+  const { videoId, checkText } = require('../api/ad.js');
+  for (const u of ['https://www.youtube.com/watch?v=QMV0eP3Aiwo&t=3', 'youtu.be/QMV0eP3Aiwo', 'https://m.youtube.com/shorts/QMV0eP3Aiwo', 'QMV0eP3Aiwo']) assert.equal(videoId(u), 'QMV0eP3Aiwo');
+  assert.equal(videoId(''), '');
+  assert.equal(videoId('https://vimeo.com/123'), undefined);
+  assert.equal(videoId('https://evil.com/watch?v=QMV0eP3Aiwo'), undefined);
+  const card = { brand: 'Acme', kind: 'Coffee shop', website: 'https://acme.com' };
+  assert.equal(checkText({ ...card, video: 'https://youtu.be/QMV0eP3Aiwo' }).video, 'QMV0eP3Aiwo');
+  assert.throws(() => checkText({ ...card, video: 'https://vimeo.com/123' }), /YouTube link/);
+});

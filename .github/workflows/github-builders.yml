@@ -1,0 +1,29 @@
+name: AI Builders memory
+
+on:
+  schedule:
+    - cron: '41 6 * * 1' # weekly, Monday
+  workflow_dispatch:
+
+concurrency:
+  group: github-builders-memory
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+      - name: Save new AI projects and new developers per country from GitHub
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/github-routine.js

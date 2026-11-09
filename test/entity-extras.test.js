@@ -37,3 +37,16 @@ test('searches fall back to plain names and skip short rival names', async () =>
   assert.deepEqual(r.names, ['Nike', 'Adidas', 'Puma']);
   assert.equal(r.days.length, 10);
 });
+
+test('products: Open Food Facts count and top countries for food brands only', async () => {
+  assert.equal(x.brandSlug('The Coca-Cola Company'), 'coca-cola');
+  assert.equal(x.brandSlug('Nestlé'), 'nestle');
+  assert.equal(x.brandSlug('Heineken N.V.'), 'heineken');
+  let asked = 0;
+  const fake = (n) => async (url) => { asked++; assert.match(url, /brands_tags%3A%22red-bull%22/); return { ok: true, json: async () => ({ count: n, facets: { countries_tags: { items: [{ key: 'en:france', count: 157 }, { key: 'en:united-states', count: 74 }, { key: 'en:atlantis', count: 3 }] } } }) }; };
+  assert.deepEqual(await x.productsOf(fake(632), 'Red Bull', 'Austrian energy drink brand'), { brand: 'red-bull', products: 632, more: false, countries: [{ code: 'FR', products: 157 }, { code: 'US', products: 74 }] });
+  assert.equal(await x.productsOf(fake(12), 'Red Bull', 'energy drink'), null);
+  const n = asked;
+  assert.equal(await x.productsOf(fake(632), 'Red Bull', 'American sportswear company'), null);
+  assert.equal(asked, n);
+});

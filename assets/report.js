@@ -453,13 +453,23 @@
       ${rank(list, (x) => x.views, (x) => `<b>${dlong(x.day)}</b> · ${L('{x}× a normal day', { x: x.times.toLocaleString(loc()) })}`, (x) => `<small>${x.cause ? `${kind(x.cause)} ${esc(x.cause.name)} (${dshort(x.cause.day)})` : ''}${x.cause && x.countries ? ' · ' : ''}${x.countries ? L('In the daily top 100 in {c}', { c: x.countries.map((c) => esc(name(c))).join(', ') }) : ''}</small>`)}
       <p class="take">${L('The biggest moment was {d}, with {n} views: {x}× a normal day.', { d: `<b>${dlong(list[0].day)}</b>`, n: num(list[0].views), x: list[0].times.toLocaleString(loc()) })}</p></section>`;
   }
+  // Food and drink products of the brand on Open Food Facts (open data), and the countries they're sold in.
+  function productsSec(data, title) {
+    const p = data.products;
+    if (!p || !p.countries.length) return '';
+    const n = `${num(p.products)}${p.more ? '+' : ''}`;
+    return `<section class="rsec"><h2>${L('Products on shelves')}</h2><p class="note">${L('Food and drink products listed on Open Food Facts, the open food database, and the countries they are sold in.')}</p>
+      <div class="kpis">${kcard(n, L('Products listed'), L('on Open Food Facts'))}${kcard(esc(name(p.countries[0].code)), L('Top country'), L('{n} products', { n: num(p.countries[0].products) }))}</div>
+      <h3 class="sub">${L('Products by country')}</h3>${rank(p.countries, (c) => c.products, (c) => esc(name(c.code)))}
+      <p class="take">${L('{s} has {n} products listed on Open Food Facts, most of them sold in {c}.', { s: esc(title), n: `<b>${n}</b>`, c: esc(name(p.countries[0].code)) })}</p></section>`;
+  }
   // The source list sits at the bottom of the last page instead of on a page of its own.
   const withSources = (html, head, text) => {
     const i = html.lastIndexOf('</section>');
     const foot = `<div class="srcfoot"><h3>${L(head)}</h3><p class="small">${text}</p></div>`;
     return i < 0 ? html + `<section class="rsec sources">${foot}</section>` : html.slice(0, i) + foot + html.slice(i);
   };
-  const extraSrc = (data) => `${data.profile ? ` ${L('Profile, awards and followers: Wikidata (CC0).')}` : ''}${data.releases ? ` ${L('Releases: MusicBrainz (CC0).')}` : ''}${data.searches ? ` ${L('Searches per day: Google Trends.')}` : ''}`;
+  const extraSrc = (data) => `${data.profile ? ` ${L('Profile, awards and followers: Wikidata (CC0).')}` : ''}${data.releases ? ` ${L('Releases: MusicBrainz (CC0).')}` : ''}${data.searches ? ` ${L('Searches per day: Google Trends.')}` : ''}${data.products ? ` ${L('Products: Open Food Facts (ODbL).')}` : ''}`;
 
   function renderBrand(data) {
     const s = data.subject;
@@ -499,7 +509,7 @@
       ${rank(gt.slice(0, 10), (t) => t.days, (t) => esc(name(t.country)))}${learn('searches')}</section>` : '';
     const srcText = `${s.website ? `${L('Website: {u}.', { u: host(s.website) })} ` : ''}${L('Wikipedia page views and pages: Wikimedia Foundation (wikimedia.org), open data.')} ${L('Sponsors: Wikipedia infoboxes.')}${data.states ? ` ${L('States: Google Trends.')}` : ''}${data.mentions ? ` ${L('News: The GDELT Project. Posts: Bluesky public API, counts only.')}` : ''}${gt.length ? ` ${L('Trending searches: Google Trends.')}` : ''}${extraSrc(data)} ${L(data.mentions ? 'No YouTube data.' : 'No YouTube or news data.')}`;
 
-    $('report').innerHTML = head + withSources(knowSec(know) + kpis + peopleSec + trend + fieldSec + mentionsSec(data, s.title) + statesSec(data, s.title) + gtr, 'Sources', esc(srcText));
+    $('report').innerHTML = head + withSources(knowSec(know) + kpis + peopleSec + productsSec(data, s.title) + trend + fieldSec + mentionsSec(data, s.title) + statesSec(data, s.title) + gtr, 'Sources', esc(srcText));
     plainWords();
     wire(data, ctx(data, { know, tag, title: s.title, subtitle: s.description || '', dates: dateList(data.from, data.to, data.generated_at), sources: srcText, fieldName: fn }));
     show('report');
@@ -598,7 +608,7 @@
     if (f) know.unshift({ big: L('#{r} of {n}', { r: f.rank, n: f.compared }), line: L('{s} in {f}, by Wikipedia views.', { s: s.title, f: fn }) });
     const mo = data.moments && data.moments.list.length ? [...data.moments.list].sort((a, b) => b.views - a.views)[0] : null;
     if (mo && mo.times >= 3) know.splice(1, 0, { big: `${Math.round(mo.times)}×`, line: L('On {day}, {s} had its biggest media moment of the year: {x}× a normal day on Wikipedia.', { day: dlong(mo.day), s: s.title, x: Math.round(mo.times) }) });
-    $('report').innerHTML = head + withSources(knowSec(know.slice(0, 3)) + kpis + profileSec(data, s.title) + fieldSec + spSec + sdSec + bizSec + momentsSec(data, s.title) + trend + searchesSec(data, s.title) + vs + followersSec(data, s.title) + releasesSec(data, s.title) + langs + ctry + mentionsSec(data, s.title) + statesSec(data, s.title) + gtr, 'Sources', srcText) + (data.sample ? getYours() : '');
+    $('report').innerHTML = head + withSources(knowSec(know.slice(0, 3)) + kpis + profileSec(data, s.title) + fieldSec + spSec + sdSec + bizSec + productsSec(data, s.title) + momentsSec(data, s.title) + trend + searchesSec(data, s.title) + vs + followersSec(data, s.title) + releasesSec(data, s.title) + langs + ctry + mentionsSec(data, s.title) + statesSec(data, s.title) + gtr, 'Sources', srcText) + (data.sample ? getYours() : '');
     plainWords();
     wire(data, ctx(data, { know: know.slice(0, 3), fieldName: fn, fieldTake: ft, tag, title: s.title, subtitle: s.description, dates: dateList(data.from, data.to, data.generated_at), sources: srcText, bizNote, bizHeads, bizTake, bizUnit: unit }));
     show('report');

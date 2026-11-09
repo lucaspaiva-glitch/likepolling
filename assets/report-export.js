@@ -137,7 +137,7 @@
 
   // Profile, best media moments, Google searches, followers and releases (same data as the web report).
   function extraSlides(slides, data, title, x) {
-    const { L, num, short, dshort } = x;
+    const { L, name, num, short, dshort } = x;
     const pf = data.profile, f = (pf && pf.facts) || {}, j = (a) => (a || []).join(', ');
     if (pf) {
       const rows = [['Born', f.born && f.born.year], ['From', j(f.from)], ['Known for', j(f.occupation)], ['Genres', j(f.genre)], ['Record labels', j(f.label)], ['Teams', j(f.team)],
@@ -155,6 +155,10 @@
     const fl = ((pf && pf.followers) || []).filter((p) => p.years.length > 1).slice(0, 2);
     if (fl.length) slides.push({ type: 'charts', title: L('Followers over time'), note: L('Social media followers recorded on Wikidata, latest count each year. Not live numbers.'),
       charts: fl.map((p) => ({ head: p.platform, kind: 'bar', labels: p.years.map((y) => String(y.year)), series: [{ name: p.platform, values: p.years.map((y) => y.followers) }] })) });
+    const pr = data.products;
+    if (pr && pr.countries.length) slides.push({ type: 'charts', title: L('Products on shelves'), note: L('Food and drink products listed on Open Food Facts, the open food database, and the countries they are sold in.'),
+      charts: [{ head: L('Products by country'), kind: 'bar', horizontal: true, labels: pr.countries.map((c) => name(c.code)), series: [{ name: L('Products listed'), values: pr.countries.map((c) => c.products) }] }],
+      take: L('{s} has {n} products listed on Open Food Facts, most of them sold in {c}.', { s: title, n: `${num(pr.products)}${pr.more ? '+' : ''}`, c: name(pr.countries[0].code) }) });
     const r = data.releases;
     if (r && r.by_year.length) slides.push({ type: 'charts', title: L('Music releases'), note: L('Singles, albums and EPs listed on MusicBrainz, the open music database.'),
       charts: [{ head: L('Releases per year'), kind: 'bar', labels: r.by_year.map((y) => String(y.year)), series: [{ name: L('Releases'), values: r.by_year.map((y) => y.releases) }] }],
@@ -432,6 +436,7 @@
       if (data.moments) sheet(L('Best media moments'), [[L('Day'), L('Views'), L('× a normal day'), L('Linked to')].map(H), ...data.moments.list.map((d) => [day(d.day), n(d.views), d.times, d.cause ? `${d.cause.name} (${d.cause.day})` : ''])], [14, 14, 16, 50]);
       if (data.searches) sheet(L('Searched on Google'), [[L('Day'), ...data.searches.names].map(H), ...data.searches.days.map((d) => [day(d.day), ...d.values.map(n)])], [14, ...data.searches.names.map(() => 18)]);
       if (data.profile) sheet(L('Followers over time'), [[L('Platform'), L('Year'), L('Followers')].map(H), ...data.profile.followers.flatMap((p) => p.years.map((y) => [p.platform, y.year, n(y.followers)]))], [16, 8, 18]);
+      if (data.products) sheet(L('Products on shelves'), [[L('Country'), L('Products')].map(H), ...data.products.countries.map((c) => [name(c.code), n(c.products)])], [24, 14]);
       if (data.releases) sheet(L('Music releases'), [[L('Year'), L('Releases')].map(H), ...data.releases.by_year.map((y) => [y.year, n(y.releases)])], [8, 12]);
       sheet(L('Attention, day by day'), [[L('Day'), ...all.map((p) => plain(p.title))].map(H), ...ds.map((d) => [day(d), ...maps.map((m) => n(m.get(d) || 0))])], [14, ...all.map(() => 20)]);
       const total = sum(data.languages.map((l) => l.views));

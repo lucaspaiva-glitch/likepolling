@@ -56,9 +56,9 @@ async function saveStates(env, fetchImpl, body) {
 }
 
 async function saveExtras(env, fetchImpl, body) {
-  if (!body || !body.subject || !(body.profile || body.releases || body.searches || body.moments)) return;
+  if (!body || !body.subject || !(body.profile || body.releases || body.searches || body.moments || body.products)) return;
   const row = { day: String(body.generated_at || new Date().toISOString()).slice(0, 10), subject: String(body.subject.title || '').slice(0, 120),
-    profile: body.profile || null, releases: body.releases || null, searches: body.searches || null, moments: body.moments || null };
+    profile: body.profile || null, releases: body.releases || null, searches: body.searches || null, moments: body.moments || null, products: body.products || null };
   await fetchImpl(`${String(env.SUPABASE_URL).trim().replace(/\/$/, '')}/rest/v1/entity_extras_daily?on_conflict=day,subject`, {
     method: 'POST', signal: AbortSignal.timeout(6000), body: JSON.stringify([row]),
     headers: { apikey: env.SUPABASE_KEY.trim(), Authorization: `Bearer ${env.SUPABASE_KEY.trim()}`, 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=minimal' },
