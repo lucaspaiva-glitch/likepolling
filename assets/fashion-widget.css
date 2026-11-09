@@ -39,8 +39,9 @@
 #restaurants .rst-list span { grid-column: 1; font-size: 12px; color: #8a8a8a; }
 #restaurants em { font-style: normal; letter-spacing: 1px; background: linear-gradient(180deg, var(--gold-hi), var(--gold)); -webkit-background-clip: text; background-clip: text; color: transparent; }
 #restaurants .rst-list em { grid-row: 1 / span 2; grid-column: 2; align-self: center; font-size: 16px; }
+#restaurants .rst-picks { display: flex; gap: 8px; }
 @media (max-width: 600px) {
+  #restaurants .rst-picks select { flex: 1 1 0; min-width: 0; }
   #restaurants .fsh-top { flex-direction: column; align-items: stretch; gap: 10px; }
   #restaurants .fsh-p { font-size: 13px; }
-  #restaurants .rst-select { width: 100%; }
 }

@@ -1,20 +1,22 @@
 #!/usr/bin/env node
 // Restaurants memory: once a week, saves the Michelin-starred restaurants that Wikidata (CC0 open data)
 // records in each tracked country into public.restaurants_michelin: name, city, stars, own website and
-// English Wikipedia page. Not an official Michelin list; Wikidata can lag behind the latest guide.
+// English Wikipedia page, and its state / region (the country's first-level division). Not an official Michelin list; Wikidata can lag behind the latest guide.
 //   node scripts/restaurants-routine.js
 // Env: SUPABASE_URL, SUPABASE_KEY (secret key). Node >= 20, no deps.
 'use strict';
 
 const UA = 'LikePolling/1.0 (https://www.likepolling.com; lucaspaiva@likepolling.com)';
 const COUNTRIES = ['GB', 'FR', 'US', 'ES', 'JP', 'PT', 'BR'];
-const QUERY = `SELECT ?r ?rLabel ?cc ?stars ?web ?cityLabel ?article WHERE {
+const QUERY = `SELECT ?r ?rLabel ?cc ?stars ?web ?cityLabel ?regLabel ?article WHERE {
   ?r wdt:P31/wdt:P279* wd:Q11707; p:P166 ?st; wdt:P17 ?c. ?st ps:P166 wd:Q20824563.
   FILTER NOT EXISTS { ?st pq:P582 ?end }
   OPTIONAL { ?st pq:P1114 ?stars } ?c wdt:P297 ?cc. FILTER(?cc IN (${COUNTRIES.map((c) => `"${c}"`).join(',')}))
-  OPTIONAL { ?r wdt:P856 ?web } OPTIONAL { ?r wdt:P131 ?city }
+  OPTIONAL { ?r wdt:P856 ?web } OPTIONAL { ?r wdt:P131 ?city } OPTIONAL { ?r wdt:P131+ ?reg. ?c wdt:P150 ?reg }
   OPTIONAL { ?article schema:about ?r; schema:isPartOf <https://en.wikipedia.org/> }
   SERVICE wikibase:label { bd:serviceParam wikibase:language "en,pt,fr,es,ja". } }`;
+
+const label = (b) => (b?.value && !/^Q\d+$/.test(b.value) ? b.value.slice(0, 80) : null);
 
 function rows(bindings, day) {
   const by = new Map();
@@ -24,10 +26,10 @@ function rows(bindings, day) {
     if (!/^Q\d+$/.test(qid) || !name || /^Q\d+$/.test(name)) continue;
     const stars = Math.min(3, Math.max(1, Number(b.stars?.value) || 1));
     const old = by.get(qid);
-    if (old && old.stars >= stars) continue;
+    if (old && (old.stars > stars || (old.stars === stars && (old.region || !b.regLabel)))) continue;
     const web = /^https?:\/\//.test(b.web?.value || '') ? b.web.value : null;
     by.set(qid, { day, qid, country_code: b.cc.value, name: name.slice(0, 120), city: b.cityLabel?.value && !/^Q\d+$/.test(b.cityLabel.value) ? b.cityLabel.value.slice(0, 80) : null,
-      stars, website: web, wiki: b.article?.value || null });
+      stars, website: web, wiki: b.article?.value || null, region: label(b.regLabel) });
   }
   return [...by.values()];
 }
