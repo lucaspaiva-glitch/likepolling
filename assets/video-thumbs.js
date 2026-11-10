@@ -96,11 +96,15 @@ a:hover > .lp-rth img { transform: scale(1.04); }
     if (box) box.querySelectorAll('.lp-prev, .lp-veil, .lp-pvc').forEach((n) => n.remove());
     box = null;
   }
+  function paintSound(b, on) {
+    if (b.getAttribute('aria-pressed') === String(on)) return;
+    b.innerHTML = on ? ICON_SOUND : ICON_MUTED;
+    b.setAttribute('aria-pressed', String(on));
+    b.title = b.ariaLabel = on ? 'Mute' : 'Sound on';
+  }
   function applySound(f, b) {
     if (pref.sound) { ytSend(f, 'unMute'); ytSend(f, 'setVolume', [100]); } else ytSend(f, 'mute');
-    b.innerHTML = pref.sound ? ICON_SOUND : ICON_MUTED;
-    b.setAttribute('aria-pressed', String(pref.sound));
-    b.title = b.ariaLabel = pref.sound ? 'Mute' : 'Sound on';
+    paintSound(b, pref.sound);
   }
   function applyCc(f, b) {
     if (pref.cc) {
@@ -134,16 +138,23 @@ a:hover > .lp-rth img { transform: scale(1.04); }
       ctl.addEventListener('click', (e) => {
         e.preventDefault(); e.stopPropagation();
         const b = e.target.closest('button');
-        if (b === snd) { pref.sound = !pref.sound; applySound(f, snd); }
+        if (b === snd) { pref.sound = snd.getAttribute('aria-pressed') !== 'true'; applySound(f, snd); }
         if (b === cc) { pref.cc = !pref.cc; applyCc(f, cc); }
       });
-      let shown = false;
+      // With sound on, the preview stays hidden until the unmuted video is really playing. A browser
+      // that refuses sound without a tap (phones, mostly) pauses the video instead: it then restarts
+      // muted, and the sound button shows off until the visitor taps it.
+      let shown = false, tried = 0, blocked = false;
+      const show = () => { shown = true; f.classList.add('on'); veil.classList.add('on'); ctl.classList.add('on'); };
       unwatch = ytWatch(f, (info, done) => {
-        if (!shown && (info.playerState === 1 || info.currentTime > 0)) {
-          shown = true;
-          f.classList.add('on'); veil.classList.add('on'); ctl.classList.add('on');
-          applySound(f, snd); applyCc(f, cc);
+        if (typeof info.muted === 'boolean') paintSound(snd, !info.muted);
+        if (!tried && (info.playerState === 1 || info.currentTime > 0)) {
+          tried = Date.now();
+          applyCc(f, cc);
+          if (pref.sound) applySound(f, snd); else { paintSound(snd, false); show(); }
         }
+        if (tried && info.playerState === 2 && !blocked) { blocked = true; ytSend(f, 'mute'); ytSend(f, 'playVideo'); paintSound(snd, false); }
+        if (tried && !shown && info.playerState === 1 && (blocked || info.muted === false || Date.now() - tried > 900)) show();
         if (shown && info.currentTime >= CONTROLS_GONE) { veil.classList.remove('on'); done(); }
       });
       el.querySelector('img').after(f, veil, ctl);
