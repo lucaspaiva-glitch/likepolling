@@ -67,7 +67,7 @@ ${SEL.split(', ').map((s) => `${s} > b, ${s} > i:not(.lp-vph)`).join(', ')} { z-
 a:hover > .lp-rth img { transform: scale(1.04); }
 .lp-rth > b { display: none; position: absolute; left: 5px; top: 5px; padding: 3px 4px; border: 1px solid rgba(255,42,60,.6); border-radius: 3px; background: #7f000a; color: #fff; font: 700 10px/1 ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace; }
 .lp-rth-s { width: 63px; aspect-ratio: 9 / 16; background: #111; }
-.lp-rth .lp-pvc { left: auto; right: 5px; top: 5px; }
+.lp-rth .lp-pvc { left: 5px; top: 27px; }
 .lp-rth .lp-pvc button { width: 20px; height: 20px; }
 @media (max-width: 560px) { .lp-rth-s { width: 50px; } }`;
   document.head.appendChild(css);
