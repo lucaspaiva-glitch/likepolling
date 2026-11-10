@@ -223,6 +223,22 @@
           <td class="n ytt-likes"><span class="ytt-num">${fmt(r.view_count)}</span></td></tr>`).join('')}</tbody></table>` : ''}`;
   }
 
+  // Loads (once) a country's rows; preload() fetches the countries either side of the one shown,
+  // so a swipe or a step in the picker draws at once instead of showing an empty box.
+  const pending = {};
+  const once = (key, url, store, cc) => store[cc] ? Promise.resolve(store[cc])
+    : (pending[key] ||= get(url).then((r) => (store[cc] = r), (e) => { delete pending[key]; throw e; }));
+  const newsFor = (cc) => once(`n${cc}`, `news_fashion?select=link,title,title_tr,source,published_at,image_url,fetched_at&country_code=eq.${encodeURIComponent(cc)}&image_url=like.https%3A%2F%2F*&title_tr->>fashion=eq.true&order=rank.asc&limit=${SHOWN * 2}`, cache, cc);
+  const videosFor = (cc) => once(`v${cc}`, `fashion_videos?select=rank,video_id,title,channel_title,channel_country,country_code,view_count,views_per_hour,fetched_at&country_code=eq.${encodeURIComponent(cc)}&order=rank&limit=${SHOWN}`, vcache, cc);
+  function preload(cc) {
+    const list = [...select.options].map((o) => o.value), k = list.indexOf(cc);
+    if (k < 0 || list.length < 2) return;
+    for (const n of new Set([list[(k + 1) % list.length], list[(k - 1 + list.length) % list.length]])) {
+      newsFor(n).catch(() => {});
+      if (videoCodes.includes(n)) videosFor(n).catch(() => {});
+    }
+  }
+
   async function showVideos(cc) {
     const mine = token;
     if (!videoCodes.includes(cc)) { vcard.hidden = true; return; }
@@ -230,7 +246,7 @@
     follow.hidden = cc !== 'PT';
     if (!vcache[cc]) vbody.innerHTML = '';
     try {
-      vcache[cc] = vcache[cc] || await get(`fashion_videos?select=rank,video_id,title,channel_title,channel_country,country_code,view_count,views_per_hour,fetched_at&country_code=eq.${encodeURIComponent(cc)}&order=rank&limit=${SHOWN}`);
+      vcache[cc] = await videosFor(cc);
       if (mine !== token) return;
       const rows = vcache[cc];
       if (!rows.length) { vcard.hidden = true; return; }
@@ -248,10 +264,11 @@
     showVideos(cc);
     if (!cache[cc]) { lead.innerHTML = ''; feed.innerHTML = ''; wrap.hidden = false; empty.hidden = true; }
     try {
-      cache[cc] = cache[cc] || await get(`news_fashion?select=link,title,title_tr,source,published_at,image_url,fetched_at&country_code=eq.${encodeURIComponent(cc)}&image_url=like.https%3A%2F%2F*&title_tr->>fashion=eq.true&order=rank.asc&limit=${SHOWN * 2}`);
+      cache[cc] = await newsFor(cc);
       if (mine !== token) return;
       const rows = cache[cc];
       draw(rows);
+      preload(cc);
       asof.textContent = rows[0] ? `As of ${new Date(rows[0].fetched_at).toISOString().slice(11, 16)} UTC` : '';
     } catch (err) {
       if (mine !== token) return;

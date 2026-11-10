@@ -228,14 +228,27 @@
     img.remove();
   }, true);
 
+  // Loads (once) a country's stories; preload() fetches the countries either side of the one shown,
+  // so a swipe or a step in the picker draws at once instead of showing an empty box.
+  const pending = {};
+  const newsFor = (cc) => cache[cc] ? Promise.resolve(cache[cc])
+    : (pending[cc] ||= get(`news_ai?select=link,title,title_tr,source,published_at,image_url,fetched_at&country_code=eq.${encodeURIComponent(cc)}&image_url=like.https%3A%2F%2F*&title_tr->>ai=in.(${Object.keys(KINDS).join(',')})&order=rank.asc&limit=40`)
+      .then((r) => (cache[cc] = r), (e) => { delete pending[cc]; throw e; }));
+  function preload(cc) {
+    const list = [...select.options].map((o) => o.value), k = list.indexOf(cc);
+    if (k < 0 || list.length < 2) return;
+    for (const n of new Set([list[(k + 1) % list.length], list[(k - 1 + list.length) % list.length]])) newsFor(n).catch(() => {});
+  }
+
   async function show(cc) {
     const mine = ++token;
     if (!cache[cc]) { lead.innerHTML = ''; feed.innerHTML = ''; wrap.hidden = false; empty.hidden = true; }
     try {
-      cache[cc] = cache[cc] || await get(`news_ai?select=link,title,title_tr,source,published_at,image_url,fetched_at&country_code=eq.${encodeURIComponent(cc)}&image_url=like.https%3A%2F%2F*&title_tr->>ai=in.(${Object.keys(KINDS).join(',')})&order=rank.asc&limit=40`);
+      cache[cc] = await newsFor(cc);
       if (mine !== token) return;
       const rows = cache[cc];
       draw(rows);
+      preload(cc);
       asof.textContent = rows[0] ? `As of ${new Date(rows[0].fetched_at).toISOString().slice(11, 16)} UTC` : '';
     } catch (err) {
       if (mine !== token) return;
