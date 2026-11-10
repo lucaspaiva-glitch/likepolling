@@ -56,7 +56,7 @@ const en = (r) => (r.title_tr && r.title_tr.en && r.title_tr.en !== r.title ? r.
 const md = (s) => String(s ?? '').replace(/\s+/g, ' ').replace(/([\[\]|*_`])/g, '\\$1').trim();
 
 const ABOUT = [
-  'Like Polling (likepolling.com) tracks what people watch on YouTube in 41 countries (live viewer estimates, YouTube Trending videos, YouTube Music, education and fashion videos) and the top news headlines in each country.',
+  'Like Polling (likepolling.com) gathers public information about 41 countries and keeps a daily history: what people watch on YouTube (live viewer estimates, YouTube Trending videos, YouTube Music, education and fashion videos), the top news headlines, Google searches, most-read Wikipedia pages, Michelin-starred restaurants and new AI projects on GitHub.',
   'All data is free to read and cite. Please credit "Like Polling (likepolling.com)".',
 ];
 const SECTIONS = [
@@ -68,12 +68,18 @@ const SECTIONS = [
   ['Fashion Index', 'the fastest-growing recent VIDEOS from the fashion magazine, brand and fashion week channels Like Polling tracks in each country.'],
   ['Education topics', 'the subjects people are learning about on YouTube and reading about in the news in each country.'],
   ['Estimated people watching YouTube', 'a modelled estimate of how many people are watching YouTube right now in each country.'],
+  ['Country, People and Company pulse', 'free pages on what a country searches, reads and celebrates, and how much attention a person or company gets, from Google Trends, Wikipedia, Wikidata and GDELT.'],
+  ['Restaurants', 'Michelin-starred restaurants in 7 countries, from Wikidata open data, refreshed weekly. Closed restaurants are left out. Not an official Michelin list.'],
+  ['AI Builders', 'the 10 most-starred new AI projects on GitHub each week, and new GitHub accounts per country.'],
 ];
 const METHOD = [
   'Estimated live viewers are modelled, not measured: YouTube users per country (Google ad reach, late 2025, via DataReportal) × about 80 minutes of viewing per person per day, spread over the day by a typical hourly pattern. Recalculated every 15 minutes; large countries (US, Canada, Brazil, Mexico, Australia, Indonesia) are split across their time zones by population. Read them as an order of magnitude.',
   'Trending and Music: YouTube Data API "most popular" charts per country, refreshed hourly. Views are YouTube\'s public counts at fetch time.',
   'World News headlines: top stories from each country\'s Google News edition. Education topics: recent videos from education channels plus local news, grouped into subjects with Google Gemini (AI).',
   'Fashion News headlines: Google News fashion stories per country, kept only when Google Gemini (AI) confirms they are about fashion. Fashion Index: tracked fashion channels\' uploads from the last 30 days, ranked by views per hour; Portugal follows the Italian, Spanish, French and UK channels.',
+  'Restaurants: Wikidata restaurants holding a current Michelin star, refreshed weekly. One is left out when Wikidata records a closing date or its English Wikipedia page describes it in the past tense. Wikidata can lag behind the latest guide, and its US list is incomplete.',
+  'AI Builders: GitHub search API, weekly. Top projects are new AI repositories ranked by stars; new developers per country count only accounts that name a country in their profile.',
+  'Country, People and Company pulse: Google Trends searches, Wikipedia page views, Wikidata facts, GDELT news tone, World Bank growth and public holidays. Counts and aggregates only, no personal data.',
 ];
 const LINKS = [
   [`${SITE}/llms-full.txt`, 'every country: YouTube Trending videos, YouTube Music, World News headlines, Fashion, Education'],
@@ -82,6 +88,7 @@ const LINKS = [
   [`${SITE}/api/v1/news?country=US`, 'JSON: World News headlines for one country (news stories; add &topic=fashion for Fashion News)'],
   [`${SITE}/api/v1/trending?country=US`, 'JSON: YouTube Trending videos for one country (also /music, /education)'],
   [`${SITE}/api/v1/channel?handle=@MrBeast`, 'JSON: one channel\'s 30-day views, comments and estimated earnings'],
+  [`${SITE}/api/v1/trending?country=US&format=csv`, 'CSV for spreadsheets: add &format=csv to any JSON list above (Excel, Google Sheets, Power BI)'],
 ];
 
 function markdown(d, full) {

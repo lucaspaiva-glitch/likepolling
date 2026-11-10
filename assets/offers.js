@@ -22,7 +22,7 @@
   const SAMPLES = 'https://iyhaoagslsrwtkcrxylp.supabase.co/storage/v1/object/public/samples';
   const tr = (s) => (window.LP_I18N ? window.LP_I18N.t(s) : s);
   const lang = () => (window.LP_I18N && window.LP_I18N.lang) || 'en';
-  const pdf = (id) => `${SAMPLES}/${lang()}/${id}-report.pdf?download=like-polling-${id}-report.pdf`;
+  const pdf = (id) => `${SAMPLES}/${lang()}/${id}-report.pdf?download=like-polling-${id === 'artist' ? 'people' : id}-report.pdf`;
   const roots = document.querySelectorAll('[data-offers]');
   const tabs = document.querySelectorAll('.lp-pp[data-rep]'); // homepage report tabs: the card opens under the tab
   if (!roots.length && !tabs.length) return;

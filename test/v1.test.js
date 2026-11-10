@@ -11,7 +11,7 @@ function mockRes() {
     setHeader(k, v) { this.headers[k.toLowerCase()] = v; },
     status(c) { this.statusCode = c; return this; },
     json(b) { this.body = b; return this; },
-    end() { return this; },
+    end(b) { if (b !== undefined) this.body = b; return this; },
   };
 }
 
@@ -224,4 +224,20 @@ test('entity: free artist/company pulse from Wikimedia + saved records, no AI', 
   const bad = { ...res, headers: {}, setHeader(k, v) { this.headers[k] = v; } };
   await createHandler({ env: { SUPABASE_URL: 'https://db.test', SUPABASE_KEY: 'k' }, fetch: fetchImpl })({ method: 'GET', query: { route: 'entity', type: 'band', title: 'X' }, headers: {} }, bad);
   assert.equal(bad.statusCode, 400);
+});
+
+test('format=csv: lists download as safe CSV, JSON stays the default', async () => {
+  const rows = [{ rank: 1, title: 'Hello, "world"\nnews', source: '=HYPERLINK("x")', link: 'https://n/1', published_at: '2026-10-20T00:00:00Z', fetched_at: '2026-10-20T01:00:00Z' }];
+  const fetch = mockFetch({ news_world: rows });
+  const json = await run({ route: 'news', country: 'br' }, { fetch });
+  assert.equal(json.body.items[0].title, 'Hello, "world"\nnews');
+  const res = await run({ route: 'news', country: 'br', format: 'csv' }, { fetch });
+  assert.equal(res.statusCode, 200);
+  assert.match(res.headers['content-type'], /text\/csv/);
+  assert.match(res.headers['content-disposition'], /like-polling-news-br\.csv/);
+  const lines = res.body.replace(/^\ufeff/, '').split('\r\n');
+  assert.equal(lines[0], 'rank,title,title_en,source,link,image_url,published_at');
+  assert.equal(res.body.split('\r\n').slice(1).join('\r\n'), '1,"Hello, ""world""\nnews",,"\'=HYPERLINK(""x"")",https://n/1,,2026-10-20T00:00:00Z\r\n');
+  const bad = await run({ route: 'channel', handle: '@x', format: 'csv' }, { fetch: mockFetch({}) });
+  assert.notEqual(bad.statusCode, 200);
 });

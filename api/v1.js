@@ -307,6 +307,19 @@ function corsHeaders(req, res, env) {
   res.setHeader('Vary', 'Origin');
 }
 
+// ?format=csv: the route's list as a spreadsheet file (Excel, Google Sheets, Power BI). JSON stays the default.
+const CSV_LISTS = { trending: 'items', music: 'items', worldwide: 'items', news: 'items', education: 'videos' };
+function csvCell(v) {
+  if (v == null) return '';
+  let s = Array.isArray(v) ? v.join(' ') : typeof v === 'object' ? JSON.stringify(v) : String(v);
+  if (typeof v === 'string' && /^[=+\-@\t\r]/.test(s)) s = `'${s}`; // spreadsheets must not run text as a formula
+  return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
+function toCsv(rows) {
+  const cols = [...new Set(rows.flatMap((r) => Object.keys(r)))];
+  return '\ufeff' + [cols.join(','), ...rows.map((r) => cols.map((c) => csvCell(r[c])).join(','))].join('\r\n') + '\r\n';
+}
+
 function createHandler(deps = {}) {
   return async function handler(req, res) {
     const env = deps.env || process.env;
@@ -335,6 +348,14 @@ function createHandler(deps = {}) {
         : null;
       if (!out) throw new HttpError(404, 'Unknown route. Try /api/v1/channel, /trending, /music, /worldwide, /education, /news, /pulse or /entity.');
       res.setHeader('Cache-Control', out.cache);
+      if (String(req.query.format || '').toLowerCase() === 'csv') {
+        const key = route === 'education' && req.query.list === 'subjects' ? 'subjects' : CSV_LISTS[route];
+        if (!key) throw new HttpError(400, `CSV is available for ${Object.keys(CSV_LISTS).join(', ')}. Use JSON for ${route}.`);
+        const name = ['like-polling', route, out.body.topic !== 'world' && out.body.topic, out.body.country, key === 'subjects' && 'subjects'].filter(Boolean).join('-').toLowerCase();
+        res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+        res.setHeader('Content-Disposition', `inline; filename="${name}.csv"`);
+        return res.status(200).end(toCsv(out.body[key]));
+      }
       return res.status(200).json(out.body);
     } catch (err) {
       if (!(err instanceof HttpError)) console.error('[v1]', err);
