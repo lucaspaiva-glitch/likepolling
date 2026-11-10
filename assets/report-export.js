@@ -426,8 +426,22 @@
       statesSheet();
       if (data.mentions) sheet(L('In the news and online'), [[L('Measure'), L('Value')].map(H), ...(data.mentions.news ? [[L('News articles'), n(data.mentions.news.articles)], ...data.mentions.news.countries.map((c) => [`${L('News by country')}: ${c.name}`, p100(c.share)])] : []), ...(data.mentions.social ? [[L('Bluesky posts'), n(data.mentions.social.posts)], [L('Likes on those posts'), n(data.mentions.social.likes)]] : [])], [40, 16]);
       sheets.push({ sheet: cut(L('Summary'), 31), data: about, columns: [{ width: 22 }, { width: 70 }] });
-      sheet(L('Side by side'), [[L('Rank'), L('Name'), L('Views, 30 days'), L('Previous 30 days'), L('Change vs last month'), L('Wikipedia languages'), L('Link')].map(H),
-        ...[...all].sort((a, b) => b.views - a.views).map((p, i) => [i + 1, plain(p.title), n(p.views), n(p.previous), p100(p.change_pct), n(p.languages), link(p.link)])], [8, 30, 16, 18, 22, 20, 50]);
+      if (x.quality) sheet(L('Sources and data quality'), [[L('What'), L('Source'), L('Type'), L('Covers')].map(H), ...x.quality], [30, 44, 26, 40]);
+      const P = `${data.from} – ${data.to}`, rows = [];
+      const add = (sec, who, when, what, v, src) => { if (v != null) rows.push([sec, who, when, what, n(v), src]); };
+      all.forEach((p) => p.series.forEach((d) => add(L('Attention, day by day'), plain(p.title), day(d.day), L('Wikipedia views'), d.views, 'Wikimedia')));
+      if (data.searches) data.searches.days.forEach((d) => d.values.forEach((v, i) => add(L('Searched on Google'), data.searches.names[i], day(d.day), L('Search index (0-100)'), v, 'Google Trends')));
+      if (data.moments) data.moments.list.forEach((d) => add(L('Best media moments'), plain(data.subject.title), day(d.day), L('Views'), d.views, 'Wikimedia'));
+      data.languages.forEach((l) => add(L('Languages'), langName(l.lang), P, L('Views'), l.views, 'Wikimedia'));
+      data.countries.forEach((c) => add(L('Trending in countries'), name(c.country), P, L('Days in the daily top 100'), c.days, 'Wikimedia'));
+      (data.trends || []).forEach((t) => add(L('Trending on Google'), name(t.country), P, L('Days trending'), t.days, 'Google Trends'));
+      if (data.profile) data.profile.followers.forEach((f) => f.years.forEach((y) => add(L('Followers over time'), f.platform, y.year, L('Followers'), y.followers, 'Wikidata')));
+      if (data.business) data.business.years.forEach((y) => { add(L('How the business is doing'), plain(data.subject.title), y.year, L('Sales, US$'), y.revenue, 'SEC EDGAR'); add(L('How the business is doing'), plain(data.subject.title), y.year, L('Profit, US$'), y.profit, 'SEC EDGAR'); });
+      if (data.releases) data.releases.by_year.forEach((y) => add(L('Music releases'), plain(data.subject.title), y.year, L('Releases'), y.releases, 'MusicBrainz'));
+      if (data.products) data.products.countries.forEach((c) => add(L('Products on shelves'), name(c.code), P, L('Products'), c.products, 'Open Food Facts'));
+      sheet(L('All data'), [[L('Section'), L('Name'), L('Day or year'), L('Measure'), L('Value'), L('Source')].map(H), ...rows], [26, 30, 22, 26, 16, 16]);
+      sheet(L('Side by side'), [[L('Rank'), L('Name'), L('Views, 30 days'), L('Previous 30 days'), L('Change vs last month'), L('Same 30 days last year'), L('vs same days last year'), L('Wikipedia languages'), L('Link')].map(H),
+        ...[...all].sort((a, b) => b.views - a.views).map((p, i) => [i + 1, plain(p.title), n(p.views), n(p.previous), p100(p.change_pct), n(p.year_ago), p100(p.yoy_pct), n(p.languages), link(p.link)])], [8, 30, 16, 18, 22, 22, 22, 20, 50]);
       const ds = data.subject.series.map((s) => s.day);
       const maps = all.map((p) => new Map(p.series.map((s) => [s.day, s.views])));
       if (data.field) sheet(L('Top in its field'), [[L('Rank'), L('Name'), L('Views, 30 days'), L('Change vs last month')].map(H),

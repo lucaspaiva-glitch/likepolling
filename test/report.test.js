@@ -347,6 +347,8 @@ test('company report ranks the subject in its narrowest shared Wikipedia categor
   assert.equal(body.field.names.pt, 'Marcas de calçado esportivo');
   assert.equal(body.field.rank, 1);
   assert.equal(body.field.compared, 6);
+  assert.equal(typeof body.subject.yoy_pct, 'number');
+  assert.ok(body.peers.every((p) => 'year_ago' in p));
   assert.ok(!body.field.ranked.some((p) => p.title === 'Air Jordan'));
   assert.deepEqual(body.peers.map((p) => p.title), ['Adidas', 'Puma (brand)', 'Asics']);
 });

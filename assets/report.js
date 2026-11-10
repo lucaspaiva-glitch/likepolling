@@ -516,6 +516,30 @@
     window.scrollTo(0, 0);
   }
 
+  // One row per kind of number in a People or Company report: what it is, where it comes from, how to treat it.
+  function quality(data) {
+    const daily = `Wikimedia Foundation, ${L('saved daily by Like Polling')}`;
+    const m = data.mentions || {};
+    return [
+      [L('Wikipedia views'), 'Wikimedia Foundation', L('Measured'), L('Last 30 days')],
+      [L('Growth and share of attention'), 'Wikimedia Foundation · Google Trends', L('Calculated by Like Polling'), L('Last 30 days and the same days last year')],
+      data.field && [L('Top in its field'), 'Wikimedia Foundation', L('Measured'), L('Last 30 days')],
+      data.searches && [L('Google searches per day'), 'Google Trends', L('Index (0–100)'), L('Last 30 days')],
+      (data.trends || []).length && [L('Trending on Google'), `Google Trends, ${L('saved daily by Like Polling')}`, L('Rough estimate'), L('Last 30 days')],
+      data.countries.length && [L('Trending in countries'), daily, L('Measured'), L('Last 30 days')],
+      data.languages.length && [L('Wikipedia languages'), 'Wikimedia Foundation', L('Measured'), L('Last 30 days')],
+      data.moments && [L('Best media moments'), 'Wikimedia Foundation', L('Calculated by Like Polling'), L('Last 12 months')],
+      data.profile && [L('Profile'), 'Wikidata (CC0)', L('Public record'), L('Latest record')],
+      data.profile && data.profile.followers && data.profile.followers.length && [L('Followers over time'), 'Wikidata (CC0)', L('Public record'), L('Yearly')],
+      data.releases && [L('Music releases'), 'MusicBrainz (CC0)', L('Public record'), L('Yearly')],
+      data.business && [L('How the business is doing'), 'US SEC (EDGAR)', L('Reported by the company'), L('Yearly')],
+      m.news && [L('News articles'), 'The GDELT Project', L('Measured'), L('Last 30 days')],
+      m.social && [L('Bluesky posts'), 'Bluesky', L('Measured'), L('Last 30 days')],
+      data.products && [L('Products on shelves'), 'Open Food Facts (ODbL)', L('Public record'), L('Latest record')],
+      ((data.sponsors || []).length || (data.sponsored || []).length) && [L('Sponsors'), 'Wikipedia', L('Public record'), L('Latest record')],
+      data.states && [L('Top states'), 'Google Trends', L('Index (0–100)'), '—'],
+    ].filter(Boolean);
+  }
   function renderEntity(data) {
     if (data.brand) return renderBrand(data);
     const s = data.subject;
@@ -580,6 +604,19 @@
       <div><h3>${L('Change vs last month')}</h3>${cbars(growth, (p) => p.change_pct || 0, (v) => `${v >= 0 ? '+' : ''}${v}%`)}</div>
       <div><h3>${L('Languages')}</h3>${cbars([...all].sort((a, b) => b.languages - a.languages), (p) => p.languages, String)}</div>
     </div>${growth[0] && growth[0].change_pct > 0 ? `<p class="take">${L('Fastest growing: {a} ({p}).', { a: `<b>${esc(growth[0].title)}</b>`, p: `${growth[0].change_pct >= 0 ? '+' : ''}${growth[0].change_pct ?? 0}%` })}</p>` : ''}${learn('vs')}</section>`;
+    const sgn = (p) => (p == null ? '—' : `${p > 0 ? '+' : ''}${p}%`);
+    const gs = data.searches && data.searches.averages ? data.searches : null;
+    const gTotal = gs ? sum(gs.averages.filter((a) => a > 0)) : 0;
+    const base = (t) => t.replace(/,? (Inc|Ltd|Corp|Corporation|plc|S\.A|AG|SE|Co|Group)\.?$/i, '').toLowerCase();
+    const gShare = (p) => { const i = gTotal ? gs.names.findIndex((x) => base(x) === base(p.title)) : -1; return i < 0 ? null : pct(gs.averages[i], gTotal); };
+    const vTotal = sum(all.map((p) => p.views));
+    const growSec = all.length > 1 || s.yoy_pct != null ? `<section class="rsec"><h2>${L('Growth and share of attention')}</h2><p class="note">${L('How each one did in the last 30 days, compared with the 30 days before and the same 30 days last year, and its share of all views and searches among them.')}</p>
+      <div class="tight" style="overflow-x:auto"><table class="cmp"><thead><tr><th>${L('Name')}</th><th>${L('Views, 30 days')}</th><th>${L('vs previous 30 days')}</th><th>${L('vs same days last year')}</th>${all.length > 1 ? `<th>${L('Share of Wikipedia views')}</th>` : ''}${gTotal ? `<th>${L('Share of Google searches')}</th>` : ''}</tr></thead>
+      <tbody>${[...all].sort((a, b) => b.views - a.views).map((p) => `<tr><th>${p.me ? `<b>${esc(p.title)}</b>` : esc(p.title)}</th><td>${num(p.views)}</td><td>${sgn(p.change_pct)}</td><td>${sgn(p.yoy_pct)}</td>${all.length > 1 ? `<td>${pct(p.views, vTotal)}%</td>` : ''}${gTotal ? `<td>${gShare(p) == null ? '—' : `${gShare(p)}%`}</td>` : ''}</tr>`).join('')}</tbody></table></div>
+      <p class="take">${[all.length > 1 ? (gTotal && gShare(all[0]) != null ? L('{s} had {p}% of the Wikipedia views and {q}% of the Google searches among these {n}.', { s: `<b>${esc(s.title)}</b>`, p: pct(s.views, vTotal), q: gShare(all[0]), n: all.length }) : L('{s} had {p}% of the Wikipedia views among these {n}.', { s: `<b>${esc(s.title)}</b>`, p: pct(s.views, vTotal), n: all.length })) : '', s.yoy_pct != null ? L('Compared with the same 30 days last year, views of {s} changed {a}.', { s: esc(s.title), a: sgn(s.yoy_pct) }) : ''].filter(Boolean).join(' ')}</p></section>` : '';
+    const qual = quality(data);
+    const qualSec = `<section class="rsec"><h2>${L('Sources and data quality')}</h2><p class="note">${L('Where each number comes from, and what kind of number it is. No number in this report was made by AI.')}</p>
+      <div class="tight" style="overflow-x:auto"><table class="cmp"><thead><tr><th>${L('What')}</th><th>${L('Source')}</th><th>${L('Type')}</th><th>${L('Covers')}</th></tr></thead><tbody>${qual.map((r) => `<tr><th>${esc(r[0])}</th>${r.slice(1).map((c) => `<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div></section>`;
     const langs = `<section class="rsec"><h2>${L('Where people read about {s}', { s: esc(s.title) })}</h2><p class="note">${L('Views by Wikipedia language, last 30 days.')}</p>
       ${langTotal ? `<div class="split"><i style="--w:${100 - abroad}%"></i></div><div class="splitl"><span><b>${100 - abroad}%</b> ${esc(langName('en'))}</span><span><b>${abroad}%</b> ${L('other languages')}</span></div>` : ''}
       ${rank(data.languages.slice(0, 8), (l) => l.views, (l) => esc(langName(l.lang)), (l) => `<small>${L('{p}% of all views', { p: pct(l.views, langTotal) })}</small>`)}
@@ -608,9 +645,9 @@
     if (f) know.unshift({ big: L('#{r} of {n}', { r: f.rank, n: f.compared }), line: L('{s} in {f}, by Wikipedia views.', { s: s.title, f: fn }) });
     const mo = data.moments && data.moments.list.length ? [...data.moments.list].sort((a, b) => b.views - a.views)[0] : null;
     if (mo && mo.times >= 3) know.splice(1, 0, { big: `${Math.round(mo.times)}×`, line: L('On {day}, {s} had its biggest media moment of the year: {x}× a normal day on Wikipedia.', { day: dlong(mo.day), s: s.title, x: Math.round(mo.times) }) });
-    $('report').innerHTML = head + withSources(knowSec(know.slice(0, 3)) + kpis + profileSec(data, s.title) + fieldSec + spSec + sdSec + bizSec + productsSec(data, s.title) + momentsSec(data, s.title) + trend + searchesSec(data, s.title) + vs + followersSec(data, s.title) + releasesSec(data, s.title) + langs + ctry + mentionsSec(data, s.title) + statesSec(data, s.title) + gtr, 'Sources', srcText) + (data.sample ? getYours() : '');
+    $('report').innerHTML = head + withSources(knowSec(know.slice(0, 3)) + kpis + growSec + profileSec(data, s.title) + fieldSec + spSec + sdSec + bizSec + productsSec(data, s.title) + momentsSec(data, s.title) + trend + searchesSec(data, s.title) + vs + followersSec(data, s.title) + releasesSec(data, s.title) + langs + ctry + mentionsSec(data, s.title) + statesSec(data, s.title) + gtr + qualSec, 'Sources', srcText) + (data.sample ? getYours() : '');
     plainWords();
-    wire(data, ctx(data, { know: know.slice(0, 3), fieldName: fn, fieldTake: ft, tag, title: s.title, subtitle: s.description, dates: dateList(data.from, data.to, data.generated_at), sources: srcText, bizNote, bizHeads, bizTake, bizUnit: unit }));
+    wire(data, ctx(data, { know: know.slice(0, 3), fieldName: fn, fieldTake: ft, tag, title: s.title, subtitle: s.description, dates: dateList(data.from, data.to, data.generated_at), sources: srcText, quality: qual, bizNote, bizHeads, bizTake, bizUnit: unit }));
     show('report');
     window.scrollTo(0, 0);
   }
