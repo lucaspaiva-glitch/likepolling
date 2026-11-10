@@ -81,22 +81,6 @@
     .lp-pp-card { position: absolute; z-index: 60; top: calc(100% + 10px); left: 0; width: 290px; display: grid; gap: 8px; padding: 0 14px 14px; border: 1px solid rgba(176,0,14,.45); border-radius: 14px; background: #fff; color: #1d1d1f; font: 14px/1.4 Inter, system-ui, sans-serif; text-align: left; box-shadow: 0 1px 2px rgba(0,0,0,.04), 0 22px 44px -18px rgba(176,0,14,.45); opacity: 0; visibility: hidden; transform: translateY(-6px); transition: opacity .2s, transform .2s, visibility 0s .2s; }
     .lp-pp-card::before { content: ''; position: absolute; left: 0; right: 0; top: -12px; height: 12px; }
     .lp-pp.open .lp-pp-card { opacity: 1; visibility: visible; transform: none; transition: opacity .2s, transform .2s; }
-    .lp-pp-top { display: flex; justify-content: space-between; align-items: center; padding-top: 12px; color: #737373; font: 600 10px/1 ui-monospace, 'SF Mono', Menlo, Consolas, monospace; letter-spacing: .12em; text-transform: uppercase; }
-    .lp-pp-beat { position: relative; height: 54px; margin: 2px 0 0; overflow: hidden; border-radius: 10px; border: 1px solid #ff2a3c; background: linear-gradient(160deg, #1a0003, #3a0009); background-image: linear-gradient(rgba(255,42,60,.12) 1px, transparent 1px), linear-gradient(90deg, rgba(255,42,60,.12) 1px, transparent 1px), linear-gradient(160deg, #1a0003, #3a0009); background-size: 12px 12px, 12px 12px, auto; box-shadow: inset 0 0 18px rgba(255,42,60,.25), 0 0 14px -6px rgba(255,42,60,.9); }
-    .lp-pp-beat svg { position: absolute; inset: 5px 0; width: 100%; height: calc(100% - 10px); overflow: visible; }
-    .lp-pp-beat path { fill: none; stroke-linecap: round; stroke-linejoin: round; }
-    .lp-pp-beat .g { stroke: rgba(255,74,92,.22); stroke-width: 1.5; }
-    .lp-pp-beat .l { stroke: #ff4a5c; stroke-width: 2.2; stroke-dasharray: 34 66; stroke-dashoffset: 100; filter: drop-shadow(0 0 3px #ff2a3c) drop-shadow(0 0 6px rgba(255,42,60,.8)); animation: lp-beat var(--d, 1.6s) linear infinite; }
-    .lp-pp-beat b { position: absolute; top: 6px; right: 8px; display: flex; align-items: center; gap: 5px; color: #ff6b78; font: 700 9px/1 'Chakra Petch', Inter, sans-serif; letter-spacing: .16em; }
-    .lp-pp-beat b::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #ff4a5c; animation: lp-free-ping 1.6s ease-out infinite; }
-    @keyframes lp-beat { to { stroke-dashoffset: 0; } }
-    .lp-pp-name { margin-top: 4px; font: italic 900 23px/.98 'Kanit', 'Arial Black', system-ui, sans-serif; letter-spacing: .02em; color: #b0000e; text-transform: uppercase; }
-    .lp-pp-sub { margin: 0; color: #1d1d1f; }
-    .lp-rep .lp-pp-lab { margin-top: 2px; font: 600 12px/1 Inter, system-ui, sans-serif; color: #6e6e73; }
-    .lp-rep .lp-pp-free :is(input, select) { flex: none; box-sizing: border-box; width: 100%; padding: 9px 12px; border: 1.5px solid #ececec; border-radius: 10px; background: #fff; font: 600 14px Inter, system-ui, sans-serif; color: #111; outline: 0; }
-    .lp-rep .lp-pp-free :is(input, select):focus { border-color: #b0000e; outline: 0; }
-    .lp-rep .lp-pp-free .need { border-color: #ff5a1f; background: #fff3ec; }
-    .lp-pp-card .lp-sug-wrap { flex: none; }
     .lp-pp-card .svc-btn { margin-top: 4px; }
     @media (prefers-reduced-motion: reduce) { .lp-rep .lp-chip i, .lp-rep .lp-chip::after, .lp-pp-beat .l, .lp-pp-beat b::before { animation: none; } .lp-pp-beat .l { stroke-dasharray: none; } }
     @media (max-width: 700px) { .lp-rep .lp-free { display: grid; } .lp-row { display: grid; position: relative; gap: 6px; } .lp-pp { position: static; display: flex; min-width: 0; } .lp-rep .lp-chip { flex: 1; justify-content: space-between; gap: 6px; padding: 8px 14px; font-size: 10.5px; letter-spacing: .08em; } .lp-rep .lp-chip span { min-width: 0; overflow: hidden; text-overflow: ellipsis; } .lp-rep .lp-chip em { flex: none; padding: 2px 4px; font-size: 8px; letter-spacing: .08em; } .lp-rep .lp-chip i { display: none; } .lp-pp-card, .lp-pp-card.lp-pp-rep { left: 0; right: 0; width: auto; } }
@@ -744,9 +728,8 @@
       <div class="lp-ext-wrap"><a class="lp-ext" href="https://chromewebstore.google.com/detail/creators-+/ibajjhdapncbacoinjjcagimpcjpahbn" target="_blank" rel="noopener" aria-label="Add to Chrome"><svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path d="M8 2v8m0 0L4.8 6.8M8 10l3.2-3.2M3 13h10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Add to Chrome</span></a><button type="button" class="lp-ext-info" id="cp-link" aria-controls="cp-pop" aria-expanded="false">Free Extension</button></div>
     </header>
     <div class="lp-rep" id="lp-rep">
-      <button type="button" class="lp-fold" aria-expanded="false" aria-controls="lp-free"><i aria-hidden="true"></i><span>Pulses &amp; reports</span></button>
+      <button type="button" class="lp-fold" aria-expanded="false" aria-controls="lp-free"><i aria-hidden="true"></i><span>Reports</span></button>
       <div class="lp-free" id="lp-free">
-        <div class="lp-row"><span class="lp-pp" data-pp="country"><a class="lp-chip" href="/pulse"><i aria-hidden="true"></i><span>Country pulse</span><em>Free</em></a></span> <span class="lp-pp" data-pp="artist"><a class="lp-chip" href="/pulse?artist="><i aria-hidden="true"></i><span>People pulse</span><em>Free</em></a></span> <span class="lp-pp" data-pp="company"><a class="lp-chip" href="/pulse?company="><i aria-hidden="true"></i><span>Company pulse</span><em>Free</em></a></span></div>
         <div class="lp-row"><span class="lp-pp lp-pp-paid" data-rep="country"><a class="lp-chip" href="/report" target="_blank" rel="noopener"><i aria-hidden="true"></i><span>Country report</span><em class="lp-price" data-eur="8" data-no-i18n>€8</em></a></span> <span class="lp-pp lp-pp-paid" data-rep="artist"><a class="lp-chip" href="/report" target="_blank" rel="noopener"><i aria-hidden="true"></i><span>People report</span><em class="lp-price" data-eur="8" data-no-i18n>€8</em></a></span> <span class="lp-pp lp-pp-paid" data-rep="company"><a class="lp-chip" href="/report" target="_blank" rel="noopener"><i aria-hidden="true"></i><span>Company report</span><em class="lp-price" data-eur="8" data-no-i18n>€8</em></a></span></div>
       </div>
     </div>

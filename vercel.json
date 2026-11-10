@@ -1,4 +1,7 @@
 {
+  "redirects": [
+    { "source": "/pulse", "destination": "/services", "permanent": true }
+  ],
   "rewrites": [
     { "source": "/api/metrics/youtube-active", "destination": "/api/youtube-active" },
     { "source": "/api/v1/:route", "destination": "/api/v1?route=:route" },
@@ -10,7 +13,6 @@
     { "source": "/services", "destination": "/services.html" },
     { "source": "/report", "destination": "/report.html" },
     { "source": "/terms", "destination": "/terms.html" },
-    { "source": "/pulse", "destination": "/pulse.html" },
     { "source": "/ad", "destination": "/ad.html" }
   ]
 }

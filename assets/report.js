@@ -260,6 +260,9 @@
     ['Holidays coming up', 'National public holidays in the next months. Good dates to plan campaigns around.', (c) => (c.holidays && c.holidays.length
       ? `<ul class="hol">${c.holidays.map((h) => `<li><b>${dshort(h.day)}</b><span>${esc(h.local_name)}${h.name && h.name !== h.local_name ? ` <small>${esc(h.name)}</small>` : ''}</span></li>`).join('')}</ul>`
         + `<p class="take">${L('Next holiday in {c}: {h} on {d}.', { c: esc(name(c.country)), h: `<b>${esc(c.holidays[0].local_name)}</b>`, d: dshort(c.holidays[0].day) }).replace(/\.\.$/, '.')}</p>` : ''), 'holidays'],
+    ['Next rocket launch', 'The next rocket launch from this country. If none is planned, the next one anywhere in the world.', (c) => (c.launch
+      ? `<ul class="hol"><li><b>${dshort(c.launch.net.slice(0, 10))}</b><span>${esc(c.launch.name)}${c.launch.provider || c.launch.site ? ` <small>${esc([c.launch.provider, c.launch.site].filter(Boolean).join(' · '))}</small>` : ''}</span></li></ul>`
+        + `<p class="take">${L(c.launch.here ? 'Next rocket launch from {c}: {n} on {d}.' : 'No rocket launch is planned from {c}. The next one in the world is {n} on {d}.', { c: esc(name(c.country)), n: `<b>${esc(c.launch.name)}</b>`, d: dshort(c.launch.net.slice(0, 10)) }).replace(/\.\.$/, '.')}</p>` : '')],
     ['Ideas to copy', 'Written each week by AI from the data above. Use them as starting points.', (c) => (c.ideas.length
       ? `<ol class="ideas">${c.ideas.map((i) => `<li><b>${esc(i.title)}</b><p>${esc(i.idea)}</p>${i.based_on ? `<small>${L('Based on: {x}', { x: esc(i.based_on) })}</small>` : ''}</li>`).join('')}</ol>`
       : '')],
@@ -704,7 +707,7 @@
     const econ = econSec(cs);
     if (econ.html) body.splice(shared ? 2 : 1, 0, econ.html);
     const srcText = L(cs.some((c) => c.ideas.length) ? 'Built by Like Polling from its own daily records of open data: Wikipedia page views (Wikimedia Foundation) and news topics and countries (The GDELT Project). Ideas are written by AI (Google Gemini) and can contain mistakes. YouTube and news headlines are not part of the report.' : 'Built by Like Polling from its own daily records of open data: Wikipedia page views (Wikimedia Foundation) and news topics and countries (The GDELT Project). YouTube and news headlines are not part of the report.') + (econ.html ? ` ${L('GDP figures come from the World Bank\'s open data.')}` : '')
-      + (cs.some((c) => c.searches && c.searches.top.length) ? ` ${L('Trending searches: Google Trends.')}` : '') + (cs.some((c) => c.holidays && c.holidays.length) ? ` ${L('Holidays: Nager.Date, open data.')}` : '');
+      + (cs.some((c) => c.searches && c.searches.top.length) ? ` ${L('Trending searches: Google Trends.')}` : '') + (cs.some((c) => c.holidays && c.holidays.length) ? ` ${L('Holidays: Nager.Date, open data.')}` : '') + (cs.some((c) => c.launch) ? ` ${L('Rocket launches: The Space Devs (Launch Library 2).')}` : '');
 
     const know = knowCountry(cs);
     $('report').innerHTML = head + withSources(knowSec(know) + body.join('') + glossary(), 'Sources and limits', srcText) + (data.sample ? getYours() : '');

@@ -4,7 +4,7 @@
 // Portuguese, and a tab price <em class="lp-price" data-eur="8">€8</em> becomes "≈R$49". Checkout stays in euros.
 // Rates: European Central Bank (frankfurter.dev); hryvnia from the National Bank of Ukraine. Euro languages see euros only.
 (function () {
-  const PAGES = { '/': 'home', '/index': 'home', '/pulse': 'pulse', '/services': 'services', '/report': 'report', '/ad': 'ad' };
+  const PAGES = { '/': 'home', '/index': 'home', '/services': 'services', '/report': 'report', '/ad': 'ad' };
   const PRODUCTS = { udjsyu: 'country', ijixxs: 'artist', linzh: 'company', laijtn: 'ad' };
   const CURRENCY = { en: 'USD', 'en-GB': 'GBP', pt: 'BRL', uk: 'UAH', ko: 'KRW', ja: 'JPY' };
   const send = (kind, item) => {

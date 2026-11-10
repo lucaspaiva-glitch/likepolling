@@ -2,6 +2,11 @@
 // pt-PT uses 'pt' plus the overrides below. English (and en-GB) use the keys as they are.
 window.LP_REPORT_DICT = {
 "pt": {
+"Next rocket launch": "Próximo lançamento de foguete",
+"The next rocket launch from this country. If none is planned, the next one anywhere in the world.": "O próximo lançamento de foguete deste país. Se não houver nenhum previsto, o próximo em qualquer lugar do mundo.",
+"Next rocket launch from {c}: {n} on {d}.": "{c}: o próximo lançamento de foguete é {n} em {d}.",
+"No rocket launch is planned from {c}. The next one in the world is {n} on {d}.": "{c}: nenhum lançamento de foguete previsto. O próximo no mundo é {n} em {d}.",
+"Rocket launches: The Space Devs (Launch Library 2).": "Lançamentos de foguetes: The Space Devs (Launch Library 2).",
 "Growth and share of attention": "Crescimento e fatia da atenção",
 "How each one did in the last 30 days, compared with the 30 days before and the same 30 days last year, and its share of all views and searches among them.": "Como cada um foi nos últimos 30 dias, comparado com os 30 dias anteriores e os mesmos 30 dias do ano passado, e sua fatia de todas as visualizações e pesquisas entre eles.",
 "vs previous 30 days": "vs. 30 dias anteriores",
@@ -418,6 +423,11 @@ window.LP_REPORT_DICT = {
 "Mass violence": "Violência em massa"
 },
 "es": {
+"Next rocket launch": "Próximo lanzamiento de cohete",
+"The next rocket launch from this country. If none is planned, the next one anywhere in the world.": "El próximo lanzamiento de cohete desde este país. Si no hay ninguno previsto, el próximo en cualquier lugar del mundo.",
+"Next rocket launch from {c}: {n} on {d}.": "Próximo lanzamiento de cohete desde {c}: {n} el {d}.",
+"No rocket launch is planned from {c}. The next one in the world is {n} on {d}.": "{c}: ningún lanzamiento de cohete previsto. El próximo en el mundo es {n} el {d}.",
+"Rocket launches: The Space Devs (Launch Library 2).": "Lanzamientos de cohetes: The Space Devs (Launch Library 2).",
 "Growth and share of attention": "Crecimiento y cuota de atención",
 "How each one did in the last 30 days, compared with the 30 days before and the same 30 days last year, and its share of all views and searches among them.": "Cómo le fue a cada uno en los últimos 30 días, frente a los 30 días anteriores y los mismos 30 días del año pasado, y su cuota de todas las visitas y búsquedas entre ellos.",
 "vs previous 30 days": "vs. 30 días anteriores",
@@ -834,6 +844,11 @@ window.LP_REPORT_DICT = {
 "Mass violence": "Violencia masiva"
 },
 "de": {
+"Next rocket launch": "Nächster Raketenstart",
+"The next rocket launch from this country. If none is planned, the next one anywhere in the world.": "Der nächste Raketenstart aus diesem Land. Ist keiner geplant, der nächste irgendwo auf der Welt.",
+"Next rocket launch from {c}: {n} on {d}.": "Nächster Raketenstart aus {c}: {n} am {d}.",
+"No rocket launch is planned from {c}. The next one in the world is {n} on {d}.": "{c}: kein Raketenstart geplant. Der nächste weltweit ist {n} am {d}.",
+"Rocket launches: The Space Devs (Launch Library 2).": "Raketenstarts: The Space Devs (Launch Library 2).",
 "Growth and share of attention": "Wachstum und Anteil an der Aufmerksamkeit",
 "How each one did in the last 30 days, compared with the 30 days before and the same 30 days last year, and its share of all views and searches among them.": "Wie sich jeder in den letzten 30 Tagen entwickelt hat, verglichen mit den 30 Tagen davor und denselben 30 Tagen im Vorjahr, und sein Anteil an allen Aufrufen und Suchen unter ihnen.",
 "vs previous 30 days": "vs. 30 Tage davor",
@@ -1250,6 +1265,11 @@ window.LP_REPORT_DICT = {
 "Mass violence": "Massengewalt"
 },
 "ru": {
+"Next rocket launch": "Ближайший запуск ракеты",
+"The next rocket launch from this country. If none is planned, the next one anywhere in the world.": "Ближайший запуск ракеты из этой страны. Если он не запланирован, ближайший в мире.",
+"Next rocket launch from {c}: {n} on {d}.": "{c}: ближайший запуск ракеты — {n}, {d}.",
+"No rocket launch is planned from {c}. The next one in the world is {n} on {d}.": "{c}: запусков ракет не запланировано. Ближайший в мире: {n}, {d}.",
+"Rocket launches: The Space Devs (Launch Library 2).": "Запуски ракет: The Space Devs (Launch Library 2).",
 "Growth and share of attention": "Рост и доля внимания",
 "How each one did in the last 30 days, compared with the 30 days before and the same 30 days last year, and its share of all views and searches among them.": "Как каждый показал себя за последние 30 дней по сравнению с предыдущими 30 днями и теми же 30 днями прошлого года, и его доля всех просмотров и поисков среди них.",
 "vs previous 30 days": "к прошлым 30 дням",
@@ -1666,6 +1686,11 @@ window.LP_REPORT_DICT = {
 "Mass violence": "Массовое насилие"
 },
 "uk": {
+"Next rocket launch": "Найближчий запуск ракети",
+"The next rocket launch from this country. If none is planned, the next one anywhere in the world.": "Найближчий запуск ракети з цієї країни. Якщо його не заплановано, найближчий у світі.",
+"Next rocket launch from {c}: {n} on {d}.": "{c}: найближчий запуск ракети — {n}, {d}.",
+"No rocket launch is planned from {c}. The next one in the world is {n} on {d}.": "{c}: запусків ракет не заплановано. Найближчий у світі: {n}, {d}.",
+"Rocket launches: The Space Devs (Launch Library 2).": "Запуски ракет: The Space Devs (Launch Library 2).",
 "Growth and share of attention": "Зростання та частка уваги",
 "How each one did in the last 30 days, compared with the 30 days before and the same 30 days last year, and its share of all views and searches among them.": "Як кожен показав себе за останні 30 днів порівняно з попередніми 30 днями та тими самими 30 днями минулого року, і його частка всіх переглядів і пошуків серед них.",
 "vs previous 30 days": "до попередніх 30 днів",
@@ -2082,6 +2107,11 @@ window.LP_REPORT_DICT = {
 "Mass violence": "Масове насильство"
 },
 "ko": {
+"Next rocket launch": "다음 로켓 발사",
+"The next rocket launch from this country. If none is planned, the next one anywhere in the world.": "이 나라의 다음 로켓 발사입니다. 예정된 발사가 없으면 전 세계에서 다음 발사를 보여 줍니다.",
+"Next rocket launch from {c}: {n} on {d}.": "{c}의 다음 로켓 발사: {d} {n}.",
+"No rocket launch is planned from {c}. The next one in the world is {n} on {d}.": "{c}에서 예정된 로켓 발사가 없습니다. 전 세계 다음 발사는 {d} {n}입니다.",
+"Rocket launches: The Space Devs (Launch Library 2).": "로켓 발사: The Space Devs (Launch Library 2).",
 "Growth and share of attention": "성장과 관심 점유율",
 "How each one did in the last 30 days, compared with the 30 days before and the same 30 days last year, and its share of all views and searches among them.": "최근 30일 동안 각자의 성과를 직전 30일, 작년 같은 30일과 비교하고, 이들 중 전체 조회수와 검색에서 차지한 비율을 보여 줍니다.",
 "vs previous 30 days": "직전 30일 대비",
@@ -2498,6 +2528,11 @@ window.LP_REPORT_DICT = {
 "Mass violence": "대규모 폭력"
 },
 "ja": {
+"Next rocket launch": "次のロケット打ち上げ",
+"The next rocket launch from this country. If none is planned, the next one anywhere in the world.": "この国からの次のロケット打ち上げです。予定がなければ、世界のどこかでの次の打ち上げを示します。",
+"Next rocket launch from {c}: {n} on {d}.": "{c} からの次のロケット打ち上げ：{d} の {n}。",
+"No rocket launch is planned from {c}. The next one in the world is {n} on {d}.": "{c} からのロケット打ち上げ予定はありません。世界での次の打ち上げは {d} の {n} です。",
+"Rocket launches: The Space Devs (Launch Library 2).": "ロケット打ち上げ：The Space Devs（Launch Library 2）。",
 "Growth and share of attention": "成長と注目シェア",
 "How each one did in the last 30 days, compared with the 30 days before and the same 30 days last year, and its share of all views and searches among them.": "直近30日間の各対象の動きを、その前の30日間と昨年の同じ30日間と比べ、全閲覧数・検索の中でのシェアも示します。",
 "vs previous 30 days": "前の30日比",

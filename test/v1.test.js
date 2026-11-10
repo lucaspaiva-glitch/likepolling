@@ -167,65 +167,6 @@ test('news: headlines per country, fashion only when AI confirmed, separate from
   assert.equal((await run({ route: 'news', country: 'PT', topic: 'sports' }, { fetch })).statusCode, 400);
 });
 
-test('pulse: free country page data from saved aggregates only', async () => {
-  const { createHandler } = require('../api/v1');
-  const seen = [];
-  const fetchImpl = async (url) => {
-    seen.push(String(url));
-    const body = url.includes('trends_daily') ? [{ day: '2026-11-06', query: 'Flamengo', traffic: 2000 }]
-      : url.includes('holidays') ? [{ day: '2026-11-15', local_name: 'Proclamação da República', name: 'Republic Proclamation Day' }]
-      : url.includes('wiki_top_daily') ? [{ day: '2026-11-05', project: 'pt.wikipedia', article: 'Lula', views_ceil: 900 }]
-      : url.includes('gdelt_country_daily') ? [{ day: '2026-11-05', root_code: '04', articles: 70 }, { day: '2026-11-05', root_code: '19', articles: 30 }]
-      : url.includes('space_launches') ? (url.includes('country_code=eq.BR') ? [] : [{ name: 'Falcon 9 | X', net: '2026-11-10T03:03:00Z', provider: 'SpaceX', site: 'Cape Canaveral', mission: 'X', country_code: 'US' }])
-      : url.includes('books_daily') ? [{ day: '2026-11-07', rank: 1, title: 'Atomic Habits', author: 'James Clear', cover_id: 1, work_key: '/works/OL1W' }, { day: '2026-11-06', rank: 1, title: 'Old', author: null, cover_id: null, work_key: '/works/OL2W' }]
-      : url.includes('worldbank') ? [{}, [{ indicator: { id: 'NY.GDP.MKTP.CD' }, country: { id: 'BR' }, date: '2024', value: 2e12 }, { indicator: { id: 'NY.GDP.MKTP.KD.ZG' }, country: { id: 'BR' }, date: '2024', value: 3.4 }, { indicator: { id: 'NY.GDP.MKTP.CD' }, country: { id: 'BR' }, date: '2023', value: 1.9e12 }, { indicator: { id: 'NY.GDP.MKTP.KD.ZG' }, country: { id: 'BR' }, date: '2023', value: 3.2 }, { indicator: { id: 'NY.GDP.MKTP.CD' }, country: { id: 'BR' }, date: '2022', value: 1.8e12 }]]
-      : [];
-    return { ok: true, status: 200, json: async () => body };
-  };
-  const res = { headers: {}, setHeader(k, v) { this.headers[k] = v; }, status(c) { this.statusCode = c; return this; }, json(b) { this.body = b; return this; }, end() { return this; } };
-  await createHandler({ env: { SUPABASE_URL: 'https://db.test', SUPABASE_KEY: 'k' }, fetch: fetchImpl, now: () => Date.parse('2026-11-07T10:00:00Z') })({ method: 'GET', query: { route: 'pulse', country: 'br' }, headers: {} }, res);
-  assert.equal(res.statusCode, 200);
-  assert.equal(res.body.country, 'BR');
-  assert.deepEqual(res.body.searches.top, [{ query: 'Flamengo', days: 1, traffic: 2000 }]);
-  assert.equal(res.body.holidays[0].local_name, 'Proclamação da República');
-  assert.equal(res.body.wikipedia[0].title, 'Lula');
-  assert.deepEqual(res.body.news, { articles: 100, peaceful_pct: 70 });
-  assert.deepEqual(res.body.gdp, [{ year: 2023, growth_pct: 3.2 }, { year: 2024, growth_pct: 3.4 }]);
-  assert.deepEqual([res.body.launch.here, res.body.launch.provider], [false, 'SpaceX']);
-  assert.deepEqual(res.body.books, [{ title: 'Atomic Habits', author: 'James Clear', cover_id: 1, link: 'https://openlibrary.org/works/OL1W' }]);
-  assert.match(res.headers['Cache-Control'], /s-maxage/);
-  const bad = { ...res, headers: {}, setHeader(k, v) { this.headers[k] = v; } };
-  await createHandler({ env: { SUPABASE_URL: 'https://db.test', SUPABASE_KEY: 'k' }, fetch: fetchImpl })({ method: 'GET', query: { route: 'pulse', country: 'XX' }, headers: {} }, bad);
-  assert.equal(bad.statusCode, 400);
-});
-
-test('entity: free artist/company pulse from Wikimedia + saved records, no AI', async () => {
-  const { createHandler } = require('../api/v1');
-  const seen = [];
-  const fetchImpl = async (url) => {
-    const u = String(url); seen.push(u);
-    const body = u.includes('pageimages') ? { query: { pages: [{ title: 'Anitta (singer)', description: 'Brazilian singer', fullurl: 'https://en.wikipedia.org/wiki/Anitta_(singer)' }] } }
-      : u.includes('pageviews') ? { items: [{ timestamp: '2026-10-30', views: 50 }, { timestamp: '2026-11-02', views: 100 }, { timestamp: '2026-11-03', views: 100 }].map((x) => ({ ...x, timestamp: x.timestamp.replace(/-/g, '') + '00' })) }
-      : u.includes('langlinks') ? { query: { pages: [{ langlinks: [{ lang: 'pt', title: 'Anitta (cantora)' }] }] } }
-      : u.includes('wiki_top_daily') ? [{ country_code: 'BR', day: '2026-11-02' }, { country_code: 'BR', day: '2026-11-03' }]
-      : u.includes('trends_daily') ? [{ country_code: 'PT', day: '2026-11-03', query: 'anitta show', traffic: 500 }]
-      : {};
-    return { ok: true, status: 200, json: async () => body };
-  };
-  const res = { headers: {}, setHeader(k, v) { this.headers[k] = v; }, status(c) { this.statusCode = c; return this; }, json(b) { this.body = b; return this; }, end() { return this; } };
-  await createHandler({ env: { SUPABASE_URL: 'https://db.test', SUPABASE_KEY: 'k' }, fetch: fetchImpl, now: () => Date.parse('2026-11-08T10:00:00Z') })({ method: 'GET', query: { route: 'entity', type: 'artist', title: 'Anitta (singer)' }, headers: {} }, res);
-  assert.equal(res.statusCode, 200, JSON.stringify(res.body));
-  assert.equal(res.body.subject.title, 'Anitta (singer)');
-  assert.equal(res.body.views.week, 200);
-  assert.deepEqual(res.body.countries.find((c) => c.country === 'BR'), { country: 'BR', read_days: 2, search_days: 0 });
-  assert.deepEqual(res.body.searches, [{ query: 'anitta show', traffic: 500 }]);
-  assert.ok(!seen.some((u) => /generativelanguage|gemini/i.test(u)));
-  assert.match(res.headers['Cache-Control'], /s-maxage=43200/);
-  const bad = { ...res, headers: {}, setHeader(k, v) { this.headers[k] = v; } };
-  await createHandler({ env: { SUPABASE_URL: 'https://db.test', SUPABASE_KEY: 'k' }, fetch: fetchImpl })({ method: 'GET', query: { route: 'entity', type: 'band', title: 'X' }, headers: {} }, bad);
-  assert.equal(bad.statusCode, 400);
-});
-
 test('format=csv: lists download as safe CSV, JSON stays the default', async () => {
   const rows = [{ rank: 1, title: 'Hello, "world"\nnews', source: '=HYPERLINK("x")', link: 'https://n/1', published_at: '2026-10-20T00:00:00Z', fetched_at: '2026-10-20T01:00:00Z' }];
   const fetch = mockFetch({ news_world: rows });

@@ -71,7 +71,7 @@ test('a comparison report uses open data only and adds what both countries share
   assert.deepEqual(out.shared.read_in_both.map((a) => a.title), ['Lula', 'Halloween']);
   assert.equal(out.countries[0].ideas[0].title, 'T');
   assert.ok(!('all_partners' in out.countries[0]));
-  assert.ok(f.seen.every((u) => /wiki_top_daily|gdelt_|report_insights|trends_daily|holidays/.test(u)), 'no YouTube or news tables');
+  assert.ok(f.seen.every((u) => /wiki_top_daily|gdelt_|report_insights|trends_daily|holidays|space_launches/.test(u)), 'no YouTube or news tables');
   assert.deepEqual(out.countries[0].searches, { top: [], days: 0 });
   assert.deepEqual(out.countries[0].holidays, []);
 });
