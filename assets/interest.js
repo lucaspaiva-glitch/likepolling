@@ -7,8 +7,8 @@
   const PAGES = { '/': 'home', '/index': 'home', '/services': 'services', '/report': 'report', '/ad': 'ad' };
   const PRODUCTS = { udjsyu: 'country', ijixxs: 'artist', linzh: 'company', laijtn: 'ad' };
   const CURRENCY = { en: 'USD', 'en-GB': 'GBP', pt: 'BRL', uk: 'UAH', ko: 'KRW', ja: 'JPY' };
-  const send = (kind, item) => {
-    const body = JSON.stringify({ kind, item });
+  const send = (kind, item, seconds) => {
+    const body = JSON.stringify({ kind, item, seconds });
     try {
       if (!(navigator.sendBeacon && navigator.sendBeacon('/api/visit', body))) fetch('/api/visit', { method: 'POST', body, keepalive: true }).catch(() => {});
     } catch { /* counting is best effort */ }
@@ -57,6 +57,42 @@
   const page = PAGES[location.pathname.replace(/\.html$/, '').replace(/\/$/, '') || '/'];
   if (page) {
     fetch('/api/visit', { method: 'POST', body: JSON.stringify({ kind: 'visit', item: page }), keepalive: true }).catch(() => {});
+  }
+  // Reading time: seconds each news section fills at least half the screen (or half of itself)
+  // while the tab is visible, sent once when the page is hidden or closed.
+  const READ = { news: '#news-front', fashion: '#fashion', ai: '#ai-age' };
+  const seen = {}, since = {}, secs = {};
+  const tick = (k, now) => { if (since[k] != null) { secs[k] = (secs[k] || 0) + (now - since[k]); since[k] = now; } };
+  const flush = () => {
+    const now = performance.now();
+    const out = {};
+    for (const k in READ) { tick(k, now); if (secs[k] >= 1000) out[k] = Math.round(secs[k] / 1000); secs[k] = 0; }
+    if (Object.keys(out).length) send('read', undefined, out);
+  };
+  if (page === 'home' && 'IntersectionObserver' in window) {
+    const io = new IntersectionObserver((entries) => {
+      const now = performance.now();
+      for (const e of entries) {
+        const k = e.target.dataset.lpRead;
+        const on = e.isIntersecting && e.intersectionRect.height >= Math.min(innerHeight, e.boundingClientRect.height) / 2;
+        seen[k] = on;
+        tick(k, now);
+        since[k] = on && document.visibilityState === 'visible' ? now : null;
+      }
+    }, { threshold: [0, 0.1, 0.25, 0.5, 0.75, 1] });
+    const start = setInterval(() => {
+      for (const k in READ) {
+        const el = document.querySelector(READ[k]);
+        if (el && !el.dataset.lpRead) { el.dataset.lpRead = k; io.observe(el); }
+      }
+    }, 1000);
+    setTimeout(() => clearInterval(start), 20000);
+    document.addEventListener('visibilitychange', () => {
+      const now = performance.now();
+      if (document.visibilityState === 'hidden') flush();
+      else for (const k in READ) since[k] = seen[k] ? now : null;
+    });
+    addEventListener('pagehide', flush);
   }
   document.addEventListener('click', (e) => {
     const a = e.target.closest && e.target.closest('a[href*="gumroad.com/l/"]');

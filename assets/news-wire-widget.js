@@ -497,6 +497,13 @@
   // Endless vertical feed: the selected language first, then every other
   // language's stories (flagged; the first one says so), each story once.
   // Cards load a few screens ahead of the reader.
+  // Last card of the list: "Next country · Germany →", the same step as a swipe (country-swipe.js).
+  const nextHtml = (sel) => {
+    const list = [...sel.options].filter((o) => !o.disabled);
+    if (list.length < 2) return '';
+    const o = list[(list.findIndex((x) => x.value === sel.value) + 1) % list.length];
+    return `<button type="button" class="nw-feed-end lp-next">${esc(tr('Next country'))} · ${esc(o.textContent.trim())} →</button>`;
+  };
   let feedState = null;
   const nearEnd = () => sentinel.offsetTop - feed.scrollTop < feed.clientHeight * 3;
   async function moreFeed() {
@@ -525,7 +532,7 @@
         if (n) return rowHtml(r, st.lang, n, note);
         lead.innerHTML = cardHtml(r, st.lang, 0, 'hero', note);
         return '';
-      }).join(''));
+      }).join('') + (st.world && st.shown >= st.items.length ? nextHtml(wSel) : ''));
       watch(feed);
       watch(lead);
     } finally {
@@ -722,6 +729,7 @@
         lang,
         items: world ? rows.slice(0, W_SHOWN) : rows.slice(),
         spare: world ? rows.slice(W_SHOWN) : [],
+        world,
         page: world ? W_SHOWN : FEED_PAGE,
         shown: 0,
         seen: new Set(rows.map((r) => r.link)),

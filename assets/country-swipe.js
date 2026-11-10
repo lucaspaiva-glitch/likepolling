@@ -104,6 +104,11 @@
       if (!still()) panel.animate([{ opacity: 0.45 }, { opacity: 1 }], { duration: 320, easing: 'ease-out' });
     };
     const skip = (t) => t.closest('input, select, textarea, [contenteditable]') || sideScroller(t, panel);
+    panel.addEventListener('click', (e) => {
+      if (!e.target.closest('.lp-next')) return;
+      step(1);
+      if (panel.getBoundingClientRect().top < 0) panel.scrollIntoView({ block: 'start', behavior: still() ? 'auto' : 'smooth' });
+    });
 
     let sx = 0, sy = 0, st = 0, on = false;
     panel.addEventListener('touchstart', (e) => {

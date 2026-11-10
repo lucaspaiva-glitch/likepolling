@@ -91,7 +91,7 @@
     const card = img.closest('.nw-card');
     if (card.classList.contains('nw-row')) {
       card.remove();
-      if (spare.length) { feed.insertAdjacentHTML('beforeend', rowHtml(spare.shift(), feed.children.length + 1)); watchCards(); }
+      if (spare.length) { (feed.querySelector('.lp-next') || feed).insertAdjacentHTML(feed.querySelector('.lp-next') ? 'beforebegin' : 'beforeend', rowHtml(spare.shift(), feed.querySelectorAll('.nw-card').length + 1)); watchCards(); }
       return;
     }
     card.classList.add('nw-noimg');
@@ -188,6 +188,14 @@
       </article>`;
   }
 
+  // Last card of the list: "Next country · Germany →", the same step as a swipe (country-swipe.js).
+  const nextHtml = (sel) => {
+    const list = [...sel.options].filter((o) => !o.disabled);
+    if (list.length < 2) return '';
+    const o = list[(list.findIndex((x) => x.value === sel.value) + 1) % list.length];
+    return `<button type="button" class="nw-feed-end lp-next">${esc(tr('Next country'))} · ${esc(o.textContent.trim())} →</button>`;
+  };
+
   function showEmpty(msg) {
     lead.innerHTML = '';
     feed.innerHTML = '';
@@ -203,7 +211,7 @@
     spare = rows.slice(SHOWN);
     feed.scrollTop = 0;
     lead.innerHTML = leadHtml(rows[0]);
-    feed.innerHTML = rows.slice(1, SHOWN).map((r, i) => rowHtml(r, i + 1)).join('');
+    feed.innerHTML = rows.slice(1, SHOWN).map((r, i) => rowHtml(r, i + 1)).join('') + nextHtml(select);
     watchCards();
   }
 

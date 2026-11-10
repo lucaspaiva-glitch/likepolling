@@ -26,9 +26,9 @@ const TRANSLATIONS_PER_RUN = 800;
 const SUMMARY_LOOKUPS_PER_RUN = 500;
 const SUMMARY_CONCURRENCY = 6;
 const SUMMARY_BATCH = 10;
-const SUMMARY_WORDS = 30;
+const SUMMARY_WORDS = 45;
 // Bump to rewrite every stored summary with the current rules (title_tr.sv).
-const SUMMARY_VERSION = 3;
+const SUMMARY_VERSION = 4;
 
 // Google News edition per country: [hl, ceid].
 const EDITIONS = {
@@ -202,7 +202,7 @@ function geminiTranslator(apiKey, classify = false) {
   const ask = geminiJson(apiKey);
   const check = checkOf(classify);
   return async (titles) => {
-    const prompt = `Translate each news headline below into these languages: ${LANG_LIST}. Keep names, numbers and meaning exact; do not add or drop information. Reply with only a JSON array with one object per headline, in the same order, each with exactly the keys ${LANG_KEYS}${check ? `, "${check.key}"` : ''}.${check ? ` ${check.rule}` : ''}\n\n${JSON.stringify(titles)}`;
+    const prompt = `Translate each news headline below into these languages: ${LANG_LIST}. Write each as a native headline writer of that language would: natural and short, with the usual local spelling of names, not word-for-word. Keep names, numbers and meaning exact; do not add or drop information. Reply with only a JSON array with one object per headline, in the same order, each with exactly the keys ${LANG_KEYS}${check ? `, "${check.key}"` : ''}.${check ? ` ${check.rule}` : ''}\n\n${JSON.stringify(titles)}`;
     const out = await ask(prompt);
     if (!Array.isArray(out) || out.length !== titles.length) throw new Error('translation count mismatch');
     return out;
@@ -215,8 +215,8 @@ function geminiSummarizer(apiKey) {
     const input = stories.map((st, id) => ({ id, ...st }));
     const prompt = `Each news story below has an id, its headline and the publisher's own description of the article. For each story:
 1. Set "fits" to false if the description is not about the same news as the headline (for example a generic site text, a live page about other news, or a different article); otherwise true.
-2. If it fits, write "en": two clear, complete English sentences, at most ${SUMMARY_WORDS} words in total, that explain the story to a reader who hasn't seen the headline. Say who did what: name the people, groups or places from the headline instead of vague references like "the advice", "a candidate" or "the plan". Use only facts stated in the headline or description, and prefer details the headline doesn't already say. Never add, guess or change names, dates, years, numbers or places. No quotation marks, no hashtags.
-3. Then translate that exact "en" text into ${LANG_LIST.replace(/^en \(English\), /, '')}, with the keys ${LANG_KEYS.replace(/^"en", /, '')}.
+2. If it fits, write "en": two or three clear, complete English sentences, at most ${SUMMARY_WORDS} words in total, that explain the story to a reader who hasn't seen the headline. Each sentence must add a new fact (who, what, where, when, how much, why, or what happens next); don't repeat the headline's wording. Write a third sentence only if the description has another fact for it; never pad. Say who did what: name the people, groups, products or places instead of vague references like "the advice", "a candidate", "a new colour" or "the plan". If the description doesn't say what the headline hints at, don't hint at it either: say what is known. Use only facts stated in the headline or description. Never add, guess or change names, dates, years, numbers or places. No quotation marks, no hashtags.
+3. Then translate that exact "en" text into ${LANG_LIST.replace(/^en \(English\), /, '')}, with the keys ${LANG_KEYS.replace(/^"en", /, '')}. Write each one as a native news writer of that language would: natural word order and the usual local spelling of names, not word-for-word. Keep every fact, name and number exactly.
 If it doesn't fit, return only "id" and "fits". Reply with only a JSON array with one object per story, each with "id", "fits" and, when it fits, exactly the keys ${LANG_KEYS}.
 
 ${JSON.stringify(input)}`;
@@ -327,7 +327,7 @@ async function addSummaries(rows, deps, cfg = WORLD) {
           r.title_tr = { ...r.title_tr, sum: '', sv: SUMMARY_VERSION };
           rejected++;
         } else if (SITE_LANGS.every((l) => typeof t[l] === 'string' && t[l].trim())) {
-          r.title_tr = { ...r.title_tr, sum: Object.fromEntries(SITE_LANGS.map((l) => [l, t[l].trim().slice(0, 400)])), sv: SUMMARY_VERSION };
+          r.title_tr = { ...r.title_tr, sum: Object.fromEntries(SITE_LANGS.map((l) => [l, t[l].trim().slice(0, 600)])), sv: SUMMARY_VERSION };
           summarized++;
         }
       });

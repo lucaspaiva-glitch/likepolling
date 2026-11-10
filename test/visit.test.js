@@ -44,3 +44,20 @@ test('a failed save returns 502', async () => {
   await handler(req({ kind: 'visit', item: 'home' }), res);
   assert.equal(res.statusCode, 502);
 });
+
+test('adds reading time per news section, capped, ignoring unknown sections', async () => {
+  const calls = [];
+  const handler = createHandler({ env, fetch: async (url, init) => { calls.push({ url, body: JSON.parse(init.body) }); return { ok: true }; } });
+  const res = mockRes();
+  await handler(req({ kind: 'read', seconds: { news: 42, fashion: 99999, admin: 5, ai: 0 } }, { 'x-vercel-ip-country': 'PT' }), res);
+  assert.equal(res.statusCode, 200);
+  assert.deepEqual(calls.map((c) => [c.url, c.body]), [
+    ['https://db.test/rest/v1/rpc/bump_reading', { p_country: 'PT', p_section: 'news', p_seconds: 42 }],
+    ['https://db.test/rest/v1/rpc/bump_reading', { p_country: 'PT', p_section: 'fashion', p_seconds: 1800 }],
+  ]);
+  for (const body of [{ kind: 'read' }, { kind: 'read', seconds: { admin: 5 } }, { kind: 'read', seconds: { news: 1.5 } }]) {
+    const r = mockRes();
+    await handler(req(body), r);
+    assert.equal(r.statusCode, 400);
+  }
+});

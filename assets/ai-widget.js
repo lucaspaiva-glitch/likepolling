@@ -159,6 +159,14 @@
     try { return new Intl.DisplayNames([siteLang() === 'pt' ? 'pt-BR' : siteLang()], { type: 'region' }).of(c); } catch (e) { return c; }
   };
 
+  // Last card of the list: "Next country · Germany →", the same step as a swipe (country-swipe.js).
+  const nextHtml = (sel) => {
+    const list = [...sel.options].filter((o) => !o.disabled);
+    if (list.length < 2) return '';
+    const o = list[(list.findIndex((x) => x.value === sel.value) + 1) % list.length];
+    return `<button type="button" class="nw-feed-end lp-next">${esc(tr('Next country'))} · ${esc(o.textContent.trim())} →</button>`;
+  };
+
   function fillPicker() {
     const cur = select.value;
     select.innerHTML = codes.map((c) => ({ c, n: regionName(c) })).sort((a, b) => a.n.localeCompare(b.n, siteLang()))
@@ -189,7 +197,7 @@
     empty.hidden = true;
     wrap.hidden = false;
     lead.innerHTML = leadHtml(top[0]);
-    feed.innerHTML = top.slice(1).map((r, i) => rowHtml(r, i + 1)).join('');
+    feed.innerHTML = top.slice(1).map((r, i) => rowHtml(r, i + 1)).join('') + nextHtml(select);
     watch();
   }
 
@@ -221,7 +229,7 @@
     const card = img.closest('.nw-card');
     if (card.classList.contains('nw-row')) {
       card.remove();
-      if (spare.length) { feed.insertAdjacentHTML('beforeend', rowHtml(spare.shift(), feed.children.length + 1)); watch(); }
+      if (spare.length) { (feed.querySelector('.lp-next') || feed).insertAdjacentHTML(feed.querySelector('.lp-next') ? 'beforebegin' : 'beforeend', rowHtml(spare.shift(), feed.querySelectorAll('.nw-card').length + 1)); watch(); }
       return;
     }
     card.classList.add('nw-noimg');
