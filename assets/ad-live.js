@@ -65,7 +65,7 @@
     if (fine) {
       [tab, pop].forEach((el) => {
         el.addEventListener('pointerenter', (e) => { if (e.pointerType !== 'mouse') return; clearTimeout(t); if (pop.hidden) t = setTimeout(() => { hoverOpen = true; set(true); }, 150); });
-        el.addEventListener('pointerleave', (e) => { if (e.pointerType !== 'mouse') return; clearTimeout(t); if (hoverOpen) t = setTimeout(() => { if (hoverOpen) set(false); }, 350); });
+        el.addEventListener('pointerleave', (e) => { if (e.pointerType !== 'mouse') return; clearTimeout(t); if (hoverOpen) t = setTimeout(() => { if (hoverOpen && !pop.querySelector('.lp-snd[aria-pressed="true"]')) set(false); }, 350); });
       });
     }
   }

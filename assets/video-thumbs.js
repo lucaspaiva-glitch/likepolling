@@ -116,7 +116,7 @@ a:hover > .lp-rth img { transform: scale(1.04); }
     b.setAttribute('aria-pressed', String(pref.cc));
     b.title = b.ariaLabel = pref.cc ? 'Subtitles off' : 'Subtitles on';
   }
-  function start(el) {
+  function start(el, wait = DELAY) {
     const id = idOf(el);
     if (!id) return;
     box = el;
@@ -158,19 +158,33 @@ a:hover > .lp-rth img { transform: scale(1.04); }
         if (shown && info.currentTime >= CONTROLS_GONE) { veil.classList.remove('on'); done(); }
       });
       el.querySelector('img').after(f, veil, ctl);
-    }, DELAY);
+    }, wait);
   }
   if (mouse) {
+    // With the sound on, the preview keeps playing after the mouse leaves it. It stops when
+    // another thumbnail is hovered (that one takes over with sound) or it scrolls off screen.
+    const loud = () => box?.isConnected && box.querySelector('.lp-snd[aria-pressed="true"]');
+    let swap = 0;
     document.addEventListener('mouseover', (e) => {
       const el = e.target.closest?.(SEL);
-      if (el === box) return;
+      if (el === box) { clearTimeout(swap); return; }
+      if (loud()) {
+        clearTimeout(swap);
+        if (el) swap = setTimeout(() => { stop(); start(el, 0); watch(el); }, DELAY);
+        return;
+      }
       stop();
-      if (el) start(el);
+      if (el) { start(el); watch(el); }
     });
     document.addEventListener('mouseout', (e) => {
-      if (box && !box.contains(e.relatedTarget)) stop();
+      if (!box || box.contains(e.relatedTarget)) return;
+      if (!loud()) stop();
+      else if (!e.relatedTarget?.closest?.(SEL)) clearTimeout(swap);
     });
-    addEventListener('blur', stop);
+    // Stops once it's off screen or hidden (e.g. the sponsor card closed), so no sound plays unseen.
+    const seenIo = new IntersectionObserver((es) => { for (const e of es) if (!e.isIntersecting && e.target === box) stop(); });
+    const watch = (el) => { seenIo.disconnect(); seenIo.observe(el); };
+    addEventListener('blur', () => { if (!loud()) stop(); });
     return;
   }
   // Touch screens: while scrolling, the thumbnail on (or nearest) the middle line of the screen

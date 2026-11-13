@@ -1307,7 +1307,7 @@ ENERGY</div>
         const leave = (e) => {
           if (e.pointerType !== 'mouse') return;
           clearTimeout(hoverT);
-          if (hoverOpen) hoverT = setTimeout(() => { if (hoverOpen) { hoverOpen = false; setAd(false); } }, 350);
+          if (hoverOpen) hoverT = setTimeout(() => { if (hoverOpen && !adPop.querySelector('.lp-snd[aria-pressed="true"]')) { hoverOpen = false; setAd(false); } }, 350);
         };
         [adTab, adPop].forEach((el) => { el.addEventListener('pointerenter', enter); el.addEventListener('pointerleave', leave); });
       }
