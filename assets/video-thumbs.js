@@ -91,7 +91,7 @@ a:hover > .lp-rth img { transform: scale(1.04); }
   const ICON_SOUND = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 4V5L7 9H3z"/><path d="M15.5 8.5a5 5 0 010 7M18 6a8.5 8.5 0 010 12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>';
   // Remembered while the page is open, so the next preview starts the same way.
   const pref = { sound: false, cc: false };
-  let box = null, timer = 0, warmed = false, unwatch = null, dog = 0;
+  let box = null, timer = 0, warmed = false, unwatch = null, dog = 0, carried = null;
   const idOf = (el) => (el.querySelector('img')?.src.match(/\/vi\/([A-Za-z0-9_-]{11})\//) || [])[1];
   function warm() {
     if (warmed) return;
@@ -108,6 +108,7 @@ a:hover > .lp-rth img { transform: scale(1.04); }
     if (unwatch) { unwatch(); unwatch = null; }
     if (box) box.querySelectorAll('.lp-prev, .lp-veil, .lp-pvc').forEach((n) => n.remove());
     box = null;
+    carried = null;
     if (np) np.classList.remove('on');
   }
   let np = null;
@@ -159,7 +160,7 @@ a:hover > .lp-rth img { transform: scale(1.04); }
       // With sound on, the preview stays hidden until the unmuted video is really playing. A browser
       // that refuses sound without a tap (phones, mostly) pauses the video instead: it then restarts
       // muted, and the sound button shows off until the visitor taps it.
-      let shown = false, tried = 0, blocked = false, lastT = -1, lastAt = Date.now(), kicks = 0;
+      let shown = false, tried = 0, blocked = false, ended = false, ps = -1, muted = true, dur = 0, lastT = -1, lastAt = Date.now(), kicks = 0;
       const show = () => { shown = true; f.classList.add('on'); veil.classList.add('on'); ctl.classList.add('on'); };
       // Desktop: a preview that stops moving (YouTube paused it, often when refusing the sound) is
       // restarted, then restarted muted; if it's still stuck it's removed so no frozen frame stays up.
@@ -173,27 +174,47 @@ a:hover > .lp-rth img { transform: scale(1.04); }
         else if (box === el) stop();
       }, 1000);
       unwatch = ytWatch(f, (info, done) => {
+        if (typeof info.duration === 'number' && info.duration > 0) dur = info.duration;
+        // Desktop, sound on: when the video ends the next one in the section plays, in ranking order.
+        if (mouse && !ended && box === el && pref.sound && muted === false && shown &&
+            (info.playerState === 0 || (dur && lastT > dur - 1.5 && info.currentTime < 1))) {
+          const nx = nextOf(el);
+          if (nx) { ended = true; return next(nx); }
+        }
         if (typeof info.currentTime === 'number' && info.currentTime !== lastT) { lastT = info.currentTime; lastAt = Date.now(); kicks = 0; }
-        if (typeof info.muted === 'boolean') paintSound(snd, !info.muted);
-        if (info.muted === true && box === el && np?.classList.contains('on')) return stop(); // out of view and silent
-        if (!tried && (info.playerState === 1 || info.currentTime > 0)) {
+        // YouTube sends only what changed, so the latest state and mute are kept here.
+        if (typeof info.playerState === 'number') ps = info.playerState;
+        if (typeof info.muted === 'boolean') { muted = info.muted; paintSound(snd, !muted); }
+        if (!tried && (ps === 1 || info.currentTime > 0)) {
           tried = Date.now();
           applyCc(f, cc);
           if (pref.sound) applySound(f, snd); else { paintSound(snd, false); show(); }
         }
+        if (tried && info.playerState === 2 && !blocked && box === el && np?.classList.contains('on')) return stop(); // refused sound while out of view
         if (tried && info.playerState === 2 && !blocked) { blocked = true; ytSend(f, 'mute'); ytSend(f, 'playVideo'); paintSound(snd, false); }
-        if (tried && !shown && info.playerState === 1 && (blocked || info.muted === false || Date.now() - tried > 900)) show();
+        if (tried && !shown && ps === 1 && (blocked || muted === false || Date.now() - tried > 900)) show();
         if (shown && info.currentTime >= CONTROLS_GONE) { veil.classList.remove('on'); if (!mouse) done(); }
       });
       el.querySelector('img').after(f, veil, ctl);
     }, wait);
   }
+  // The thumbnail after el in its section (wrapping to the first), skipping hidden ones.
+  function nextOf(el) {
+    const sec = el.closest('section');
+    if (!sec) return null;
+    const list = [...sec.querySelectorAll(SEL)].filter((x) => x.getClientRects().length && idOf(x));
+    const i = list.indexOf(el);
+    return i >= 0 && list.length > 1 ? list[(i + 1) % list.length] : null;
+  }
+  // Hands the sound to el; it counts as playing with sound until its own button shows it.
+  let watch = () => {};
+  function next(el) { stop(); carried = el; start(el, 0); watch(el); }
   if (mouse) {
     // With the sound on, the preview keeps playing after the mouse leaves it and while the page
     // scrolls; once it's out of view a small bar shows it, to jump back to it or mute it. It stops
     // when another thumbnail is hovered (that one takes over with sound), when muted, or when it's
     // hidden (e.g. the sponsor card closed).
-    const loud = () => box?.isConnected && box.querySelector('.lp-snd[aria-pressed="true"]');
+    const loud = () => box?.isConnected && (box.querySelector('.lp-snd[aria-pressed="true"]') || (box === carried && pref.sound));
     let swap = 0, swapEl = null, mx = -1, my = -1;
     const cancelSwap = () => { clearTimeout(swap); swapEl = null; };
     document.addEventListener('mouseover', (e) => {
@@ -215,7 +236,7 @@ a:hover > .lp-rth img { transform: scale(1.04); }
       cancelSwap();
       if (!el || el === box || el.closest('.lp-np')) return;
       swapEl = el;
-      swap = setTimeout(() => { swapEl = null; stop(); start(el, 0); watch(el); }, DELAY);
+      swap = setTimeout(() => { swapEl = null; next(el); }, DELAY);
     }, { passive: true });
     document.addEventListener('mouseout', (e) => {
       if (!box || box.contains(e.relatedTarget)) return;
@@ -251,7 +272,7 @@ a:hover > .lp-rth img { transform: scale(1.04); }
         b.classList.add('on');
       }
     });
-    const watch = (el) => { seenIo.disconnect(); seenIo.observe(el); };
+    watch = (el) => { seenIo.disconnect(); seenIo.observe(el); };
     addEventListener('blur', () => { if (!loud()) stop(); });
     return;
   }
