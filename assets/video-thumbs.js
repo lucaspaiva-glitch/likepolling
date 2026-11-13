@@ -69,7 +69,19 @@ a:hover > .lp-rth img { transform: scale(1.04); }
 .lp-rth-s { width: 63px; aspect-ratio: 9 / 16; background: #111; }
 .lp-rth .lp-pvc { left: 5px; top: 27px; }
 .lp-rth .lp-pvc button { width: 20px; height: 20px; }
-@media (max-width: 560px) { .lp-rth-s { width: 50px; } }`;
+@media (max-width: 560px) { .lp-rth-s { width: 50px; } }
+/* Desktop: the video playing with sound, while it's scrolled out of view. */
+.lp-np { position: fixed; left: 44px; bottom: 16px; z-index: 58; display: flex; align-items: center; gap: 8px; padding: 5px 8px 5px 5px; border: 1px solid rgba(255,42,60,.45); border-radius: 9px; background: rgba(20,0,4,.92); box-shadow: 0 8px 24px -8px rgba(60,0,6,.5); opacity: 0; transform: translateY(8px); visibility: hidden; transition: opacity .2s, transform .2s, visibility 0s .2s; }
+.lp-np.on { opacity: 1; transform: none; visibility: visible; transition: opacity .2s, transform .2s; }
+.lp-np img { display: block; width: 72px; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 5px; cursor: pointer; }
+.lp-np i { display: flex; align-items: flex-end; gap: 2px; height: 12px; }
+.lp-np i b { width: 3px; height: 100%; border-radius: 1px; background: #ff2a3c; transform-origin: bottom; animation: lp-eq .9s ease-in-out infinite alternate; }
+.lp-np i b:nth-child(2) { animation-delay: -.3s; } .lp-np i b:nth-child(3) { animation-delay: -.6s; }
+@keyframes lp-eq { from { transform: scaleY(.3); } to { transform: scaleY(1); } }
+@media (prefers-reduced-motion: reduce) { .lp-np i b { animation: none; } }
+.lp-np button { display: grid; place-items: center; width: 24px; height: 24px; padding: 0; border: 1px solid rgba(255,42,60,.8); border-radius: 50%; background: #b0000e; color: #fff; cursor: pointer; }
+.lp-np button:hover { background: #7f000a; }
+.lp-np svg { width: 13px; height: 13px; }`;
   document.head.appendChild(css);
 
   const mouse = matchMedia('(hover: hover) and (pointer: fine)').matches;
@@ -79,7 +91,7 @@ a:hover > .lp-rth img { transform: scale(1.04); }
   const ICON_SOUND = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 4V5L7 9H3z"/><path d="M15.5 8.5a5 5 0 010 7M18 6a8.5 8.5 0 010 12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>';
   // Remembered while the page is open, so the next preview starts the same way.
   const pref = { sound: false, cc: false };
-  let box = null, timer = 0, warmed = false, unwatch = null;
+  let box = null, timer = 0, warmed = false, unwatch = null, dog = 0;
   const idOf = (el) => (el.querySelector('img')?.src.match(/\/vi\/([A-Za-z0-9_-]{11})\//) || [])[1];
   function warm() {
     if (warmed) return;
@@ -92,10 +104,13 @@ a:hover > .lp-rth img { transform: scale(1.04); }
   }
   function stop() {
     clearTimeout(timer);
+    clearInterval(dog);
     if (unwatch) { unwatch(); unwatch = null; }
     if (box) box.querySelectorAll('.lp-prev, .lp-veil, .lp-pvc').forEach((n) => n.remove());
     box = null;
+    if (np) np.classList.remove('on');
   }
+  let np = null;
   function paintSound(b, on) {
     if (b.getAttribute('aria-pressed') === String(on)) return;
     b.innerHTML = on ? ICON_SOUND : ICON_MUTED;
@@ -144,10 +159,23 @@ a:hover > .lp-rth img { transform: scale(1.04); }
       // With sound on, the preview stays hidden until the unmuted video is really playing. A browser
       // that refuses sound without a tap (phones, mostly) pauses the video instead: it then restarts
       // muted, and the sound button shows off until the visitor taps it.
-      let shown = false, tried = 0, blocked = false;
+      let shown = false, tried = 0, blocked = false, lastT = -1, lastAt = Date.now(), kicks = 0;
       const show = () => { shown = true; f.classList.add('on'); veil.classList.add('on'); ctl.classList.add('on'); };
+      // Desktop: a preview that stops moving (YouTube paused it, often when refusing the sound) is
+      // restarted, then restarted muted; if it's still stuck it's removed so no frozen frame stays up.
+      if (mouse) dog = setInterval(() => {
+        if (!f.isConnected) { if (box === el) stop(); return; }
+        if (document.hidden || !shown || Date.now() - lastAt < 2500) { if (document.hidden) lastAt = Date.now(); return; }
+        lastAt = Date.now();
+        if (++kicks === 1) ytSend(f, 'playVideo');
+        else if (kicks === 2 && np?.classList.contains('on')) stop();
+        else if (kicks === 2) { ytSend(f, 'mute'); ytSend(f, 'playVideo'); paintSound(snd, false); }
+        else if (box === el) stop();
+      }, 1000);
       unwatch = ytWatch(f, (info, done) => {
+        if (typeof info.currentTime === 'number' && info.currentTime !== lastT) { lastT = info.currentTime; lastAt = Date.now(); kicks = 0; }
         if (typeof info.muted === 'boolean') paintSound(snd, !info.muted);
+        if (info.muted === true && box === el && np?.classList.contains('on')) return stop(); // out of view and silent
         if (!tried && (info.playerState === 1 || info.currentTime > 0)) {
           tried = Date.now();
           applyCc(f, cc);
@@ -155,34 +183,74 @@ a:hover > .lp-rth img { transform: scale(1.04); }
         }
         if (tried && info.playerState === 2 && !blocked) { blocked = true; ytSend(f, 'mute'); ytSend(f, 'playVideo'); paintSound(snd, false); }
         if (tried && !shown && info.playerState === 1 && (blocked || info.muted === false || Date.now() - tried > 900)) show();
-        if (shown && info.currentTime >= CONTROLS_GONE) { veil.classList.remove('on'); done(); }
+        if (shown && info.currentTime >= CONTROLS_GONE) { veil.classList.remove('on'); if (!mouse) done(); }
       });
       el.querySelector('img').after(f, veil, ctl);
     }, wait);
   }
   if (mouse) {
-    // With the sound on, the preview keeps playing after the mouse leaves it. It stops when
-    // another thumbnail is hovered (that one takes over with sound) or it scrolls off screen.
+    // With the sound on, the preview keeps playing after the mouse leaves it and while the page
+    // scrolls; once it's out of view a small bar shows it, to jump back to it or mute it. It stops
+    // when another thumbnail is hovered (that one takes over with sound), when muted, or when it's
+    // hidden (e.g. the sponsor card closed).
     const loud = () => box?.isConnected && box.querySelector('.lp-snd[aria-pressed="true"]');
-    let swap = 0;
+    let swap = 0, swapEl = null, mx = -1, my = -1;
+    const cancelSwap = () => { clearTimeout(swap); swapEl = null; };
     document.addEventListener('mouseover', (e) => {
+      if (loud()) return;
+      cancelSwap();
       const el = e.target.closest?.(SEL);
-      if (el === box) { clearTimeout(swap); return; }
-      if (loud()) {
-        clearTimeout(swap);
-        if (el) swap = setTimeout(() => { stop(); start(el, 0); watch(el); }, DELAY);
-        return;
-      }
+      if (el === box) return;
       stop();
       if (el) { start(el); watch(el); }
     });
+    // Only a real mouse move hands the sound to another video: content scrolling under a
+    // resting mouse doesn't.
+    document.addEventListener('mousemove', (e) => {
+      const moved = e.clientX !== mx || e.clientY !== my;
+      mx = e.clientX; my = e.clientY;
+      if (!moved || !loud()) return;
+      const el = e.target.closest?.(SEL);
+      if (el === swapEl) return;
+      cancelSwap();
+      if (!el || el === box || el.closest('.lp-np')) return;
+      swapEl = el;
+      swap = setTimeout(() => { swapEl = null; stop(); start(el, 0); watch(el); }, DELAY);
+    }, { passive: true });
     document.addEventListener('mouseout', (e) => {
       if (!box || box.contains(e.relatedTarget)) return;
       if (!loud()) stop();
-      else if (!e.relatedTarget?.closest?.(SEL)) clearTimeout(swap);
     });
-    // Stops once it's off screen or hidden (e.g. the sponsor card closed), so no sound plays unseen.
-    const seenIo = new IntersectionObserver((es) => { for (const e of es) if (!e.isIntersecting && e.target === box) stop(); });
+    function bar() {
+      if (np) return np;
+      np = document.createElement('div');
+      np.className = 'lp-np';
+      np.innerHTML = `<img alt=""><i aria-hidden="true"><b></b><b></b><b></b></i><button type="button" class="lp-np-snd" aria-pressed="true">${ICON_SOUND}</button>`;
+      np.querySelector('img').title = 'Back to the video';
+      np.querySelector('button').title = 'Mute';
+      np.querySelector('button').ariaLabel = 'Mute';
+      np.addEventListener('click', (e) => {
+        if (!box) return;
+        if (e.target.closest('button')) {
+          const f = box.querySelector('.lp-prev');
+          pref.sound = false;
+          if (f) ytSend(f, 'mute');
+          stop();
+        } else box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      });
+      document.body.appendChild(np);
+      return np;
+    }
+    const seenIo = new IntersectionObserver((es) => {
+      for (const e of es) {
+        if (e.target !== box) continue;
+        if (e.isIntersecting) { np?.classList.remove('on'); continue; }
+        if (!loud() || !box.getClientRects().length) { stop(); continue; }
+        const b = bar();
+        b.querySelector('img').src = box.querySelector('img')?.src || '';
+        b.classList.add('on');
+      }
+    });
     const watch = (el) => { seenIo.disconnect(); seenIo.observe(el); };
     addEventListener('blur', () => { if (!loud()) stop(); });
     return;
