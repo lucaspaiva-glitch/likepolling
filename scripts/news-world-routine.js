@@ -214,7 +214,7 @@ function geminiSummarizer(apiKey) {
   return async (stories) => {
     const input = stories.map((st, id) => ({ id, ...st }));
     const prompt = `Each news story below has an id, its headline and the publisher's own description of the article. For each story:
-1. Set "fits" to false if the description is not about the same news as the headline (for example a generic site text, a live page about other news, or a different article); otherwise true.
+1. Set "fits" to false only if the description is about different news than the headline (for example a generic site text, a live page about other news, or a different article). A description about the same people and the same event fits, even if it tells an earlier or different part of the story; then summarize what the headline and description say.
 2. If it fits, write "en": two or three clear, complete English sentences, at most ${SUMMARY_WORDS} words in total, that explain the story to a reader who hasn't seen the headline. Each sentence must add a new fact (who, what, where, when, how much, why, or what happens next); don't repeat the headline's wording. Write a third sentence only if the description has another fact for it; never pad. Say who did what: name the people, groups, products or places instead of vague references like "the advice", "a candidate", "a new colour" or "the plan". If the description doesn't say what the headline hints at, don't hint at it either: say what is known. Use only facts stated in the headline or description. Never add, guess or change names, dates, years, numbers or places. No quotation marks, no hashtags.
 3. Then translate that exact "en" text into ${LANG_LIST.replace(/^en \(English\), /, '')}, with the keys ${LANG_KEYS.replace(/^"en", /, '')}. Write each one as a native news writer of that language would: natural word order and the usual local spelling of names, not word-for-word. Keep every fact, name and number exactly.
 If it doesn't fit, return only "id" and "fits". Reply with only a JSON array with one object per story, each with "id", "fits" and, when it fits, exactly the keys ${LANG_KEYS}.
@@ -283,7 +283,7 @@ async function addTranslations(rows, env, deps, cfg = WORLD) {
 // Each country's first photoTarget translated photo stories get a summary (title_tr.sum, one per
 // site language), stored with the translations so it's written once. Stories whose article has
 // no description, or whose summary fails the checks, get sum '' (the site shows the headline instead)
-// and aren't looked up again until SUMMARY_VERSION changes.
+// and aren't looked up again until SUMMARY_VERSION changes (ones stored without sr are retried once).
 async function addSummaries(rows, deps, cfg = WORLD) {
   if (!cfg.summaries) return null;
   const check = checkOf(cfg.classify);
@@ -293,7 +293,7 @@ async function addSummaries(rows, deps, cfg = WORLD) {
   for (const r of [...rows].sort((a, b) => a.rank - b.rank)) {
     if (!r.image_url) continue;
     pos[r.country_code] = (pos[r.country_code] || 0) + 1;
-    if (pos[r.country_code] <= cfg.photoTarget && r.title_tr && (r.title_tr.sum === undefined || r.title_tr.sv !== SUMMARY_VERSION) && shown(r)) todo.push([pos[r.country_code], r]);
+    if (pos[r.country_code] <= cfg.photoTarget && r.title_tr && (r.title_tr.sum === undefined || r.title_tr.sv !== SUMMARY_VERSION || (r.title_tr.sum === '' && !r.title_tr.sr)) && shown(r)) todo.push([pos[r.country_code], r]);
   }
   // Every country's #1 first, then every #2 and so on, so fill-in stories (low Google rank,
   // high place on the site) aren't left at the back of the queue.
@@ -309,7 +309,7 @@ async function addSummaries(rows, deps, cfg = WORLD) {
       const d = await descriptionFor(r.link, deps);
       if (d === null) continue;
       if (d) ready.push([r, d]);
-      else { r.title_tr = { ...r.title_tr, sum: '', sv: SUMMARY_VERSION }; noDescription++; }
+      else { r.title_tr = { ...r.title_tr, sum: '', sv: SUMMARY_VERSION, sr: 1 }; noDescription++; }
     }
   }));
   const batches = [];
@@ -324,7 +324,7 @@ async function addSummaries(rows, deps, cfg = WORLD) {
       batch.forEach(([r, d], k) => {
         const t = out[k] || {};
         if (t.fits === false || (typeof t.en === 'string' && !numbersCheckOut(t.en, r.title, d))) {
-          r.title_tr = { ...r.title_tr, sum: '', sv: SUMMARY_VERSION };
+          r.title_tr = { ...r.title_tr, sum: '', sv: SUMMARY_VERSION, sr: 1 };
           rejected++;
         } else if (SITE_LANGS.every((l) => typeof t[l] === 'string' && t[l].trim())) {
           r.title_tr = { ...r.title_tr, sum: Object.fromEntries(SITE_LANGS.map((l) => [l, t[l].trim().slice(0, 600)])), sv: SUMMARY_VERSION };
