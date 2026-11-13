@@ -706,6 +706,24 @@
     #lp-rep-form button:hover { background: var(--red-dark); }
     @media (max-width: 700px) { .lp-rep { flex-direction: column; flex-wrap: nowrap; align-items: stretch; } .lp-rep { margin-bottom: 14px; } .lp-rep > p a { margin-left: 8px; } }
     .earn-note { margin: 10px 0 0; font-size: 11.5px; line-height: 1.45; color: var(--muted); }
+    /* Wide screens: World News, then Music beside Trending, then Fashion and the rest full width. */
+    @media (min-width: 1240px) {
+      .wrap:has(> #yt-trending:not([hidden])) { grid-template-rows: auto 1fr auto; }
+      .wrap:has(> #yt-trending:not([hidden])) > #yt-trending { grid-row: 2 / span 2; }
+      /* World News grows to fill the space beside Trending. */
+      .wrap:has(> #yt-trending:not([hidden])) > #news-front { grid-row: 2; display: flex; flex-direction: column; }
+      .wrap:has(> #yt-trending:not([hidden])) > #news-front .nw-feed-wrap { flex: 1; }
+      .wrap:has(> #yt-trending:not([hidden])) > #news-front :is(.nw-lead, .nw-feed) { height: auto; min-height: 520px; contain: size; }
+      .wrap:has(> #yt-trending:not([hidden])) > #yt-music { grid-column: 1; grid-row: 3; }
+      .wrap:has(> #yt-trending:not([hidden])) > :is(#fashion, #ai-age, #restaurants, .nw-credits, #news-wire, #ai-builders, #edu) { grid-column: 1 / -1; margin: 0 0 56px; }
+      .wrap:has(> #yt-trending:not([hidden])) > #fashion { grid-row: 4; }
+      .wrap:has(> #yt-trending:not([hidden])) > #ai-age { grid-row: 5; }
+      .wrap:has(> #yt-trending:not([hidden])) > #restaurants { grid-row: 6; }
+      .wrap:has(> #yt-trending:not([hidden])) > .nw-credits { grid-row: 7; }
+      .wrap:has(> #yt-trending:not([hidden])) > #news-wire { grid-row: 8; }
+      .wrap:has(> #yt-trending:not([hidden])) > #ai-builders { grid-row: 9; }
+      .wrap:has(> #yt-trending:not([hidden])) > #edu { grid-row: 10; }
+    }
   </style>
   <link rel="alternate" type="text/markdown" href="/llms.txt" title="Like Polling data for AI">
   <script type="application/ld+json">{"@context": "https://schema.org", "@type": "Dataset", "name": "Like Polling: what the world watches on YouTube", "description": "Estimated live YouTube viewers, YouTube Trending videos and YouTube Music top 10s, top news headlines (World News, Fashion News), and education and fashion videos for 41 countries, refreshed hourly. Live viewer figures are modelled estimates.", "url": "https://www.likepolling.com/data", "isAccessibleForFree": true, "creator": {"@type": "Organization", "name": "Like Polling", "url": "https://www.likepolling.com/"}, "keywords": ["YouTube", "trending", "music", "news", "education", "countries", "creators"], "distribution": [{"@type": "DataDownload", "encodingFormat": "text/markdown", "contentUrl": "https://www.likepolling.com/llms-full.txt"}, {"@type": "DataDownload", "encodingFormat": "text/html", "contentUrl": "https://www.likepolling.com/data"}, {"@type": "DataDownload", "encodingFormat": "application/json", "contentUrl": "https://www.likepolling.com/api/v1/worldwide"}]}</script>
