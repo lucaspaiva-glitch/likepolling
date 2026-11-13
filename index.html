@@ -708,12 +708,25 @@
     .earn-note { margin: 10px 0 0; font-size: 11.5px; line-height: 1.45; color: var(--muted); }
     /* Wide screens: World News, then Music beside Trending, then Fashion and the rest full width. */
     @media (min-width: 1240px) {
-      .wrap:has(> #yt-trending:not([hidden])) { grid-template-rows: auto 1fr auto; }
+      .wrap:has(> #yt-trending:not([hidden])) { grid-template-rows: auto auto 1fr; }
       .wrap:has(> #yt-trending:not([hidden])) > #yt-trending { grid-row: 2 / span 2; }
-      /* World News grows to fill the space beside Trending. */
-      .wrap:has(> #yt-trending:not([hidden])) > #news-front { grid-row: 2; display: flex; flex-direction: column; }
-      .wrap:has(> #yt-trending:not([hidden])) > #news-front .nw-feed-wrap { flex: 1; }
-      .wrap:has(> #yt-trending:not([hidden])) > #news-front :is(.nw-lead, .nw-feed) { height: auto; min-height: 520px; contain: size; }
+      /* World News: stories step down in size by rank (01, 02, 03-05, 06-10), all in one grid without inner scrolling. */
+      .wrap:has(> #yt-trending:not([hidden])) > #news-front { grid-row: 2; align-self: start; }
+      .wrap:has(> #yt-trending:not([hidden])) > #news-front .nw-feed-wrap { grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 0 16px; counter-reset: nw-rank 1; }
+      .wrap:has(> #yt-trending:not([hidden])) > #news-front .nw-feed-wrap > .nw-feed { display: contents; }
+      .wrap:has(> #yt-trending:not([hidden])) > #news-front .nw-feed-wrap > .nw-lead { grid-column: span 7; height: auto; aspect-ratio: 16 / 9; align-self: start; margin: 0 0 16px; }
+      .wrap:has(> #yt-trending:not([hidden])) > #news-front .nw-feed-wrap .nw-row, .wrap:has(> #yt-trending:not([hidden])) > #news-front .nw-feed-wrap .nw-row:first-child { grid-column: span 3; padding: 0 0 16px; border: 0; }
+      .wrap:has(> #yt-trending:not([hidden])) > #news-front .nw-feed-wrap .nw-row:nth-child(1) { grid-column: span 5; }
+      .wrap:has(> #yt-trending:not([hidden])) > #news-front .nw-feed-wrap .nw-row:nth-child(n+2):nth-child(-n+4) { grid-column: span 4; }
+      .wrap:has(> #yt-trending:not([hidden])) > #news-front .nw-feed-wrap .nw-row-media { width: 100%; }
+      .wrap:has(> #yt-trending:not([hidden])) > #news-front .nw-feed-wrap .nw-row:nth-child(1) .nw-hl { font-size: 17px; }
+      .wrap:has(> #yt-trending:not([hidden])) > #news-front .nw-feed-wrap .nw-row:nth-child(n+2):nth-child(-n+4) .nw-hl { font-size: 15.5px; }
+      .wrap:has(> #yt-trending:not([hidden])) > #news-front .nw-feed-wrap .nw-row:nth-child(n+5) .nw-hl { font-size: 14px; }
+      .wrap:has(> #yt-trending:not([hidden])) > #news-front .nw-feed-wrap .nw-sentinel { grid-column: 1 / -1; }
+      .wrap:has(> #yt-trending:not([hidden])) > #news-front .nw-feed-wrap .nw-feed-end { grid-column: span 9; align-self: center; margin: 0 0 16px; }
+      .wrap:has(> #yt-trending:not([hidden])) > #news-front .nw-feed-wrap .nw-row:nth-child(n+10) ~ .nw-feed-end, .wrap:has(> #yt-trending:not([hidden])) > #news-front .nw-feed-wrap .nw-row:nth-child(-n+8):nth-last-child(-n+3) ~ .nw-feed-end { grid-column: 1 / -1; }
+      .wrap:has(> #yt-trending:not([hidden])) > #news-front .nw-lead :is(.nw-cap, .nw-read, .nw-rail) { display: none; }
+      .wrap:has(> #yt-trending:not([hidden])) > #news-front .nw-lead .nw-hl { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; font-size: 20px; line-height: 1.25; letter-spacing: 0; }
       .wrap:has(> #yt-trending:not([hidden])) > #yt-music { grid-column: 1; grid-row: 3; }
       .wrap:has(> #yt-trending:not([hidden])) > :is(#fashion, #ai-age, #restaurants, .nw-credits, #news-wire, #ai-builders, #edu) { grid-column: 1 / -1; margin: 0 0 56px; }
       .wrap:has(> #yt-trending:not([hidden])) > #fashion { grid-row: 4; }
