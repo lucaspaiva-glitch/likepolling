@@ -164,7 +164,7 @@ a:hover > .lp-rth img { transform: scale(1.04); }
       // Desktop: a preview that stops moving (YouTube paused it, often when refusing the sound) is
       // restarted, then restarted muted; if it's still stuck it's removed so no frozen frame stays up.
       if (mouse) dog = setInterval(() => {
-        if (!f.isConnected) { if (box === el) stop(); return; }
+        if (!f.isConnected || !el.getClientRects().length) { if (box === el) stop(); return; } // removed, or hidden (sponsor card closed)
         if (document.hidden || !shown || Date.now() - lastAt < 2500) { if (document.hidden) lastAt = Date.now(); return; }
         lastAt = Date.now();
         if (++kicks === 1) ytSend(f, 'playVideo');
