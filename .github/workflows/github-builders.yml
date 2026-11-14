@@ -4,6 +4,9 @@ on:
   schedule:
     - cron: '41 6 * * 1' # weekly, Monday
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['scripts/github-routine.js']
 
 concurrency:
   group: github-builders-memory
@@ -21,9 +24,11 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: '22'
-      - name: Save new AI projects and new developers per country from GitHub
+      - run: npm ci --omit=dev
+      - name: Save new AI projects (with plain-language titles) and new developers per country from GitHub
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: node scripts/github-routine.js

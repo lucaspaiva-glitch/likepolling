@@ -2,8 +2,9 @@
 // AI Builders memory: once a week, saves from the GitHub API (free, official) the 10 most-starred AI projects
 // created in the last 7 days into public.github_ai_repos_weekly, and how many new GitHub accounts each tracked
 // country got in those 7 days (by the country written in the profile) into public.github_new_devs_weekly.
+// With GEMINI_API_KEY, each project also gets a plain-language title and sentence in every site language (plain).
 //   node scripts/github-routine.js
-// Env: SUPABASE_URL, SUPABASE_KEY (secret key), GITHUB_TOKEN (optional, raises the search limit). Node >= 20, no deps.
+// Env: SUPABASE_URL, SUPABASE_KEY (secret key), GITHUB_TOKEN (optional, raises the search limit), GEMINI_API_KEY (optional). Node >= 20.
 'use strict';
 
 const { COUNTRIES } = require('../lib/report.js');
@@ -18,6 +19,27 @@ function topRepos(lists, day, n = 10) {
   return [...by.values()].sort((a, b) => b.stargazers_count - a.stargazers_count).slice(0, n).map((r, i) => ({
     day, rank: i + 1, full_name: r.full_name.slice(0, 140), description: r.description ? String(r.description).slice(0, 200) : null,
     stars: r.stargazers_count, language: r.language || null, url: r.html_url }));
+}
+
+// { en: { t, d }, pt: { t, d }, … } for each repo, or null when Gemini's reply doesn't fit.
+async function plainNames(repos, ask) {
+  const { SITE_LANGS, LANG_LIST } = require('./news-world-routine.js');
+  const input = repos.map((r, id) => ({ id, name: r.full_name, description: r.description, language: r.language }));
+  const prompt = `Below are new AI projects from GitHub. For each one, write for people who have never written code:
+- "t": a short title (at most 7 words) that says what the project does for its user, for example "Lets AI use a real iPhone". No project names, no jargon (no "agent", "MCP", "LLM", "CLI", "SDK", "repo"; say "AI assistant", "tool", "app" instead).
+- "d": one short sentence (at most 20 words) that explains it more, in the same plain words.
+Use only what the name and description say; do not guess features. If there is too little to tell what it does, set both to null.
+Write both in each of these languages: ${LANG_LIST}, as a native writer would.
+Reply with only a JSON array with one object per project, in the same order: {"id": number, ${SITE_LANGS.map((l) => `"${l}": {"t": string, "d": string}`).join(', ')}}.
+
+${JSON.stringify(input)}`;
+  const out = await ask(prompt);
+  if (!Array.isArray(out)) throw new Error('plain titles: not an array');
+  const ok = (v) => v && typeof v.t === 'string' && v.t.trim() && v.t.length <= 90 && typeof v.d === 'string' && v.d.length <= 240;
+  return repos.map((r, i) => {
+    const o = out.find((x) => x && x.id === i);
+    return o && SITE_LANGS.every((l) => ok(o[l])) ? Object.fromEntries(SITE_LANGS.map((l) => [l, { t: o[l].t.trim(), d: o[l].d.trim() }])) : null;
+  });
 }
 
 async function main(env = process.env, now = new Date()) {
@@ -38,6 +60,12 @@ async function main(env = process.env, now = new Date()) {
   const lists = [];
   for (const t of TOPICS) { lists.push((await get(`repositories?q=${encodeURIComponent(`topic:${t} created:${span}`)}`, '&sort=stars&order=desc&per_page=30')).items || []); await sleep(gap); }
   const repos = topRepos(lists, day);
+  if (env.GEMINI_API_KEY) {
+    try {
+      const plain = await plainNames(repos, require('./news-world-routine.js').geminiJson(env.GEMINI_API_KEY));
+      repos.forEach((r, i) => { r.plain = plain[i]; });
+    } catch (e) { console.error(`plain titles skipped: ${String(e.message).split('\n')[0]}`); }
+  }
   const en = new Intl.DisplayNames(['en'], { type: 'region' });
   const devs = [];
   for (const cc of COUNTRIES) {
@@ -57,4 +85,4 @@ async function main(env = process.env, now = new Date()) {
 }
 
 if (require.main === module) main().catch((e) => { console.error(e.message); process.exitCode = 1; });
-module.exports = { main, topRepos };
+module.exports = { main, topRepos, plainNames };

@@ -401,7 +401,7 @@ async function run(env = process.env, deps = {}, cfg = WORLD) {
   return summary;
 }
 
-module.exports = { run, feedUrl, sectionUrl, EDITIONS, SEARCH, PHOTO_TARGET, WORLD, geminiTranslator, numbersCheckOut };
+module.exports = { run, feedUrl, sectionUrl, EDITIONS, SEARCH, PHOTO_TARGET, WORLD, geminiTranslator, geminiJson, numbersCheckOut, SITE_LANGS, LANG_LIST };
 
 if (require.main === module) {
   run().catch((err) => {
