@@ -41,33 +41,14 @@
     const slides = [];
     slides.push({ type: 'kpis', title: L('At a glance'), note: L('The main numbers for the period, explained in the sections below.'),
       groups: cs.map((c, i) => ({ head: cs.length > 1 ? names[i] : '', cards: [
-        F[i].views && { n: short(F[i].views), label: L('Wikipedia views'), sub: L('of the daily top 30 pages, all days added') },
-        F[i].focus.articles && { n: short(F[i].focus.articles), label: L('News articles'), sub: L('about the country, worldwide') },
-        F[i].focus.cooperation_pct != null && { n: `${F[i].focus.cooperation_pct}%`, label: L('Peaceful news'), sub: L('talks, deals, aid. The rest is tension or conflict') },
-        F[i].partner && { n: name(F[i].partner.country), label: L('Most in the news with'), sub: L('{n} articles together', { n: num(F[i].partner.articles) }) },
         F[i].top && { n: cut(F[i].top.title, 26), label: L('Most-read page'), sub: L('{n} views', { n: num(F[i].top.views) }) },
         c.wikipedia_rising.length && { n: String(c.wikipedia_rising.length), label: L('New this week'), sub: L('pages that just entered the top 30') },
+        c.searches && c.searches.top[0] && { n: cut(c.searches.top[0].query, 26), label: L('Searched on Google'), sub: `~${num(c.searches.top[0].traffic)}` },
+        F[i].partner && { n: name(F[i].partner.country), label: L('Most in the news with'), sub: L('{n} articles together', { n: num(F[i].partner.articles) }) },
+        (() => { const g = (c.gdp || []).filter((d) => d.per_person != null).pop(); return g && { n: num(Math.round(g.per_person)), label: L('GDP per person, US$'), sub: String(g.year) }; })(),
       ].filter(Boolean) })) });
-    if (data.shared && cs.length > 1) {
-      const pair = (head, a, b, fmt) => (a == null || b == null || (!a && !b) ? null : { head, kind: 'bar', labels: names, series: [{ name: head, values: [a, b] }], fmt, vary: true });
-      const both = data.shared.read_in_both;
-      slides.push({ type: 'charts', title: L('Side by side'), note: L('The same measures for both countries.'),
-        charts: [pair(L('News articles'), F[0].focus.articles, F[1].focus.articles), pair(L('Wikipedia views (top 30)'), F[0].views, F[1].views), pair(L('Peaceful news'), F[0].focus.cooperation_pct, F[1].focus.cooperation_pct, 'pct')].filter(Boolean),
-        take: `${L('{n} news articles mentioned both countries together.', { n: num(data.shared.articles_together) })} ${both.length === 0 ? L('No page was among the most-read in both countries.') : `${both.length === 1 ? L('1 page was among the most-read in both:') : L('{n} pages were among the most-read in both:', { n: both.length })} ${both.slice(0, 2).map((w) => cut(w.title, 30)).join(', ')}${both.length > 2 ? '…' : ''}`}` });
-    }
-    const days = (pick) => [...new Set(cs.flatMap((c) => pick(c).map((p) => p.day)))].sort();
-    const lineSlide = (title, note, pick, take) => {
-      const ds = days(pick);
-      if (ds.length < 2) return;
-      slides.push({ type: 'charts', title, note, charts: [{ kind: 'line', labels: ds.map(dshort), series: cs.map((c, i) => { const m = new Map(pick(c).map((p) => [p.day, p.value])); return { name: names[i], values: ds.map((d) => m.get(d) || 0) }; }) }], take });
-    };
-    lineSlide(L('News coverage per day'), L('How many news articles worldwide mentioned the country each day. Spikes usually mean a big event.'),
-      (c) => (c.news_daily || []).map((d) => ({ day: d.day, value: d.articles })),
-      F.map((k, i) => (k.busy ? `${cs.length > 1 ? `${names[i]}: ` : ''}${L('Busiest day: {day} with {n} articles', { day: dshort(k.busy.day), n: num(k.busy.articles) })}` : '')).filter(Boolean).join('   ·   '));
-    lineSlide(L('Wikipedia attention per day'), L('Total views of the 30 most-read pages each day. It shows how busy people were looking things up.'),
-      (c) => (c.wikipedia_days || []).map((d, i) => ({ day: d, value: c.wikipedia_daily_total[i] })));
     const perCountry = (title, note, list, label, val, take) => {
-      const charts = cs.map((c, i) => { const it = list(c).slice(0, 8); return it.length ? { head: cs.length > 1 ? names[i] : '', kind: 'bar', horizontal: true, labels: it.map(label), series: [{ name: title, values: it.map(val) }] } : null; });
+      const charts = cs.map((c, i) => { const it = list(c).slice(0, 6); return it.length ? { head: cs.length > 1 ? names[i] : '', kind: 'bar', horizontal: true, labels: it.map(label), series: [{ name: title, values: it.map(val) }] } : null; });
       if (charts.some(Boolean)) slides.push({ type: 'charts', title, note, charts: charts.map((c) => c || { head: '', empty: true }), take });
     };
     const each = (list, line) => cs.map((c) => (list(c)[0] ? line(c, list(c)[0]) : '')).filter(Boolean).join('   ·   ');
@@ -77,30 +58,24 @@
       each((c) => c.wikipedia_rising, (c, w) => L('{t} is the newest big interest in {c}.', { c: name(c.country), t: w.title })));
     perCountry(L('Searched on Google'), L('Searches that suddenly grew on Google in the country (Google Trends). The numbers are Google\'s rough estimates.'), (c) => (c.searches ? c.searches.top : []), (q) => cut(q.query), (q) => q.traffic,
       each((c) => (c.searches ? c.searches.top : []), (c, q) => L('The biggest search in {c} was {q}, with about {n} searches.', { c: name(c.country), q: q.query, n: num(q.traffic) })));
-    if (cs.some((c) => c.news_focus.articles)) {
-      slides.push({ type: 'charts', title: L('Peaceful and tense news'), note: L('GDELT sorts every news event into 20 types. Talks, deals and aid count as peaceful. Protests and fighting count as tension or conflict.'),
-        charts: cs.map((c, i) => (c.news_focus.articles ? { head: cs.length > 1 ? names[i] : '', kind: 'doughnut', labels: [L('peaceful'), L('tension or conflict')], series: [{ name: names[i], values: [c.news_focus.cooperation_pct, 100 - c.news_focus.cooperation_pct] }] } : { head: '', empty: true })) });
-      perCountry(L('What the news talks about'), L('Share of all news articles about the country, by type of event.'), (c) => (c.news_focus.articles ? c.news_focus.topics : []), (t) => L(t.topic), (t) => t.pct, null);
-      slides[slides.length - 1].charts.forEach((ch) => { ch.fmt = 'pct'; });
-    }
     perCountry(L('In the news with'), L('Countries that appeared in the same news articles most often. A sign of who the country deals with.'), (c) => c.news_partners, (p) => name(p.country), (p) => p.articles,
       each((c) => c.news_partners, (c, q) => L('{p} shows up next to {c} in the news more than any other country.', { c: name(c.country), p: name(q.country) })));
     if (cs.some((c) => (c.holidays || []).length)) {
       slides.push({ type: 'list', title: L('Holidays coming up'), note: L('National public holidays in the next months. Good dates to plan campaigns around.'),
-        groups: cs.map((c, i) => ({ head: cs.length > 1 ? names[i] : '', items: (c.holidays || []).map((h) => ({ title: `${dshort(h.day)} · ${h.local_name}`, text: h.name !== h.local_name ? h.name : '' })) })),
+        groups: cs.map((c, i) => ({ head: cs.length > 1 ? names[i] : '', items: (c.holidays || []).slice(0, 4).map((h) => ({ title: `${dshort(h.day)} · ${h.local_name}`, text: h.name !== h.local_name ? h.name : '' })) })),
         take: each((c) => c.holidays || [], (c, h) => L('Next holiday in {c}: {h} on {d}.', { c: name(c.country), h: h.local_name, d: dshort(h.day) }).replace(/\.\.$/, '.')) });
     }
     if (cs.some((c) => c.ideas.length)) {
       slides.push({ type: 'list', title: L('Ideas to copy'), note: L('Written each week by AI from the data above. Use them as starting points.'),
-        groups: cs.map((c, i) => ({ head: cs.length > 1 ? names[i] : '', items: c.ideas.slice(0, 5).map((it) => ({ title: it.title, text: it.idea })) })) });
+        groups: cs.map((c, i) => ({ head: cs.length > 1 ? names[i] : '', items: c.ideas.slice(0, 3).map((it) => ({ title: it.title, text: it.idea })) })) });
     }
     const years = [...new Set(cs.flatMap((c) => (c.gdp || []).map((g) => g.year)))].sort();
     if (years.length > 1) {
       const yc = (head, k, fmt, scale = 1) => ({ head, kind: 'bar', labels: years.map(String), fmt,
         series: cs.map((c, i) => { const m = new Map((c.gdp || []).map((g) => [g.year, g[k]])); return { name: names[i], values: years.map((y) => (m.get(y) == null ? 0 : Math.round((m.get(y) / scale) * 10) / 10)) }; }) });
-      const at = slides.findIndex((sl) => sl.title === L('Side by side'));
-      slides.splice((at >= 0 ? at : 0) + 1, 0, { type: 'charts', title: L('The economy'), note: L('Yearly figures from the World Bank. The newest year is usually last year.'),
-        charts: [yc(L('GDP, US$ billions'), 'usd', null, 1e9), yc(L('GDP per person, US$'), 'per_person'), yc(L('Growth after inflation'), 'growth_pct', 'pct1')], take: x.econTake || '' });
+      const at = slides.findIndex((sl) => sl.title === L('Ideas to copy'));
+      slides.splice(at >= 0 ? at : slides.length, 0, { type: 'charts', title: L('The economy'), note: L('Yearly figures from the World Bank. The newest year is usually last year.'),
+        charts: [yc(L('GDP per person, US$'), 'per_person'), yc(L('Growth after inflation'), 'growth_pct', 'pct1')], take: x.econTake || '' });
     }
     slides.push({ type: 'text', title: L('How to read the numbers'), terms: x.glossary, foot: x.sources });
     return { slides, title: names.join(' vs '), file: `like-polling-${cs.map((c) => c.country.toLowerCase()).join('-')}-report` };
@@ -126,35 +101,16 @@
       charts: [{ kind: 'bar', horizontal: true, labels: m.news.countries.map((c) => cut(c.name, 22)), series: [{ name: L('News articles'), values: m.news.countries.map((c) => c.share) }], fmt: 'pct' }] });
   }
 
-  function statesSlide(slides, data, title, x) {
-    const st = data.states || {};
-    const cs = ['US', 'BR'].filter((c) => st[c] && st[c].length);
-    if (!cs.length) return;
-    slides.push({ type: 'charts', title: x.L('Top states'), note: x.L('Google searches by state, last 30 days. 100 is the state where it is searched most for its size.'),
-      charts: cs.map((c) => ({ head: x.name(c), kind: 'bar', horizontal: true, labels: st[c].slice(0, 8).map((r) => cut(r.name, 22)), series: [{ name: x.name(c), values: st[c].slice(0, 8).map((r) => r.value) }] })),
-      take: cs.map((c) => x.L('{s} is searched most in {r}, {c}.', { s: title, r: st[c][0].name, c: x.name(c) })).join(' ') });
-  }
-
   // Profile, best media moments, Google searches, followers and releases (same data as the web report).
   function extraSlides(slides, data, title, x) {
     const { L, name, num, short, dshort } = x;
     const pf = data.profile, f = (pf && pf.facts) || {}, j = (a) => (a || []).join(', ');
-    if (pf) {
-      const rows = [['Born', f.born && f.born.year], ['From', j(f.from)], ['Known for', j(f.occupation)], ['Genres', j(f.genre)], ['Record labels', j(f.label)], ['Teams', j(f.team)],
-        ['Founded', f.founded && f.founded.year], ['Founders', j(f.founders)], ['Chief executive', j(f.ceo)], ['Headquarters', j(f.hq)], ['Employees', f.employees && num(f.employees.n)], ['Brands it owns', j(f.owns)], ['Stock indexes', j(f.part_of)], ['Website', pf.website && host(pf.website)]].filter((r) => r[1]);
-      const hon = [...(pf.awards || []).map((a) => ({ title: a.name, text: `${L('Won')}${a.year ? ` · ${a.year}` : ''}` })), ...(pf.nominations || []).map((a) => ({ title: a.name, text: `${L('Nominated')}${a.year ? ` · ${a.year}` : ''}` }))];
-      if (rows.length + hon.length >= 3) slides.push({ type: 'list', title: L('Profile'), note: L('Facts about {s} recorded on Wikidata, the open database behind Wikipedia.', { s: title }),
-        groups: [{ head: '', items: rows.map(([k, v]) => ({ title: L(k), text: String(v) })) }, ...(hon.length ? [{ head: L('Awards and nominations'), items: hon.slice(0, 10) }] : [])] });
-    }
     const m = data.moments && [...data.moments.list].sort((a, b) => b.views - a.views);
     if (m && m.length) slides.push({ type: 'list', title: L('Best media moments'), note: L(m.length < 10 ? 'All the days, in the last 12 months, when Wikipedia views of {s} were at least twice a normal day.' : 'The 10 days, in the last 12 months, when the most people read about {s} on Wikipedia.', { s: title }),
       groups: [{ head: '', items: m.map((d) => ({ title: `${dshort(d.day)} ${d.day.slice(0, 4)} · ${num(d.views)} · ${L('{x}× a normal day', { x: d.times })}`, text: d.cause ? `${d.cause.name} (${dshort(d.cause.day)})` : '' })) }] });
     const g = data.searches;
     if (g && g.days.length > 6) slides.push({ type: 'charts', title: L('Searched on Google'), note: L('Google searches per day worldwide, last 30 days. 100 is the busiest day of any of them (Google Trends).'),
       charts: [{ kind: 'line', labels: g.days.map((d) => dshort(d.day)), series: g.names.map((n, i) => ({ name: n, values: g.days.map((d) => d.values[i]) })) }] });
-    const fl = ((pf && pf.followers) || []).filter((p) => p.years.length > 1).slice(0, 2);
-    if (fl.length) slides.push({ type: 'charts', title: L('Followers over time'), note: L('Social media followers recorded on Wikidata, latest count each year. Not live numbers.'),
-      charts: fl.map((p) => ({ head: p.platform, kind: 'bar', labels: p.years.map((y) => String(y.year)), series: [{ name: p.platform, values: p.years.map((y) => y.followers) }] })) });
     const pr = data.products;
     if (pr && pr.countries.length) slides.push({ type: 'charts', title: L('Products on shelves'), note: L('Food and drink products listed on Open Food Facts, the open food database, and the countries they are sold in.'),
       charts: [{ head: L('Products by country'), kind: 'bar', horizontal: true, labels: pr.countries.map((c) => name(c.code)), series: [{ name: L('Products listed'), values: pr.countries.map((c) => c.products) }] }],
@@ -178,14 +134,10 @@
       f && { n: plain(f.ranked[0].title), label: L('Category leader'), sub: x.fieldName },
     ].filter(Boolean) }] });
     if (ppl.length) sponsoredSlide(slides, ppl, s.title, L);
-    const ds = ppl.length ? ppl[0].series.map((d) => d.day) : [];
-    if (ds.length > 1) slides.push({ type: 'charts', title: L('Attention, day by day'), note: L('English Wikipedia views per day.'),
-      charts: [{ kind: 'line', labels: ds.map(dshort), series: ppl.slice(0, 4).map((p) => { const m = new Map(p.series.map((d) => [d.day, d.views])); return { name: plain(p.title), values: ds.map((d) => m.get(d) || 0) }; }) }] });
     if (f) slides.push({ type: 'charts', title: L('Top in its field'), note: L('{f}: the {n} biggest pages in this Wikipedia category, ranked by English Wikipedia views, last 30 days.', { f: x.fieldName, n: f.compared }),
       charts: [{ kind: 'bar', horizontal: true, labels: f.ranked.map((p) => cut(plain(p.title), 26)), series: [{ name: L('Views, 30 days'), values: f.ranked.map((p) => p.views) }] }],
       take: L('{a} leads {f} with {p}% of the attention.', { a: plain(f.ranked[0].title), f: x.fieldName, p: f.share_pct }) });
     mentionsSlide(slides, data, s.title, x);
-    statesSlide(slides, data, s.title, x);
     slides[slides.length - 1].foot = `${L('Sources')}: ${x.sources}`;
     return { slides, title: s.title, file: `like-polling-brand-${s.title.toLowerCase().normalize('NFD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-report` };
   }
@@ -223,25 +175,12 @@
       const yc = (head, k) => ({ head, kind: 'bar', labels: yrs.map((y) => String(y.year)), series: [{ name: head, values: yrs.map((y) => (y[k] == null ? 0 : Math.round((y[k] / u) * 10) / 10)) }] });
       slides.push({ type: 'charts', title: L('How the business is doing'), note: x.bizNote || '', charts: [yc(x.bizHeads[0], 'revenue'), yc(x.bizHeads[1], 'profit')], take: x.bizTake || '' });
     }
-    const ds = s.series.map((d) => d.day);
-    if (ds.length > 1) {
-      slides.push({ type: 'charts', title: L('Attention, day by day'), note: L('English Wikipedia views per day.'),
-        charts: [{ kind: 'line', labels: ds.map(dshort), series: all.map((p) => { const m = new Map(p.series.map((d) => [d.day, d.views])); return { name: p.title, values: ds.map((d) => m.get(d) || 0) }; }) }] });
-    }
-    if (all.length > 1) {
-      const by = (k) => [...all].sort((a, b) => (b[k] ?? -1e9) - (a[k] ?? -1e9));
-      const bar = (head, k, fmt) => { const it = by(k); return { head, kind: 'bar', horizontal: true, labels: it.map((p) => cut(p.title, 24)), series: [{ name: head, values: it.map((p) => p[k] || 0) }], fmt }; };
-      const g = by('change_pct')[0];
-      slides.push({ type: 'charts', title: L('Side by side'), note: L('The same three measures for each.'),
-        charts: [bar(L('Views, 30 days'), 'views'), bar(L('Change vs last month'), 'change_pct', 'pct'), bar(L('Languages'), 'languages')],
-        take: g.change_pct > 0 ? L('Fastest growing: {a} ({p}).', { a: g.title, p: `+${g.change_pct}%` }) : '' });
-    }
     if (langTotal) {
       const top = data.languages.slice(0, 8);
       slides.push({ type: 'charts', title: L('Where people read about {s}', { s: s.title }), note: L('Views by Wikipedia language, last 30 days.'),
         charts: [{ head: '', kind: 'doughnut', labels: [langName('en'), L('other languages')], series: [{ name: s.title, values: [100 - abroad, abroad] }] },
           { head: '', kind: 'bar', horizontal: true, labels: top.map((l) => langName(l.lang)), series: [{ name: L('Wikipedia views'), values: top.map((l) => l.views) }], wide: 2 }],
-        take: data.languages[1] ? L('After English, the most readers are in {l}.', { l: langName(data.languages[1].lang) }) : '', learn: x.tip ? x.tip('langs') : '' });
+        take: data.languages[1] ? L('After English, the most readers are in {l}.', { l: langName(data.languages[1].lang) }) : '' });
     }
     if (data.countries.length) {
       const top = data.countries.slice(0, 10);
@@ -257,19 +196,13 @@
     }
     extraSlides(slides, data, s.title, x);
     mentionsSlide(slides, data, s.title, x);
-    statesSlide(slides, data, s.title, x);
     slides[slides.length - 1].foot = `${L('Sources')}: ${x.sources}`;
     return { slides, title: s.title, file: `like-polling-${data.type}-${s.title.toLowerCase().normalize('NFD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-report` };
   }
 
-  const TIP_OF = ['Searched on Google:searches', 'Holidays coming up:holidays', 'Trending on Google:searches', 'Top in its field:field', 'The economy:gdp', 'How the business is doing:biz', 'At a glance:glance', 'News coverage per day:line', 'Wikipedia attention per day:line', 'Attention, day by day:line', 'Most-read on Wikipedia:top', 'Rising this week:rising',
-    'Peaceful and tense news:topics', 'What the news talks about:topics', 'In the news with:partners', 'Side by side:vs', 'Languages:langs', 'Trending in countries:ctry'];
   const deckOf = (data, x) => {
     const d = data.type === 'artist' || data.type === 'company' ? entityDeck(data, x) : countryDeck(data, x);
-    if (!x.tip) return d;
-    const tips = new Map(TIP_OF.map((t) => { const [k, v] = t.split(':'); return [x.L(k), v]; }));
-    d.slides.forEach((sl) => { if (tips.has(sl.title)) sl.learn = x.tip(tips.get(sl.title)); });
-    if (x.know && x.know.length) d.slides.unshift({ type: 'know', title: x.L('In plain words'), note: x.L('The report in a few easy numbers. The slides after this show the details.'), items: x.know, learn: x.tip('know') });
+    if (x.know && x.know.length) d.slides.unshift({ type: 'know', title: x.L('In plain words'), note: x.L('The report in a few easy numbers. The slides after this show the details.'), items: x.know });
     return d;
   };
 

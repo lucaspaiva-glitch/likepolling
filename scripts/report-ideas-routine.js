@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Weekly "ideas to copy" for the Country Inspiration Report: for each tracked country, Gemini reads
-// that country's last-30-days report (lib/report.js: Wikipedia + GDELT only) and writes 5 short ideas a brand or
+// that country's last-30-days report (lib/report.js: Wikipedia, GDELT, holidays) and writes 3 short ideas a brand or
 // creator from another country could adapt. Saved in public.report_insights (private).
 //   node scripts/report-ideas-routine.js        Env: SUPABASE_URL, SUPABASE_KEY (secret), GEMINI_API_KEY
 'use strict';
@@ -38,15 +38,17 @@ function digest(c) {
     news_topics: c.news_focus.topics.map((t) => `${t.topic} ${t.pct}%`),
     news_cooperation_share: c.news_focus.cooperation_pct,
     countries_most_mentioned_with: c.news_partners.map((p) => p.country),
+    upcoming_holidays: (c.holidays || []).map((h) => `${h.day} ${h.name || h.local_name}`),
   };
 }
 
 function prompt(d) {
   return `You advise marketing agencies and creators who want inspiration from other countries.
-Below is what people in country ${d.country} read most on Wikipedia, and what the news there talked about (GDELT), over the last 30 days.
-Write exactly 5 concrete content or campaign ideas that a brand or creator from ANOTHER country could adapt from this.
+Below is what people in country ${d.country} read most on Wikipedia, what the news there talked about (GDELT), over the last 30 days, and its next public holidays.
+Write exactly 3 concrete content or campaign ideas that a brand or creator from ANOTHER country could adapt from this.
+Each idea starts from ONE specific item in the data (a rising or most-read page, or an upcoming holiday) and says what to post, on which platform and when. No generic ideas such as "a content series about trends".
 Rules: use only the data below; never invent numbers, names or facts; no politics, tragedies, deaths or violence as campaign hooks; plain English.
-Reply with only a JSON array of 5 objects: {"title": at most 8 words, "idea": at most 35 words, "based_on": the item(s) from the data it comes from, at most 12 words}.
+Reply with only a JSON array of 3 objects: {"title": at most 8 words, "idea": at most 30 words, "based_on": the item(s) from the data it comes from, at most 12 words}.
 
 ${JSON.stringify(d)}`;
 }
@@ -54,7 +56,7 @@ ${JSON.stringify(d)}`;
 function clean(ideas) {
   if (!Array.isArray(ideas)) return [];
   const s = (v, n) => String(v || '').trim().slice(0, n);
-  return ideas.filter((i) => i && i.title && i.idea).slice(0, 5).map((i) => ({ title: s(i.title, 80), idea: s(i.idea, 300), based_on: s(i.based_on, 140) }));
+  return ideas.filter((i) => i && i.title && i.idea).slice(0, 3).map((i) => ({ title: s(i.title, 80), idea: s(i.idea, 240), based_on: s(i.based_on, 140) }));
 }
 
 async function run(env = process.env, deps = {}) {

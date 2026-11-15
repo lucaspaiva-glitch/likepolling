@@ -26,9 +26,14 @@
     .lp-cs-pos b { color: #ff8a94; font-weight: 700; }
     .lp-cs-grp select.lp-cs-sel { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; min-width: 0; margin: 0; padding: 0; border: 0; opacity: 0; cursor: pointer; font-size: 16px; -webkit-appearance: none; appearance: none; }
     .lp-cs-grp select.lp-cs-sel option { color: #0d0d0d; background: #fff; }
+    .lp-cs-nav { display: inline-flex; align-items: center; gap: 4px; min-width: 0; max-width: 100%; flex: none; }
+    .lp-cs-arr { flex: none; width: 24px; height: 24px; padding: 0 0 2px; margin: 0; box-sizing: border-box; border: 1px solid rgba(255,42,60,.55); border-radius: 5px; background: linear-gradient(180deg, #8c000c, #7f000a 55%, #6e0009); color: #fff; font: 700 16px/1 ${MONO}; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+    .lp-cs-arr:hover { border-color: #ff2a3c; box-shadow: 0 0 12px -3px rgba(255,42,60,.85); }
+    .lp-cs-arr:focus-visible { outline: 2px solid rgba(255,42,60,.6); outline-offset: 2px; }
     @media (max-width: 560px) {
-      #news-front .nw-head .nw-wpick, #yt-trending .lp-cs-grp, #yt-music .lp-cs-grp, #edu .lp-cs-grp { order: 2; flex-basis: 100%; }
-      #yt-trending .lp-cs-grp, #yt-music .lp-cs-grp, #edu .lp-cs-grp { flex: 0 0 auto; margin-right: 100%; }
+      .lp-cs-arr { width: 32px; height: 28px; }
+      #news-front .nw-head .nw-wpick, #yt-trending .lp-cs-nav, #yt-music .lp-cs-nav, #edu .lp-cs-nav { order: 2; flex-basis: 100%; }
+      #yt-trending .lp-cs-nav, #yt-music .lp-cs-nav, #edu .lp-cs-nav { flex: 0 0 auto; margin-right: 100%; }
       #news-front .nw-head .nw-spacer { display: none; }
     }
   `;
@@ -103,7 +108,23 @@
       sel.dispatchEvent(new Event('change', { bubbles: true }));
       if (!still()) panel.animate([{ opacity: 0.45 }, { opacity: 1 }], { duration: 320, easing: 'ease-out' });
     };
-    const skip = (t) => t.closest('input, select, textarea, [contenteditable]') || sideScroller(t, panel);
+    // ‹ › buttons either side of the country picker: one click or tap per country, both ways.
+    const anchor = sel.closest('.lp-cs-grp') || (sel.parentElement.matches('.nw-wpick') ? sel.parentElement : sel);
+    const nav = document.createElement('span');
+    nav.className = 'lp-cs-nav';
+    anchor.before(nav);
+    const arrow = (dir, label, ch) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'lp-cs-arr';
+      b.setAttribute('aria-label', label);
+      b.setAttribute('data-no-i18n', '');
+      b.textContent = ch;
+      b.addEventListener('click', () => step(dir));
+      return b;
+    };
+    nav.append(arrow(-1, 'Previous country', '‹'), anchor, arrow(1, 'Next country', '›'));
+    const skip = (t) => t.closest('input, select, textarea, button, [contenteditable]') || sideScroller(t, panel);
     panel.addEventListener('click', (e) => {
       if (!e.target.closest('.lp-next')) return;
       step(1);

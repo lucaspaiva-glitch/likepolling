@@ -169,7 +169,7 @@ test('ideas routine sends only open data to Gemini and saves cleaned ideas', asy
     ask: async (p) => { prompts.push(p); return [1, 2, 3, 4, 5, 6].map((n) => ({ title: `Idea ${n}`, idea: 'Do it', based_on: 'Lula' })); },
   });
   assert.deepEqual(out.done, ['BR']);
-  assert.equal(saved[0].ideas.length, 5);
+  assert.equal(saved[0].ideas.length, 3);
   assert.match(prompts[0], /Wikipedia/);
   assert.doesNotMatch(prompts[0], /youtube/i);
 });
