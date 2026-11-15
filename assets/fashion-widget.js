@@ -38,7 +38,7 @@
   mount.classList.add('fsh');
   mount.setAttribute('aria-label', 'Fashion: fashion videos and fashion news in each country');
   mount.innerHTML = `
-    <div class="fsh-top"><div><h2 class="fsh-h">Fashion</h2><p class="fsh-p">Fashion videos and headlines from each country, in your language.</p></div>
+    <div class="fsh-top"><div><h2 class="fsh-h">Fashion</h2></div>
       <select class="ytt-select fsh-select" aria-label="Country"></select></div>
     <section class="ytt fsh-card fsh-vcard" hidden>
       <div class="ytt-head"><h3 class="ytt-title">Fashion Index</h3><span class="ytt-sym">FIX</span><span class="ytt-spacer"></span><span class="ytt-asof fsh-vasof"></span></div>
