@@ -2,7 +2,7 @@ name: News coverage memory
 
 on:
   schedule:
-    - cron: '17 3 * * 1' # weekly, Monday
+    - cron: '17 */3 * * *' # every 3 hours; each subject is refreshed about weekly
   workflow_dispatch:
   push:
     branches: [main]

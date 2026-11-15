@@ -95,7 +95,7 @@
       if (pts.length < 2 || ch == null) return '';
       return `<div class="fsh-attn-c"><span class="fsh-attn-n"><b>${esc(name)}</b>${A.badge(ch)}</span><span class="fsh-attn-p">${A.chart(pts, { label: name, axis: true, small: true })}</span></div>`;
     }).join('');
-    attn.querySelector('.fsh-attn-h').innerHTML = `<b>${esc(tr('Brands in the news vs last year'))}</b> ${esc(tr('Share of world news per month, last 3 years'))}`;
+    attn.querySelector('.fsh-attn-h').innerHTML = `<b>${esc(tr('Brand news share vs last year'))}</b> ${esc(tr('Share of world news per month, last 3 years'))}`;
     attn.querySelector('.fsh-attn-grid').innerHTML = cards;
     attn.hidden = !cards;
   }

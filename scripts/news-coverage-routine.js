@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// News coverage memory: once a week, saves for each tracked country and Fashion Index brand the share of
+// News coverage memory: every 3 hours, refreshes (weekly per subject) for each tracked country and Fashion Index brand the share of
 // all news articles worldwide that mention it (GDELT DOC API "volume intensity", in %), averaged per month over the last
 // 3 full years, into public.news_coverage_monthly and public.brand_coverage_monthly (lib/news-coverage.js). GDELT allows 1 request every 5 s, so this runs as a
 // job instead of from visitors' browsers.
@@ -28,26 +28,43 @@ function query(cc) {
   return `"${new Intl.DisplayNames(['en'], { type: 'region' }).of(cc)}"`;
 }
 
+// Each run refreshes the subjects saved longest ago (missing ones first) for up to `budget` ms, so GDELT's
+// rate limits only slow the fill-in instead of failing it. Subjects saved in the last 6 days are skipped.
 async function main(env = process.env, now = new Date(), deps = {}) {
   if (!env.SUPABASE_URL || !env.SUPABASE_KEY) throw new Error('SUPABASE_URL and SUPABASE_KEY are required.');
-  const fetchImpl = deps.fetch || fetch, wait = deps.sleep || sleep;
+  const fetchImpl = deps.fetch || fetch, wait = deps.sleep || sleep, clock = deps.clock || Date.now, budget = deps.budget ?? 20 * 60000;
+  const headers = supabaseHeaders(env.SUPABASE_KEY);
+  const last = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1)).toISOString().slice(0, 10);
+  const savedAt = {};
+  for (const [table, col] of [['news_coverage_monthly', 'country_code'], ['brand_coverage_monthly', 'brand']]) {
+    const r = await fetchImpl(`${env.SUPABASE_URL}/rest/v1/${table}?select=${col},saved_at&month=eq.${last}`, { headers });
+    if (!r.ok) throw new Error(`Supabase ${r.status}`);
+    for (const row of await r.json()) savedAt[`${table}:${row[col]}`] = Date.parse(row.saved_at);
+  }
   const jobs = [...COUNTRIES.map((cc) => ['news_coverage_monthly', 'country_code', cc, query(cc)]),
-    ...Object.entries(BRANDS).map(([b, q]) => ['brand_coverage_monthly', 'brand', b, q])];
-  let saved = 0, failed = 0;
+    ...Object.entries(BRANDS).map(([b, q]) => ['brand_coverage_monthly', 'brand', b, q])]
+    .map((j) => [...j, savedAt[`${j[0]}:${j[2]}`] || 0])
+    .filter((j) => now - j[4] > 6 * 86400000)
+    .sort((x, y) => x[4] - y[4]);
+  const start = clock();
+  let saved = 0, tried = 0, failed = 0;
   for (const [table, col, key, q] of jobs) {
+    if (clock() - start > budget) break;
+    tried++;
     try {
-      const rows = (await coverage(q, now, { fetchImpl, wait })).map((r) => ({ [col]: key, ...r, saved_at: now.toISOString() }));
+      const rows = (await coverage(q, now, { fetchImpl, wait, tries: 2, timeout: 30000 })).map((r) => ({ [col]: key, ...r, saved_at: now.toISOString() }));
       if (rows.length) {
         const r = await fetchImpl(`${env.SUPABASE_URL}/rest/v1/${table}?on_conflict=${col},month`,
-          { method: 'POST', headers: { ...supabaseHeaders(env.SUPABASE_KEY), Prefer: 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(rows) });
+          { method: 'POST', headers: { ...headers, Prefer: 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(rows) });
         if (!r.ok) throw new Error(`Supabase ${r.status}`);
-        saved += rows.length;
+        saved++;
       }
     } catch (e) { failed++; console.error(`${key}: ${e.message}`); }
-    await wait(6000);
+    await wait(10000);
   }
-  console.log(`Saved ${saved} months, ${failed} of ${jobs.length} subjects failed.`);
-  if (failed > jobs.length / 2) throw new Error('Most subjects failed.');
+  console.log(`Saved ${saved} subjects, ${failed} failed, ${jobs.length - tried} left for the next run.`);
+  if (tried && !saved) throw new Error('No subject could be saved.');
+  return { saved, failed, left: jobs.length - tried };
 }
 
 if (require.main === module) main().catch((e) => { console.error(e.message); process.exitCode = 1; });

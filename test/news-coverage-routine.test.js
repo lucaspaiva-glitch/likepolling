@@ -12,6 +12,24 @@ test('monthly averages GDELT daily shares per month; span covers the last 3 full
   assert.strictEqual(query('BR'), '"Brazil"');
   assert.strictEqual(query('US'), '"United States"');
   assert.ok(BRANDS.Chanel && BRANDS['Hermès']);
-  assert.deepStrictEqual(indexed([{ month: '2023-11-01', share: '0.5' }, { month: '2023-12-01', share: 2 }]), [{ day: '2023-11-01', value: 25 }, { day: '2023-12-01', value: 100 }]);
+  assert.deepStrictEqual(indexed([{ month: '2023-11-01', share: '0.5' }, { month: '2023-12-01', share: 2 }]), [{ day: '2023-11-01', value: 25, share: 0.5 }, { day: '2023-12-01', value: 100, share: 2 }]);
   assert.deepStrictEqual(indexed([]), []);
+});
+
+test('routine refreshes missing and oldest subjects first, skips fresh ones and stops at the time budget', async () => {
+  const { main } = require('../scripts/news-coverage-routine.js');
+  const now = new Date('2026-11-15T12:00:00Z'), asked = [], posted = [];
+  let t = 0;
+  const fetch = async (url, opt = {}) => {
+    if (url.includes('news_coverage_monthly?select')) return { ok: true, json: async () => [{ country_code: 'AR', saved_at: '2026-11-14T00:00:00Z' }, { country_code: 'BR', saved_at: '2026-10-01T00:00:00Z' }] };
+    if (url.includes('brand_coverage_monthly?select')) return { ok: true, json: async () => [] };
+    if (opt.method === 'POST') { posted.push(url); return { ok: true }; }
+    asked.push(new URL(url).searchParams.get('query'));
+    return { ok: true, text: async () => JSON.stringify({ timeline: [{ data: [{ date: '20261001T000000Z', value: 2 }] }] }) };
+  };
+  const out = await main({ SUPABASE_URL: 'https://x', SUPABASE_KEY: 'k' }, now, { fetch, sleep: async () => {}, clock: () => (t += 1000), budget: 3500 });
+  assert.ok(!asked.includes('"Argentina"'), 'saved yesterday: skipped');
+  assert.notStrictEqual(asked[asked.length - 1], '"Brazil"', 'BR (oldest saved) comes after the missing ones');
+  assert.strictEqual(out.saved, asked.length);
+  assert.ok(out.left > 0 && posted.length === asked.length);
 });

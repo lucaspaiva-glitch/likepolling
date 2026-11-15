@@ -116,6 +116,12 @@
   const nice = (m) => { const p = 10 ** Math.floor(Math.log10(m || 1)); return Math.ceil(m / p / (m / p > 5 ? 2 : 1)) * p * (m / p > 5 ? 2 : 1); };
 
   // Line chart of one daily series, peak marked. Plain SVG so it prints into the PDF.
+  // "1 in N news stories" for the latest month with a share (points from lib/news-coverage.js indexed()).
+  function newsOneIn(pts, who) {
+    const p = (pts || []).filter((d) => d.share > 0).pop();
+    return p ? L('In {m}, 1 in {n} news stories worldwide mentioned {s}.', { m: monthName(p.day.slice(0, 7)), n: num(Math.round(100 / p.share)), s: who }) : '';
+  }
+
   function lineChart(points, what, tick = dshort) {
     if (points.length < 2) return empty();
     const W = 600, H = 210, LM = 44, R = 14, T = 16, B = 30;
@@ -257,7 +263,7 @@
       ? `<ul class="hol"><li><b>${dshort(c.launch.net.slice(0, 10))}</b><span>${esc(c.launch.name)}${c.launch.provider || c.launch.site ? ` <small>${esc([c.launch.provider, c.launch.site].filter(Boolean).join(' · '))}</small>` : ''}</span></li></ul>`
         + `<p class="take">${L(c.launch.here ? 'Next rocket launch from {c}: {n} on {d}.' : 'No rocket launch is planned from {c}. The next one in the world is {n} on {d}.', { c: esc(name(c.country)), n: `<b>${esc(c.launch.name)}</b>`, d: dshort(c.launch.net.slice(0, 10)) }).replace(/\.\.$/, '.')}</p>` : '')],
     ['Through time', 'From the Like Polling archive: the most-read pages, top search and news coverage in each month since we started.', (c) => (c.through_time && c.through_time.length
-      ? `${byMonthChart(c.news_by_month, L('News coverage per month, last 3 years (100 = busiest month)'))}<ul class="hol stack">${c.through_time.slice(-6).reverse().map((m) => `<li><b>${monthName(m.month)}</b><span>${m.most_read.slice(0, 2).map(wikiLabel).join('<br>')}${[m.searches[0] && L('Top search: {x}', { x: esc(m.searches[0].query) }), m.news_articles && L('News articles: {n}', { n: num(m.news_articles) })].filter(Boolean).map((x) => `<small>${x}</small>`).join('')}</span></li>`).join('')}</ul>`
+      ? `${byMonthChart(c.news_by_month, L('News share per month, last 3 years (100 = busiest month)'))}${newsOneIn(c.news_by_month, esc(name(c.country))) ? `<p class="take">${newsOneIn(c.news_by_month, esc(name(c.country)))}</p>` : ''}<ul class="hol stack">${c.through_time.slice(-6).reverse().map((m) => `<li><b>${monthName(m.month)}</b><span>${m.most_read.slice(0, 2).map(wikiLabel).join('<br>')}${[m.searches[0] && L('Top search: {x}', { x: esc(m.searches[0].query) }), m.news_articles && L('News articles: {n}', { n: num(m.news_articles) })].filter(Boolean).map((x) => `<small>${x}</small>`).join('')}</span></li>`).join('')}</ul>`
         + `<p class="take">${L('Like Polling has kept a daily record of {c} since {date}. Every new report adds to it.', { c: esc(name(c.country)), date: dlong(STARTED) })}</p>` : '')],
     ['Ideas to copy', 'Written each week by AI from the data above. Use them as starting points.', (c) => (c.ideas.length
       ? `<ol class="ideas">${c.ideas.slice(0, 3).map((i) => `<li><b>${esc(i.title)}</b><p>${esc(i.idea)}</p>${i.based_on ? `<small>${L('Based on: {x}', { x: esc(i.based_on) })}</small>` : ''}</li>`).join('')}</ol>`
@@ -602,7 +608,7 @@
     const ttChange = tt.length >= 24 && yr(tt.slice(-24, -12)) ? Math.round(((yr(tt.slice(-12)) - yr(tt.slice(-24, -12))) / yr(tt.slice(-24, -12))) * 100) : null;
     const ttPeak = tt.reduce((m, d) => (!m || d.value > m.value ? d : m), null);
     const timeSec = tt.length > 1 ? `<section class="rsec"><h2>${L('Through time')}</h2><p class="note">${L('How much of the world\'s news mentioned {s} each month, last 3 years (100 = its busiest month).', { s: esc(s.title) })}</p>
-      ${lineChart(tt, L('News coverage'), monthShort)}<p class="take">${L('It was most in the news in {m}.', { m: monthName(ttPeak.day.slice(0, 7)) })}${ttChange != null ? ` ${L('In the last 12 months, its news coverage changed {p} compared with the 12 months before.', { p: sign(ttChange) })}` : ''}</p></section>` : '';
+      ${lineChart(tt, L('News share'), monthShort)}<p class="take">${newsOneIn(tt, esc(s.title)) || L('It was most in the news in {m}.', { m: monthName(ttPeak.day.slice(0, 7)) })}${ttChange != null ? ` ${L('In the last 12 months, its news share changed {p} compared with the 12 months before.', { p: sign(ttChange) })}` : ''}</p></section>` : '';
     const qual = quality(data);
     const qualSec = `<section class="rsec"><h2>${L('Sources and data quality')}</h2><p class="note">${L('Where each number comes from, and what kind of number it is. No number in this report was made by AI.')}</p>
       <div class="tight" style="overflow-x:auto"><table class="cmp"><thead><tr><th>${L('What')}</th><th>${L('Source')}</th><th>${L('Type')}</th><th>${L('Covers')}</th></tr></thead><tbody>${qual.map((r) => `<tr><th>${esc(r[0])}</th>${r.slice(1).map((c) => `<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div></section>`;

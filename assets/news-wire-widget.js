@@ -197,9 +197,10 @@
     let name = cc;
     try { name = new Intl.DisplayNames([lang === 'pt' ? 'pt-BR' : lang], { type: 'region' }).of(cc); } catch (e) { /* code only */ }
     const ch = A.change(pts);
-    attn.querySelector('.lp-attn-txt').innerHTML = `<b>${esc(tr('{c} in the news').replace('{c}', name))}</b>${ch == null ? '' : `<strong>${A.badge(ch)}<small>${esc(tr('vs last year'))}</small></strong>`}<span>${esc(tr('Share of world news per month'))}</span>`;
+    const last = pts[pts.length - 1].v > 0 ? pts[pts.length - 1] : null;
+    attn.querySelector('.lp-attn-txt').innerHTML = `<b>${esc(tr('News share: {c}').replace('{c}', name))}</b>${ch == null ? '' : `<strong>${A.badge(ch)}<small>${esc(tr('vs last year'))}</small></strong>`}${last ? `<span>${esc(tr('1 in {n} news stories worldwide mention {c}').replace('{n}', Math.round(100 / last.v).toLocaleString(lang)).replace('{c}', name))}</span>` : ''}`;
     const plot = attn.querySelector('.lp-attn-plot');
-    plot.innerHTML = A.chart(pts, { label: tr('{c} in the news').replace('{c}', name), axis: true }) + '<span class="lp-attn-cap"></span>';
+    plot.innerHTML = A.chart(pts, { label: tr('News share: {c}').replace('{c}', name), axis: true }) + '<span class="lp-attn-cap"></span>';
     const cap = plot.querySelector('.lp-attn-cap');
     const show = (m) => {
       const s = top.get(m);
