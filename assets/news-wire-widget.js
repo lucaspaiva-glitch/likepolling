@@ -175,6 +175,26 @@
   fLabel.foot.el.textContent = '';
   front.querySelector('.nw-asof').insertAdjacentHTML('beforebegin', '<span class="nw-wpick" hidden><img class="nw-pick-flag" src="" alt="" width="20" height="15"><select class="nw-select" data-no-i18n></select></span>');
   const wPick = front.querySelector('.nw-wpick');
+  // Through time: how much the world read the country's English Wikipedia page each month (assets/attention.js).
+  front.querySelector('.nw-sub').insertAdjacentHTML('afterend', '<div class="lp-attn-row nw-attn" data-no-i18n hidden><div class="lp-attn-txt"><b></b><span></span></div><div class="lp-attn-plot"></div></div>');
+  const attn = front.querySelector('.nw-attn');
+  const WIKI_TITLES = { IE: 'Republic of Ireland', TR: 'Turkey' };
+  let attnFor = null;
+  async function showAttn(cc) {
+    const A = window.LP_ATTN;
+    attnFor = cc;
+    if (!A || !cc) { attn.hidden = true; return; }
+    let title = WIKI_TITLES[cc];
+    try { title = title || new Intl.DisplayNames(['en'], { type: 'region' }).of(cc); } catch (e) { title = null; }
+    const pts = await A.months(title);
+    if (attnFor !== cc) return;
+    if (pts.length < 2) { attn.hidden = true; return; }
+    const top = A.peak(pts), ch = A.change(pts);
+    attn.querySelector('b').textContent = tr('Interest per month, last 3 years (Wikipedia views)');
+    attn.querySelector('span').innerHTML = `${esc(tr('Peak'))}: ${esc(A.month(top.m))}${ch == null ? '' : ` · ${esc(tr('Last 12 months'))}: <em class="${ch >= 0 ? 'lp-attn-up' : 'lp-attn-down'}">${A.signed(ch)}</em> ${esc(tr('vs the 12 before'))}`}`;
+    attn.querySelector('.lp-attn-plot').innerHTML = A.chart(pts, tr('Interest per month, last 3 years (Wikipedia views)'));
+    attn.hidden = false;
+  }
   const wSel = wPick.querySelector('select');
   const wFlag = wPick.querySelector('img');
   wSel.addEventListener('change', () => {
@@ -665,6 +685,7 @@
     fLabel.foot.el.textContent = world ? `${tr(W_FOOT)} ${tr(W_TR)} ${tr(W_SUM)}` : tr(fLabel.foot.creators);
     wPick.hidden = !world;
     front.classList.toggle('nw-ranked', world);
+    showAttn(world ? cc : null);
     if (!world) return;
     wSel.innerHTML = WORLD_CC.map((c) => ({ c, n: name(c) })).sort((a, b) => a.n.localeCompare(b.n, ui))
       .map((o) => `<option value="${o.c}"${counts[o.c] || o.c === cc ? '' : ' disabled'}>${esc(o.n)}</option>`).join('');

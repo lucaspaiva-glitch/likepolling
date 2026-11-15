@@ -43,6 +43,7 @@
     <section class="ytt fsh-card fsh-vcard" hidden>
       <div class="ytt-head"><h3 class="ytt-title">Fashion Index</h3><span class="ytt-sym">FIX</span><span class="ytt-spacer"></span><span class="ytt-asof fsh-vasof"></span></div>
       <div class="fsh-vbody"></div>
+      <div class="fsh-attn" data-no-i18n hidden><p class="fsh-attn-h"></p><div class="fsh-attn-grid"></div></div>
       <p class="ytt-foot fsh-follow" hidden>Portugal follows fashion from Italy, Spain, France and the UK, so these are the top videos from their channels.</p>
       <p class="ytt-foot">Fastest-growing uploads of the last 30 days from the fashion magazines, brands and fashion weeks we track in this country, at most 2 per channel. Speed = views per hour since upload. Refreshed twice a day.</p>
       <p class="ytt-foot">Countries with fewer than 5 videos look back 60 days, with up to 3 per channel.</p>
@@ -63,6 +64,40 @@
   const vbody = mount.querySelector('.fsh-vbody');
   const vasof = mount.querySelector('.fsh-vasof');
   const follow = mount.querySelector('.fsh-follow');
+  // Brands through time: English Wikipedia views per month of the brands and magazines in the Fashion Index (assets/attention.js).
+  const attn = mount.querySelector('.fsh-attn');
+  const BRANDS = [
+    [/^teen vogue/i, 'Teen Vogue', 'Teen Vogue'], [/^vogue/i, 'Vogue', 'Vogue (magazine)'], [/^elle\b/i, 'ELLE', 'Elle (magazine)'],
+    [/^harper'?s bazaar/i, "Harper's Bazaar", "Harper's Bazaar"], [/^instyle/i, 'InStyle', 'InStyle'], [/^wwd\b/i, 'WWD', "Women's Wear Daily"],
+    [/^gq\b/i, 'GQ', 'GQ'], [/^w korea/i, 'W', 'W (magazine)'], [/^burberry/i, 'Burberry', 'Burberry'], [/^chanel/i, 'Chanel', 'Chanel'],
+    [/dior/i, 'Dior', 'Dior'], [/^louis vuitton/i, 'Louis Vuitton', 'Louis Vuitton'], [/^herm[eè]s/i, 'Hermès', 'Hermès'],
+    [/^balmain/i, 'Balmain', 'Balmain (fashion house)'], [/^gucci/i, 'Gucci', 'Gucci'], [/^prada/i, 'Prada', 'Prada'],
+    [/^valentino/i, 'Valentino', 'Valentino (fashion house)'], [/^versace/i, 'Versace', 'Versace'], [/^zara\b/i, 'Zara', 'Zara (retailer)'],
+    [/^mango\b/i, 'Mango', 'Mango (retailer)'], [/^uniqlo/i, 'Uniqlo', 'Uniqlo'], [/^lakm[eé] fashion week/i, 'Lakmé Fashion Week', 'Lakmé Fashion Week'],
+    [/^tamara kalinic/i, 'Tamara Kalinic', 'Tamara Kalinic'],
+  ];
+  async function showAttn(rows) {
+    const A = window.LP_ATTN;
+    const seen = new Map();
+    for (const r of rows) {
+      const b = BRANDS.find(([re]) => re.test(String(r.channel_title || '').trim()));
+      if (b && !seen.has(b[2])) seen.set(b[2], b[1]);
+    }
+    const list = [...seen].slice(0, 6);
+    if (!A || !list.length) { attn.hidden = true; return; }
+    const mine = token;
+    const got = await Promise.all(list.map(([title]) => A.months(title)));
+    if (mine !== token) return;
+    const cards = list.map(([, name], i) => {
+      const pts = got[i];
+      if (pts.length < 2) return '';
+      const ch = A.change(pts);
+      return `<div class="fsh-attn-c"><span class="fsh-attn-n"><b>${esc(name)}</b>${ch == null ? '' : `<em class="${ch >= 0 ? 'lp-attn-up' : 'lp-attn-down'}" title="${esc(`${tr('Last 12 months')} ${tr('vs the 12 before')}`)}">${A.signed(ch)}</em>`}</span><span class="fsh-attn-p">${A.chart(pts, name)}</span></div>`;
+    }).join('');
+    attn.querySelector('.fsh-attn-h').innerHTML = `<b>${esc(tr('Brands through time'))}</b> ${esc(tr('Interest per month, last 3 years (Wikipedia views)'))}. ${esc(tr('Last 12 months'))} ${esc(tr('vs the 12 before'))}.`;
+    attn.querySelector('.fsh-attn-grid').innerHTML = cards;
+    attn.hidden = !cards;
+  }
   const cache = {};
   const vcache = {};
   let videoCodes = [];
@@ -249,7 +284,7 @@
 
   async function showVideos(cc) {
     const mine = token;
-    if (!videoCodes.includes(cc)) { vcard.hidden = true; return; }
+    if (!videoCodes.includes(cc)) { vcard.hidden = true; attn.hidden = true; return; }
     vcard.hidden = false;
     follow.hidden = cc !== 'PT';
     if (!vcache[cc]) vbody.innerHTML = '';
@@ -259,6 +294,7 @@
       const rows = vcache[cc];
       if (!rows.length) { vcard.hidden = true; return; }
       vbody.innerHTML = videos(rows);
+      showAttn(rows);
       vasof.textContent = `As of ${new Date(rows[0].fetched_at).toISOString().slice(11, 16)} UTC`;
     } catch (err) {
       if (mine !== token) return;
@@ -313,7 +349,7 @@
       select.addEventListener('change', () => show(select.value));
       document.addEventListener('lp:lang', () => {
         if (cache[select.value]) draw(cache[select.value]);
-        if (vcache[select.value] && vcache[select.value].length) vbody.innerHTML = videos(vcache[select.value]);
+        if (vcache[select.value] && vcache[select.value].length) { vbody.innerHTML = videos(vcache[select.value]); showAttn(vcache[select.value]); }
       });
       await show(select.value);
     } catch (err) {
