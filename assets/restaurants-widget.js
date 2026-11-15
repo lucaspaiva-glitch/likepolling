@@ -25,7 +25,7 @@
       <div class="rst-sum" data-no-i18n></div>
       <ul class="rst-list" data-no-i18n></ul>
       <p class="ytt-foot">Stars as recorded in Wikidata (open data), checked weekly. Not an official Michelin Guide list.</p>
-      <p class="ytt-foot">Lines show interest per month over the last 3 years (Wikipedia views).</p></section>`;
+      <p class="ytt-foot">▲▼ shows how many more or fewer people looked a restaurant up on Wikipedia than last year.</p></section>`;
   const select = mount.querySelector('.rst-select');
   const list = mount.querySelector('.rst-list');
   const sum = mount.querySelector('.rst-sum');
@@ -34,24 +34,24 @@
   let reg = '';
   const tr = (x) => (window.LP_I18N ? window.LP_I18N.t(x) : x);
   const fill = () => { select.innerHTML = COUNTRIES.map((c) => `<option value="${c}"${c === cc ? ' selected' : ''}>${esc(region(c))}</option>`).join(''); };
-  // Through time: each restaurant's English Wikipedia views per month, last 3 years (assets/attention.js), loaded when on screen.
+  // Interest vs last year: each restaurant's English Wikipedia visits, last 12 months vs the 12 before (assets/attention.js), loaded when on screen.
   const wikiTitle = (u) => { const m = /^https:\/\/en\.wikipedia\.org\/wiki\/(.+)$/.exec(u || ''); try { return m ? decodeURIComponent(m[1]).replace(/_/g, ' ') : ''; } catch { return ''; } };
   async function spark(el) {
     const A = window.LP_ATTN;
     if (!A || el.dataset.done) return;
     el.dataset.done = '1';
     const pts = await A.months(el.dataset.t);
-    if (pts.length < 2 || !el.isConnected) return;
-    const top = A.peak(pts);
-    el.title = `${tr('Peak')}: ${A.month(top.m)}`;
-    el.innerHTML = A.chart(pts, tr('Interest per month, last 3 years (Wikipedia views)'));
+    if (!el.isConnected) return;
+    const ch = A.change(pts);
+    if (ch == null) return;
+    el.innerHTML = `${A.badge(ch)}${esc(tr('vs last year'))}`;
   }
-  const seen = 'IntersectionObserver' in window ? new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { seen.unobserve(e.target); spark(e.target); } }), { root: null, rootMargin: '200px' }) : null;
+  const seen = 'IntersectionObserver' in window ? new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { seen.unobserve(e.target); spark(e.target.querySelector('.rst-spark')); } }), { root: null, rootMargin: '200px' }) : null;
   function paint() {
     const rows = reg ? all.filter((r) => r.region === reg) : all;
     list.innerHTML = rows.map((r) => { const u = r.website || r.wiki; const inner = `<b>${esc(r.name)}</b><span>${esc(r.city || '')}</span><em aria-label="${r.stars} Michelin star${r.stars > 1 ? 's' : ''}">${'★'.repeat(r.stars)}</em>${wikiTitle(r.wiki) ? `<span class="rst-spark" data-t="${esc(wikiTitle(r.wiki))}"></span>` : ''}`;
       return `<li class="rst-t${r.stars}">${u ? `<a href="${esc(u)}" target="_blank" rel="noopener">${inner}</a>` : `<div>${inner}</div>`}</li>`; }).join('');
-    list.querySelectorAll('.rst-spark').forEach((el) => (seen ? seen.observe(el) : spark(el)));
+    list.querySelectorAll('.rst-spark').forEach((el) => (seen ? seen.observe(el.closest('li')) : spark(el)));
     sum.innerHTML = [3, 2, 1].map((n) => [n, rows.filter((r) => r.stars === n).length]).filter(([, c]) => c).map(([n, c]) => `<span class="rst-t${n}"><em>${'★'.repeat(n)}</em>${c}</span>`).join('');
   }
   async function show() {

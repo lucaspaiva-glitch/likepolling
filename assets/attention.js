@@ -33,20 +33,19 @@
   const peak = (pts) => pts.reduce((a, p) => (!a || p.v > a.v ? p : a), null);
   const signed = (p) => `${p > 0 ? '+' : p < 0 ? '−' : ''}${Math.abs(p)}%`;
 
-  // Line and area in a 100×30 box stretched to the container; the peak is a dot placed in %.
-  function chart(pts, label = '') {
+  // Line and area in a 100×30 box stretched to the container; axis = first and last month under it.
+  function chart(pts, label = '', axis = false) {
     if (!pts || pts.length < 2) return '';
     const max = Math.max(1, ...pts.map((p) => p.v));
     const x = (i) => (i / (pts.length - 1)) * 100;
     const y = (v) => 28 - (v / max) * 26;
     const line = pts.map((p, i) => `${x(i).toFixed(2)},${y(p.v).toFixed(2)}`).join(' ');
-    const top = peak(pts);
-    const k = pts.indexOf(top);
     return `<span class="lp-attn-svg" role="img" aria-label="${esc(label)}">
       <svg viewBox="0 0 100 30" preserveAspectRatio="none" aria-hidden="true"><polygon points="0,30 ${line} 100,30" class="lp-attn-area"/><polyline points="${line}" class="lp-attn-line" vector-effect="non-scaling-stroke"/></svg>
-      <i class="lp-attn-dot" style="left:${x(k).toFixed(2)}%;top:${((y(top.v) / 30) * 100).toFixed(2)}%" title="${esc(`${month(top.m)}: ${num(top.v)}`)}"></i>
-    </span>`;
+    </span>${axis ? `<span class="lp-attn-ax"><span>${esc(month(pts[0].m))}</span><span>${esc(month(pts[pts.length - 1].m))}</span></span>` : ''}`;
   }
+  // ▲ 12% / ▼ 8%, green or red.
+  const badge = (p) => (p == null ? '' : `<em class="${p >= 0 ? 'lp-attn-up' : 'lp-attn-down'}">${p >= 0 ? '▲' : '▼'} ${Math.abs(p)}%</em>`);
 
   const css = document.createElement('style');
   css.textContent = `
@@ -54,16 +53,19 @@
 .lp-attn-svg svg { display: block; width: 100%; height: 100%; overflow: visible; }
 .lp-attn-area { fill: rgba(176, 0, 14, .09); }
 .lp-attn-line { fill: none; stroke: #b0000e; stroke-width: 1.6; stroke-linejoin: round; }
-.lp-attn-dot { position: absolute; width: 7px; height: 7px; margin: -3.5px 0 0 -3.5px; border-radius: 50%; background: #fff; border: 2px solid #b0000e; box-sizing: border-box; }
-.lp-attn-row { display: grid; grid-template-columns: minmax(280px, 32%) 1fr; gap: 6px 18px; align-items: center; padding: 10px 18px; border-bottom: 1px solid var(--line, #ebebeb); }
+.lp-attn-ax { display: flex; justify-content: space-between; margin-top: 3px; font-size: 11px; color: #8a8a8a; }
+.lp-attn-row { display: grid; grid-template-columns: auto 1fr; gap: 8px 24px; align-items: center; padding: 12px 18px; border-bottom: 1px solid var(--line, #ebebeb); }
 .lp-attn-row[hidden] { display: none; }
-.lp-attn-txt { display: flex; flex-direction: column; gap: 3px; font-size: 12px; line-height: 1.35; color: #6b6b6b; }
-.lp-attn-txt b { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted, #737373); }
-.lp-attn-txt em, .fsh-attn em { font-style: normal; font-weight: 700; }
-.lp-attn-plot { height: 44px; }
-@media (max-width: 640px) { .lp-attn-row { grid-template-columns: 1fr; padding: 10px 14px; } .lp-attn-plot { height: 40px; } }
+.lp-attn-txt { display: flex; flex-direction: column; gap: 2px; }
+.lp-attn-txt b { font-size: 15px; font-weight: 700; color: var(--ink, #111); }
+.lp-attn-txt strong { font-size: 22px; line-height: 1.15; }
+.lp-attn-txt strong em { font-style: normal; }
+.lp-attn-txt strong small { margin-left: 6px; font-size: 13px; font-weight: 500; color: #6b6b6b; }
+.lp-attn-txt > span { font-size: 11px; color: #8a8a8a; }
+.lp-attn-plot .lp-attn-svg { height: 48px; }
+@media (max-width: 640px) { .lp-attn-row { grid-template-columns: 1fr; padding: 12px 14px; } .lp-attn-plot .lp-attn-svg { height: 40px; } }
 .lp-attn-up { color: #137a3a; } .lp-attn-down { color: #b0000e; }`;
   document.head.appendChild(css);
 
-  window.LP_ATTN = { months, change, chart, month, num, peak, signed };
+  window.LP_ATTN = { months, change, chart, badge, month, num, peak, signed };
 })();

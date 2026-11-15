@@ -91,10 +91,9 @@
     const cards = list.map(([, name], i) => {
       const pts = got[i];
       if (pts.length < 2) return '';
-      const ch = A.change(pts);
-      return `<div class="fsh-attn-c"><span class="fsh-attn-n"><b>${esc(name)}</b>${ch == null ? '' : `<em class="${ch >= 0 ? 'lp-attn-up' : 'lp-attn-down'}" title="${esc(`${tr('Last 12 months')} ${tr('vs the 12 before')}`)}">${A.signed(ch)}</em>`}</span><span class="fsh-attn-p">${A.chart(pts, name)}</span></div>`;
+      return `<div class="fsh-attn-c"><span class="fsh-attn-n"><b>${esc(name)}</b>${A.badge(A.change(pts))}</span><span class="fsh-attn-p">${A.chart(pts, name)}</span></div>`;
     }).join('');
-    attn.querySelector('.fsh-attn-h').innerHTML = `<b>${esc(tr('Brands through time'))}</b> ${esc(tr('Interest per month, last 3 years (Wikipedia views)'))}. ${esc(tr('Last 12 months'))} ${esc(tr('vs the 12 before'))}.`;
+    attn.querySelector('.fsh-attn-h').innerHTML = `<b>${esc(tr('Brand interest vs last year'))}</b> ${esc(tr('Wikipedia visits per month, last 3 years'))}`;
     attn.querySelector('.fsh-attn-grid').innerHTML = cards;
     attn.hidden = !cards;
   }

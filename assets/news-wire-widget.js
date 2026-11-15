@@ -176,7 +176,7 @@
   front.querySelector('.nw-asof').insertAdjacentHTML('beforebegin', '<span class="nw-wpick" hidden><img class="nw-pick-flag" src="" alt="" width="20" height="15"><select class="nw-select" data-no-i18n></select></span>');
   const wPick = front.querySelector('.nw-wpick');
   // Through time: how much the world read the country's English Wikipedia page each month (assets/attention.js).
-  front.querySelector('.nw-sub').insertAdjacentHTML('afterend', '<div class="lp-attn-row nw-attn" data-no-i18n hidden><div class="lp-attn-txt"><b></b><span></span></div><div class="lp-attn-plot"></div></div>');
+  front.querySelector('.nw-sub').insertAdjacentHTML('afterend', '<div class="lp-attn-row nw-attn" data-no-i18n hidden><div class="lp-attn-txt"></div><div class="lp-attn-plot"></div></div>');
   const attn = front.querySelector('.nw-attn');
   const WIKI_TITLES = { IE: 'Republic of Ireland', TR: 'Turkey' };
   let attnFor = null;
@@ -189,10 +189,11 @@
     const pts = await A.months(title);
     if (attnFor !== cc) return;
     if (pts.length < 2) { attn.hidden = true; return; }
-    const top = A.peak(pts), ch = A.change(pts);
-    attn.querySelector('b').textContent = tr('Interest per month, last 3 years (Wikipedia views)');
-    attn.querySelector('span').innerHTML = `${esc(tr('Peak'))}: ${esc(A.month(top.m))}${ch == null ? '' : ` · ${esc(tr('Last 12 months'))}: <em class="${ch >= 0 ? 'lp-attn-up' : 'lp-attn-down'}">${A.signed(ch)}</em> ${esc(tr('vs the 12 before'))}`}`;
-    attn.querySelector('.lp-attn-plot').innerHTML = A.chart(pts, tr('Interest per month, last 3 years (Wikipedia views)'));
+    const ch = A.change(pts);
+    let name = cc;
+    try { name = new Intl.DisplayNames([siteLang() === 'pt' ? 'pt-BR' : siteLang()], { type: 'region' }).of(cc); } catch (e) { /* code only */ }
+    attn.querySelector('.lp-attn-txt').innerHTML = `<b>${esc(tr('Interest in {c}').replace('{c}', name))}</b>${ch == null ? '' : `<strong>${A.badge(ch)}<small>${esc(tr('vs last year'))}</small></strong>`}<span>${esc(tr('Wikipedia visits per month'))}</span>`;
+    attn.querySelector('.lp-attn-plot').innerHTML = A.chart(pts, tr('Wikipedia visits per month'), true);
     attn.hidden = false;
   }
   const wSel = wPick.querySelector('select');
