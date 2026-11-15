@@ -2,6 +2,8 @@
 // pt-PT uses 'pt' plus the overrides below. English (and en-GB) use the keys as they are.
 window.LP_REPORT_DICT = {
 "pt": {
+"A snapshot in time.": "Um retrato no tempo.",
+"This report captures {date}. Like Polling keeps a dated copy in its archive, so this moment can be compared with any later one.": "Este relatório registra {date}. O Like Polling guarda uma cópia datada no seu arquivo, para que este momento possa ser comparado com qualquer outro mais tarde.",
 "Next rocket launch": "Próximo lançamento de foguete",
 "The next rocket launch from this country. If none is planned, the next one anywhere in the world.": "O próximo lançamento de foguete deste país. Se não houver nenhum previsto, o próximo em qualquer lugar do mundo.",
 "Next rocket launch from {c}: {n} on {d}.": "{c}: o próximo lançamento de foguete é {n} em {d}.",
@@ -423,6 +425,8 @@ window.LP_REPORT_DICT = {
 "Mass violence": "Violência em massa"
 },
 "es": {
+"A snapshot in time.": "Una instantánea en el tiempo.",
+"This report captures {date}. Like Polling keeps a dated copy in its archive, so this moment can be compared with any later one.": "Este informe recoge el {date}. Like Polling guarda una copia fechada en su archivo, para comparar este momento con cualquier otro más adelante.",
 "Next rocket launch": "Próximo lanzamiento de cohete",
 "The next rocket launch from this country. If none is planned, the next one anywhere in the world.": "El próximo lanzamiento de cohete desde este país. Si no hay ninguno previsto, el próximo en cualquier lugar del mundo.",
 "Next rocket launch from {c}: {n} on {d}.": "Próximo lanzamiento de cohete desde {c}: {n} el {d}.",
@@ -844,6 +848,8 @@ window.LP_REPORT_DICT = {
 "Mass violence": "Violencia masiva"
 },
 "de": {
+"A snapshot in time.": "Eine Momentaufnahme.",
+"This report captures {date}. Like Polling keeps a dated copy in its archive, so this moment can be compared with any later one.": "Dieser Bericht hält den {date} fest. Like Polling bewahrt eine datierte Kopie in seinem Archiv auf, damit sich dieser Moment mit jedem späteren vergleichen lässt.",
 "Next rocket launch": "Nächster Raketenstart",
 "The next rocket launch from this country. If none is planned, the next one anywhere in the world.": "Der nächste Raketenstart aus diesem Land. Ist keiner geplant, der nächste irgendwo auf der Welt.",
 "Next rocket launch from {c}: {n} on {d}.": "Nächster Raketenstart aus {c}: {n} am {d}.",
@@ -1265,6 +1271,8 @@ window.LP_REPORT_DICT = {
 "Mass violence": "Massengewalt"
 },
 "ru": {
+"A snapshot in time.": "Снимок времени.",
+"This report captures {date}. Like Polling keeps a dated copy in its archive, so this moment can be compared with any later one.": "Этот отчёт фиксирует {date}. Like Polling хранит датированную копию в своём архиве, чтобы этот момент можно было сравнить с любым последующим.",
 "Next rocket launch": "Ближайший запуск ракеты",
 "The next rocket launch from this country. If none is planned, the next one anywhere in the world.": "Ближайший запуск ракеты из этой страны. Если он не запланирован, ближайший в мире.",
 "Next rocket launch from {c}: {n} on {d}.": "{c}: ближайший запуск ракеты — {n}, {d}.",
@@ -1686,6 +1694,8 @@ window.LP_REPORT_DICT = {
 "Mass violence": "Массовое насилие"
 },
 "uk": {
+"A snapshot in time.": "Знімок часу.",
+"This report captures {date}. Like Polling keeps a dated copy in its archive, so this moment can be compared with any later one.": "Цей звіт фіксує {date}. Like Polling зберігає датовану копію у своєму архіві, щоб цей момент можна було порівняти з будь-яким наступним.",
 "Next rocket launch": "Найближчий запуск ракети",
 "The next rocket launch from this country. If none is planned, the next one anywhere in the world.": "Найближчий запуск ракети з цієї країни. Якщо його не заплановано, найближчий у світі.",
 "Next rocket launch from {c}: {n} on {d}.": "{c}: найближчий запуск ракети — {n}, {d}.",
@@ -2107,6 +2117,8 @@ window.LP_REPORT_DICT = {
 "Mass violence": "Масове насильство"
 },
 "ko": {
+"A snapshot in time.": "시간의 스냅숏.",
+"This report captures {date}. Like Polling keeps a dated copy in its archive, so this moment can be compared with any later one.": "이 보고서는 {date}의 모습을 담았습니다. Like Polling은 날짜가 찍힌 사본을 보관해, 이 순간을 이후 어느 때와도 비교할 수 있습니다.",
 "Next rocket launch": "다음 로켓 발사",
 "The next rocket launch from this country. If none is planned, the next one anywhere in the world.": "이 나라의 다음 로켓 발사입니다. 예정된 발사가 없으면 전 세계에서 다음 발사를 보여 줍니다.",
 "Next rocket launch from {c}: {n} on {d}.": "{c}의 다음 로켓 발사: {d} {n}.",
@@ -2528,6 +2540,8 @@ window.LP_REPORT_DICT = {
 "Mass violence": "대규모 폭력"
 },
 "ja": {
+"A snapshot in time.": "時を切り取ったスナップショット。",
+"This report captures {date}. Like Polling keeps a dated copy in its archive, so this moment can be compared with any later one.": "このレポートは{date}の姿を記録しています。Like Pollingは日付入りの写しをアーカイブに保管し、この瞬間を後のどの時点とも比べられるようにしています。",
 "Next rocket launch": "次のロケット打ち上げ",
 "The next rocket launch from this country. If none is planned, the next one anywhere in the world.": "この国からの次のロケット打ち上げです。予定がなければ、世界のどこかでの次の打ち上げを示します。",
 "Next rocket launch from {c}: {n} on {d}.": "{c} からの次のロケット打ち上げ：{d} の {n}。",
@@ -2949,6 +2963,7 @@ window.LP_REPORT_DICT = {
 "Mass violence": "大規模な暴力"
 },
 "pt-PT": {
+"This report captures {date}. Like Polling keeps a dated copy in its archive, so this moment can be compared with any later one.": "Este relatório regista {date}. O Like Polling guarda uma cópia datada no seu arquivo, para que este momento possa ser comparado com qualquer outro mais tarde.",
 "Public record": "Registo público",
 "Latest record": "Registo mais recente",
 "Same 30 days last year": "Mesmos 30 dias do ano passado",

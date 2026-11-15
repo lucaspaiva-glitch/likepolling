@@ -55,6 +55,19 @@ async function saveStates(env, fetchImpl, body) {
   }).catch(() => null);
 }
 
+// Time capsule: every report (paid or sample) is kept as a dated snapshot, one per day per subject.
+async function saveSnapshot(env, fetchImpl, body) {
+  if (!body) return;
+  const kind = body.subject ? String(body.type || 'entity') : 'country';
+  const subjects = body.subject ? String(body.subject.title || '').slice(0, 200) : (body.countries || []).map((c) => c.country).join(',');
+  if (!subjects) return;
+  const row = { day: String(body.generated_at || new Date().toISOString()).slice(0, 10), kind, subjects, body };
+  await fetchImpl(`${String(env.SUPABASE_URL).trim().replace(/\/$/, '')}/rest/v1/report_snapshots?on_conflict=day,kind,subjects`, {
+    method: 'POST', signal: AbortSignal.timeout(6000), body: JSON.stringify([row]),
+    headers: { apikey: env.SUPABASE_KEY.trim(), Authorization: `Bearer ${env.SUPABASE_KEY.trim()}`, 'Content-Type': 'application/json', Prefer: 'resolution=ignore-duplicates,return=minimal' },
+  }).catch(() => null);
+}
+
 async function saveExtras(env, fetchImpl, body) {
   if (!body || !body.subject || !(body.profile || body.releases || body.searches || body.moments || body.products)) return;
   const row = { day: String(body.generated_at || new Date().toISOString()).slice(0, 10), subject: String(body.subject.title || '').slice(0, 120),
@@ -244,6 +257,7 @@ function createHandler(deps = {}) {
       if (req.method === 'GET' && entity.TYPES[req.query.type]) {
         const body = await entity.buildEntityReport(get, req.query.type, entity.SAMPLES[req.query.type], { fetchImpl, rest: get, now: new Date(now) });
         await saveStates(env, fetchImpl, body);
+        await saveSnapshot(env, fetchImpl, body);
         res.setHeader('Cache-Control', 'public, max-age=300, s-maxage=21600, stale-while-revalidate=86400');
         return res.status(200).json({ ...body, sample: true });
       }
@@ -251,6 +265,7 @@ function createHandler(deps = {}) {
         const list = report.parseCountries([req.query.country, req.query.compare].join(','));
         if (!report.isSample(list)) throw fail(403, 'Only the Brazil vs Portugal sample is free. Get a report at likepolling.com/services.');
         const body = await report.buildReport(get, list, new Date(now), { fetchImpl });
+        await saveSnapshot(env, fetchImpl, body);
         res.setHeader('Cache-Control', 'public, max-age=300, s-maxage=3600, stale-while-revalidate=3600');
         return res.status(200).json({ ...body, sample: true });
       }
@@ -268,6 +283,7 @@ function createHandler(deps = {}) {
         const access = await (lemon ? unlock(env, fetchImpl, args) : unlockGumroad(env, fetchImpl, args, build));
         const body = access.body || await report.buildReport(get, access.countries, new Date(now), { fetchImpl });
         if (access.body) await saveStates(env, fetchImpl, access.body);
+        await saveSnapshot(env, fetchImpl, body);
         res.setHeader('Cache-Control', 'no-store');
         return res.status(200).json({ ...body, sample: false, instance_id: access.instance_id, expires_at: access.expires_at });
       }

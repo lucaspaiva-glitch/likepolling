@@ -131,6 +131,22 @@ test('first visit asks for countries, then activates the key with them and retur
   assert.ok(!JSON.stringify(res.body).includes('buyer@example.com'), 'never returns the buyer email');
 });
 
+test('a paid report is saved as a dated snapshot, once per day', async () => {
+  const saved = [];
+  const handler = createHandler({ env, now: () => NOW.getTime(), fetch: db({ route: async (url, init) => {
+    if (url.includes('report_snapshots')) { saved.push({ url, row: JSON.parse(init.body)[0], prefer: init.headers.Prefer }); return json(null, 201); }
+    return lemon({ inst: { id: 'inst-123456', name: 'BR,PT' } }).route(url, init);
+  } }) });
+  const res = mockRes();
+  await handler({ method: 'POST', body: { key: KEY, instance: 'inst-123456' }, headers: { 'x-forwarded-for': '10.9.0.1' } }, res);
+  assert.equal(res.statusCode, 200);
+  assert.equal(saved.length, 1);
+  assert.match(saved[0].url, /on_conflict=day,kind,subjects/);
+  assert.match(saved[0].prefer, /ignore-duplicates/);
+  assert.deepEqual([saved[0].row.day, saved[0].row.kind, saved[0].row.subjects], [NOW.toISOString().slice(0, 10), 'country', 'BR,PT']);
+  assert.deepEqual(saved[0].row.body.countries.map((c) => c.country), ['BR', 'PT']);
+});
+
 test('later visits use the saved activation; countries can\'t be changed', async () => {
   const state = { inst: { id: 'inst-123456', name: 'US' } };
   const { res, calls } = await post(state, { key: KEY, instance: 'inst-123456', countries: 'BR,PT' });
