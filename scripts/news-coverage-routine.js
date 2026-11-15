@@ -10,7 +10,7 @@
 
 const { COUNTRIES } = require('../lib/report.js');
 const { supabaseHeaders } = require('./memory-common.js');
-const { coverage } = require('../lib/news-coverage.js');
+const { coverage, termOf } = require('../lib/news-coverage.js');
 
 // How the news names a country, when it differs from its English short name (GDELT needs 4+ letters).
 const QUERY = { US: '"United States"', GB: '("United Kingdom" OR "Britain")', KR: '"South Korea"', TW: '"Taiwan"',
@@ -40,7 +40,12 @@ async function main(env = process.env, now = new Date(), deps = {}) {
     if (!r.ok) throw new Error(`Supabase ${r.status}`);
     for (const row of await r.json()) savedAt[`${table}:${row[col]}`] = Date.parse(row.saved_at);
   }
-  const jobs = [...COUNTRIES.map((cc) => ['news_coverage_monthly', 'country_code', cc, query(cc)]),
+  // People and companies of saved reports (samples and bought ones) go first; the reports read them from brand_coverage_monthly.
+  const snaps = await fetchImpl(`${env.SUPABASE_URL}/rest/v1/report_snapshots?select=subjects&kind=in.(artist,company)&order=saved_at.desc&limit=1000`, { headers })
+    .then((r) => (r.ok ? r.json() : [])).catch(() => []);
+  const people = [...new Set((Array.isArray(snaps) ? snaps : []).map((r) => termOf(r.subjects)))].filter((t) => t.length >= 3 && t.length <= 60 && !BRANDS[t]);
+  const jobs = [...people.map((t) => ['brand_coverage_monthly', 'brand', t, `"${t.replace(/"/g, '')}"`]),
+    ...COUNTRIES.map((cc) => ['news_coverage_monthly', 'country_code', cc, query(cc)]),
     ...Object.entries(BRANDS).map(([b, q]) => ['brand_coverage_monthly', 'brand', b, q])]
     .map((j) => [...j, savedAt[`${j[0]}:${j[2]}`] || 0])
     .filter((j) => now - j[4] > 6 * 86400000)
