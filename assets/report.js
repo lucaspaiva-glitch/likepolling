@@ -116,7 +116,7 @@
   const nice = (m) => { const p = 10 ** Math.floor(Math.log10(m || 1)); return Math.ceil(m / p / (m / p > 5 ? 2 : 1)) * p * (m / p > 5 ? 2 : 1); };
 
   // Line chart of one daily series, peak marked. Plain SVG so it prints into the PDF.
-  function lineChart(points, what) {
+  function lineChart(points, what, tick = dshort) {
     if (points.length < 2) return empty();
     const W = 600, H = 210, LM = 44, R = 14, T = 16, B = 30;
     const max = nice(Math.max(...points.map((p) => p.value)));
@@ -125,9 +125,9 @@
     const line = points.map((p, i) => `${x(i).toFixed(1)},${y(p.value).toFixed(1)}`).join(' ');
     const peak = points.reduce((m, p, i) => (p.value > points[m].value ? i : m), 0);
     const grid = [0, max / 2, max].map((v) => `<line x1="${LM}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" class="g"/><text x="${LM - 6}" y="${y(v) + 4}" text-anchor="end">${short(v)}</text>`).join('');
-    const ticks = [0, Math.floor((points.length - 1) / 2), points.length - 1].map((i) => `<text x="${x(i)}" y="${H - 8}" text-anchor="${i === 0 ? 'start' : i === points.length - 1 ? 'end' : 'middle'}">${dshort(points[i].day)}</text>`).join('');
+    const ticks = [0, Math.floor((points.length - 1) / 2), points.length - 1].map((i) => `<text x="${x(i)}" y="${H - 8}" text-anchor="${i === 0 ? 'start' : i === points.length - 1 ? 'end' : 'middle'}">${tick(points[i].day)}</text>`).join('');
     const px = x(peak), anchor = px > W - 120 ? 'end' : px < LM + 80 ? 'start' : 'middle';
-    return `<figure class="chart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(what)} per day">${grid}${ticks}
+    return `<figure class="chart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(what)}">${grid}${ticks}
       <polygon points="${x(0)},${y(0)} ${line} ${x(points.length - 1)},${y(0)}" class="area"/><polyline points="${line}" class="ln"/>
       ${points.map((p, i) => `<circle cx="${x(i)}" cy="${y(p.value)}" r="${i === peak ? 4.5 : 2.5}" class="${i === peak ? 'pk' : 'dot'}"/>`).join('')}
       <text x="${px}" y="${y(points[peak].value) - 9}" text-anchor="${anchor}" class="pkl">${L('Peak: {n}', { n: num(points[peak].value) })}</text></svg></figure>`;
@@ -230,6 +230,8 @@
   }
 
   const monthName = (m) => utc(`${m}-01`, { month: 'long', year: 'numeric' });
+  const monthShort = (d) => utc(d, { month: 'short', year: 'numeric' });
+  const byMonthChart = (pts, label) => (pts && pts.length > 1 ? `<h3>${label}</h3>${lineChart(pts, label, monthShort)}` : '');
   const SECTIONS = [
     ['Since your last snapshot', 'What changed compared with the previous saved snapshot of this report.', (c) => (c.since_last
       ? (c.since_last.same ? `<p class="take">${L('No change in the top topics since {date}.', { date: dlong(c.since_last.day) })}</p>`
@@ -249,7 +251,7 @@
       ? `<ul class="hol"><li><b>${dshort(c.launch.net.slice(0, 10))}</b><span>${esc(c.launch.name)}${c.launch.provider || c.launch.site ? ` <small>${esc([c.launch.provider, c.launch.site].filter(Boolean).join(' · '))}</small>` : ''}</span></li></ul>`
         + `<p class="take">${L(c.launch.here ? 'Next rocket launch from {c}: {n} on {d}.' : 'No rocket launch is planned from {c}. The next one in the world is {n} on {d}.', { c: esc(name(c.country)), n: `<b>${esc(c.launch.name)}</b>`, d: dshort(c.launch.net.slice(0, 10)) }).replace(/\.\.$/, '.')}</p>` : '')],
     ['Through time', 'From the Like Polling archive: the most-read pages, top search and news coverage in each month since we started.', (c) => (c.through_time && c.through_time.length
-      ? `<ul class="hol stack">${c.through_time.slice(-6).reverse().map((m) => `<li><b>${monthName(m.month)}</b><span>${m.most_read.slice(0, 2).map(wikiLabel).join('<br>')}${[m.searches[0] && L('Top search: {x}', { x: esc(m.searches[0].query) }), m.news_articles && L('News articles: {n}', { n: num(m.news_articles) })].filter(Boolean).map((x) => `<small>${x}</small>`).join('')}</span></li>`).join('')}</ul>`
+      ? `${byMonthChart(c.views_by_month, L('Interest per month, last 3 years (English Wikipedia views)'))}<ul class="hol stack">${c.through_time.slice(-6).reverse().map((m) => `<li><b>${monthName(m.month)}</b><span>${m.most_read.slice(0, 2).map(wikiLabel).join('<br>')}${[m.searches[0] && L('Top search: {x}', { x: esc(m.searches[0].query) }), m.news_articles && L('News articles: {n}', { n: num(m.news_articles) })].filter(Boolean).map((x) => `<small>${x}</small>`).join('')}</span></li>`).join('')}</ul>`
         + `<p class="take">${L('Like Polling has kept a daily record of {c} since {date}. Every new report adds to it.', { c: esc(name(c.country)), date: dlong(STARTED) })}</p>` : '')],
     ['Ideas to copy', 'Written each week by AI from the data above. Use them as starting points.', (c) => (c.ideas.length
       ? `<ol class="ideas">${c.ideas.slice(0, 3).map((i) => `<li><b>${esc(i.title)}</b><p>${esc(i.idea)}</p>${i.based_on ? `<small>${L('Based on: {x}', { x: esc(i.based_on) })}</small>` : ''}</li>`).join('')}</ol>`
@@ -589,6 +591,12 @@
       <div class="tight" style="overflow-x:auto"><table class="cmp"><thead><tr><th>${L('Name')}</th><th>${L('Views, 30 days')}</th><th>${L('vs previous 30 days')}</th><th>${L('vs same days last year')}</th>${all.length > 1 ? `<th>${L('Share of Wikipedia views')}</th>` : ''}${gTotal ? `<th>${L('Share of Google searches')}</th>` : ''}</tr></thead>
       <tbody>${[...all].sort((a, b) => b.views - a.views).map((p) => `<tr><th>${p.me ? `<b>${esc(p.title)}</b>` : esc(p.title)}</th><td>${num(p.views)}</td><td>${sgn(p.change_pct)}</td><td>${sgn(p.yoy_pct)}</td>${all.length > 1 ? `<td>${pct(p.views, vTotal)}%</td>` : ''}${gTotal ? `<td>${gShare(p) == null ? '—' : `${gShare(p)}%`}</td>` : ''}</tr>`).join('')}</tbody></table></div>
       <p class="take">${[all.length > 1 ? (gTotal && gShare(all[0]) != null ? L('{s} had {p}% of the Wikipedia views and {q}% of the Google searches among these {n}.', { s: `<b>${esc(s.title)}</b>`, p: pct(s.views, vTotal), q: gShare(all[0]), n: all.length }) : L('{s} had {p}% of the Wikipedia views among these {n}.', { s: `<b>${esc(s.title)}</b>`, p: pct(s.views, vTotal), n: all.length })) : '', s.yoy_pct != null ? L('Compared with the same 30 days last year, views of {s} changed {a}.', { s: esc(s.title), a: sgn(s.yoy_pct) }) : ''].filter(Boolean).join(' ')}</p></section>` : '';
+    const tt = data.through_time || [];
+    const yr = (a) => sum(a.map((d) => d.value));
+    const ttChange = tt.length >= 24 && yr(tt.slice(-24, -12)) ? Math.round(((yr(tt.slice(-12)) - yr(tt.slice(-24, -12))) / yr(tt.slice(-24, -12))) * 100) : null;
+    const ttPeak = tt.reduce((m, d) => (!m || d.value > m.value ? d : m), null);
+    const timeSec = tt.length > 1 ? `<section class="rsec"><h2>${L('Through time')}</h2><p class="note">${L('Views of {s}\'s English Wikipedia page each month, last 3 years.', { s: esc(s.title) })}</p>
+      ${lineChart(tt, L('Wikipedia views'), monthShort)}<p class="take">${L('Its busiest month was {m}, with {n} views.', { m: monthName(ttPeak.day.slice(0, 7)), n: num(ttPeak.value) })}${ttChange != null ? ` ${L('In the last 12 months, views changed {p} compared with the 12 months before.', { p: sign(ttChange) })}` : ''}</p></section>` : '';
     const qual = quality(data);
     const qualSec = `<section class="rsec"><h2>${L('Sources and data quality')}</h2><p class="note">${L('Where each number comes from, and what kind of number it is. No number in this report was made by AI.')}</p>
       <div class="tight" style="overflow-x:auto"><table class="cmp"><thead><tr><th>${L('What')}</th><th>${L('Source')}</th><th>${L('Type')}</th><th>${L('Covers')}</th></tr></thead><tbody>${qual.map((r) => `<tr><th>${esc(r[0])}</th>${r.slice(1).map((c) => `<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div></section>`;
@@ -620,7 +628,7 @@
     if (f) know.unshift({ big: L('#{r} of {n}', { r: f.rank, n: f.compared }), line: L('{s} in {f}, by Wikipedia views.', { s: s.title, f: fn }) });
     const mo = data.moments && data.moments.list.length ? [...data.moments.list].sort((a, b) => b.views - a.views)[0] : null;
     if (mo && mo.times >= 3) know.splice(1, 0, { big: `${Math.round(mo.times)}×`, line: L('On {day}, {s} had its biggest media moment of the year: {x}× a normal day on Wikipedia.', { day: dlong(mo.day), s: s.title, x: Math.round(mo.times) }) });
-    $('report').innerHTML = head + withSources(knowSec(know.slice(0, 3), kpis) + growSec + fieldSec + spSec + sdSec + bizSec + productsSec(data, s.title) + momentsSec(data, s.title) + searchesSec(data, s.title) + releasesSec(data, s.title) + langs + ctry + mentionsSec(data, s.title) + gtr + qualSec, 'Sources', srcText) + (data.sample ? getYours() : '');
+    $('report').innerHTML = head + withSources(knowSec(know.slice(0, 3), kpis) + growSec + timeSec + fieldSec + spSec + sdSec + bizSec + productsSec(data, s.title) + momentsSec(data, s.title) + searchesSec(data, s.title) + releasesSec(data, s.title) + langs + ctry + mentionsSec(data, s.title) + gtr + qualSec, 'Sources', srcText) + (data.sample ? getYours() : '');
     plainWords();
     wire(data, ctx(data, { know: know.slice(0, 3), fieldName: fn, fieldTake: ft, tag, title: s.title, subtitle: s.description, dates: dateList(data.from, data.to, data.generated_at), sources: srcText, quality: qual, bizNote, bizHeads, bizTake, bizUnit: unit }));
     show('report');

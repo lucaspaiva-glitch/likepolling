@@ -478,3 +478,13 @@ test('sinceLast lists new and dropped topics against the earlier snapshot', () =
   assert.equal(sinceLast(now, now, '2026-11-14').same, true);
   assert.equal(sinceLast(now, null, null), null);
 });
+
+test('monthly reads the last 3 full years of Wikipedia views; countryTitle names the article', async () => {
+  const { monthly } = require('../lib/entity-report');
+  const seen = [];
+  const out = await monthly(async (u) => { seen.push(u); return { items: [{ timestamp: '2023110100', views: 5 }, { timestamp: '2023120100', views: 7 }] }; }, 'en.wikipedia', 'Nike, Inc.', new Date('2026-11-15T10:00:00Z'));
+  assert.match(seen[0], /en\.wikipedia\/all-access\/user\/Nike%2C_Inc\.\/monthly\/20231101\/20261031$/);
+  assert.deepEqual(out, [{ day: '2023-11-01', value: 5 }, { day: '2023-12-01', value: 7 }]);
+  assert.equal(report.countryTitle('IE'), 'Republic of Ireland');
+  assert.equal(report.countryTitle('BR'), 'Brazil');
+});
