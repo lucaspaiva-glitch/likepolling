@@ -133,6 +133,27 @@ export default function LikePollingCard({ data, gemini }: { data: LikePollingSum
           </tbody>
         </table>
       )}
+      {data.plan.vendors.length > 0 && (
+        <div className="mt-3">
+          <p className="text-[11px] text-dark-tremor-content">Planned · next 3 months (latest monthly bills, plus Supabase Pro)</p>
+          <table className="mt-1 w-full text-xs tabular-nums">
+            <tbody className="divide-y divide-dark-tremor-border text-dark-tremor-content-emphasis">
+              {data.plan.vendors.map((v) => (
+                <tr key={v.name}>
+                  <td className="py-1">{v.name}</td>
+                  <td className="py-1 text-right">{fmtUsd(v.monthly)}/mo</td>
+                </tr>
+              ))}
+              {data.plan.months.map((m) => (
+                <tr key={m.month} className="font-medium text-dark-tremor-content-strong">
+                  <td className="py-1">{monthLabel(m.month)}</td>
+                  <td className="py-1 text-right">{fmtUsd(m.total)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </Card>
   );
 }
