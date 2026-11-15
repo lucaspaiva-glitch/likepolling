@@ -71,7 +71,7 @@ test('a comparison report uses open data only and adds what both countries share
   assert.deepEqual(out.shared.read_in_both.map((a) => a.title), ['Lula', 'Halloween']);
   assert.equal(out.countries[0].ideas[0].title, 'T');
   assert.ok(!('all_partners' in out.countries[0]));
-  assert.ok(f.seen.every((u) => /wiki_top_daily|gdelt_|report_insights|trends_daily|holidays|space_launches/.test(u)), 'no YouTube or news tables');
+  assert.ok(f.seen.every((u) => /wiki_top_daily|gdelt_|report_insights|trends_daily|holidays|space_launches|report_snapshots/.test(u)), 'no YouTube or news tables');
   assert.deepEqual(out.countries[0].searches, { top: [], days: 0 });
   assert.deepEqual(out.countries[0].holidays, []);
 });
@@ -456,4 +456,25 @@ test('company business: no SEC number on Wikidata -> the same name in the saved 
 test('a confirmed brand without a Wikipedia page keeps its brand flag', () => {
   assert.deepEqual(entity.parseChoice({ subject: 'Machu Picchu Energy', confirm: true, brand: true }), { subject: 'Machu Picchu Energy', peers: [], confirm: true, brand: true });
   assert.equal(entity.parseChoice({ subject: 'X', brand: 'yes' }).brand, undefined);
+});
+
+test('throughTime groups most-read pages, searches and news coverage by month', () => {
+  const { throughTime } = require('../lib/report');
+  const out = throughTime(
+    [{ day: '2026-10-25', project: 'pt.wikipedia', article: 'X_Y', views_ceil: 5 }, { day: '2026-10-26', project: 'pt.wikipedia', article: 'X_Y', views_ceil: 5 }],
+    [{ day: '2026-11-03', query: 'q', traffic: 100 }],
+    [{ day: '2026-10-27', articles: 7 }, { day: '2026-10-28', articles: 3 }]);
+  assert.deepEqual(out.map((m) => m.month), ['2026-10', '2026-11']);
+  assert.deepEqual(out[0].most_read[0], { title: 'X Y', link: 'https://pt.wikipedia.org/wiki/X_Y', views: 10 });
+  assert.equal(out[0].news_articles, 10);
+  assert.equal(out[1].searches[0].query, 'q');
+});
+
+test('sinceLast lists new and dropped topics against the earlier snapshot', () => {
+  const { sinceLast } = require('../lib/report');
+  const now = { wikipedia: [{ title: 'A' }, { title: 'B' }], searches: { top: [{ query: 'x' }] } };
+  const prev = { wikipedia: [{ title: 'B' }, { title: 'C' }], searches: { top: [{ query: 'X' }] } };
+  assert.deepEqual(sinceLast(now, prev, '2026-11-14'), { day: '2026-11-14', new_read: ['A'], gone_read: ['C'], new_searches: [] });
+  assert.equal(sinceLast(now, now, '2026-11-14').same, true);
+  assert.equal(sinceLast(now, null, null), null);
 });

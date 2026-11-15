@@ -229,7 +229,13 @@
     ].join('')}</div>`;
   }
 
+  const monthName = (m) => utc(`${m}-01`, { month: 'long', year: 'numeric' });
   const SECTIONS = [
+    ['Since your last snapshot', 'What changed compared with the previous saved snapshot of this report.', (c) => (c.since_last
+      ? (c.since_last.same ? `<p class="take">${L('No change in the top topics since {date}.', { date: dlong(c.since_last.day) })}</p>`
+        : `<ul class="hol stack">${[['New in most-read', c.since_last.new_read], ['New searches', c.since_last.new_searches], ['Dropped out', c.since_last.gone_read]].filter(([, l]) => l.length)
+          .map(([h, l]) => `<li><b>${L(h)}</b><span>${l.map(esc).join(' · ')}</span></li>`).join('')}</ul><p class="take">${L('Compared with the snapshot of {date}.', { date: dlong(c.since_last.day) })}</p>`)
+      : '')],
     ['Most-read on Wikipedia', 'Total views over the period. The small line shows that page\'s views day by day.', (c) => (c.wikipedia.length ? rank(c.wikipedia.slice(0, 6), (w) => w.views, wikiLabel, wikiExtra(c)) + `<p class="take">${L('People in {c} cared most about {t}.', { c: esc(name(c.country)), t: `<b>${esc(c.wikipedia[0].title)}</b>` })}</p>` : ''), 'top'],
     ['Rising this week', 'Pages that entered the daily top 30 only in the last 7 days. Often the best early signals.', (c) => (c.wikipedia_rising.length ? rank(c.wikipedia_rising.slice(0, 6), (w) => w.views, wikiLabel, wikiExtra(c)) + `<p class="take">${L('{t} is the newest big interest in {c}.', { c: esc(name(c.country)), t: `<b>${esc(c.wikipedia_rising[0].title)}</b>` })}</p>` : ''), 'rising'],
     ['In the news with', 'Countries that appeared in the same news articles most often. A sign of who the country deals with.', (c) => (c.news_partners.length ? rank(c.news_partners, (p) => p.articles, (p) => esc(name(p.country))) + `<p class="take">${L('{p} shows up next to {c} in the news more than any other country.', { c: esc(name(c.country)), p: `<b>${esc(name(c.news_partners[0].country))}</b>` })}</p>` : ''), 'partners'],
@@ -242,6 +248,9 @@
     ['Next rocket launch', 'The next rocket launch from this country. If none is planned, the next one anywhere in the world.', (c) => (c.launch
       ? `<ul class="hol"><li><b>${dshort(c.launch.net.slice(0, 10))}</b><span>${esc(c.launch.name)}${c.launch.provider || c.launch.site ? ` <small>${esc([c.launch.provider, c.launch.site].filter(Boolean).join(' · '))}</small>` : ''}</span></li></ul>`
         + `<p class="take">${L(c.launch.here ? 'Next rocket launch from {c}: {n} on {d}.' : 'No rocket launch is planned from {c}. The next one in the world is {n} on {d}.', { c: esc(name(c.country)), n: `<b>${esc(c.launch.name)}</b>`, d: dshort(c.launch.net.slice(0, 10)) }).replace(/\.\.$/, '.')}</p>` : '')],
+    ['Through time', 'From the Like Polling archive: the most-read pages, top search and news coverage in each month since we started.', (c) => (c.through_time && c.through_time.length
+      ? `<ul class="hol stack">${c.through_time.slice(-6).reverse().map((m) => `<li><b>${monthName(m.month)}</b><span>${m.most_read.slice(0, 2).map(wikiLabel).join('<br>')}${[m.searches[0] && L('Top search: {x}', { x: esc(m.searches[0].query) }), m.news_articles && L('News articles: {n}', { n: num(m.news_articles) })].filter(Boolean).map((x) => `<small>${x}</small>`).join('')}</span></li>`).join('')}</ul>`
+        + `<p class="take">${L('Like Polling has kept a daily record of {c} since {date}. Every new report adds to it.', { c: esc(name(c.country)), date: dlong(STARTED) })}</p>` : '')],
     ['Ideas to copy', 'Written each week by AI from the data above. Use them as starting points.', (c) => (c.ideas.length
       ? `<ol class="ideas">${c.ideas.slice(0, 3).map((i) => `<li><b>${esc(i.title)}</b><p>${esc(i.idea)}</p>${i.based_on ? `<small>${L('Based on: {x}', { x: esc(i.based_on) })}</small>` : ''}</li>`).join('')}</ol>`
       : '')],
