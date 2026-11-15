@@ -200,7 +200,8 @@
     const last = pts[pts.length - 1].v > 0 ? pts[pts.length - 1] : null;
     attn.querySelector('.lp-attn-txt').innerHTML = `<b>${esc(tr('News share: {c}').replace('{c}', name))}</b>${ch == null ? '' : `<strong>${A.badge(ch)}<small>${esc(tr('vs last year'))}</small></strong>`}${last ? `<span>${esc(tr('1 in {n} news stories worldwide mention {c}').replace('{n}', Math.round(100 / last.v).toLocaleString(lang)).replace('{c}', name))}</span>` : ''}`;
     const plot = attn.querySelector('.lp-attn-plot');
-    plot.innerHTML = A.chart(pts, { label: tr('News share: {c}').replace('{c}', name), axis: true }) + '<span class="lp-attn-cap"></span>';
+    const yr = pts.slice(-12);
+    plot.innerHTML = A.chart(yr, { label: tr('News share: {c}').replace('{c}', name), axis: true }) + '<span class="lp-attn-cap"></span>';
     const cap = plot.querySelector('.lp-attn-cap');
     const show = (m) => {
       const s = top.get(m);
@@ -209,9 +210,9 @@
       cap.innerHTML = t ? `<b>${esc(A.month(m))}</b> · ${esc(tr('Top story'))}: <a href="${esc(s.link)}" target="_blank" rel="noopener">${esc(t)}</a>${sum ? `<small>${esc(sum)}</small>` : ''}`
         : `<b>${esc(A.month(m))}</b>${top.size ? ` · ${esc(tr('Point at or tap a month to see its top story.'))}` : ''}`;
     };
-    const lastStory = [...pts].reverse().find((p) => top.has(p.m));
-    show((lastStory || pts[pts.length - 1]).m);
-    A.pick(plot, pts.length, (i) => show(pts[i].m));
+    const lastStory = [...yr].reverse().find((p) => top.has(p.m));
+    show((lastStory || yr[yr.length - 1]).m);
+    A.pick(plot, yr.length, (i) => show(yr[i].m));
     attn.hidden = false;
   }
   const wSel = wPick.querySelector('select');

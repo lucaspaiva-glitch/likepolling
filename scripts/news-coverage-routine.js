@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // News coverage memory: every 3 hours, refreshes (weekly per subject) for each tracked country and Fashion Index brand the share of
-// all news articles worldwide that mention it (GDELT DOC API "volume intensity", in %), averaged per month over the last
-// 3 full years, into public.news_coverage_monthly and public.brand_coverage_monthly (lib/news-coverage.js). GDELT allows 1 request every 5 s, so this runs as a
+// all news articles worldwide that mention it (GDELT DOC API "volume intensity", in %), averaged per month since
+// January 2017, into public.news_coverage_monthly and public.brand_coverage_monthly (lib/news-coverage.js). GDELT allows 1 request every 5 s, so this runs as a
 // job instead of from visitors' browsers.
 //   node scripts/news-coverage-routine.js
 // Data: The GDELT Project (https://www.gdeltproject.org), free for any use with credit.
@@ -34,10 +34,9 @@ async function main(env = process.env, now = new Date(), deps = {}) {
   if (!env.SUPABASE_URL || !env.SUPABASE_KEY) throw new Error('SUPABASE_URL and SUPABASE_KEY are required.');
   const fetchImpl = deps.fetch || fetch, wait = deps.sleep || sleep, clock = deps.clock || Date.now, budget = deps.budget ?? 20 * 60000;
   const headers = supabaseHeaders(env.SUPABASE_KEY);
-  const last = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1)).toISOString().slice(0, 10);
   const savedAt = {};
   for (const [table, col] of [['news_coverage_monthly', 'country_code'], ['brand_coverage_monthly', 'brand']]) {
-    const r = await fetchImpl(`${env.SUPABASE_URL}/rest/v1/${table}?select=${col},saved_at&month=eq.${last}`, { headers });
+    const r = await fetchImpl(`${env.SUPABASE_URL}/rest/v1/${table}?select=${col},saved_at&month=eq.2017-01-01`, { headers });
     if (!r.ok) throw new Error(`Supabase ${r.status}`);
     for (const row of await r.json()) savedAt[`${table}:${row[col]}`] = Date.parse(row.saved_at);
   }
@@ -52,7 +51,7 @@ async function main(env = process.env, now = new Date(), deps = {}) {
     if (clock() - start > budget) break;
     tried++;
     try {
-      const rows = (await coverage(q, now, { fetchImpl, wait, tries: 2, timeout: 30000 })).map((r) => ({ [col]: key, ...r, saved_at: now.toISOString() }));
+      const rows = (await coverage(q, now, { fetchImpl, wait, tries: 2, timeout: 90000 })).map((r) => ({ [col]: key, ...r, saved_at: now.toISOString() }));
       if (rows.length) {
         const r = await fetchImpl(`${env.SUPABASE_URL}/rest/v1/${table}?on_conflict=${col},month`,
           { method: 'POST', headers: { ...headers, Prefer: 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(rows) });

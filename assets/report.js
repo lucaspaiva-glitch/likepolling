@@ -134,14 +134,14 @@
     // Monthly charts: a dashed line and label at each new year, and the last month at the right end.
     const years = tick === monthShort ? points.map((p, i) => i).filter((i) => i > 0 && points[i].day.slice(5, 7) === '01') : [];
     const ticks = years.length
-      ? years.map((i) => `<line x1="${x(i)}" x2="${x(i)}" y1="${T}" y2="${H - B + 4}" class="g yr"/><text x="${x(i) + 3}" y="${H - 8}" text-anchor="start">${points[i].day.slice(0, 4)}</text>`).join('')
-        + (x(years[0]) - LM >= 70 ? `<text x="${LM + 3}" y="${H - 8}" text-anchor="start">${points[0].day.slice(0, 4)}</text>` : '')
+      ? years.map((i) => `<line x1="${x(i)}" x2="${x(i)}" y1="${T}" y2="${H - B + 4}" class="g yr"/>${x(points.length - 1) - x(i) >= 75 ? `<text x="${x(i) + 3}" y="${H - 8}" text-anchor="start">${points[i].day.slice(0, 4)}</text>` : ''}`).join('')
+        + (x(years[0]) - LM >= 36 ? `<text x="${LM + 3}" y="${H - 8}" text-anchor="start">${points[0].day.slice(0, 4)}</text>` : '')
         + `<text x="${x(points.length - 1)}" y="${H - 8}" text-anchor="end">${tick(points[points.length - 1].day)}</text>`
       : [0, Math.floor((points.length - 1) / 2), points.length - 1].map((i) => `<text x="${x(i)}" y="${H - 8}" text-anchor="${i === 0 ? 'start' : i === points.length - 1 ? 'end' : 'middle'}">${tick(points[i].day)}</text>`).join('');
     const px = x(peak), anchor = px > W - 120 ? 'end' : px < LM + 80 ? 'start' : 'middle';
     return `<figure class="chart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(what)}">${grid}${ticks}
       <polygon points="${x(0)},${y(0)} ${line} ${x(points.length - 1)},${y(0)}" class="area"/><polyline points="${line}" class="ln"/>
-      ${points.map((p, i) => `<circle cx="${x(i)}" cy="${y(p.value)}" r="${i === peak ? 4.5 : 2.5}" class="${i === peak ? 'pk' : 'dot'}"/>`).join('')}
+      ${points.map((p, i) => (i === peak || points.length <= 40 ? `<circle cx="${x(i)}" cy="${y(p.value)}" r="${i === peak ? 4.5 : 2.5}" class="${i === peak ? 'pk' : 'dot'}"/>` : '')).join('')}
       <text x="${px}" y="${y(points[peak].value) - 9}" text-anchor="${anchor}" class="pkl">${L('Peak: {n}', { n: num(points[peak].value) })}</text></svg></figure>`;
   }
 
@@ -263,7 +263,7 @@
       ? `<ul class="hol"><li><b>${dshort(c.launch.net.slice(0, 10))}</b><span>${esc(c.launch.name)}${c.launch.provider || c.launch.site ? ` <small>${esc([c.launch.provider, c.launch.site].filter(Boolean).join(' · '))}</small>` : ''}</span></li></ul>`
         + `<p class="take">${L(c.launch.here ? 'Next rocket launch from {c}: {n} on {d}.' : 'No rocket launch is planned from {c}. The next one in the world is {n} on {d}.', { c: esc(name(c.country)), n: `<b>${esc(c.launch.name)}</b>`, d: dshort(c.launch.net.slice(0, 10)) }).replace(/\.\.$/, '.')}</p>` : '')],
     ['Through time', 'From the Like Polling archive: the most-read pages, top search and news coverage in each month since we started.', (c) => (c.through_time && c.through_time.length
-      ? `${byMonthChart(c.news_by_month, L('News share per month, last 3 years (100 = busiest month)'))}${newsOneIn(c.news_by_month, esc(name(c.country))) ? `<p class="take">${newsOneIn(c.news_by_month, esc(name(c.country)))}</p>` : ''}<ul class="hol stack">${c.through_time.slice(-6).reverse().map((m) => `<li><b>${monthName(m.month)}</b><span>${m.most_read.slice(0, 2).map(wikiLabel).join('<br>')}${[m.searches[0] && L('Top search: {x}', { x: esc(m.searches[0].query) }), m.news_articles && L('News articles: {n}', { n: num(m.news_articles) })].filter(Boolean).map((x) => `<small>${x}</small>`).join('')}</span></li>`).join('')}</ul>`
+      ? `${byMonthChart(c.news_by_month, L('News share per month, since 2017 (100 = busiest month)'))}${newsOneIn(c.news_by_month, esc(name(c.country))) ? `<p class="take">${newsOneIn(c.news_by_month, esc(name(c.country)))}</p>` : ''}<ul class="hol stack">${c.through_time.slice(-6).reverse().map((m) => `<li><b>${monthName(m.month)}</b><span>${m.most_read.slice(0, 2).map(wikiLabel).join('<br>')}${[m.searches[0] && L('Top search: {x}', { x: esc(m.searches[0].query) }), m.news_articles && L('News articles: {n}', { n: num(m.news_articles) })].filter(Boolean).map((x) => `<small>${x}</small>`).join('')}</span></li>`).join('')}</ul>`
         + `<p class="take">${L('Like Polling has kept a daily record of {c} since {date}. Every new report adds to it.', { c: esc(name(c.country)), date: dlong(STARTED) })}</p>` : '')],
     ['Ideas to copy', 'Written each week by AI from the data above. Use them as starting points.', (c) => (c.ideas.length
       ? `<ol class="ideas">${c.ideas.slice(0, 3).map((i) => `<li><b>${esc(i.title)}</b><p>${esc(i.idea)}</p>${i.based_on ? `<small>${L('Based on: {x}', { x: esc(i.based_on) })}</small>` : ''}</li>`).join('')}</ol>`
@@ -607,7 +607,7 @@
     const yr = (a) => sum(a.map((d) => d.value));
     const ttChange = tt.length >= 24 && yr(tt.slice(-24, -12)) ? Math.round(((yr(tt.slice(-12)) - yr(tt.slice(-24, -12))) / yr(tt.slice(-24, -12))) * 100) : null;
     const ttPeak = tt.reduce((m, d) => (!m || d.value > m.value ? d : m), null);
-    const timeSec = tt.length > 1 ? `<section class="rsec"><h2>${L('Through time')}</h2><p class="note">${L('How much of the world\'s news mentioned {s} each month, last 3 years (100 = its busiest month).', { s: esc(s.title) })}</p>
+    const timeSec = tt.length > 1 ? `<section class="rsec"><h2>${L('Through time')}</h2><p class="note">${L('How much of the world\'s news mentioned {s} each month, since 2017 (100 = its busiest month).', { s: esc(s.title) })}</p>
       ${lineChart(tt, L('News share'), monthShort)}<p class="take">${newsOneIn(tt, esc(s.title)) || L('It was most in the news in {m}.', { m: monthName(ttPeak.day.slice(0, 7)) })}${ttChange != null ? ` ${L('In the last 12 months, its news share changed {p} compared with the 12 months before.', { p: sign(ttChange) })}` : ''}</p></section>` : '';
     const qual = quality(data);
     const qualSec = `<section class="rsec"><h2>${L('Sources and data quality')}</h2><p class="note">${L('Where each number comes from, and what kind of number it is. No number in this report was made by AI.')}</p>
