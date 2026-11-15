@@ -25,23 +25,33 @@
     const pts = (lines[0] && lines[0].pts) || [];
     if (pts.length < 2) return '';
     const at = new Map(pts.map((p, i) => [p.m, i]));
-    const x = (i) => (i / (pts.length - 1)) * 100;
+    // Monthly axis: each month sits in the middle of its own slot, so every label fits.
+    const mo = axis && pts.length <= 24;
+    const x = (i) => (mo ? ((i + 0.5) / pts.length) : (i / (pts.length - 1))) * 100;
     const poly = (l) => {
       const ok = l.pts.filter((p) => at.has(p.m));
       const max = Math.max(...ok.map((p) => p.v), 0) || 1;
       return ok.map((p) => `${x(at.get(p.m)).toFixed(2)},${(28 - (p.v / max) * 26).toFixed(2)}`).join(' ');
     };
     const first = poly(lines[0]);
-    const svg = `<svg viewBox="0 0 100 30" preserveAspectRatio="none" aria-hidden="true"><polygon points="0,30 ${first} 100,30" class="lp-attn-area"/>${lines.map((l, k) => `<polyline points="${k ? poly(l) : first}" class="lp-attn-line ${esc(l.cls || '')}" vector-effect="non-scaling-stroke"/>`).join('')}</svg>`;
+    const svg = `<svg viewBox="0 0 100 30" preserveAspectRatio="none" aria-hidden="true"><polygon points="${x(0).toFixed(2)},30 ${first} ${x(pts.length - 1).toFixed(2)},30" class="lp-attn-area"/>${lines.map((l, k) => `<polyline points="${k ? poly(l) : first}" class="lp-attn-line ${esc(l.cls || '')}" vector-effect="non-scaling-stroke"/>`).join('')}</svg>`;
     let grid = '', ax = '';
-    if (axis) {
+    if (mo) {
+      // A label under every month, plus the year under the first month and each January.
+      const f = new Intl.DateTimeFormat(lang(), { month: small ? 'narrow' : 'short', timeZone: 'UTC' });
+      grid = pts.map((p, i) => (i > 0 && p.m.endsWith('-01') ? `<i class="lp-attn-yr" style="left:${x(i).toFixed(2)}%"></i>` : '')).join('');
+      ax = `<span class="lp-attn-ax mo${small ? ' sm' : ''}">${pts.map((p, i) => {
+        const yr = i === 0 || p.m.endsWith('-01') ? `<b>${p.m.slice(0, 4)}</b>` : '';
+        return `<span style="left:${x(i).toFixed(2)}%">${esc(f.format(new Date(`${p.m}-01T00:00:00Z`)).replace(/\.$/, ''))}${yr}</span>`;
+      }).join('')}</span>`;
+    } else if (axis) {
       const years = pts.map((p, i) => [p, i]).filter(([p, i]) => i > 0 && p.m.endsWith('-01'));
       grid = years.map(([, i]) => `<i class="lp-attn-yr" style="left:${x(i).toFixed(2)}%"></i>`).join('');
       const firstYr = years.length ? years[0][1] : pts.length;
       const labels = (x(firstYr) >= 14 ? [[pts[0], 0]] : []).concat(years);
       ax = `<span class="lp-attn-ax${small ? ' sm' : ''}">${labels.map(([p, i]) => `<span style="left:${x(i).toFixed(2)}%">${p.m.slice(0, 4)}</span>`).join('')}${small ? '' : `<span class="end">${esc(month(pts[pts.length - 1].m))}</span>`}</span>`;
     }
-    return `<span class="lp-attn-svg" role="img" aria-label="${esc(label)}">${grid}${svg}<i class="lp-attn-cur" hidden></i></span>${ax}`;
+    return `<span class="lp-attn-svg${mo ? ' mo' : ''}" role="img" aria-label="${esc(label)}">${grid}${svg}<i class="lp-attn-cur" hidden></i></span>${ax}`;
   }
   // Pointing at or tapping a chart calls onPick(index of the month) and moves a cursor line there.
   function pick(root, n, onPick) {
@@ -50,9 +60,10 @@
     const cur = box.querySelector('.lp-attn-cur');
     const go = (e) => {
       const r = box.getBoundingClientRect();
-      const i = Math.max(0, Math.min(n - 1, Math.round(((e.clientX - r.left) / r.width) * (n - 1))));
+      const f = (e.clientX - r.left) / r.width, mo = box.classList.contains('mo');
+      const i = Math.max(0, Math.min(n - 1, mo ? Math.floor(f * n) : Math.round(f * (n - 1))));
       cur.hidden = false;
-      cur.style.left = `${(i / (n - 1)) * 100}%`;
+      cur.style.left = `${(mo ? (i + 0.5) / n : i / (n - 1)) * 100}%`;
       onPick(i);
     };
     box.addEventListener('pointermove', go);
@@ -71,6 +82,10 @@
 .lp-attn-ax span { position: absolute; top: 0; padding-left: 3px; white-space: nowrap; }
 .lp-attn-ax span.end { left: auto !important; right: 0; padding: 0; }
 .lp-attn-ax.sm { height: 12px; margin-top: 2px; font-size: 9.5px; }
+.lp-attn-ax.mo { height: 28px; }
+.lp-attn-ax.mo span { padding: 0; transform: translateX(-50%); text-align: center; text-transform: capitalize; }
+.lp-attn-ax.mo b { display: block; font-weight: 600; color: #333; }
+.lp-attn-ax.mo.sm { height: 24px; }
 .lp-attn-yr { position: absolute; top: -2px; bottom: -19px; width: 0; border-left: 1px dashed #cfcfcf; pointer-events: none; }
 .lp-attn-ax.sm ~ * .lp-attn-yr, .fsh-attn-p .lp-attn-yr { bottom: -14px; }
 .lp-attn-cur { position: absolute; top: -2px; bottom: 0; width: 0; border-left: 1.5px solid #111; pointer-events: none; }
@@ -88,7 +103,7 @@
 .lp-attn-txt b { font-size: 15px; font-weight: 700; color: var(--ink, #111); }
 .lp-attn-txt > span { font-size: 11px; color: #8a8a8a; }
 .lp-attn-plot .lp-attn-svg { height: 48px; }
-@media (max-width: 640px) { .lp-attn-row { grid-template-columns: 1fr; padding: 12px 14px; } .lp-attn-plot .lp-attn-svg { height: 40px; } .lp-attn-ax span.end { display: none; } }
+@media (max-width: 640px) { .lp-attn-ax.mo:not(.sm) { font-size: 10px; } .lp-attn-row { grid-template-columns: 1fr; padding: 12px 14px; } .lp-attn-plot .lp-attn-svg { height: 40px; } .lp-attn-ax span.end { display: none; } }
 .lp-attn-up { color: #137a3a; } .lp-attn-down { color: #b0000e; }`;
   document.head.appendChild(css);
 

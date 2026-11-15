@@ -26,7 +26,8 @@
     .lp-cs-pos b { color: #ff8a94; font-weight: 700; }
     .lp-cs-grp select.lp-cs-sel { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; min-width: 0; margin: 0; padding: 0; border: 0; opacity: 0; cursor: pointer; font-size: 16px; -webkit-appearance: none; appearance: none; }
     .lp-cs-grp select.lp-cs-sel option { color: #0d0d0d; background: #fff; }
-    .lp-cs-nav { display: inline-flex; align-items: center; gap: 4px; min-width: 0; max-width: 100%; flex: none; }
+    .lp-cs-nav { display: inline-flex; align-items: center; gap: 4px; min-width: 0; max-width: 100%; flex: 0 1 auto; }
+    .lp-cs-nav > select { min-width: 0; max-width: 100%; flex: 0 1 auto; text-overflow: ellipsis; }
     .lp-cs-arr { flex: none; width: 24px; height: 24px; padding: 0 0 2px; margin: 0; box-sizing: border-box; border: 1px solid rgba(255,42,60,.55); border-radius: 5px; background: linear-gradient(180deg, #8c000c, #7f000a 55%, #6e0009); color: #fff; font: 700 16px/1 ${MONO}; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
     .lp-cs-arr:hover { border-color: #ff2a3c; box-shadow: 0 0 12px -3px rgba(255,42,60,.85); }
     .lp-cs-arr:focus-visible { outline: 2px solid rgba(255,42,60,.6); outline-offset: 2px; }
@@ -160,11 +161,34 @@
     return true;
   }
 
+  // Long country names get their short form so the ‹ › arrows stay on screen ('United States' -> 'U.S.').
+  const SHORT_NAMES = { US: { en: 'U.S.', pt: 'EUA', es: 'EE. UU.', de: 'USA', ru: 'США', uk: 'США' }, GB: { en: 'U.K.', de: 'UK' }, ZA: { ru: 'ЮАР', uk: 'ПАР' } };
+  // Full names in the page language -> short form, e.g. pt 'Estados Unidos' -> 'EUA'.
+  function shorten(sel) {
+    const l = (window.LP_I18N && window.LP_I18N.lang) || document.documentElement.lang || 'en';
+    const base = l.slice(0, 2), map = new Map();
+    for (const [cc, by] of Object.entries(SHORT_NAMES)) {
+      if (!by[base]) continue;
+      for (const loc of [l, base, base === 'pt' ? 'pt-BR' : base, base === 'pt' ? 'pt-PT' : base, 'en']) {
+        try { map.set(new Intl.DisplayNames([loc], { type: 'region' }).of(cc), by[base]); } catch (e) { /* no Intl */ }
+      }
+    }
+    for (const o of sel.options) { const t = map.get(o.textContent.trim()); if (t) o.textContent = t; }
+  }
+  const shortened = new Set();
+  function watchNames(sel) {
+    if (shortened.has(sel)) return;
+    shortened.add(sel);
+    shorten(sel);
+    new MutationObserver(() => shorten(sel)).observe(sel, { childList: true, subtree: true, characterData: true });
+  }
+
   const done = new Set(), swiped = new Set();
   let tries = 0;
   const timer = setInterval(() => {
     PANELS.forEach((p, i) => { if (!done.has(i) && setup(p)) done.add(i); });
     SWIPE.forEach((p, i) => { if (!swiped.has(i) && swipe(p)) swiped.add(i); });
+    SWIPE.forEach(([root, q]) => { const sel = document.querySelector(`${root} ${q}`); if (sel && sel.options.length) watchNames(sel); });
     if ((done.size === PANELS.length && swiped.size === SWIPE.length) || ++tries > 120) clearInterval(timer);
   }, 500);
 })();
