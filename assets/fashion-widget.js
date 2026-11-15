@@ -64,36 +64,38 @@
   const vbody = mount.querySelector('.fsh-vbody');
   const vasof = mount.querySelector('.fsh-vasof');
   const follow = mount.querySelector('.fsh-follow');
-  // Brands through time: English Wikipedia views per month of the brands and magazines in the Fashion Index (assets/attention.js).
+  // Brands in the news: share of world news per month of the brands and magazines in the Fashion Index (GDELT, saved weekly by scripts/news-coverage-routine.js).
   const attn = mount.querySelector('.fsh-attn');
   const BRANDS = [
-    [/^teen vogue/i, 'Teen Vogue', 'Teen Vogue'], [/^vogue/i, 'Vogue', 'Vogue (magazine)'], [/^elle\b/i, 'ELLE', 'Elle (magazine)'],
-    [/^harper'?s bazaar/i, "Harper's Bazaar", "Harper's Bazaar"], [/^instyle/i, 'InStyle', 'InStyle'], [/^wwd\b/i, 'WWD', "Women's Wear Daily"],
-    [/^gq\b/i, 'GQ', 'GQ'], [/^w korea/i, 'W', 'W (magazine)'], [/^burberry/i, 'Burberry', 'Burberry'], [/^chanel/i, 'Chanel', 'Chanel'],
-    [/dior/i, 'Dior', 'Dior'], [/^louis vuitton/i, 'Louis Vuitton', 'Louis Vuitton'], [/^herm[eè]s/i, 'Hermès', 'Hermès'],
-    [/^balmain/i, 'Balmain', 'Balmain (fashion house)'], [/^gucci/i, 'Gucci', 'Gucci'], [/^prada/i, 'Prada', 'Prada'],
-    [/^valentino/i, 'Valentino', 'Valentino (fashion house)'], [/^versace/i, 'Versace', 'Versace'], [/^zara\b/i, 'Zara', 'Zara (retailer)'],
-    [/^mango\b/i, 'Mango', 'Mango (retailer)'], [/^uniqlo/i, 'Uniqlo', 'Uniqlo'], [/^lakm[eé] fashion week/i, 'Lakmé Fashion Week', 'Lakmé Fashion Week'],
-    [/^tamara kalinic/i, 'Tamara Kalinic', 'Tamara Kalinic'],
+    [/^teen vogue/i, 'Teen Vogue'], [/^vogue/i, 'Vogue'], [/^elle\b/i, 'ELLE'],
+    [/^harper'?s bazaar/i, "Harper's Bazaar"], [/^instyle/i, 'InStyle'], [/^wwd\b/i, 'WWD'],
+    [/^gq\b/i, 'GQ'], [/^w korea/i, 'W'], [/^burberry/i, 'Burberry'], [/^chanel/i, 'Chanel'],
+    [/dior/i, 'Dior'], [/^louis vuitton/i, 'Louis Vuitton'], [/^herm[eè]s/i, 'Hermès'],
+    [/^balmain/i, 'Balmain'], [/^gucci/i, 'Gucci'], [/^prada/i, 'Prada'],
+    [/^valentino/i, 'Valentino'], [/^versace/i, 'Versace'], [/^zara\b/i, 'Zara'],
+    [/^mango\b/i, 'Mango'], [/^uniqlo/i, 'Uniqlo'], [/^lakm[eé] fashion week/i, 'Lakmé Fashion Week', 'Lakmé Fashion Week'],
+    [/^tamara kalinic/i, 'Tamara Kalinic'],
   ];
   async function showAttn(rows) {
     const A = window.LP_ATTN;
-    const seen = new Map();
+    const seen = new Set();
     for (const r of rows) {
       const b = BRANDS.find(([re]) => re.test(String(r.channel_title || '').trim()));
-      if (b && !seen.has(b[2])) seen.set(b[2], b[1]);
+      if (b) seen.add(b[1]);
     }
     const list = [...seen].slice(0, 6);
     if (!A || !list.length) { attn.hidden = true; return; }
     const mine = token;
-    const got = await Promise.all(list.map(([title]) => A.months(title)));
+    const got = await fetch(`${base}/rest/v1/brand_coverage_monthly?select=brand,month,share&brand=in.(${encodeURIComponent(list.map((n) => `"${n}"`).join(','))})&order=month.asc`, { headers })
+      .then((r) => (r.ok ? r.json() : [])).catch(() => []);
     if (mine !== token) return;
-    const cards = list.map(([, name], i) => {
-      const pts = got[i];
-      if (pts.length < 2) return '';
-      return `<div class="fsh-attn-c"><span class="fsh-attn-n"><b>${esc(name)}</b>${A.badge(A.change(pts))}</span><span class="fsh-attn-p">${A.chart(pts, name)}</span></div>`;
+    const cards = list.map((name) => {
+      const pts = got.filter((r) => r.brand === name).map((r) => ({ m: r.month.slice(0, 7), v: Number(r.share) }));
+      const ch = A.change(pts);
+      if (pts.length < 2 || ch == null) return '';
+      return `<div class="fsh-attn-c"><span class="fsh-attn-n"><b>${esc(name)}</b>${A.badge(ch)}</span><span class="fsh-attn-p">${A.chart(pts, { label: name, axis: true, small: true })}</span></div>`;
     }).join('');
-    attn.querySelector('.fsh-attn-h').innerHTML = `<b>${esc(tr('Brand interest vs last year'))}</b> ${esc(tr('Wikipedia visits per month, last 3 years'))}`;
+    attn.querySelector('.fsh-attn-h').innerHTML = `<b>${esc(tr('Brands in the news vs last year'))}</b> ${esc(tr('Share of world news per month, last 3 years'))}`;
     attn.querySelector('.fsh-attn-grid').innerHTML = cards;
     attn.hidden = !cards;
   }

@@ -178,22 +178,39 @@
   // Through time: how much the world read the country's English Wikipedia page each month (assets/attention.js).
   front.querySelector('.nw-sub').insertAdjacentHTML('afterend', '<div class="lp-attn-row nw-attn" data-no-i18n hidden><div class="lp-attn-txt"></div><div class="lp-attn-plot"></div></div>');
   const attn = front.querySelector('.nw-attn');
-  const WIKI_TITLES = { IE: 'Republic of Ireland', TR: 'Turkey' };
   let attnFor = null;
+  // The share of the world's news that mentioned the country each month (GDELT, saved weekly by
+  // scripts/news-coverage-routine.js), and each month's top story from the time capsule archive (shown when pointing at or tapping a month).
+  const coverageOf = {}, storiesOf = {};
+  const coverage = (cc) => (coverageOf[cc] = coverageOf[cc] || fetch(`${base}/rest/v1/news_coverage_monthly?select=month,share&country_code=eq.${encodeURIComponent(cc)}&order=month.asc`, { headers })
+    .then((r) => (r.ok ? r.json() : [])).catch(() => []).then((rows) => rows.map((r) => ({ m: r.month.slice(0, 7), v: Number(r.share) }))));
+  const stories = (cc) => (storiesOf[cc] = storiesOf[cc] || fetch(`${base}/rest/v1/rpc/month_top_stories`, { method: 'POST', headers: { ...headers, 'Content-Type': 'application/json' }, body: JSON.stringify({ p_country: cc }) })
+    .then((r) => (r.ok ? r.json() : [])).catch(() => []).then((rows) => new Map(rows.map((r) => [r.month.slice(0, 7), r]))));
   async function showAttn(cc) {
     const A = window.LP_ATTN;
     attnFor = cc;
     if (!A || !cc) { attn.hidden = true; return; }
-    let title = WIKI_TITLES[cc];
-    try { title = title || new Intl.DisplayNames(['en'], { type: 'region' }).of(cc); } catch (e) { title = null; }
-    const pts = await A.months(title);
+    const [pts, top] = await Promise.all([coverage(cc), stories(cc)]);
     if (attnFor !== cc) return;
     if (pts.length < 2) { attn.hidden = true; return; }
-    const ch = A.change(pts);
+    const lang = siteLang();
     let name = cc;
-    try { name = new Intl.DisplayNames([siteLang() === 'pt' ? 'pt-BR' : siteLang()], { type: 'region' }).of(cc); } catch (e) { /* code only */ }
-    attn.querySelector('.lp-attn-txt').innerHTML = `<b>${esc(tr('Interest in {c}').replace('{c}', name))}</b>${ch == null ? '' : `<strong>${A.badge(ch)}<small>${esc(tr('vs last year'))}</small></strong>`}<span>${esc(tr('Wikipedia visits per month'))}</span>`;
-    attn.querySelector('.lp-attn-plot').innerHTML = A.chart(pts, tr('Wikipedia visits per month'), true);
+    try { name = new Intl.DisplayNames([lang === 'pt' ? 'pt-BR' : lang], { type: 'region' }).of(cc); } catch (e) { /* code only */ }
+    const ch = A.change(pts);
+    attn.querySelector('.lp-attn-txt').innerHTML = `<b>${esc(tr('{c} in the news').replace('{c}', name))}</b>${ch == null ? '' : `<strong>${A.badge(ch)}<small>${esc(tr('vs last year'))}</small></strong>`}<span>${esc(tr('Share of world news per month'))}</span>`;
+    const plot = attn.querySelector('.lp-attn-plot');
+    plot.innerHTML = A.chart(pts, { label: tr('{c} in the news').replace('{c}', name), axis: true }) + '<span class="lp-attn-cap"></span>';
+    const cap = plot.querySelector('.lp-attn-cap');
+    const show = (m) => {
+      const s = top.get(m);
+      const t = s && ((s.title_tr && s.title_tr[lang]) || s.title_en);
+      const sum = s && s.title_tr && s.title_tr.sum && (s.title_tr.sum[lang] || s.title_tr.sum.en);
+      cap.innerHTML = t ? `<b>${esc(A.month(m))}</b> · ${esc(tr('Top story'))}: <a href="${esc(s.link)}" target="_blank" rel="noopener">${esc(t)}</a>${sum ? `<small>${esc(sum)}</small>` : ''}`
+        : `<b>${esc(A.month(m))}</b>${top.size ? ` · ${esc(tr('Point at or tap a month to see its top story.'))}` : ''}`;
+    };
+    const lastStory = [...pts].reverse().find((p) => top.has(p.m));
+    show((lastStory || pts[pts.length - 1]).m);
+    A.pick(plot, pts.length, (i) => show(pts[i].m));
     attn.hidden = false;
   }
   const wSel = wPick.querySelector('select');

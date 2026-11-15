@@ -1,26 +1,10 @@
-// Through-time charts on the homepage: views per month of an English Wikipedia page over the
-// last 3 full years (Wikimedia pageviews API: open data, no key, CORS allowed). Load before the widgets.
-//   LP_ATTN.months(title) -> Promise<[{ m: 'YYYY-MM', v }]>, LP_ATTN.chart(points), LP_ATTN.change(points)
+// Through-time charts on the homepage (points: [{ m: 'YYYY-MM', v }], e.g. news coverage per month). Load before the widgets.
+//   LP_ATTN.chart(lines, opts), LP_ATTN.change(points), LP_ATTN.pick(el, n, fn), LP_ATTN.badge(pct)
 (function () {
   'use strict';
-  const API = 'https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia/all-access/user/';
-  const cache = {};
-  const ymd = (d) => d.toISOString().slice(0, 10).replace(/-/g, '');
   const lang = () => (window.LP_I18N && window.LP_I18N.lang) || 'en';
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-  function months(title) {
-    if (!title) return Promise.resolve([]);
-    if (!cache[title]) {
-      const now = new Date();
-      const first = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
-      const from = new Date(Date.UTC(first.getUTCFullYear(), first.getUTCMonth() - 36, 1));
-      const url = `${API}${encodeURIComponent(title.replace(/ /g, '_'))}/monthly/${ymd(from)}/${ymd(new Date(first - 864e5))}`;
-      cache[title] = fetch(url).then((r) => (r.ok ? r.json() : {})).catch(() => ({}))
-        .then((j) => (j.items || []).map((i) => ({ m: `${i.timestamp.slice(0, 4)}-${i.timestamp.slice(4, 6)}`, v: i.views })));
-    }
-    return cache[title];
-  }
   // Last 12 months against the 12 before, in %; null without 2 full years.
   function change(pts) {
     if (pts.length < 24) return null;
@@ -33,16 +17,46 @@
   const peak = (pts) => pts.reduce((a, p) => (!a || p.v > a.v ? p : a), null);
   const signed = (p) => `${p > 0 ? '+' : p < 0 ? '−' : ''}${Math.abs(p)}%`;
 
-  // Line and area in a 100×30 box stretched to the container; axis = first and last month under it.
-  function chart(pts, label = '', axis = false) {
-    if (!pts || pts.length < 2) return '';
-    const max = Math.max(1, ...pts.map((p) => p.v));
+  // Lines in a 100×30 box stretched to the container, each scaled to its own top month.
+  // lines: points, or [{ pts, cls }] (the first line sets the months and gets the area).
+  // axis: a dashed line and label at each new year, and the last month at the right end (not when small).
+  function chart(lines, { label = '', axis = false, small = false } = {}) {
+    if (Array.isArray(lines) && (!lines.length || lines[0].m)) lines = [{ pts: lines }];
+    const pts = (lines[0] && lines[0].pts) || [];
+    if (pts.length < 2) return '';
+    const at = new Map(pts.map((p, i) => [p.m, i]));
     const x = (i) => (i / (pts.length - 1)) * 100;
-    const y = (v) => 28 - (v / max) * 26;
-    const line = pts.map((p, i) => `${x(i).toFixed(2)},${y(p.v).toFixed(2)}`).join(' ');
-    return `<span class="lp-attn-svg" role="img" aria-label="${esc(label)}">
-      <svg viewBox="0 0 100 30" preserveAspectRatio="none" aria-hidden="true"><polygon points="0,30 ${line} 100,30" class="lp-attn-area"/><polyline points="${line}" class="lp-attn-line" vector-effect="non-scaling-stroke"/></svg>
-    </span>${axis ? `<span class="lp-attn-ax"><span>${esc(month(pts[0].m))}</span><span>${esc(month(pts[pts.length - 1].m))}</span></span>` : ''}`;
+    const poly = (l) => {
+      const ok = l.pts.filter((p) => at.has(p.m));
+      const max = Math.max(...ok.map((p) => p.v), 0) || 1;
+      return ok.map((p) => `${x(at.get(p.m)).toFixed(2)},${(28 - (p.v / max) * 26).toFixed(2)}`).join(' ');
+    };
+    const first = poly(lines[0]);
+    const svg = `<svg viewBox="0 0 100 30" preserveAspectRatio="none" aria-hidden="true"><polygon points="0,30 ${first} 100,30" class="lp-attn-area"/>${lines.map((l, k) => `<polyline points="${k ? poly(l) : first}" class="lp-attn-line ${esc(l.cls || '')}" vector-effect="non-scaling-stroke"/>`).join('')}</svg>`;
+    let grid = '', ax = '';
+    if (axis) {
+      const years = pts.map((p, i) => [p, i]).filter(([p, i]) => i > 0 && p.m.endsWith('-01'));
+      grid = years.map(([, i]) => `<i class="lp-attn-yr" style="left:${x(i).toFixed(2)}%"></i>`).join('');
+      const firstYr = years.length ? years[0][1] : pts.length;
+      const labels = (x(firstYr) >= 14 ? [[pts[0], 0]] : []).concat(years);
+      ax = `<span class="lp-attn-ax${small ? ' sm' : ''}">${labels.map(([p, i]) => `<span style="left:${x(i).toFixed(2)}%">${p.m.slice(0, 4)}</span>`).join('')}${small ? '' : `<span class="end">${esc(month(pts[pts.length - 1].m))}</span>`}</span>`;
+    }
+    return `<span class="lp-attn-svg" role="img" aria-label="${esc(label)}">${grid}${svg}<i class="lp-attn-cur" hidden></i></span>${ax}`;
+  }
+  // Pointing at or tapping a chart calls onPick(index of the month) and moves a cursor line there.
+  function pick(root, n, onPick) {
+    const box = root.querySelector('.lp-attn-svg');
+    if (!box || n < 2) return;
+    const cur = box.querySelector('.lp-attn-cur');
+    const go = (e) => {
+      const r = box.getBoundingClientRect();
+      const i = Math.max(0, Math.min(n - 1, Math.round(((e.clientX - r.left) / r.width) * (n - 1))));
+      cur.hidden = false;
+      cur.style.left = `${(i / (n - 1)) * 100}%`;
+      onPick(i);
+    };
+    box.addEventListener('pointermove', go);
+    box.addEventListener('pointerdown', go);
   }
   // ▲ 12% / ▼ 8%, green or red.
   const badge = (p) => (p == null ? '' : `<em class="${p >= 0 ? 'lp-attn-up' : 'lp-attn-down'}">${p >= 0 ? '▲' : '▼'} ${Math.abs(p)}%</em>`);
@@ -53,19 +67,30 @@
 .lp-attn-svg svg { display: block; width: 100%; height: 100%; overflow: visible; }
 .lp-attn-area { fill: rgba(176, 0, 14, .09); }
 .lp-attn-line { fill: none; stroke: #b0000e; stroke-width: 1.6; stroke-linejoin: round; }
-.lp-attn-ax { display: flex; justify-content: space-between; margin-top: 3px; font-size: 11px; color: #8a8a8a; }
-.lp-attn-row { display: grid; grid-template-columns: auto 1fr; gap: 8px 24px; align-items: center; padding: 12px 18px; border-bottom: 1px solid var(--line, #ebebeb); }
-.lp-attn-row[hidden] { display: none; }
-.lp-attn-txt { display: flex; flex-direction: column; gap: 2px; }
-.lp-attn-txt b { font-size: 15px; font-weight: 700; color: var(--ink, #111); }
+.lp-attn-ax { position: relative; display: block; height: 15px; margin-top: 4px; font-size: 11px; color: #6b6b6b; }
+.lp-attn-ax span { position: absolute; top: 0; padding-left: 3px; white-space: nowrap; }
+.lp-attn-ax span.end { left: auto !important; right: 0; padding: 0; }
+.lp-attn-ax.sm { height: 12px; margin-top: 2px; font-size: 9.5px; }
+.lp-attn-yr { position: absolute; top: -2px; bottom: -19px; width: 0; border-left: 1px dashed #cfcfcf; pointer-events: none; }
+.lp-attn-ax.sm ~ * .lp-attn-yr, .fsh-attn-p .lp-attn-yr { bottom: -14px; }
+.lp-attn-cur { position: absolute; top: -2px; bottom: 0; width: 0; border-left: 1.5px solid #111; pointer-events: none; }
+.lp-attn-cur[hidden] { display: none; }
 .lp-attn-txt strong { font-size: 22px; line-height: 1.15; }
 .lp-attn-txt strong em { font-style: normal; }
 .lp-attn-txt strong small { margin-left: 6px; font-size: 13px; font-weight: 500; color: #6b6b6b; }
+.lp-attn-cap { display: block; margin-top: 8px; font-size: 13px; line-height: 1.4; color: #333; min-height: 18px; }
+.lp-attn-cap a { color: inherit; font-weight: 600; text-decoration: underline; text-decoration-color: #ccc; }
+.lp-attn-cap small { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-top: 2px; font-size: 12px; color: #6b6b6b; }
+.lp-attn-plot .lp-attn-svg { touch-action: pan-y; cursor: crosshair; }
+.lp-attn-row { display: grid; grid-template-columns: auto 1fr; gap: 10px 28px; align-items: start; padding: 12px 18px; border-bottom: 1px solid var(--line, #ebebeb); }
+.lp-attn-row[hidden] { display: none; }
+.lp-attn-txt { display: flex; flex-direction: column; gap: 4px; min-width: 210px; }
+.lp-attn-txt b { font-size: 15px; font-weight: 700; color: var(--ink, #111); }
 .lp-attn-txt > span { font-size: 11px; color: #8a8a8a; }
 .lp-attn-plot .lp-attn-svg { height: 48px; }
-@media (max-width: 640px) { .lp-attn-row { grid-template-columns: 1fr; padding: 12px 14px; } .lp-attn-plot .lp-attn-svg { height: 40px; } }
+@media (max-width: 640px) { .lp-attn-row { grid-template-columns: 1fr; padding: 12px 14px; } .lp-attn-plot .lp-attn-svg { height: 40px; } .lp-attn-ax span.end { display: none; } }
 .lp-attn-up { color: #137a3a; } .lp-attn-down { color: #b0000e; }`;
   document.head.appendChild(css);
 
-  window.LP_ATTN = { months, change, chart, badge, month, num, peak, signed };
+  window.LP_ATTN = { change, chart, pick, badge, month, num, peak, signed };
 })();

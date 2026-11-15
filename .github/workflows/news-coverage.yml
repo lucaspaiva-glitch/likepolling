@@ -1,0 +1,32 @@
+name: News coverage memory
+
+on:
+  schedule:
+    - cron: '17 3 * * 1' # weekly, Monday
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['scripts/news-coverage-routine.js', 'lib/news-coverage.js']
+
+concurrency:
+  group: news-coverage-memory
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+      - run: npm ci --omit=dev
+      - name: Save monthly news coverage per country from GDELT
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: node scripts/news-coverage-routine.js

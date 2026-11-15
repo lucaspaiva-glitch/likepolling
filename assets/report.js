@@ -125,7 +125,13 @@
     const line = points.map((p, i) => `${x(i).toFixed(1)},${y(p.value).toFixed(1)}`).join(' ');
     const peak = points.reduce((m, p, i) => (p.value > points[m].value ? i : m), 0);
     const grid = [0, max / 2, max].map((v) => `<line x1="${LM}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" class="g"/><text x="${LM - 6}" y="${y(v) + 4}" text-anchor="end">${short(v)}</text>`).join('');
-    const ticks = [0, Math.floor((points.length - 1) / 2), points.length - 1].map((i) => `<text x="${x(i)}" y="${H - 8}" text-anchor="${i === 0 ? 'start' : i === points.length - 1 ? 'end' : 'middle'}">${tick(points[i].day)}</text>`).join('');
+    // Monthly charts: a dashed line and label at each new year, and the last month at the right end.
+    const years = tick === monthShort ? points.map((p, i) => i).filter((i) => i > 0 && points[i].day.slice(5, 7) === '01') : [];
+    const ticks = years.length
+      ? years.map((i) => `<line x1="${x(i)}" x2="${x(i)}" y1="${T}" y2="${H - B + 4}" class="g yr"/><text x="${x(i) + 3}" y="${H - 8}" text-anchor="start">${points[i].day.slice(0, 4)}</text>`).join('')
+        + (x(years[0]) - LM >= 70 ? `<text x="${LM + 3}" y="${H - 8}" text-anchor="start">${points[0].day.slice(0, 4)}</text>` : '')
+        + `<text x="${x(points.length - 1)}" y="${H - 8}" text-anchor="end">${tick(points[points.length - 1].day)}</text>`
+      : [0, Math.floor((points.length - 1) / 2), points.length - 1].map((i) => `<text x="${x(i)}" y="${H - 8}" text-anchor="${i === 0 ? 'start' : i === points.length - 1 ? 'end' : 'middle'}">${tick(points[i].day)}</text>`).join('');
     const px = x(peak), anchor = px > W - 120 ? 'end' : px < LM + 80 ? 'start' : 'middle';
     return `<figure class="chart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(what)}">${grid}${ticks}
       <polygon points="${x(0)},${y(0)} ${line} ${x(points.length - 1)},${y(0)}" class="area"/><polyline points="${line}" class="ln"/>
@@ -251,7 +257,7 @@
       ? `<ul class="hol"><li><b>${dshort(c.launch.net.slice(0, 10))}</b><span>${esc(c.launch.name)}${c.launch.provider || c.launch.site ? ` <small>${esc([c.launch.provider, c.launch.site].filter(Boolean).join(' · '))}</small>` : ''}</span></li></ul>`
         + `<p class="take">${L(c.launch.here ? 'Next rocket launch from {c}: {n} on {d}.' : 'No rocket launch is planned from {c}. The next one in the world is {n} on {d}.', { c: esc(name(c.country)), n: `<b>${esc(c.launch.name)}</b>`, d: dshort(c.launch.net.slice(0, 10)) }).replace(/\.\.$/, '.')}</p>` : '')],
     ['Through time', 'From the Like Polling archive: the most-read pages, top search and news coverage in each month since we started.', (c) => (c.through_time && c.through_time.length
-      ? `${byMonthChart(c.views_by_month, L('Interest per month, last 3 years (English Wikipedia views)'))}<ul class="hol stack">${c.through_time.slice(-6).reverse().map((m) => `<li><b>${monthName(m.month)}</b><span>${m.most_read.slice(0, 2).map(wikiLabel).join('<br>')}${[m.searches[0] && L('Top search: {x}', { x: esc(m.searches[0].query) }), m.news_articles && L('News articles: {n}', { n: num(m.news_articles) })].filter(Boolean).map((x) => `<small>${x}</small>`).join('')}</span></li>`).join('')}</ul>`
+      ? `${byMonthChart(c.news_by_month, L('News coverage per month, last 3 years (100 = busiest month)'))}<ul class="hol stack">${c.through_time.slice(-6).reverse().map((m) => `<li><b>${monthName(m.month)}</b><span>${m.most_read.slice(0, 2).map(wikiLabel).join('<br>')}${[m.searches[0] && L('Top search: {x}', { x: esc(m.searches[0].query) }), m.news_articles && L('News articles: {n}', { n: num(m.news_articles) })].filter(Boolean).map((x) => `<small>${x}</small>`).join('')}</span></li>`).join('')}</ul>`
         + `<p class="take">${L('Like Polling has kept a daily record of {c} since {date}. Every new report adds to it.', { c: esc(name(c.country)), date: dlong(STARTED) })}</p>` : '')],
     ['Ideas to copy', 'Written each week by AI from the data above. Use them as starting points.', (c) => (c.ideas.length
       ? `<ol class="ideas">${c.ideas.slice(0, 3).map((i) => `<li><b>${esc(i.title)}</b><p>${esc(i.idea)}</p>${i.based_on ? `<small>${L('Based on: {x}', { x: esc(i.based_on) })}</small>` : ''}</li>`).join('')}</ol>`
@@ -595,8 +601,8 @@
     const yr = (a) => sum(a.map((d) => d.value));
     const ttChange = tt.length >= 24 && yr(tt.slice(-24, -12)) ? Math.round(((yr(tt.slice(-12)) - yr(tt.slice(-24, -12))) / yr(tt.slice(-24, -12))) * 100) : null;
     const ttPeak = tt.reduce((m, d) => (!m || d.value > m.value ? d : m), null);
-    const timeSec = tt.length > 1 ? `<section class="rsec"><h2>${L('Through time')}</h2><p class="note">${L('Views of {s}\'s English Wikipedia page each month, last 3 years.', { s: esc(s.title) })}</p>
-      ${lineChart(tt, L('Wikipedia views'), monthShort)}<p class="take">${L('Its busiest month was {m}, with {n} views.', { m: monthName(ttPeak.day.slice(0, 7)), n: num(ttPeak.value) })}${ttChange != null ? ` ${L('In the last 12 months, views changed {p} compared with the 12 months before.', { p: sign(ttChange) })}` : ''}</p></section>` : '';
+    const timeSec = tt.length > 1 ? `<section class="rsec"><h2>${L('Through time')}</h2><p class="note">${L('How much of the world\'s news mentioned {s} each month, last 3 years (100 = its busiest month).', { s: esc(s.title) })}</p>
+      ${lineChart(tt, L('News coverage'), monthShort)}<p class="take">${L('It was most in the news in {m}.', { m: monthName(ttPeak.day.slice(0, 7)) })}${ttChange != null ? ` ${L('In the last 12 months, its news coverage changed {p} compared with the 12 months before.', { p: sign(ttChange) })}` : ''}</p></section>` : '';
     const qual = quality(data);
     const qualSec = `<section class="rsec"><h2>${L('Sources and data quality')}</h2><p class="note">${L('Where each number comes from, and what kind of number it is. No number in this report was made by AI.')}</p>
       <div class="tight" style="overflow-x:auto"><table class="cmp"><thead><tr><th>${L('What')}</th><th>${L('Source')}</th><th>${L('Type')}</th><th>${L('Covers')}</th></tr></thead><tbody>${qual.map((r) => `<tr><th>${esc(r[0])}</th>${r.slice(1).map((c) => `<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div></section>`;
