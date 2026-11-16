@@ -55,3 +55,5 @@
 #restaurants .rst-sum button.on em { color: #fff; }
 /* Phones and touch screens: the list grows with the page instead of scrolling in its own box, so it can't wobble. */
 @media (max-width: 640px), (hover: none) { #restaurants .rst-list { max-height: none; overflow: visible; } }
+#restaurants .rst-more { display: block; margin: 0 12px 12px; width: calc(100% - 24px); padding: 10px; border: 1px solid #f1d4d4; border-radius: 10px; background: var(--red-soft, #fbf1f1); color: var(--red, #b0000e); font: inherit; font-size: 13px; font-weight: 650; cursor: pointer; }
+#restaurants .rst-more[hidden] { display: none; }

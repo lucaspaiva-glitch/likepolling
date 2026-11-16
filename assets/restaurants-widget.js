@@ -24,6 +24,7 @@
     <section class="ytt"><div class="ytt-head"><h3 class="ytt-title">Michelin stars</h3><span class="ytt-sym" data-no-i18n>STAR</span></div>
       <div class="rst-sum" data-no-i18n></div>
       <ul class="rst-list" data-no-i18n></ul>
+      <button type="button" class="rst-more" hidden></button>
       <p class="ytt-foot">Stars as recorded in Wikidata (open data), checked weekly. Not an official Michelin Guide list.</p></section>`;
   const select = mount.querySelector('.rst-select');
   const list = mount.querySelector('.rst-list');
@@ -32,12 +33,19 @@
   let all = [];
   let reg = '';
   let star = 0;
+  // The list shows 10 restaurants at a time, so the section stays short; filters always search the whole list.
+  const STEP = 10;
+  let limit = STEP;
+  const more = mount.querySelector('.rst-more');
   const tr = (x) => (window.LP_I18N ? window.LP_I18N.t(x) : x);
   const fill = () => { select.innerHTML = COUNTRIES.map((c) => `<option value="${c}"${c === cc ? ' selected' : ''}>${esc(region(c))}</option>`).join(''); };
   function paint() {
     const rows = reg ? all.filter((r) => r.region === reg) : all;
     if (!rows.some((r) => r.stars === star)) star = 0;
-    list.innerHTML = rows.filter((r) => !star || r.stars === star).map((r) => { const u = r.website || r.wiki; const inner = `<b>${esc(r.name)}</b><span>${esc(r.city || '')}</span><em aria-label="${r.stars} Michelin star${r.stars > 1 ? 's' : ''}">${'★'.repeat(r.stars)}</em>`;
+    const shown = rows.filter((r) => !star || r.stars === star);
+    more.hidden = shown.length <= limit;
+    more.textContent = `${tr('Show more')} (${shown.length - Math.min(limit, shown.length)})`;
+    list.innerHTML = shown.slice(0, limit).map((r) => { const u = r.website || r.wiki; const inner = `<b>${esc(r.name)}</b><span>${esc(r.city || '')}</span><em aria-label="${r.stars} Michelin star${r.stars > 1 ? 's' : ''}">${'★'.repeat(r.stars)}</em>`;
       return `<li class="rst-t${r.stars}">${u ? `<a href="${esc(u)}" target="_blank" rel="noopener">${inner}</a>` : `<div>${inner}</div>`}</li>`; }).join('');
     sum.innerHTML = [3, 2, 1].map((n) => [n, rows.filter((r) => r.stars === n).length]).filter(([, c]) => c).map(([n, c]) => `<button type="button" class="rst-t${n}${star === n ? ' on' : ''}" data-s="${n}" aria-pressed="${star === n}" aria-label="${n} Michelin star${n > 1 ? 's' : ''}: ${c}"><em>${'★'.repeat(n)}</em>${c}</button>`).join('');
   }
@@ -55,11 +63,12 @@
       mount.hidden = !rows.length;
     } catch { mount.hidden = true; }
   }
-  select.addEventListener('change', () => { cc = select.value; reg = ''; star = 0; show(); });
-  pick.addEventListener('change', () => { reg = pick.value; paint(); });
+  select.addEventListener('change', () => { cc = select.value; reg = ''; star = 0; limit = STEP; show(); });
+  pick.addEventListener('change', () => { reg = pick.value; limit = STEP; paint(); });
   // Tapping ★★★, ★★ or ★ shows only those restaurants; tapping it again shows all.
-  sum.addEventListener('click', (e) => { const b = e.target.closest('[data-s]'); if (!b) return; const n = Number(b.dataset.s); star = star === n ? 0 : n; paint(); });
-  document.addEventListener('lp:lang', () => { fill(); if (pick.options[0]) pick.options[0].textContent = tr('All states'); });
+  sum.addEventListener('click', (e) => { const b = e.target.closest('[data-s]'); if (!b) return; const n = Number(b.dataset.s); star = star === n ? 0 : n; limit = STEP; paint(); });
+  more.addEventListener('click', () => { limit += STEP; paint(); });
+  document.addEventListener('lp:lang', () => { paint(); fill(); if (pick.options[0]) pick.options[0].textContent = tr('All states'); });
   fill();
   show();
 })();

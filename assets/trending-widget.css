@@ -133,6 +133,6 @@
 @container (max-width: 560px) {
   .ytt-cards, .ymu-cards { align-items: center; }
   .ytt-cards > .lp-more, .ymu-cards > .lp-more { display: flex; }
-  .ytt-cards > .ytt-card[style], .ymu-cards > .ymu-card[style] { width: calc(100% * (1 - var(--i, 0) * .012)); margin-inline: auto; }
+  .ytt-cards > .ytt-card[style], .ymu-cards > .ymu-card[style] { width: calc(90% * (1 - var(--i, 0) * .012)); margin-inline: auto; }
   .ytt-cards:has(> .lp-more) ~ .ytt-table, .ymu-cards:has(> .lp-more) ~ .ymu-table { display: none; }
 }
