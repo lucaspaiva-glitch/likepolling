@@ -345,7 +345,7 @@
       if (!codes.length) throw new Error('no data');
       const names = await get(`youtube_active_users?select=country_code,country_name&country_code=in.(${codes.join(',')})`).catch(() => []);
       const name = Object.fromEntries(names.map((n) => [n.country_code, n.country_name]));
-      const list = codes.map((c) => [c, name[c] || c]).sort((a, b) => a[1].localeCompare(b[1]));
+      const list = codes.map((c) => [c, name[c] || regionName(c)]).sort((a, b) => a[1].localeCompare(b[1]));
       select.innerHTML = list.map(([c, n]) => `<option value="${esc(c)}">${esc(n)}</option>`).join('');
       select.value = defaultCountry(codes);
       select.addEventListener('change', () => show(select.value));

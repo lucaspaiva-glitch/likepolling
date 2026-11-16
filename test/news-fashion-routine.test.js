@@ -34,7 +34,10 @@ test('writes news_fashion with the AI fashion check stored in title_tr', async (
   assert.deepEqual(us.map((r) => [r.title, r.title_tr && r.title_tr.fashion]), [['Runway report', true], ['Team wins in style', false]]);
 });
 
-test('Fashion News skips Iraq', () => {
-  assert.equal(FASHION.countries.length, Object.keys(EDITIONS).length - 1);
-  assert.ok(!FASHION.countries.includes('IQ'));
+test('World, AI and Fashion News cover the same 14 featured countries', () => {
+  const { FEATURED, WORLD } = require('../scripts/news-world-routine');
+  assert.equal(FEATURED.length, 14);
+  assert.ok(FEATURED.every((cc) => EDITIONS[cc]));
+  assert.deepEqual(FASHION.countries, FEATURED);
+  assert.deepEqual(WORLD.countries, FEATURED);
 });

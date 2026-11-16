@@ -10,7 +10,7 @@ const { run: runNews, EDITIONS, WORLD } = require('./news-world-routine');
 const TERMS = {
   es: 'inteligencia artificial', 'es-419': 'inteligencia artificial', pt: 'inteligência artificial', 'pt-BR': 'inteligência artificial',
   'pt-PT': 'inteligência artificial', it: 'intelligenza artificiale', pl: 'sztuczna inteligencja', tr: 'yapay zeka', uk: 'штучний інтелект',
-  de: 'künstliche Intelligenz', fr: 'intelligence artificielle', nl: 'kunstmatige intelligentie', ja: '人工知能', ko: '인공지능',
+  de: 'künstliche Intelligenz', fr: 'intelligence artificielle', nl: 'kunstmatige intelligentie', ja: '人工知能', ko: '인공지능', ru: 'искусственный интеллект', 'zh-CN': '人工智能',
   th: 'ปัญญาประดิษฐ์', vi: 'trí tuệ nhân tạo', id: 'kecerdasan buatan', ar: 'الذكاء الاصطناعي', bn: 'কৃত্রিম বুদ্ধিমত্তা', 'zh-TW': '人工智慧',
 };
 // No Google News edition of their own (see news-world-routine.js): add the country's name.

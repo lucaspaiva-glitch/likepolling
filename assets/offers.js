@@ -3,7 +3,7 @@
 // Resting the mouse on a card shows the details; a click opens the content itself (sample PDF or the ad spot page) in a new tab.
 (function () {
   'use strict';
-  const PRICE = '€8';
+  const PRICE = '€4';
   const MAIL = 'lucaspaiva@likepolling.com';
   // buy: Gumroad product link. Empty = the button opens an order email instead.
   const OFFERS = [
@@ -82,18 +82,18 @@
   const card = (o) => {
     const report = !o.mail;
     const actions = report
-      ? `<form class="svc-form" novalidate>${blank(o)}</form><a class="svc-btn" href="${esc(buyLink(o))}">${tr(o.buy ? 'Buy' : 'Order')} · ${PRICE}<span class="lp-local" data-eur="8"></span></a><a class="svc-link" href="${esc(pdf(o.id))}">${tr('Download a free sample (PDF) ›')}</a><p class="svc-fine">${tr('Gathered every day since 24 Oct 2026.')}</p>`
+      ? `<form class="svc-form" novalidate>${blank(o)}</form><a class="svc-btn" href="${esc(buyLink(o))}">${tr(o.buy ? 'Buy' : 'Order')} · ${PRICE}<span class="lp-local" data-eur="4"></span></a><a class="svc-link" href="${esc(pdf(o.id))}">${tr('Download a free sample (PDF) ›')}</a><p class="svc-fine">${tr('Gathered every day since 24 Oct 2026.')}</p>`
       : `<a class="svc-btn" href="${esc(mailto(o.mail, 'Hi! I\'d like to know about sponsoring Like Polling.\n\nBrand:\nCountries we target:\nWebsite:'))}">${tr('Ask about the ad spot')}</a><p class="svc-fine">${tr('Like the Machu Picchu Energy card. Monthly views and clicks included.')}</p>`;
     const nm = tr(o.name);
     return `<section class="svc" id="offer-${o.id}" data-no-i18n>
       <a class="svc-tab" href="${esc(report ? `${SAMPLES}/${lang()}/${o.id}-report.pdf` : AD)}" target="_blank" rel="noopener">
-        <span class="svc-top"><span class="svc-sym">${esc(tr(o.sym))}</span><span>${esc(o.top ? tr(o.top) : PRICE)}${o.top ? '' : '<span class="lp-local" data-eur="8"></span>'}</span></span>
+        <span class="svc-top"><span class="svc-sym">${esc(tr(o.sym))}</span><span>${esc(o.top ? tr(o.top) : PRICE)}${o.top ? '' : '<span class="lp-local" data-eur="4"></span>'}</span></span>
         <span class="svc-name svc-glitch" data-text="${esc(nm)}">${esc(nm)}</span>
         <span class="svc-bar" aria-hidden="true"></span>
         <span class="svc-sub">${esc(tr(o.sub))}</span>
         <span class="svc-more">${tr(report ? 'See a sample' : 'Get the ad spot')} ↗</span>
       </a>
-      <a class="svc-buy-m" href="${esc(report ? buyLink(o) : AD)}">${tr('Buy')} · ${report ? PRICE : '€18'}<span class="lp-local" data-eur="${report ? 8 : 18}"></span></a>
+      <a class="svc-buy-m" href="${esc(report ? buyLink(o) : AD)}">${tr('Buy')} · ${report ? PRICE : '€20'}<span class="lp-local" data-eur="${report ? 4 : 20}"></span></a>
       <div class="svc-body" id="offer-${o.id}-body">
         <div class="svc-stats">${o.stats.map(([n, l]) => `<div><b>${esc(n)}</b><span>${esc(tr(l))}</span></div>`).join('')}</div>
         ${actions}

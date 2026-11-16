@@ -9,7 +9,7 @@ const { run: runNews, EDITIONS, WORLD } = require('./news-world-routine');
 const TERMS = {
   es: 'moda', 'es-419': 'moda', pt: 'moda', 'pt-BR': 'moda', 'pt-PT': 'moda', it: 'moda', pl: 'moda', tr: 'moda', uk: 'мода',
   de: 'Mode', fr: 'mode', nl: 'mode', ja: 'ファッション', ko: '패션', th: 'แฟชั่น', vi: 'thời trang', id: 'fashion',
-  ar: 'أزياء', bn: 'ফ্যাশন', 'zh-TW': '時尚',
+  ar: 'أزياء', bn: 'ফ্যাশন', 'zh-TW': '時尚', ru: 'мода', 'zh-CN': '时尚',
 };
 // No Google News edition of their own (see news-world-routine.js): add the country's name.
 const PLACE = { DZ: 'Algérie', EC: 'Ecuador', IQ: 'العراق' };
@@ -24,8 +24,6 @@ function fashionUrl(cc, days = 2) {
 const FASHION = {
   ...WORLD,
   table: 'news_fashion', rpc: 'replace_news_fashion', feed: fashionUrl, searchTopUp: () => true,
-  // Iraq has too little fashion news to fill a list.
-  countries: Object.keys(EDITIONS).filter((cc) => cc !== 'IQ'),
   maxPerSource: 3, photoTarget: 20, imageLookups: 1000, translations: 1000, classify: true, summaries: true,
 };
 

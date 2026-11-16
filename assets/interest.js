@@ -1,7 +1,7 @@
 // Anonymous interest counter: one "visit" per page load and one "buy" per Gumroad Buy click.
 // Sends only the page or product name; the server adds the visitor's country. No cookies.
-// Euro prices also show in the money of the chosen language: <span class="lp-local" data-eur="8"> becomes " ≈ R$49" in
-// Portuguese, and a tab price <em class="lp-price" data-eur="8">€8</em> becomes "≈R$49". Checkout stays in euros.
+// Euro prices also show in the money of the chosen language: <span class="lp-local" data-eur="4"> becomes " ≈ R$49" in
+// Portuguese, and a tab price <em class="lp-price" data-eur="4">€4</em> becomes "≈R$49". Checkout stays in euros.
 // Rates: European Central Bank (frankfurter.dev); hryvnia from the National Bank of Ukraine. Euro languages see euros only.
 (function () {
   const PAGES = { '/': 'home', '/index': 'home', '/services': 'services', '/report': 'report', '/ad': 'ad' };

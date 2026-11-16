@@ -9,8 +9,8 @@ const rss = (...items) => `<?xml version="1.0"?><rss><channel>${items.join('')}<
 const text = (status, body) => ({ ok: status >= 200 && status < 300, status, text: async () => body, json: async () => JSON.parse(body) });
 const deps = (f) => ({ fetch: f, sleep: async () => {}, log: () => {} });
 
-test('covers the 41 Trending Index countries; editions vs country searches', () => {
-  assert.equal(Object.keys(EDITIONS).length, 41);
+test('covers the 41 Trending Index countries plus Russia and China; editions vs country searches', () => {
+  assert.equal(Object.keys(EDITIONS).length, 43);
   assert.equal(feedUrl('US'), 'https://news.google.com/rss?hl=en-US&gl=US&ceid=US:en');
   assert.match(feedUrl('EC'), /^https:\/\/news\.google\.com\/rss\/search\?q=Ecuador%20when%3A1d&hl=es-419&gl=EC&ceid=EC:es-419$/);
   assert.deepEqual(Object.keys(SEARCH).sort(), ['DZ', 'EC', 'IQ']);
@@ -33,7 +33,7 @@ test('keeps Google News order, drops blocked sources, repeats and overlong links
     ));
   };
   const s = await run(env, deps(f));
-  assert.equal(s.rows, 82);
+  assert.equal(s.rows, 28);
   assert.deepEqual(s.failed, []);
   const us = payload.filter((r) => r.country_code === 'US');
   assert.deepEqual(us.map((r) => [r.rank, r.title, r.source]), [[1, 'First story', 'Wire'], [2, 'Second story', 'Paper']]);
@@ -69,8 +69,8 @@ test('translates new headlines once and reuses stored translations', async () =>
     return text(200, rss(item('First story', 'Wire', `https://news.google.com/rss/articles/${cc}-1`)));
   };
   const s = await run(env, { ...deps(f), translate: async (titles) => { asked.push(...titles); return titles.map(tr); } });
-  assert.equal(s.translations.translated, 40);
-  assert.equal(asked.length, 40);
+  assert.equal(s.translations.translated, 13);
+  assert.equal(asked.length, 13);
   assert.equal(payload.find((r) => r.country_code === 'US').title_tr.ja, 'ja:stored');
   assert.equal(payload.find((r) => r.country_code === 'JP').title_tr.pt, 'pt:First story');
 });
@@ -118,10 +118,10 @@ test('a batch whose translation reply is invalid JSON is retried in halves', asy
     return text(200, rss(item(`Story ${cc}`, 'Wire', `https://news.google.com/rss/articles/${cc}-1`)));
   };
   const s = await run(env, { ...deps(f), translate: async (titles) => { if (titles.length > 10) throw new Error("Expected ',' or '}' after property value in JSON"); return titles.map(tr); } });
-  assert.equal(s.translations.translated, 41);
+  assert.equal(s.translations.translated, 14);
   assert.equal(s.translations.pending, 0);
   assert.deepEqual(s.translations.errors, []);
-  assert.equal(payload.find((r) => r.country_code === 'AR').title_tr.en, 'en:Story AR');
+  assert.equal(payload.find((r) => r.country_code === 'BR').title_tr.en, 'en:Story BR');
 });
 
 test("translates only each country's first PHOTO_TARGET photo stories", async () => {

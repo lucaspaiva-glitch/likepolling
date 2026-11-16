@@ -42,8 +42,10 @@ const EDITIONS = {
   PH: ['en-PH', 'PH:en'], PK: ['en-PK', 'PK:en'], PL: ['pl', 'PL:pl'], PT: ['pt-PT', 'PT:pt-150'],
   SA: ['ar', 'SA:ar'], TH: ['th', 'TH:th'], TR: ['tr', 'TR:tr'],
   TW: ['zh-TW', 'TW:zh-Hant'], UA: ['uk', 'UA:uk'], US: ['en-US', 'US:en'], VN: ['vi', 'VN:vi'],
-  ZA: ['en-ZA', 'ZA:en'],
+  ZA: ['en-ZA', 'ZA:en'], RU: ['ru', 'RU:ru'], CN: ['zh-CN', 'CN:zh-Hans'],
 };
+// The countries the World, AI and Fashion News lists cover (each one costs Gemini summaries).
+const FEATURED = ['BR', 'PT', 'US', 'ES', 'FR', 'DE', 'GB', 'JP', 'KR', 'RU', 'UA', 'MX', 'IN', 'CN'];
 // No Google News edition of their own (Google serves France's, Egypt's or US
 // Spanish news instead), so these use a Google News search for the country's name.
 const SEARCH = { DZ: 'Algérie', EC: 'Ecuador', IQ: 'العراق' };
@@ -82,7 +84,7 @@ function uniqueItems(items, seen, maxPerSource = Infinity) {
 // The World News defaults; scripts/news-fashion-routine.js passes its own.
 const WORLD = {
   table: 'news_world', rpc: 'replace_news_world', feed: feedUrl, searchTopUp: (cc) => !!SEARCH[cc],
-  photoTarget: PHOTO_TARGET, imageLookups: IMAGE_LOOKUPS_PER_RUN, translations: TRANSLATIONS_PER_RUN, classify: false, summaries: true,
+  photoTarget: PHOTO_TARGET, imageLookups: IMAGE_LOOKUPS_PER_RUN, translations: TRANSLATIONS_PER_RUN, classify: false, summaries: true, countries: FEATURED,
 };
 
 async function fetchCountry(cc, deps, cfg = WORLD) {
@@ -401,7 +403,7 @@ async function run(env = process.env, deps = {}, cfg = WORLD) {
   return summary;
 }
 
-module.exports = { run, feedUrl, sectionUrl, EDITIONS, SEARCH, PHOTO_TARGET, WORLD, geminiTranslator, geminiJson, numbersCheckOut, SITE_LANGS, LANG_LIST };
+module.exports = { run, feedUrl, sectionUrl, EDITIONS, FEATURED, SEARCH, PHOTO_TARGET, WORLD, geminiTranslator, geminiJson, numbersCheckOut, SITE_LANGS, LANG_LIST };
 
 if (require.main === module) {
   run().catch((err) => {
