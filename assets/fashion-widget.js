@@ -59,7 +59,9 @@
   const bsel = attn.querySelector('select');
   const BRANDS = ['Vogue', 'ELLE', "Harper's Bazaar", 'GQ', 'Chanel', 'Dior', 'Louis Vuitton', 'Hermès', 'Gucci', 'Prada', 'Burberry', 'Versace', 'Zara', 'Uniqlo'];
   let brandRows = null, brands = [];
-  const brandData = () => (brandRows = brandRows || fetch(`${base}/rest/v1/brand_coverage_monthly?select=brand,month,share&brand=in.(${encodeURIComponent(BRANDS.map((n) => `"${n}"`).join(','))})&order=month.asc`, { headers })
+  // The last 25 months are enough for the chart and the change vs last year (and stay under Supabase's 1,000-row limit).
+  const since = () => { const d = new Date(); d.setUTCDate(1); d.setUTCMonth(d.getUTCMonth() - 25); return d.toISOString().slice(0, 10); };
+  const brandData = () => (brandRows = brandRows || fetch(`${base}/rest/v1/brand_coverage_monthly?select=brand,month,share&brand=in.(${encodeURIComponent(BRANDS.map((n) => `"${n}"`).join(','))})&month=gte.${since()}&order=month.asc`, { headers })
     .then((r) => (r.ok ? r.json() : [])).catch(() => []).then((rows) => {
       const by = {};
       for (const r of rows) (by[r.brand] = by[r.brand] || []).push({ m: r.month.slice(0, 7), v: Number(r.share) });
