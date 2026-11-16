@@ -33,6 +33,8 @@ export function likePollingVendor(payee: string | null, descriptor: string | nul
 
 // Plans that bill every month even before their first charge shows up at the bank.
 const FIXED_PLANS: Record<string, number> = { Supabase: 25 };
+// Flat subscriptions the user confirmed; past top-ups shouldn't raise the plan.
+const SUBSCRIPTIONS: Record<string, number> = { "Devin (Cognition)": 200 };
 const ONE_OFF = new Set(["Chrome Web Store", "Domain"]);
 
 export interface LikePollingPlan {
@@ -61,6 +63,7 @@ export function likePollingPlan(rows: Transaction[], vendorOf: Map<string, strin
   }
   const last = new Map(Array.from(spent, ([name, v]) => [name, Math.max(v[basis] ?? 0, v[now] ?? 0)]));
   for (const [name, amount] of Object.entries(FIXED_PLANS)) last.set(name, Math.max(last.get(name) ?? 0, amount));
+  for (const [name, amount] of Object.entries(SUBSCRIPTIONS)) last.set(name, amount);
   const vendors = Array.from(last, ([name, monthly]) => ({ name, monthly: Math.round(monthly * 100) / 100 }))
     .filter((v) => v.monthly > 0).sort((a, b) => b.monthly - a.monthly);
   const total = vendors.reduce((s, v) => s + v.monthly, 0);
