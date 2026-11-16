@@ -11,13 +11,13 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#0b1120",
+  themeColor: "#f5f9fc",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className="dark">
-      <body className="min-h-screen bg-dark-tremor-background-muted text-dark-tremor-content antialiased">
+    <html lang="en">
+      <body className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-emerald-50 text-tremor-content antialiased">
         {children}
       </body>
     </html>

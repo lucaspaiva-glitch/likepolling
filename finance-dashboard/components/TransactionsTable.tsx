@@ -65,7 +65,7 @@ function CategoryCell({ tx, onSaved }: { tx: Transaction; onSaved: (c: string) =
             setEditing(false);
           }
         }}
-        className="w-full rounded border-dark-tremor-border bg-dark-tremor-background px-1.5 py-0.5 text-xs text-dark-tremor-content-strong focus:border-blue-500 focus:ring-0"
+        className="w-full rounded border-tremor-border bg-tremor-background px-1.5 py-0.5 text-xs text-tremor-content-strong focus:border-blue-500 focus:ring-0"
         aria-label="Edit category"
       />
     );
@@ -75,8 +75,8 @@ function CategoryCell({ tx, onSaved }: { tx: Transaction; onSaved: (c: string) =
       type="button"
       onClick={() => setEditing(true)}
       title="Click to edit category"
-      className={`w-full rounded px-1.5 py-0.5 text-left text-xs hover:bg-dark-tremor-background-subtle ${
-        state === "error" ? "text-rose-400" : state === "saving" ? "text-dark-tremor-content-subtle" : "text-dark-tremor-content-emphasis"
+      className={`w-full rounded px-1.5 py-0.5 text-left text-xs hover:bg-tremor-background-subtle ${
+        state === "error" ? "text-rose-600" : state === "saving" ? "text-tremor-content-subtle" : "text-tremor-content-emphasis"
       }`}
     >
       {tx.category || "Uncategorized"}
@@ -125,8 +125,8 @@ export default function TransactionsTable({ transactions, accounts }: { transact
     <Card className="p-3">
       <div className="flex flex-wrap items-center gap-2">
         <div className="mr-auto w-full sm:w-auto">
-          <h3 className="text-sm font-medium text-dark-tremor-content-strong">Transactions</h3>
-          <p className="text-[11px] text-dark-tremor-content">
+          <h3 className="text-sm font-medium text-tremor-content-strong">Transactions</h3>
+          <p className="text-[11px] text-tremor-content">
             {filtered.length.toLocaleString()} of {rows.length.toLocaleString()} · net {fmtUsd2(sum)} · click a category to edit
           </p>
         </div>
@@ -137,7 +137,7 @@ export default function TransactionsTable({ transactions, accounts }: { transact
               setDirty(false);
               router.refresh();
             }}
-            className="rounded border border-blue-500/40 px-2 py-1 text-xs text-blue-400 hover:bg-blue-500/10"
+            className="rounded border border-blue-300 px-2 py-1 text-xs text-blue-600 hover:bg-blue-500/10"
           >
             Refresh charts
           </button>
@@ -176,7 +176,7 @@ export default function TransactionsTable({ transactions, accounts }: { transact
       </datalist>
 
       <Table className="mt-2 max-h-[560px] overflow-auto">
-        <TableHead className="sticky top-0 z-10 bg-dark-tremor-background">
+        <TableHead className="sticky top-0 z-10 bg-tremor-background">
           <TableRow>
             <TableHeaderCell className="px-1.5 sm:px-4 w-20 py-1.5 text-xs sm:w-24">Date</TableHeaderCell>
             <TableHeaderCell className="px-1.5 sm:px-4 py-1.5 text-xs">Payee</TableHeaderCell>
@@ -188,14 +188,14 @@ export default function TransactionsTable({ transactions, accounts }: { transact
         </TableHead>
         <TableBody>
           {filtered.slice(0, limit).map((t) => (
-            <TableRow key={t.id} className="hover:bg-dark-tremor-background-subtle/40">
+            <TableRow key={t.id} className="hover:bg-tremor-background-subtle/40">
               <TableCell className="whitespace-nowrap px-1.5 sm:px-4 py-1 text-xs tabular-nums"><span className="sm:hidden">{fmtDate(t.date)}</span><span className="hidden sm:inline">{fmtDate(t.date, true)}</span></TableCell>
-              <TableCell className="px-1.5 sm:px-4 max-w-0 truncate py-1 text-xs text-dark-tremor-content-emphasis" title={t.payee ?? ""}>
+              <TableCell className="px-1.5 sm:px-4 max-w-0 truncate py-1 text-xs text-tremor-content-emphasis" title={t.payee ?? ""}>
                 <span className="block truncate">
                   {t.payee}
-                  {t.pending && <span className="text-amber-400 md:hidden"> · pending</span>}
+                  {t.pending && <span className="text-amber-600 md:hidden"> · pending</span>}
                 </span>
-                <span className="block truncate text-[11px] text-dark-tremor-content-subtle sm:hidden">{t.category ?? "Uncategorized"}</span>
+                <span className="block truncate text-[11px] text-tremor-content-subtle sm:hidden">{t.category ?? "Uncategorized"}</span>
               </TableCell>
               <TableCell className="px-1.5 sm:px-4 hidden truncate py-1 text-xs md:table-cell">{(t.account_id && accountName.get(t.account_id)) || "—"}</TableCell>
               <TableCell className="px-1.5 sm:px-4 hidden py-0.5 sm:table-cell">
@@ -207,20 +207,20 @@ export default function TransactionsTable({ transactions, accounts }: { transact
                   }}
                 />
               </TableCell>
-              <TableCell className="px-1.5 sm:px-4 hidden py-1 text-xs md:table-cell">{t.pending ? <span className="text-amber-400">pending</span> : t.type}</TableCell>
-              <TableCell className={`px-1.5 sm:px-4 py-1 text-right text-xs tabular-nums ${t.amount >= 0 ? "text-emerald-400" : "text-dark-tremor-content-strong"}`}>
+              <TableCell className="px-1.5 sm:px-4 hidden py-1 text-xs md:table-cell">{t.pending ? <span className="text-amber-600">pending</span> : t.type}</TableCell>
+              <TableCell className={`px-1.5 sm:px-4 py-1 text-right text-xs tabular-nums ${t.amount >= 0 ? "text-emerald-600" : "text-tremor-content-strong"}`}>
                 {fmtUsd2(t.amount)}
               </TableCell>
             </TableRow>
           ))}
         </TableBody>
       </Table>
-      {filtered.length === 0 && <p className="py-8 text-center text-xs text-dark-tremor-content-subtle">No transactions</p>}
+      {filtered.length === 0 && <p className="py-8 text-center text-xs text-tremor-content-subtle">No transactions</p>}
       {filtered.length > limit && (
         <button
           type="button"
           onClick={() => setLimit((l) => l + PAGE)}
-          className="mt-2 w-full rounded border border-dark-tremor-border py-1 text-xs text-dark-tremor-content hover:bg-dark-tremor-background-subtle"
+          className="mt-2 w-full rounded border border-tremor-border py-1 text-xs text-tremor-content hover:bg-tremor-background-subtle"
         >
           Show {Math.min(PAGE, filtered.length - limit)} more
         </button>

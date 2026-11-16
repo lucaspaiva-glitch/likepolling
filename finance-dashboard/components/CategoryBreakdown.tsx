@@ -25,8 +25,8 @@ export default function CategoryBreakdown({ categories }: { categories: Dashboar
     <Card className="h-full p-3">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
-          <h3 className="text-sm font-medium text-dark-tremor-content-strong">Spending by category</h3>
-          <p className="text-[11px] text-dark-tremor-content">Outflows · total {fmtUsd(total)}</p>
+          <h3 className="text-sm font-medium text-tremor-content-strong">Spending by category</h3>
+          <p className="text-[11px] text-tremor-content">Outflows · total {fmtUsd(total)}</p>
         </div>
         <TabGroup index={idx} onIndexChange={setIdx} className="w-auto">
           <TabList variant="solid" className="text-xs">
@@ -39,7 +39,7 @@ export default function CategoryBreakdown({ categories }: { categories: Dashboar
         </TabGroup>
       </div>
       {all.length === 0 ? (
-        <p className="py-16 text-center text-xs text-dark-tremor-content-subtle">No outflows in this range</p>
+        <p className="py-16 text-center text-xs text-tremor-content-subtle">No outflows in this range</p>
       ) : (
         <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-5">
           <BarChart

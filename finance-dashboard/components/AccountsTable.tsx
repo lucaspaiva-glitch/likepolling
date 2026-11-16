@@ -17,7 +17,7 @@ function BalanceCell({ account }: { account: Account }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const manual = (account.external_id?.startsWith("csv:") && account.external_id !== TAX_ACCOUNT_EXTERNAL_ID) ?? false;
-  const cls = `w-24 text-right tabular-nums ${account.balance < 0 ? "text-rose-400" : "text-dark-tremor-content-strong"}`;
+  const cls = `w-24 text-right tabular-nums ${account.balance < 0 ? "text-rose-600" : "text-tremor-content-strong"}`;
 
   async function save() {
     const balance = parseAmount(value);
@@ -47,7 +47,7 @@ function BalanceCell({ account }: { account: Account }) {
       <button
         type="button"
         title="Edit balance (manual account)"
-        className={`${cls} rounded underline decoration-dotted underline-offset-2 hover:bg-dark-tremor-background-subtle`}
+        className={`${cls} rounded underline decoration-dotted underline-offset-2 hover:bg-tremor-background-subtle`}
         onClick={() => {
           setValue(String(account.balance));
           setEditing(true);
@@ -76,7 +76,7 @@ function BalanceCell({ account }: { account: Account }) {
           if (value.trim() === String(account.balance)) setEditing(false);
           else save();
         }}
-        className="w-32 rounded border border-dark-tremor-border bg-dark-tremor-background px-1 py-0.5 text-right tabular-nums text-dark-tremor-content-strong"
+        className="w-32 rounded border border-tremor-border bg-tremor-background px-1 py-0.5 text-right tabular-nums text-tremor-content-strong"
       />
       <button
         type="button"
@@ -87,7 +87,7 @@ function BalanceCell({ account }: { account: Account }) {
       >
         {busy ? "…" : "Save"}
       </button>
-      {error && <span className="text-[11px] text-rose-400">{error}</span>}
+      {error && <span className="text-[11px] text-rose-600">{error}</span>}
     </span>
   );
 }
@@ -95,16 +95,16 @@ function BalanceCell({ account }: { account: Account }) {
 export default function AccountsTable({ accounts }: { accounts: Account[] }) {
   return (
     <Card className="h-full p-3">
-      <h3 className="text-sm font-medium text-dark-tremor-content-strong">Accounts</h3>
+      <h3 className="text-sm font-medium text-tremor-content-strong">Accounts</h3>
       {accounts.length === 0 ? (
-        <p className="py-8 text-center text-xs text-dark-tremor-content-subtle">Connect a bank or import a CSV</p>
+        <p className="py-8 text-center text-xs text-tremor-content-subtle">Connect a bank or import a CSV</p>
       ) : (
-        <ul className="mt-2 divide-y divide-dark-tremor-border text-xs">
+        <ul className="mt-2 divide-y divide-tremor-border text-xs">
           {accounts.map((a) => (
             <li key={a.id} className="flex items-center justify-between gap-2 py-1.5">
               <div className="min-w-0">
-                <p className="leading-snug text-dark-tremor-content-emphasis">{a.name}</p>
-                <p className="text-[11px] leading-snug text-dark-tremor-content-subtle">
+                <p className="leading-snug text-tremor-content-emphasis">{a.name}</p>
+                <p className="text-[11px] leading-snug text-tremor-content-subtle">
                   {a.institution ?? "—"}
                   {a.external_id?.startsWith("csv:") && a.external_id !== TAX_ACCOUNT_EXTERNAL_ID && ` · as of ${fmtDate(a.updated_at)}`}
                 </p>

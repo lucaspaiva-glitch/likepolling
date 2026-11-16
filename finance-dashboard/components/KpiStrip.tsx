@@ -3,12 +3,12 @@ import { fmtDate, fmtSignedPct, fmtUsd } from "@/lib/format";
 import type { DashboardData } from "@/lib/data";
 
 function Kpi({ label, value, sub, tone }: { label: string; value: string; sub?: string; tone?: "pos" | "neg" }) {
-  const color = tone === "pos" ? "text-emerald-400" : tone === "neg" ? "text-rose-400" : "text-dark-tremor-content-strong";
+  const color = tone === "pos" ? "text-emerald-600" : tone === "neg" ? "text-rose-600" : "text-tremor-content-strong";
   return (
     <Card className="h-full min-w-0 p-3">
-      <p className="text-[11px] uppercase tracking-wide text-dark-tremor-content">{label}</p>
+      <p className="text-[11px] uppercase tracking-wide text-tremor-content">{label}</p>
       <p className={`mt-0.5 truncate text-lg font-semibold tabular-nums sm:text-xl ${color}`}>{value}</p>
-      {sub && <p className="text-[11px] text-dark-tremor-content-subtle">{sub}</p>}
+      {sub && <p className="text-[11px] text-tremor-content-subtle">{sub}</p>}
     </Card>
   );
 }

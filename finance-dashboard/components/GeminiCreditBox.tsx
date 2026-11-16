@@ -8,16 +8,16 @@ export default function GeminiCreditBox({ data }: { data: GeminiCredit }) {
   const left = data.outOfCredit ? 0 : Math.max(0, data.left ?? 0);
   const leftEur = data.outOfCredit ? 0 : Math.max(0, data.leftEur ?? 0);
   return (
-    <div className="mt-2 rounded border border-dark-tremor-border px-2 py-1.5">
+    <div className="mt-2 rounded border border-tremor-border px-2 py-1.5">
       {data.outOfCredit && (
-        <p className="mb-1.5 rounded border border-rose-500/40 bg-rose-500/10 px-2 py-1 text-xs font-medium text-rose-200">
+        <p className="mb-1.5 rounded border border-rose-300 bg-rose-500/10 px-2 py-1 text-xs font-medium text-rose-700">
           Gemini: out of credit{data.outSince ? ` since ${fmtDate(data.outSince)}` : ""}. Top up in Google AI Studio.
         </p>
       )}
       <div className="flex items-start justify-between gap-2">
         <div>
-          <p className="text-xs font-medium text-dark-tremor-content-strong">Gemini credit left (at least)</p>
-          <p className="text-[11px] text-dark-tremor-content">
+          <p className="text-xs font-medium text-tremor-content-strong">Gemini credit left (at least)</p>
+          <p className="text-[11px] text-tremor-content">
             {data.reading
               ? `€${data.reading.eur.toFixed(2)} in AI Studio on ${fmtDate(data.reading.at)} − ${fmtUsd2(data.spent)} used since (${data.requests.toLocaleString("en-US")} requests).`
               : data.topUpDate
@@ -27,14 +27,14 @@ export default function GeminiCreditBox({ data }: { data: GeminiCredit }) {
         </div>
         {(data.left != null || data.leftEur != null) && (
           <div className="text-right">
-            <p className={`text-base font-semibold tabular-nums ${left <= 0 && leftEur <= 0 ? "text-rose-400" : "text-emerald-400"}`}>
+            <p className={`text-base font-semibold tabular-nums ${left <= 0 && leftEur <= 0 ? "text-rose-600" : "text-emerald-600"}`}>
               €{leftEur.toFixed(2)}
             </p>
-            {data.left != null && <p className="text-[11px] tabular-nums text-dark-tremor-content">≈ {fmtUsd2(left)}</p>}
+            {data.left != null && <p className="text-[11px] tabular-nums text-tremor-content">≈ {fmtUsd2(left)}</p>}
           </div>
         )}
       </div>
-      {data.error && <p className="mt-1 text-[11px] text-rose-400">Couldn&apos;t read Gemini usage: {data.error}</p>}
+      {data.error && <p className="mt-1 text-[11px] text-rose-600">Couldn&apos;t read Gemini usage: {data.error}</p>}
     </div>
   );
 }

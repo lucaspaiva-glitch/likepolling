@@ -41,34 +41,34 @@ export default function LikePollingCard({ data, gemini }: { data: LikePollingSum
     <Card className="p-3">
       <div className="flex items-start justify-between gap-2">
         <div>
-          <h3 className="text-sm font-medium text-dark-tremor-content-strong">Like Polling</h3>
-          <p className="text-[11px] text-dark-tremor-content">
+          <h3 className="text-sm font-medium text-tremor-content-strong">Like Polling</h3>
+          <p className="text-[11px] text-tremor-content">
             Spent so far{data.since ? ` · since ${fmtDate(data.since, true)}` : ""}
           </p>
         </div>
-        <p className="text-lg font-semibold tabular-nums text-dark-tremor-content-strong">{fmtUsd(data.total)}</p>
+        <p className="text-lg font-semibold tabular-nums text-tremor-content-strong">{fmtUsd(data.total)}</p>
       </div>
       <div className="mt-2 grid grid-cols-3 gap-2 text-center">
         {[
-          ["Costs", data.total, "text-dark-tremor-content-strong"],
-          ["Revenue", data.revenue, "text-blue-400"],
-          ["Profit", data.revenue - data.total, data.revenue - data.total < 0 ? "text-rose-400" : "text-emerald-400"],
+          ["Costs", data.total, "text-tremor-content-strong"],
+          ["Revenue", data.revenue, "text-blue-600"],
+          ["Profit", data.revenue - data.total, data.revenue - data.total < 0 ? "text-rose-600" : "text-emerald-600"],
         ].map(([label, value, color]) => (
-          <div key={label as string} className="rounded border border-dark-tremor-border px-1 py-1">
-            <p className="text-[11px] text-dark-tremor-content">{label}</p>
+          <div key={label as string} className="rounded border border-tremor-border px-1 py-1">
+            <p className="text-[11px] text-tremor-content">{label}</p>
             <p className={`text-sm font-semibold tabular-nums ${color}`}>{fmtUsd(value as number)}</p>
           </div>
         ))}
       </div>
       {data.cash != null && (
-        <div className="mt-2 flex items-center justify-between rounded border border-dark-tremor-border px-2 py-1.5 text-xs">
-          <span className="text-dark-tremor-content-emphasis">PayPal balance</span>
-          <span className="font-semibold tabular-nums text-emerald-400">{fmtUsd(data.cash)}</span>
+        <div className="mt-2 flex items-center justify-between rounded border border-tremor-border px-2 py-1.5 text-xs">
+          <span className="text-tremor-content-emphasis">PayPal balance</span>
+          <span className="font-semibold tabular-nums text-emerald-600">{fmtUsd(data.cash)}</span>
         </div>
       )}
       <GeminiCreditBox data={gemini} />
       {data.vendors.length === 0 ? (
-        <p className="py-6 text-center text-xs text-dark-tremor-content-subtle">No Like Polling charges yet</p>
+        <p className="py-6 text-center text-xs text-tremor-content-subtle">No Like Polling charges yet</p>
       ) : (
         <>
           <div className="mt-2 flex items-center gap-3">
@@ -82,22 +82,22 @@ export default function LikePollingCard({ data, gemini }: { data: LikePollingSum
               valueFormatter={fmtUsd}
               showAnimation={false}
             />
-            <ul className="min-w-0 flex-1 divide-y divide-dark-tremor-border text-xs">
+            <ul className="min-w-0 flex-1 divide-y divide-tremor-border text-xs">
               {data.vendors.map((v, i) => (
                 <li key={v.name} className="flex items-center justify-between gap-2 py-1">
-                  <span className="flex min-w-0 items-center gap-1.5 text-dark-tremor-content-emphasis">
+                  <span className="flex min-w-0 items-center gap-1.5 text-tremor-content-emphasis">
                     <span className={`h-2 w-2 shrink-0 rounded-full ${DOT[COLORS[i % COLORS.length]]}`} />
                     {v.name}
                   </span>
-                  <span className="whitespace-nowrap tabular-nums text-dark-tremor-content-strong">
+                  <span className="whitespace-nowrap tabular-nums text-tremor-content-strong">
                     {fmtUsd(v.total)}
-                    <span className="ml-1 text-dark-tremor-content">{data.total > 0 ? Math.round((v.total / data.total) * 100) : 0}%</span>
+                    <span className="ml-1 text-tremor-content">{data.total > 0 ? Math.round((v.total / data.total) * 100) : 0}%</span>
                   </span>
                 </li>
               ))}
             </ul>
           </div>
-          <p className="mt-3 text-[11px] text-dark-tremor-content">Total spent over time</p>
+          <p className="mt-3 text-[11px] text-tremor-content">Total spent over time</p>
           <AreaChart
             className="mt-1 h-56"
             data={points}
@@ -113,7 +113,7 @@ export default function LikePollingCard({ data, gemini }: { data: LikePollingSum
       )}
       {data.months.length > 0 && (
         <table className="mt-3 w-full text-xs tabular-nums">
-          <thead className="text-[11px] text-dark-tremor-content">
+          <thead className="text-[11px] text-tremor-content">
             <tr>
               <th className="py-1 text-left font-normal">Month</th>
               <th className="py-1 text-right font-normal">Costs</th>
@@ -121,13 +121,13 @@ export default function LikePollingCard({ data, gemini }: { data: LikePollingSum
               <th className="py-1 text-right font-normal">Profit</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-dark-tremor-border text-dark-tremor-content-emphasis">
+          <tbody className="divide-y divide-tremor-border text-tremor-content-emphasis">
             {data.months.map((m) => (
               <tr key={m.month}>
                 <td className="py-1">{monthLabel(m.month)}</td>
                 <td className="py-1 text-right">{fmtUsd(m.costs)}</td>
                 <td className="py-1 text-right">{fmtUsd(m.revenue)}</td>
-                <td className={`py-1 text-right ${m.revenue - m.costs < 0 ? "text-rose-400" : "text-emerald-400"}`}>{fmtUsd(m.revenue - m.costs)}</td>
+                <td className={`py-1 text-right ${m.revenue - m.costs < 0 ? "text-rose-600" : "text-emerald-600"}`}>{fmtUsd(m.revenue - m.costs)}</td>
               </tr>
             ))}
           </tbody>
@@ -135,9 +135,9 @@ export default function LikePollingCard({ data, gemini }: { data: LikePollingSum
       )}
       {data.plan.vendors.length > 0 && (
         <div className="mt-3">
-          <p className="text-[11px] text-dark-tremor-content">Planned · next 3 months (latest monthly bills, plus Supabase Pro)</p>
+          <p className="text-[11px] text-tremor-content">Planned · next 3 months (latest monthly bills, plus Supabase Pro)</p>
           <table className="mt-1 w-full text-xs tabular-nums">
-            <tbody className="divide-y divide-dark-tremor-border text-dark-tremor-content-emphasis">
+            <tbody className="divide-y divide-tremor-border text-tremor-content-emphasis">
               {data.plan.vendors.map((v) => (
                 <tr key={v.name}>
                   <td className="py-1">{v.name}</td>
@@ -145,7 +145,7 @@ export default function LikePollingCard({ data, gemini }: { data: LikePollingSum
                 </tr>
               ))}
               {data.plan.months.map((m) => (
-                <tr key={m.month} className="font-medium text-dark-tremor-content-strong">
+                <tr key={m.month} className="font-medium text-tremor-content-strong">
                   <td className="py-1">{monthLabel(m.month)}</td>
                   <td className="py-1 text-right">{fmtUsd(m.total)}</td>
                 </tr>

@@ -75,8 +75,8 @@ export default function CsvDropzone({ accounts }: { accounts: Account[] }) {
 
   return (
     <Card className="h-full p-3">
-      <h3 className="text-sm font-medium text-dark-tremor-content-strong">CSV import</h3>
-      <p className="text-[11px] text-dark-tremor-content">Bank of America / Merrill Lynch exports · fallback when Plaid is unavailable</p>
+      <h3 className="text-sm font-medium text-tremor-content-strong">CSV import</h3>
+      <p className="text-[11px] text-tremor-content">Bank of America / Merrill Lynch exports · fallback when Plaid is unavailable</p>
 
       <div
         role="button"
@@ -95,10 +95,10 @@ export default function CsvDropzone({ accounts }: { accounts: Account[] }) {
           if (f) handleFile(f);
         }}
         className={`mt-2 cursor-pointer rounded border border-dashed px-3 py-4 text-center text-xs transition-colors ${
-          drag ? "border-blue-500 bg-blue-500/10 text-blue-300" : "border-dark-tremor-border text-dark-tremor-content hover:border-dark-tremor-content-subtle"
+          drag ? "border-blue-500 bg-blue-500/10 text-blue-700" : "border-tremor-border text-tremor-content hover:border-tremor-content-subtle"
         }`}
       >
-        {file ? <span className="text-dark-tremor-content-emphasis">{file}</span> : "Drop a .csv here or click to browse"}
+        {file ? <span className="text-tremor-content-emphasis">{file}</span> : "Drop a .csv here or click to browse"}
         <input
           ref={inputRef}
           type="file"
@@ -114,21 +114,21 @@ export default function CsvDropzone({ accounts }: { accounts: Account[] }) {
 
       {parsed && (
         <div className="mt-2 space-y-2 text-xs">
-          <p className="text-dark-tremor-content">
-            <span className="text-dark-tremor-content-strong">{parsed.rows.length}</span> rows · {parsed.institution} · {dateRange}
+          <p className="text-tremor-content">
+            <span className="text-tremor-content-strong">{parsed.rows.length}</span> rows · {parsed.institution} · {dateRange}
             {parsed.skipped > 0 && ` · ${parsed.skipped} skipped`}
             {investments > 0 && ` · ${investments} → Investments`}
             {parsed.latestBalance != null && ` · balance ${fmtUsd2(parsed.latestBalance)}`}
           </p>
-          <div className="max-h-28 overflow-auto rounded border border-dark-tremor-border">
+          <div className="max-h-28 overflow-auto rounded border border-tremor-border">
             <table className="w-full text-[11px]">
               <tbody>
                 {parsed.rows.slice(0, 8).map((r, i) => (
-                  <tr key={i} className="border-b border-dark-tremor-border last:border-0">
+                  <tr key={i} className="border-b border-tremor-border last:border-0">
                     <td className="px-1.5 py-0.5 tabular-nums">{r.date}</td>
                     <td className="max-w-[9rem] truncate px-1.5 py-0.5">{r.payee}</td>
-                    <td className="px-1.5 py-0.5 text-dark-tremor-content-subtle">{r.category}</td>
-                    <td className={`px-1.5 py-0.5 text-right tabular-nums ${r.amount >= 0 ? "text-emerald-400" : ""}`}>{fmtUsd2(r.amount)}</td>
+                    <td className="px-1.5 py-0.5 text-tremor-content-subtle">{r.category}</td>
+                    <td className={`px-1.5 py-0.5 text-right tabular-nums ${r.amount >= 0 ? "text-emerald-600" : ""}`}>{fmtUsd2(r.amount)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -137,7 +137,7 @@ export default function CsvDropzone({ accounts }: { accounts: Account[] }) {
           <select
             value={target}
             onChange={(e) => setTarget(e.target.value)}
-            className="w-full rounded border-dark-tremor-border bg-dark-tremor-background py-1 text-xs"
+            className="w-full rounded border-tremor-border bg-tremor-background py-1 text-xs"
           >
             <option value={NEW}>+ New account…</option>
             {accounts.filter((a) => a.external_id !== TAX_ACCOUNT_EXTERNAL_ID).map((a) => (
@@ -152,12 +152,12 @@ export default function CsvDropzone({ accounts }: { accounts: Account[] }) {
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
                 placeholder="Account name"
-                className="min-w-0 flex-1 rounded border-dark-tremor-border bg-dark-tremor-background py-1 text-xs"
+                className="min-w-0 flex-1 rounded border-tremor-border bg-tremor-background py-1 text-xs"
               />
               <select
                 value={newType}
                 onChange={(e) => setNewType(e.target.value)}
-                className="rounded border-dark-tremor-border bg-dark-tremor-background py-1 text-xs"
+                className="rounded border-tremor-border bg-tremor-background py-1 text-xs"
               >
                 <option value="cash">cash</option>
                 <option value="investment">investment</option>
@@ -176,7 +176,7 @@ export default function CsvDropzone({ accounts }: { accounts: Account[] }) {
           </button>
         </div>
       )}
-      {msg && <p className={`mt-2 text-xs ${msg.ok ? "text-emerald-400" : "text-rose-400"}`}>{msg.text}</p>}
+      {msg && <p className={`mt-2 text-xs ${msg.ok ? "text-emerald-600" : "text-rose-600"}`}>{msg.text}</p>}
     </Card>
   );
 }

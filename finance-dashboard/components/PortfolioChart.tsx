@@ -7,16 +7,16 @@ import type { PortfolioPoint } from "@/lib/data";
 export default function PortfolioChart({ data, ready }: { data: PortfolioPoint[]; ready: boolean }) {
   return (
     <Card className="h-full p-3">
-      <h3 className="text-sm font-medium text-dark-tremor-content-strong">Portfolio value</h3>
-      <p className="text-[11px] text-dark-tremor-content">
+      <h3 className="text-sm font-medium text-tremor-content-strong">Portfolio value</h3>
+      <p className="text-[11px] text-tremor-content">
         Investment accounts · {data[0] ? `since ${fmtDate(data[0].date, true)}` : "no history yet"}
       </p>
       {!ready ? (
-        <p className="py-16 text-center text-xs text-amber-200">
+        <p className="py-16 text-center text-xs text-amber-700">
           Run <code>supabase/migrations/0002_balance_snapshots.sql</code> in the Supabase SQL Editor to start tracking.
         </p>
       ) : data.length < 2 ? (
-        <p className="py-16 text-center text-xs text-dark-tremor-content-subtle">
+        <p className="py-16 text-center text-xs text-tremor-content-subtle">
           Tracking started{data[0] ? ` ${fmtDate(data[0].date, true)}` : ""}. The chart fills in each time the balance changes.
         </p>
       ) : (

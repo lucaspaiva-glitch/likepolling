@@ -88,7 +88,7 @@ export default function PlaidConnect() {
     }
   }
 
-  const color = status?.tone === "err" ? "text-rose-400" : status?.tone === "ok" ? "text-emerald-400" : "text-dark-tremor-content";
+  const color = status?.tone === "err" ? "text-rose-600" : status?.tone === "ok" ? "text-emerald-600" : "text-tremor-content";
 
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -101,7 +101,7 @@ export default function PlaidConnect() {
         type="button"
         onClick={sync}
         disabled={busy}
-        className="flex-1 rounded border border-dark-tremor-border px-2.5 py-2 text-xs sm:flex-none sm:py-1 text-dark-tremor-content-emphasis hover:bg-dark-tremor-background-subtle disabled:opacity-50"
+        className="flex-1 rounded border border-tremor-border px-2.5 py-2 text-xs sm:flex-none sm:py-1 text-tremor-content-emphasis hover:bg-tremor-background-subtle disabled:opacity-50"
       >
         Sync now
       </button>
