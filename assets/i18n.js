@@ -850,8 +850,9 @@
     @media (max-width: 520px) {
       header.top:has(> .lp-lang) { flex-wrap: wrap; row-gap: 12px; }
       header.top > .brand, header.top > .live { white-space: nowrap; }
-      .lp-lang { order: 3; margin: 0 0 0 auto; max-width: 100%; flex-wrap: wrap; justify-content: center; }
-      .lp-lang button { padding: 5px 3px; }
+      .lp-lang { order: 3; margin: 0; width: 100%; box-sizing: border-box; }
+      .lp-lang button { flex: 1 1 0; min-width: 0; justify-content: center; padding: 5px 0; }
+      .lp-lang img { max-width: 100%; }
     }`;
   document.head.appendChild(style);
 

@@ -136,6 +136,11 @@
     .foot-tag { margin-bottom: 6px; font-size: 12.5px; font-weight: 600; color: var(--ink); }
     .live { font-size: 12px; font-weight: 500; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; display: flex; align-items: center; gap: 6px; }
     .live::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--red); box-shadow: 0 0 0 0 rgba(176,0,14,.45); animation: pulse 2s infinite; }
+    .brand, .live { white-space: nowrap; }
+    @media (min-width: 561px) and (max-width: 1180px) {
+      .live { flex: none; font-size: 0; gap: 0; padding: 6px 11px; }
+      .live::after { content: '24/7'; font: 600 11px/1 ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: .08em; margin-left: 6px; }
+    }
     @media (max-width: 560px) {
       header.top { flex-wrap: nowrap; gap: 10px; }
       .live { flex: none; font-size: 0; gap: 0; padding: 6px 11px; }
