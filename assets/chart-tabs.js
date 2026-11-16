@@ -1,4 +1,4 @@
-// Trending Index / Music Index tabs: below 1240px both charts share one spot (CSS in index.html).
+// Music Index / Trending Index tabs (Music opens first): below 1240px both charts share one spot (CSS in index.html).
 (function () {
   'use strict';
   const tabs = document.getElementById('tm-tabs');
@@ -7,14 +7,14 @@
   if (!tabs || !t || !m) return;
   const wrap = tabs.parentElement;
   const pick = (name) => {
-    if (name === 'music') wrap.dataset.tm = 'music'; else delete wrap.dataset.tm;
-    tabs.querySelectorAll('button[data-tm]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tm === (name || 'trending'))));
+    if (name === 'trending') wrap.dataset.tm = 'trending'; else delete wrap.dataset.tm;
+    tabs.querySelectorAll('button[data-tm]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tm === (name === 'trending' ? 'trending' : 'music'))));
   };
   // A chart that hides itself (no data) leaves the other one on its own, without tabs.
   const sync = () => {
     tabs.hidden = t.hidden || m.hidden;
-    if (t.hidden && !m.hidden) pick('music');
-    else if (m.hidden) pick('trending');
+    if (m.hidden && !t.hidden) pick('trending');
+    else if (t.hidden) pick('music');
   };
   tabs.addEventListener('click', (e) => {
     const b = e.target.closest('button[data-tm]');

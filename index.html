@@ -718,7 +718,7 @@
     .tm-tabs button[aria-selected="true"] { background: var(--red); color: #fff; }
     .tm-tabs button:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
     .tm-tabs[hidden] { display: none; }
-    @media (max-width: 1239px) { .wrap[data-tm="music"] > #yt-trending, .wrap:not([data-tm="music"]) > #yt-music { display: none; } }
+    @media (max-width: 1239px) { .wrap:not([data-tm="trending"]) > #yt-trending, .wrap[data-tm="trending"] > #yt-music { display: none; } }
     @media (min-width: 1240px) { .tm-tabs { display: none !important; } }
     /* Wide screens: World News, then Music beside Trending, then Fashion and the rest full width. */
     @media (min-width: 1240px) {
@@ -787,7 +787,7 @@
       })();
     </script>
     <section class="nw nw-front" id="news-front" aria-label="World News: top news headlines in each country"></section>
-    <div class="tm-tabs" id="tm-tabs" role="tablist" aria-label="Charts"><button type="button" role="tab" aria-selected="true" data-tm="trending">Trending</button><button type="button" role="tab" aria-selected="false" data-tm="music">Music</button></div>
+    <div class="tm-tabs" id="tm-tabs" role="tablist" aria-label="Charts"><button type="button" role="tab" aria-selected="false" data-tm="trending">Trending</button><button type="button" role="tab" aria-selected="true" data-tm="music">Music</button></div>
     <section class="ytt" id="yt-trending" aria-label="YouTube Trending: most popular videos in each country" data-supabase-url="https://iyhaoagslsrwtkcrxylp.supabase.co" data-supabase-key="sb_publishable_ZnV9HrtfDqeKlBftnDxH2Q_YK6XWJTp"></section>
     <section class="ymu" id="yt-music" aria-label="YouTube Music: most popular music videos in each country" data-supabase-url="https://iyhaoagslsrwtkcrxylp.supabase.co" data-supabase-key="sb_publishable_ZnV9HrtfDqeKlBftnDxH2Q_YK6XWJTp"></section>
     <section id="fashion" aria-label="Fashion: fashion videos in each country" data-supabase-url="https://iyhaoagslsrwtkcrxylp.supabase.co" data-supabase-key="sb_publishable_ZnV9HrtfDqeKlBftnDxH2Q_YK6XWJTp"></section>
