@@ -84,7 +84,7 @@
     plot.innerHTML = A.chart(yr, { label, axis: true }) + '<span class="lp-attn-cap"></span>';
     const cap = plot.querySelector('.lp-attn-cap');
     const show = (p) => { const t = mention(p); cap.innerHTML = `<b>${esc(A.month(p.m))}</b>${t ? ` · ${esc(t)}` : ''}`; };
-    show(yr[yr.length - 1]);
+    show([...yr].reverse().find((p) => p.v > 0) || yr[yr.length - 1]);
     A.pick(plot, yr.length, (i) => show(yr[i]));
     attn.hidden = false;
   }
