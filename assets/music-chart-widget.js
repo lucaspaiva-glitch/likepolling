@@ -29,6 +29,7 @@
   }
 
   function defaultCountry(codes) {
+    if (window.LP_CC) return window.LP_CC(codes);
     const langs = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || ''];
     for (const l of langs) {
       const region = (l.split('-')[1] || '').toUpperCase();

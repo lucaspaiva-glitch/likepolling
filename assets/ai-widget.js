@@ -272,6 +272,7 @@
   }
 
   function defaultCountry(codes) {
+    if (window.LP_CC) return window.LP_CC(codes);
     let picked = null;
     try { picked = localStorage.getItem('lp-world-cc'); } catch (e) { /* no storage */ }
     if (picked && codes.includes(picked)) return picked;

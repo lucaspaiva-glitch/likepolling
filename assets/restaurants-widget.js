@@ -14,7 +14,7 @@
   const region = (cc) => { try { return new Intl.DisplayNames([lang()], { type: 'region' }).of(cc); } catch { return cc; } };
   const get = async (path) => { const r = await fetch(`${base}/rest/v1/${path}`, { headers: { apikey: key, Authorization: `Bearer ${key}` } }); if (!r.ok) throw new Error(r.status); return r.json(); };
   const guess = (String(navigator.language || '').split('-')[1] || '').toUpperCase();
-  let cc = COUNTRIES.includes(guess) ? guess : 'PT';
+  let cc = window.LP_CC ? window.LP_CC(COUNTRIES) : COUNTRIES.includes(guess) ? guess : 'PT';
   let day = null;
   mount.hidden = true;
   mount.classList.add('rst');

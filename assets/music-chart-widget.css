@@ -111,3 +111,5 @@
   .ymu-video:hover .ymu-vt { color: var(--red, #b0000e); }
   .ymu-table td.ymu-vol { display: flex; align-items: baseline; gap: 8px; margin-top: 3px; text-align: left; }
 }
+.ymu-table .lp-rth { margin-right: calc(var(--rw) * var(--i, 0) * var(--st, .05)); }
+@container (max-width: 560px) { .ymu-table .lp-rth { margin-right: 0; } }

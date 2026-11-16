@@ -1,5 +1,6 @@
 /* Product cards (assets/offers.js), styled like the homepage sponsor card. Used by / and /services. */
 .svc-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; align-items: start; }
+.svc-grid:not(:has(.svc.open)) { align-items: stretch; }
 .svc { position: relative; border: 1px solid #ebebeb; border-radius: 14px; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.04), 0 12px 28px -18px rgba(0,0,0,.25); overflow: hidden; transition: border-color .2s, box-shadow .2s; font-family: Inter, system-ui, sans-serif; }
 .svc:hover, .svc.open { border-color: rgba(176,0,14,.45); box-shadow: 0 1px 2px rgba(0,0,0,.04), 0 18px 36px -18px rgba(176,0,14,.35); }
 .svc-tab { display: block; width: 100%; padding: 0 0 14px; border: 0; background: none; text-align: left; font: inherit; color: inherit; cursor: pointer; }

@@ -324,6 +324,7 @@
   }
 
   function defaultCountry(codes) {
+    if (window.LP_CC) return window.LP_CC(codes);
     const fromLang = { en: 'US', 'en-GB': 'GB', pt: 'BR', 'pt-PT': 'PT', es: 'ES', de: 'DE', uk: 'UA', ko: 'KR', ja: 'JP' }[siteLang()];
     if (fromLang && codes.includes(fromLang)) return fromLang;
     for (const l of navigator.languages || [navigator.language || '']) {

@@ -53,6 +53,8 @@
 .ytt-cards > :nth-child(4) { width: calc((100% - 24px) * .33); }
 .ytt-cards > :nth-child(5) { width: calc((100% - 24px) * .325); }
 .ytt-cards > :first-child .ytt-ctt { font-size: 14px; }
+.ytt-cards:has(> :nth-child(2):last-child) > *, .ytt-cards:has(> :nth-child(4):last-child) > * { width: calc((100% - 12px) / 2); }
+.ytt-cards:has(> :nth-child(3):last-child) > * { width: calc((100% - 24px) / 3); }
 .ytt-table { --rw: min(28cqi, 240px); --st: .03; }
 .ytt-table .lp-rth { width: calc(var(--rw) * (1 - var(--i, 0) * var(--st, .05))); }
 @container (max-width: 560px) {
@@ -118,3 +120,9 @@
   .ytt-video:hover .ytt-vt { color: var(--red, #b0000e); }
   .ytt-table td.ytt-vol { display: flex; align-items: baseline; gap: 8px; margin-top: 3px; text-align: left; }
 }
+/* YouTube has no picture yet (e.g. a premiere): show a plain red tile instead of its grey placeholder. */
+.lp-nothumb { background: linear-gradient(135deg, #7f000a, #1a0306); }
+.lp-nothumb > img { opacity: 0; }
+/* Stepped thumbnails keep the titles beside them on one line. */
+.ytt-table .lp-rth { margin-right: calc(var(--rw) * var(--i, 0) * var(--st, .05)); }
+@container (max-width: 560px) { .ytt-table .lp-rth { margin-right: 0; } }

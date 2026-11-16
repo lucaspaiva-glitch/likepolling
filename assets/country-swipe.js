@@ -8,6 +8,9 @@
     ['#yt-music', '.ymu-select'],
     ['.nw-credits', '.nw-pick .nw-select'],
     ['#edu', '.edu-select'],
+    ['#fashion', '.fsh-select'],
+    ['#restaurants', '.rst-select'],
+    ['#ai-age', '.aia-select'],
   ];
   const still = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
   const MONO = "ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace";
@@ -90,7 +93,7 @@
   // trackpad. Touch listeners are passive and leave touch-action alone, so vertical scrolling stays
   // the browser's own. Swipes from the screen edges (Safari's back gesture), on a form field or on a
   // row that scrolls sideways are ignored; overscroll-behavior-x stops Chrome's swipe-to-go-back.
-  const SWIPE = [...PANELS, ['#fashion', '.fsh-select'], ['#restaurants', '.rst-select'], ['#ai-age', '.aia-select']];
+  const SWIPE = PANELS;
   const EDGE = 24;
   const sideScroller = (el, panel) => {
     for (let n = el; n && n !== panel; n = n.parentElement) if (n.scrollWidth > n.clientWidth + 2 && /auto|scroll/.test(getComputedStyle(n).overflowX)) return true;
