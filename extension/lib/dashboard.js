@@ -59,12 +59,10 @@
       loadChannel(true);
     }
 
-    const eduCountry = () => st.eduCountry || st.country;
     function ensureTabData() {
       if (st.tab === 'trending' && st.scope === 'worldwide') need('worldwide', 'worldwide');
       if (st.tab === 'trending' && st.scope === 'country') need(`trending:${st.country}`, `trending?country=${st.country}`);
       if (st.tab === 'music') need(`music:${st.country}`, `music?country=${st.country}`);
-      if (st.tab === 'education') need(`edu:${eduCountry()}`, `education?country=${eduCountry()}`);
     }
 
     // ---------- views ----------
@@ -117,7 +115,7 @@
         ${vids.length ? `<div class="cp-sec"><h3>${t('graph')}</h3>${graph(longV, 'long', t('long'), x0, x1)}${graph(shortV, 'short', t('shorts'), x0, x1)}
           <div class="cp-pick">${sel ? `<a href="https://www.youtube.com/watch?v=${esc(sel.id)}" target="_blank" rel="noopener"><b>${esc(sel.title)}</b><span>${f.num(sel.views)} ${t('views')} · ${f.date(sel.published_at)}</span></a>` : `<span class="cp-s">${t('tap_dot')}</span>`}</div></div>` : ''}
         ${top.length ? `<div class="cp-sec"><h3>${t('top')}</h3><ol class="cp-top">${top.map((v) => `<li><a href="https://www.youtube.com/watch?v=${esc(v.id)}" target="_blank" rel="noopener">
-          <img src="https://i.ytimg.com/vi/${esc(v.id)}/mqdefault.jpg" alt="" loading="lazy"><span><b>${esc(v.title)}</b><em>${f.num(v.views)} ${t('views')}${v.shorts_length ? ' · Shorts' : ''}</em></span></a></li>`).join('')}</ol></div>` : ''}
+          <img src="https://i.ytimg.com/vi/${esc(v.id)}/mqdefault.jpg" alt="" decoding="async"><span><b>${esc(v.title)}</b><em>${f.num(v.views)} ${t('views')}${v.shorts_length ? ' · Shorts' : ''}</em></span></a></li>`).join('')}</ol></div>` : ''}
         ${ch.warn ? `<p class="cp-warn">${esc(ch.warn)}</p>` : ''}
       </div>`;
     }
@@ -130,7 +128,7 @@
         const right = worldwide ? t('in_countries', { n: r.country_count, t: total }) : `${f.num(val)}${t(unit)}`;
         return `<li><a href="https://www.youtube.com/watch?v=${esc(r.video_id)}" target="_blank" rel="noopener">
           <span class="cp-rank">${String(r.rank).padStart(2, '0')}</span>
-          ${st.full ? `<img src="${esc(r.thumbnail_url || '')}" alt="" loading="lazy">` : ''}
+          ${st.full ? `<img src="${esc(r.thumbnail_url || '')}" alt="" decoding="async">` : ''}
           <span class="cp-title"><b>${esc(r.title)}</b><em>${esc(r.channel_title)} · ${f.num(r.views)} ${t('views')}${st.full && r.like_rate != null ? ` · ${t('like_rate')} ${f.pct(r.like_rate)}` : ''}</em></span>
           <span class="cp-speed"><span class="cp-meter"><i style="width:${Math.max(4, (val / max) * 100).toFixed(0)}%"></i></span><span>${esc(right)}</span>${!worldwide && r.video_id === fastestId ? `<span class="cp-badge">${t('fastest')}</span>` : ''}</span>
         </a></li>`;
@@ -158,30 +156,6 @@
       return picker + body;
     }
 
-    const SUBJ_KEYS = ['ai_tech', 'space_physics', 'math', 'health_biology', 'chemistry', 'climate_environment', 'history_geography', 'engineering', 'exams_admissions', 'schools_policy', 'money_careers', 'languages_culture'];
-    function education() {
-      const cc = eduCountry();
-      const c = st.charts[`edu:${cc}`];
-      const b = c?.body;
-      // The user's country has no tracked channels: switch once to a country that has data.
-      if (b && !b.videos.length && b.countries.length && !st.eduCountry) {
-        st.eduCountry = b.countries.includes('US') ? 'US' : b.countries[0];
-        queueMicrotask(() => { ensureTabData(); render(); });
-      }
-      const codes = [...new Set([...(b?.countries || []), cc])];
-      const picker = `<div class="cp-ctl"><label class="cp-sel"><span class="cp-vh">${t('country')}</span><select data-act="edu-country">${codes.map((k) => `<option value="${k}"${k === cc ? ' selected' : ''}>${esc(f.country(k))}</option>`).join('')}</select></label></div>`;
-      if (!c || (c.status === 'loading' && !b)) return picker + skeleton(6);
-      if (!b) return picker + msg(t('offline'), `<button class="cp-btn ghost" data-act="retry">${t('retry')}</button>`);
-      if (!b.videos.length) return picker + msg(t('no_edu'));
-      const max = Math.max(...b.subjects.map((s) => s.score), 1);
-      const subjects = b.subjects.length ? `<div class="cp-sec"><h3>${t('edu_subjects')}</h3><ol class="cp-subj">${b.subjects.map((s) => `<li>
-          <div class="cp-sj"><span class="cp-rank">${String(s.rank).padStart(2, '0')}</span><b>${esc(SUBJ_KEYS.includes(s.subject) ? t(`s_${s.subject}`) : s.subject)}</b><em>${t(s.video_count === 1 ? 'n_video' : 'n_videos', { n: s.video_count })} · ${t('n_news', { n: s.news_count })}</em></div>
-          <div class="cp-sbar"><i class="yt" style="width:${(s.video_count * 3 / max * 100).toFixed(1)}%"></i><i class="nw" style="width:${(s.news_count / max * 100).toFixed(1)}%"></i></div></li>`).join('')}</ol>
-          <p class="cp-note">${t('edu_note')}</p></div>` : '';
-      return `${picker}<div class="cp-sec cp-edu"><h3>${t('edu_index')}</h3>${rows(b.videos, 'views_per_hour', 'per_hour', b.videos[0].video_id, false)}<p class="cp-note">${t('speed')} = ${t('speed_h')}</p></div>${subjects}`
-        + (b.updated_at ? `<p class="cp-note">${t('updated', { t: f.ago(b.updated_at) })}</p>` : '');
-    }
-
     const LANG_NAMES = { en: 'English', pt: 'Português (Brasil)', 'pt-PT': 'Português (Portugal)', es: 'Español', de: 'Deutsch', ru: 'Русский', uk: 'Українська', ko: '한국어', ja: '日本語' };
     function settingsView() {
       return `<div class="cp-settings"><label>${t('language')}<select data-act="lang">${CP.LANGS.map((k) => `<option value="${k}"${k === opts.lang ? ' selected' : ''}>${LANG_NAMES[k]}</option>`).join('')}</select></label>
@@ -192,22 +166,28 @@
     function render() {
       if (!st.active) return;
       const hud = opts.mode === 'hud';
-      const tabs = ['creators', 'trending', 'music', 'education'].map((k) => `<button role="tab" aria-selected="${st.tab === k}" data-act="tab" data-v="${k}">${t(k)}</button>`).join('');
+      // Creators (the channel you're on) stands apart from the two country rankings.
+      const tab = (k) => `<button role="tab" aria-selected="${st.tab === k}" data-act="tab" data-v="${k}">${t(k)}</button>`;
+      const tabs = `${tab('creators')}<i class="cp-tsep" aria-hidden="true"></i><span class="cp-tgrp">${tab('trending')}${tab('music')}</span>`;
       const tools = hud
         ? `<button class="cp-ico" data-act="settings" title="${t('lang_country')}" aria-label="${t('lang_country')}">${ICON.gear}</button>
            <button class="cp-ico" data-act="min" title="${t('minimize')}" aria-label="${t('minimize')}">${ICON.min}</button>
            <button class="cp-ico" data-act="full" title="${t(st.full ? 'exit_full' : 'full')}" aria-label="${t(st.full ? 'exit_full' : 'full')}">${st.full ? ICON.exit : ICON.full}</button>`
         : `${opts.canShowOnPage ? `<button class="cp-btn small" data-act="show-on-page">${t('show_on_page')}</button>` : ''}<button class="cp-ico" data-act="settings" title="${t('lang_country')}" aria-label="${t('lang_country')}">${ICON.gear}</button>`;
-      const view = st.settings ? settingsView() : st.tab === 'creators' ? creators() : st.tab === 'education' ? education() : chart(st.tab);
+      const view = st.settings ? settingsView() : st.tab === 'creators' ? creators() : chart(st.tab);
       const report = st.tab === 'creators' && st.ch?.body ? st.ch.body.channel.report_url : SITE;
       const scrollTop = container.querySelector('.cp-body')?.scrollTop || 0;
-      container.innerHTML = `<div class="cp ${hud ? 'hud' : 'popup'}${st.full ? ' full' : ''}" lang="${esc(CP.LOCALE[opts.lang] || 'en')}">
-        <header class="cp-bar" data-drag>${LOGO}<span class="cp-name">Creators <i>+</i></span><span class="cp-tools">${tools}</span></header>
+      const html = `<div class="cp ${hud ? 'hud' : 'popup'}${st.full ? ' full' : ''}" lang="${esc(CP.LOCALE[opts.lang] || 'en')}">
+        <header class="cp-bar" data-drag>${LOGO}<span class="cp-name">Creators <i>+</i> <small>by Like Polling</small></span><span class="cp-tools">${tools}</span></header>
         ${opts.where ? `<div class="cp-where">${esc(t('w_where'))} <a href="https://www.youtube.com/" target="_blank" rel="noopener">${esc(t('open_yt'))} ↗</a></div>` : ''}
         <nav class="cp-tabs" role="tablist">${tabs}</nav>
         <div class="cp-body">${view}</div>
         <footer class="cp-foot"><span>likepolling.com</span><a href="${esc(report)}" target="_blank" rel="noopener">${t('report')} ↗</a></footer>
       </div>`;
+      // Re-rendering identical markup would reload every thumbnail and flash the list.
+      if (container.__cpHtml === html) return;
+      container.__cpHtml = html;
+      container.innerHTML = html;
       const body = container.querySelector('.cp-body');
       if (body) body.scrollTop = scrollTop;
     }
@@ -235,7 +215,6 @@
     container.addEventListener('change', (e) => {
       const el = e.target;
       if (el.dataset.act === 'country') { st.country = el.value; opts.onAction && opts.onAction('country', el.value); ensureTabData(); render(); }
-      if (el.dataset.act === 'edu-country') { st.eduCountry = el.value; ensureTabData(); render(); }
       if (el.dataset.act === 'pill') { st.showPill = el.checked; opts.onAction && opts.onAction('pill', el.checked); }
       if (el.dataset.act === 'lang') { setLang(el.value); opts.onAction && opts.onAction('lang', el.value); }
     });

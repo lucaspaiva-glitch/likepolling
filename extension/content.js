@@ -76,6 +76,8 @@
     wrap.style.display = visible ? 'block' : 'none';
     pill.style.display = state === 'pill' ? 'block' : 'none';
     panel.style.display = state === 'panel' || state === 'full' ? 'block' : 'none';
+    // Full view: the panel must fill the window so its list scrolls instead of running off-screen.
+    panel.style.height = state === 'full' ? '100%' : '';
     if (state === 'panel' || state === 'full') {
       dash.setFull(state === 'full');
       dash.activate(true);

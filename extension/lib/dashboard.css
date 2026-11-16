@@ -22,6 +22,12 @@
 .cp-tabs { display: flex; gap: 4px; padding: 8px 10px 0; border-bottom: 1px solid var(--line); }
 .cp-tabs button { flex: 1; border: 0; background: none; padding: 7px 4px 9px; font-weight: 700; font-size: 12.5px; color: var(--mute); border-bottom: 2.5px solid transparent; }
 .cp-tabs button[aria-selected="true"] { color: var(--red); border-bottom-color: var(--red); }
+.cp-tabs > button { flex: 1; }
+.cp-tsep { flex: none; width: 2px; margin: 2px 6px 8px; border-radius: 2px; background: #e3d6d6; }
+.cp-tgrp { flex: 2; display: flex; gap: 2px; min-width: 0; margin-bottom: 6px; padding: 0 2px; border-radius: 9px; background: #f7f2f2; }
+.cp-tgrp button { padding-bottom: 7px; }
+.cp-tgrp button[aria-selected="true"] { background: #fff; border-radius: 7px 7px 0 0; }
+.cp-name small { font-size: 10.5px; font-weight: 600; color: var(--mute); letter-spacing: 0; }
 .cp-body { flex: 1; overflow: auto; padding: 12px; overscroll-behavior: contain; }
 .cp-foot { display: flex; justify-content: space-between; padding: 7px 12px; border-top: 1px solid var(--line); font-size: 11px; color: var(--mute); }
 .cp-foot a { color: var(--red); font-weight: 700; }
@@ -97,19 +103,7 @@
 .cp.full .cp-top a { flex-direction: column; align-items: stretch; }
 .cp.full .cp-top img { width: 100%; }
 .cp.full .cp-big { font-size: 48px; }
-/* education */
-.cp-edu { margin-top: 0; }
 .cp-tabs button { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.cp-subj { list-style: none; margin: 0; padding: 0; }
-.cp-subj li { padding: 7px 0; }
-.cp-subj li + li { border-top: 1px solid var(--line); }
-.cp-sj { display: flex; gap: 8px; align-items: baseline; min-width: 0; }
-.cp-sj b { font-size: 12.5px; font-weight: 650; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.cp-sj em { margin-left: auto; flex: none; font-style: normal; font-size: 11px; color: var(--mute); }
-.cp-sbar { display: flex; height: 5px; margin-top: 5px; background: #f4f4f4; border-radius: 3px; overflow: hidden; }
-.cp-sbar i { display: block; height: 100%; }
-.cp-sbar .yt { background: var(--red); }
-.cp-sbar .nw { background: #e8a3a8; }
 /* pill */
 .cp-pill { display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 14px 0 6px; background: #fff; border: 1px solid #ecd2d2; border-radius: 999px; cursor: grab; user-select: none; white-space: nowrap;
   box-shadow: 0 6px 20px rgba(176,0,14,.22), 0 0 0 0 rgba(176,0,14,.35); animation: cp-glow 2.6s ease-out 3; font-weight: 600; font-size: 12.5px; }
