@@ -48,8 +48,6 @@
   #restaurants .fsh-p { font-size: 13px; }
 }
 
-.fsh-attn .fsh-bnav { grid-column: 1 / -1; justify-self: start; }
-.fsh-attn .fsh-bnav .lp-cs-name { flex: none; }
 
 #restaurants .rst-sum button.on { background: var(--red, #b0000e); border-color: var(--red, #b0000e); color: #fff; }
 #restaurants .rst-sum button.on em { color: #fff; }

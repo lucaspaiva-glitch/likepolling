@@ -40,10 +40,6 @@
       <select class="ytt-select fsh-select" aria-label="Country"></select></div>
     <section class="ytt fsh-card fsh-vcard" hidden>
       <div class="ytt-head"><h3 class="ytt-title">Fashion Index</h3><span class="ytt-sym">FIX</span><span class="ytt-spacer"></span><span class="ytt-asof fsh-vasof"></span></div>
-      <div class="lp-attn-row fsh-attn" data-no-i18n hidden>
-        <span class="lp-cs-nav fsh-bnav"><button type="button" class="lp-cs-arr" data-d="-1" aria-label="Previous brand">‹</button><span class="lp-cs-grp"><span class="lp-cs-name" aria-hidden="true"></span><span class="lp-cs-pos" aria-hidden="true"></span><select class="lp-cs-sel" aria-label="Brand"></select></span><button type="button" class="lp-cs-arr" data-d="1" aria-label="Next brand">›</button></span>
-        <div class="lp-attn-txt"></div><div class="lp-attn-plot"></div>
-      </div>
       <div class="fsh-vbody"></div>
       <p class="ytt-foot fsh-follow" hidden>Portugal follows fashion from Italy, Spain, France and the UK, so these are the top videos from their channels.</p>
       <p class="ytt-foot">Fastest-growing uploads of the last 30 days from the fashion magazines, brands and fashion weeks we track in this country, at most 2 per channel. Speed = views per hour since upload. Refreshed twice a day.</p>
@@ -54,54 +50,6 @@
   const vbody = mount.querySelector('.fsh-vbody');
   const vasof = mount.querySelector('.fsh-vasof');
   const follow = mount.querySelector('.fsh-follow');
-  // Average views per video on the 14 biggest fashion YouTube channels, by upload year (saved weekly by scripts/fashion-yearly-routine.js).
-  const attn = mount.querySelector('.fsh-attn');
-  const bsel = attn.querySelector('select');
-  const BRANDS = ['Vogue', 'GQ', 'Louis Vuitton', "Victoria's Secret", 'Dior', 'Chanel', 'ELLE', 'Teen Vogue', "Harper's Bazaar", 'Gucci', 'Vogue Korea', 'Calvin Klein', 'SHEIN', 'FashionTV'];
-  const YEARS = 10;
-  let brandRows = null, brands = [];
-  const brandData = () => (brandRows = brandRows || fetch(`${base}/rest/v1/fashion_channel_yearly?select=name,year,videos,views&year=gte.${new Date().getUTCFullYear() - YEARS + 1}&order=year.asc`, { headers })
-    .then((r) => (r.ok ? r.json() : [])).catch(() => []).then((rows) => {
-      const by = {};
-      for (const r of rows) if (r.videos > 0) (by[r.name] = by[r.name] || []).push({ m: `${r.year}-01`, y: r.year, n: r.videos, v: Number(r.views) / r.videos });
-      return by;
-    }));
-  // Last full year against the year before, in %.
-  const full = new Date().getUTCFullYear() - 1;
-  const yoy = (pts) => {
-    const a = pts.find((p) => p.y === full), b = pts.find((p) => p.y === full - 1);
-    return a && b && b.v ? Math.round(((a.v - b.v) / b.v) * 100) : null;
-  };
-  async function showBrand() {
-    const A = window.LP_ATTN;
-    const by = await brandData();
-    brands = BRANDS.filter((b) => (by[b] || []).length >= 3 && A && yoy(by[b]) != null);
-    if (!brands.length) { attn.hidden = true; return; }
-    if (bsel.options.length !== brands.length) bsel.innerHTML = brands.map((b) => `<option value="${esc(b)}">${esc(b)}</option>`).join('');
-    if (!brands.includes(bsel.value)) bsel.value = brands[0];
-    const name = bsel.value, yr = by[name];
-    attn.querySelector('.lp-cs-name').textContent = name;
-    attn.querySelector('.lp-cs-pos').innerHTML = `<span>${brands.indexOf(name) + 1}/${brands.length}</span>`;
-    const label = tr('Fashion Share: {c}').replace('{c}', name);
-    attn.querySelector('.lp-attn-txt').innerHTML = `<b>${esc(label)}</b><strong>${A.badge(yoy(yr))}<small>${esc(tr('views per video in {y}').replace('{y}', full))}</small></strong>`;
-    const plot = attn.querySelector('.lp-attn-plot');
-    plot.innerHTML = A.chart(yr, { label, axis: true, years: true }) + '<span class="lp-attn-cap"></span>';
-    const cap = plot.querySelector('.lp-attn-cap');
-    const show = (p) => {
-      const when = p.y > full ? `${p.y} (${tr('so far')})` : String(p.y);
-      cap.innerHTML = `<b>${esc(when)}</b> · ${esc(tr('{n} views per video').replace('{n}', A.num(p.v)))}`;
-    };
-    show(yr.find((p) => p.y === full));
-    A.pick(plot, yr.length, (i) => show(yr[i]));
-    attn.hidden = false;
-  }
-  bsel.addEventListener('change', showBrand);
-  attn.querySelectorAll('[data-d]').forEach((b) => b.addEventListener('click', () => {
-    const k = brands.indexOf(bsel.value);
-    if (k < 0) return;
-    bsel.value = brands[(k + Number(b.dataset.d) + brands.length) % brands.length];
-    showBrand();
-  }));
   const SHOWN = 10;
   const vcache = {};
   let videoCodes = [];
@@ -190,10 +138,8 @@
       select.addEventListener('change', () => show(select.value));
       document.addEventListener('lp:lang', () => {
         if (vcache[select.value] && vcache[select.value].length) vbody.innerHTML = videos(vcache[select.value]);
-        showBrand();
       });
       show(select.value);
-      showBrand();
     } catch (err) {
       if (err.message !== 'no data') console.error('Fashion widget:', err);
       mount.hidden = true;

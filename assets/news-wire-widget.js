@@ -175,33 +175,6 @@
   fLabel.foot.el.textContent = '';
   front.querySelector('.nw-asof').insertAdjacentHTML('beforebegin', '<span class="nw-wpick" hidden><img class="nw-pick-flag" src="" alt="" width="20" height="15"><select class="nw-select" data-no-i18n></select></span>');
   const wPick = front.querySelector('.nw-wpick');
-  // Through time: each month's top story for the country, from the time capsule archive (newest first).
-  front.querySelector('.nw-sub').insertAdjacentHTML('afterend', '<div class="lp-attn-row nw-attn" data-no-i18n hidden><div class="lp-attn-txt"></div><ol class="nw-months"></ol></div>');
-  const attn = front.querySelector('.nw-attn');
-  let attnFor = null;
-  const MONTHS = 6;
-  const storiesOf = {};
-  const stories = (cc) => (storiesOf[cc] = storiesOf[cc] || fetch(`${base}/rest/v1/rpc/month_top_stories`, { method: 'POST', headers: { ...headers, 'Content-Type': 'application/json' }, body: JSON.stringify({ p_country: cc }) })
-    .then((r) => (r.ok ? r.json() : [])).catch(() => []));
-  async function showAttn(cc) {
-    const A = window.LP_ATTN;
-    attnFor = cc;
-    if (!A || !cc) { attn.hidden = true; return; }
-    const rows = await stories(cc);
-    if (attnFor !== cc) return;
-    const lang = siteLang();
-    const list = rows.map((s) => ({ ...s, t: (s.title_tr && s.title_tr[lang]) || s.title_en })).filter((s) => s.t)
-      .sort((x, y) => (x.month < y.month ? 1 : -1)).slice(0, MONTHS);
-    if (!list.length) { attn.hidden = true; return; }
-    let name = cc;
-    try { name = new Intl.DisplayNames([lang === 'pt' ? 'pt-BR' : lang], { type: 'region' }).of(cc); } catch (e) { /* code only */ }
-    attn.querySelector('.lp-attn-txt').innerHTML = `<b>${esc(tr('Top story each month: {c}').replace('{c}', name))}</b>`;
-    attn.querySelector('.nw-months').innerHTML = list.map((s) => {
-      const sum = s.title_tr && s.title_tr.sum && (s.title_tr.sum[lang] || s.title_tr.sum.en);
-      return `<li><b>${esc(A.month(s.month.slice(0, 7)))}</b><a href="${esc(s.link)}" target="_blank" rel="noopener">${esc(s.t)}</a>${sum ? `<small>${esc(sum)}</small>` : ''}</li>`;
-    }).join('');
-    attn.hidden = false;
-  }
   const wSel = wPick.querySelector('select');
   const wFlag = wPick.querySelector('img');
   wSel.addEventListener('change', () => {
@@ -692,7 +665,6 @@
     fLabel.foot.el.textContent = world ? `${tr(W_FOOT)} ${tr(W_TR)} ${tr(W_SUM)}` : tr(fLabel.foot.creators);
     wPick.hidden = !world;
     front.classList.toggle('nw-ranked', world);
-    showAttn(world ? cc : null);
     if (!world) return;
     wSel.innerHTML = WORLD_CC.map((c) => ({ c, n: name(c) })).sort((a, b) => a.n.localeCompare(b.n, ui))
       .map((o) => `<option value="${o.c}"${counts[o.c] || o.c === cc ? '' : ' disabled'}>${esc(o.n)}</option>`).join('');

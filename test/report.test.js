@@ -71,7 +71,7 @@ test('a comparison report uses open data only and adds what both countries share
   assert.deepEqual(out.shared.read_in_both.map((a) => a.title), ['Lula', 'Halloween']);
   assert.equal(out.countries[0].ideas[0].title, 'T');
   assert.ok(!('all_partners' in out.countries[0]));
-  assert.ok(f.seen.every((u) => /wiki_top_daily|gdelt_|report_insights|trends_daily|holidays|report_snapshots|news_coverage_monthly|github_ai_builders_monthly/.test(u)), 'no YouTube or news tables');
+  assert.ok(f.seen.every((u) => /wiki_top_daily|gdelt_|report_insights|trends_daily|holidays|report_snapshots|news_coverage_monthly|news_archive|github_ai_builders_monthly/.test(u)), 'no YouTube tables, only the news archive');
   assert.deepEqual(out.countries[0].searches, { top: [], days: 0 });
   assert.deepEqual(out.countries[0].holidays, []);
 });
@@ -479,3 +479,30 @@ test('sinceLast lists new and dropped topics against the earlier snapshot', () =
   assert.equal(sinceLast(now, null, null), null);
 });
 
+
+test('topStories keeps, per country and month, the #1 story that stayed longest', () => {
+  const { topStories } = require('../lib/report');
+  const out = topStories([
+    { country_code: 'BR', first_seen: '2026-10-02T00:00:00Z', last_seen: '2026-10-02T03:00:00Z', title_en: 'Short', link: 'a' },
+    { country_code: 'BR', first_seen: '2026-10-05T00:00:00Z', last_seen: '2026-10-06T00:00:00Z', title_en: 'Long', title_tr: { pt: 'Longa' }, link: 'b' },
+    { country_code: 'BR', first_seen: '2026-11-01T00:00:00Z', last_seen: '2026-11-01T01:00:00Z', title_en: 'Nov', link: 'c' },
+    { country_code: 'PT', first_seen: '2026-10-01T00:00:00Z', last_seen: '2026-10-01T01:00:00Z', title_en: '', link: 'd' },
+  ]);
+  assert.equal(out.BR['2026-10'].title, 'Long');
+  assert.deepEqual(out.BR['2026-10'].title_tr, { pt: 'Longa' });
+  assert.equal(out.BR['2026-11'].title, 'Nov');
+  assert.equal(out.PT, undefined);
+});
+
+test('youtubeYearly matches the company to its fashion channel and averages views per video', async () => {
+  const { youtubeYearly } = require('../lib/entity-report');
+  const rows = [
+    { name: 'Dior', year: 2024, videos: 10, views: 1000 },
+    { name: 'Dior', year: 2025, videos: 4, views: 1000 },
+    { name: 'Gucci', year: 2025, videos: 1, views: 5 },
+  ];
+  const rest = async () => rows;
+  assert.deepEqual(await youtubeYearly(rest, 'Dior (company)', NOW), [{ year: 2024, avg_views: 100 }, { year: 2025, avg_views: 250 }]);
+  assert.equal(await youtubeYearly(rest, 'Gucci', NOW), null);
+  assert.equal(await youtubeYearly(rest, 'Nike, Inc.', NOW), null);
+});
