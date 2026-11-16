@@ -17,18 +17,15 @@ function rest(env, fetchImpl) {
 
 async function load(get) {
   const chart = 'select=country_code,rank,video_id,title,channel_title,view_count,published_at,fetched_at';
-  const [users, trending, music, news, subjects, fashion, fashionVideos] = await Promise.all([
+  const [users, trending, music, news, subjects, fashionVideos] = await Promise.all([
     get('youtube_active_users?select=country_code,country_name,online_users_estimate,updated_at&order=online_users_estimate.desc'),
     get(`youtube_trending?${chart}&rank=lte.${TOP}&order=country_code,rank&limit=1000`),
     get(`youtube_music_chart?${chart}&rank=lte.${TOP}&order=country_code,rank&limit=1000`),
     get('news_world?select=country_code,rank,title,source,link,published_at&rank=lte.5&order=country_code,rank&limit=1000'),
     get('education_subjects?select=country_code,rank,subject,video_count,news_count&rank=lte.5&order=country_code,rank&limit=1000'),
-    get('news_fashion?select=country_code,rank,title,title_tr,source,link&title_tr->>fashion=eq.true&rank=lte.12&order=country_code,rank&limit=1000').catch(() => []),
     get('fashion_videos?select=country_code,rank,video_id,title,channel_title,channel_country,view_count,views_per_hour&rank=lte.5&order=country_code,rank&limit=1000').catch(() => []),
   ]);
   const by = (rows) => rows.reduce((m, r) => ((m[r.country_code] ||= []).push(r), m), {});
-  const fashionBy = by(fashion);
-  for (const k of Object.keys(fashionBy)) fashionBy[k] = fashionBy[k].slice(0, 3);
   const countries = users.map((u) => ({ code: u.country_code, name: u.country_name, live: Number(u.online_users_estimate) || 0 }))
     .sort((a, b) => a.name.localeCompare(b.name));
   const seen = new Map();
@@ -44,7 +41,7 @@ async function load(get) {
     countries, worldwide,
     live: users.reduce((s, u) => s + (Number(u.online_users_estimate) || 0), 0),
     liveAt: stamp(users, 'updated_at'), trendingAt: stamp(trending, 'fetched_at'),
-    trending: by(trending), music: by(music), news: by(news), subjects: by(subjects), fashion: fashionBy, fashionVideos: by(fashionVideos),
+    trending: by(trending), music: by(music), news: by(news), subjects: by(subjects), fashionVideos: by(fashionVideos),
   };
 }
 
@@ -64,7 +61,6 @@ const SECTIONS = [
   ['YouTube Music', 'the most popular music videos on YouTube in each country.'],
   ['World News headlines', 'the top NEWS stories in each country, from its Google News edition. Use this for questions about news, top news or trending news.'],
   ['Creator News', 'news headlines about YouTube and the creator economy (shown on the website).'],
-  ['Fashion News headlines', 'fashion news stories in each country, from Google News, checked by AI to be about fashion.'],
   ['Fashion Index', 'the fastest-growing recent VIDEOS from the fashion magazine, brand and fashion week channels Like Polling tracks in each country.'],
   ['Education topics', 'the subjects people are learning about on YouTube and reading about in the news in each country.'],
   ['Estimated people watching YouTube', 'a modelled estimate of how many people are watching YouTube right now in each country.'],
@@ -75,7 +71,7 @@ const METHOD = [
   'Estimated live viewers are modelled, not measured: YouTube users per country (Google ad reach, late 2025, via DataReportal) × about 80 minutes of viewing per person per day, spread over the day by a typical hourly pattern. Recalculated every 15 minutes; large countries (US, Canada, Brazil, Mexico, Australia, Indonesia) are split across their time zones by population. Read them as an order of magnitude.',
   'Trending and Music: YouTube Data API "most popular" charts per country, refreshed hourly. Views are YouTube\'s public counts at fetch time.',
   'World News headlines: top stories from each country\'s Google News edition. Education topics: recent videos from education channels plus local news, grouped into subjects with Google Gemini (AI).',
-  'Fashion News headlines: Google News fashion stories per country, kept only when Google Gemini (AI) confirms they are about fashion. Fashion Index: tracked fashion channels\' uploads from the last 30 days, ranked by views per hour; Portugal follows the Italian, Spanish, French and UK channels.',
+  'Fashion Index: tracked fashion channels\' uploads from the last 30 days, ranked by views per hour; Portugal follows the Italian, Spanish, French and UK channels.',
   'Restaurants: Wikidata restaurants holding a current Michelin star, refreshed weekly. One is left out when Wikidata records a closing date or its English Wikipedia page describes it in the past tense. Wikidata can lag behind the latest guide, and its US list is incomplete.',
   'AI Builders: GitHub search API, weekly. Top projects are new AI repositories ranked by stars; new developers per country count only accounts that name a country in their profile.',
 ];
@@ -83,7 +79,7 @@ const LINKS = [
   [`${SITE}/llms-full.txt`, 'every country: YouTube Trending videos, YouTube Music, World News headlines, Fashion, Education'],
   [`${SITE}/data`, 'the same numbers as HTML tables'],
   [`${SITE}/api/v1/worldwide`, 'JSON: videos trending in the most countries'],
-  [`${SITE}/api/v1/news?country=US`, 'JSON: World News headlines for one country (news stories; add &topic=fashion for Fashion News)'],
+  [`${SITE}/api/v1/news?country=US`, 'JSON: World News headlines for one country (news stories)'],
   [`${SITE}/api/v1/trending?country=US`, 'JSON: YouTube Trending videos for one country (also /music, /education)'],
   [`${SITE}/api/v1/channel?handle=@MrBeast`, 'JSON: one channel\'s 30-day views, comments and estimated earnings'],
   [`${SITE}/api/v1/trending?country=US&format=csv`, 'CSV for spreadsheets: add &format=csv to any JSON list above (Excel, Google Sheets, Power BI)'],
@@ -111,7 +107,6 @@ function markdown(d, full) {
       list('YouTube Trending videos', d.trending[c.code], (r) => `${r.rank}. [${md(r.title)}](${yt(r.video_id)}) – ${md(r.channel_title)} – ${fmt(r.view_count)} views`);
       list('YouTube Music', d.music[c.code], (r) => `${r.rank}. [${md(r.title)}](${yt(r.video_id)}) – ${md(r.channel_title)} – ${fmt(r.view_count)} views`);
       list('World News headlines (news)', d.news[c.code], (r) => `${r.rank}. ${headline(r)}`);
-      list('Fashion News headlines', d.fashion[c.code], (r, i) => `${i + 1}. ${headline(r)}`);
       list('Fashion Index (fashion videos)', d.fashionVideos[c.code], (r) => `${r.rank}. [${md(r.title)}](${yt(r.video_id)}) – ${md(r.channel_title)}${r.channel_country && r.channel_country !== c.code ? ` (${r.channel_country})` : ''} – ${fmt(Math.round(r.views_per_hour))} views/hour`);
       list('Education topics', d.subjects[c.code], (r) => `${r.rank}. ${md(r.subject)} (${r.video_count} videos, ${r.news_count} news stories)`);
     }
@@ -135,7 +130,6 @@ function brief(d, cc, topic) {
   if (topic === 'all' || topic === 'music') list(`Top 10 songs on YouTube in ${c.name} (YouTube Music chart)`, d.music[cc], vid);
   if (topic === 'all' || topic === 'fashion') {
     list(`Fashion Index for ${c.name}: fastest-growing videos from fashion brand and magazine channels`, d.fashionVideos[cc], (r) => `${t(r.title)} – ${t(r.channel_title)} – ${fmt(Math.round(r.views_per_hour))} views/hour`);
-    list(`Fashion news in ${c.name} (Google News)`, d.fashion[cc], news);
   }
   if (topic === 'trending') list(`YouTube Trending videos in ${c.name}`, d.trending[cc], vid);
   if (topic === 'world') {
@@ -169,7 +163,6 @@ function html(d) {
 <h3>YouTube Trending videos</h3>${table(['#', 'Video', 'Channel', 'Views'], (d.trending[c.code] || []).map(vid))}
 <h3>YouTube Music</h3>${table(['#', 'Video', 'Channel', 'Views'], (d.music[c.code] || []).map(vid))}
 <h3>World News headlines (news)</h3>${table(['#', 'Headline', 'Source'], (d.news[c.code] || []).map(news))}
-<h3>Fashion News headlines</h3>${table(['#', 'Headline', 'Source'], (d.fashion[c.code] || []).map((r, i) => news({ ...r, rank: i + 1 })))}
 <h3>Fashion Index (fashion videos)</h3>${table(['#', 'Video', 'Channel', 'Views/hour'], (d.fashionVideos[c.code] || []).map((r) => [r.rank, `<a href="${yt(r.video_id)}">${esc(r.title)}</a>`, esc(r.channel_title), fmt(Math.round(r.views_per_hour))]))}
 <h3>Education topics</h3>${table(['#', 'Subject', 'Videos', 'News'], (d.subjects[c.code] || []).map((r) => [r.rank, esc(r.subject), r.video_count, r.news_count]))}
 </section>`).join('\n');

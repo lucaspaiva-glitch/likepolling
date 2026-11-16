@@ -1,8 +1,7 @@
 name: Fashion News
 
+# Fashion News left the site, so this only runs by hand; news_fashion and news_archive keep its history.
 on:
-  schedule:
-    - cron: '30 0,12 * * *' # twice a day, after World News
   workflow_dispatch:
 
 concurrency:

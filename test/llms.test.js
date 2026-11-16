@@ -49,7 +49,7 @@ test('full adds a section per country', async () => {
   const res = await run('full');
   assert.match(res.body, /## Ireland \(IE\)[\s\S]*### Education topics\n\n1\. Biology \(3 videos, 1 news stories\)/);
   assert.match(res.body, /## Portugal \(PT\)[\s\S]*### World News headlines \(news\)\n\n1\. \[Notícia <b>\]\(https:\/\/example\.pt\/a\) – RTP/);
-  assert.match(res.body, /### Fashion News headlines\n\n1\. \[Moda\]\(https:\/\/example\.pt\/m\) \(English: Fashion\) – Vogue/);
+  assert.doesNotMatch(res.body, /Fashion News headlines/);
   assert.match(res.body, /### Fashion Index \(fashion videos\)\n\n1\. \[Zara AW26\]\(https:\/\/www\.youtube\.com\/watch\?v=zzzzzzzzzzz\) – Zara \(ES\) – 1,234 views\/hour/);
 });
 
@@ -82,7 +82,7 @@ test('brief gives plain-text data for one country and topic', async () => {
   assert.match(res.body, /\nOther countries \(shorter lists\):\n- Ireland: [^\n]*YouTube Trending: 1\. Big \| trailer – Studio/);
   assert.doesNotMatch(res.body, /\n- Portugal: /);
   assert.match(res.body, /Fashion Index for Portugal.*\n1\. Zara AW26 – Zara – 1,234 views\/hour/);
-  assert.match(res.body, /Fashion news in Portugal.*\n1\. Moda \(English: Fashion\) – Vogue/);
+  assert.doesNotMatch(res.body, /Fashion news in Portugal/);
   assert.doesNotMatch(res.body, /Notícia|likepolling\.com/);
   const world = mockRes();
   await createHandler({ env, fetch: mockFetch() })({ query: { format: 'brief', country: 'PT', topic: 'world' } }, world);

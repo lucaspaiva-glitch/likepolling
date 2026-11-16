@@ -5,7 +5,7 @@
 //   GET /api/v1/music?country=BR
 //   GET /api/v1/worldwide
 //   GET /api/v1/education?country=BR
-//   GET /api/v1/news?country=BR[&topic=world|fashion]
+//   GET /api/v1/news?country=BR[&topic=world]
 // Every number is a stored value or one of the formulas listed in FORMULAS.
 const metrics = require('./metrics');
 const earnings = require('../assets/earnings.js');
@@ -233,14 +233,13 @@ async function educationRoute(req, get) {
 }
 
 // News headlines (Google News), separate from the YouTube video charts.
-const NEWS_TOPICS = { world: 'news_world', fashion: 'news_fashion' };
+const NEWS_TOPICS = { world: 'news_world' };
 async function newsRoute(req, get) {
   const country = countryParam(req);
   const topic = String(req.query.topic || 'world').toLowerCase();
   const table = NEWS_TOPICS[topic];
   if (!table) throw new HttpError(400, `Unknown topic. Use one of: ${Object.keys(NEWS_TOPICS).join(', ')}.`);
-  const only = topic === 'fashion' ? '&title_tr->>fashion=eq.true' : '';
-  const rows = await get(`${table}?select=rank,title,title_tr,source,link,image_url,published_at,fetched_at&country_code=eq.${country}${only}&order=rank.asc&limit=30`);
+  const rows = await get(`${table}?select=rank,title,title_tr,source,link,image_url,published_at,fetched_at&country_code=eq.${country}&order=rank.asc&limit=30`);
   return {
     body: {
       country, topic, kind: 'news headlines (not videos)', source: 'Google News',

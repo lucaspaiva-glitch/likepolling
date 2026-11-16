@@ -712,6 +712,14 @@
     #lp-rep-form button:hover { background: var(--red-dark); }
     @media (max-width: 700px) { .lp-rep { flex-direction: column; flex-wrap: nowrap; align-items: stretch; } .lp-rep { margin-bottom: 14px; } .lp-rep > p a { margin-left: 8px; } }
     .earn-note { margin: 10px 0 0; font-size: 11.5px; line-height: 1.45; color: var(--muted); }
+    /* Below 1240px Trending and Music share one spot: the tabs flip between them (assets/chart-tabs.js). */
+    .tm-tabs { display: flex; gap: 4px; margin: 0 0 12px; padding: 4px; border-radius: 999px; background: #f5f5f7; }
+    .tm-tabs button { flex: 1 1 0; min-width: 0; padding: 9px 10px; border: 0; border-radius: 999px; background: none; font: 600 14px Inter, system-ui, sans-serif; color: #6e6e73; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .tm-tabs button[aria-selected="true"] { background: var(--red); color: #fff; }
+    .tm-tabs button:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
+    .tm-tabs[hidden] { display: none; }
+    @media (max-width: 1239px) { .wrap[data-tm="music"] > #yt-trending, .wrap:not([data-tm="music"]) > #yt-music { display: none; } }
+    @media (min-width: 1240px) { .tm-tabs { display: none !important; } }
     /* Wide screens: World News, then Music beside Trending, then Fashion and the rest full width. */
     @media (min-width: 1240px) {
       .wrap:has(> #yt-trending:not([hidden])) { grid-template-rows: auto auto 1fr; }
@@ -779,9 +787,10 @@
       })();
     </script>
     <section class="nw nw-front" id="news-front" aria-label="World News: top news headlines in each country"></section>
+    <div class="tm-tabs" id="tm-tabs" role="tablist" aria-label="Charts"><button type="button" role="tab" aria-selected="true" data-tm="trending">Trending</button><button type="button" role="tab" aria-selected="false" data-tm="music">Music</button></div>
     <section class="ytt" id="yt-trending" aria-label="YouTube Trending: most popular videos in each country" data-supabase-url="https://iyhaoagslsrwtkcrxylp.supabase.co" data-supabase-key="sb_publishable_ZnV9HrtfDqeKlBftnDxH2Q_YK6XWJTp"></section>
     <section class="ymu" id="yt-music" aria-label="YouTube Music: most popular music videos in each country" data-supabase-url="https://iyhaoagslsrwtkcrxylp.supabase.co" data-supabase-key="sb_publishable_ZnV9HrtfDqeKlBftnDxH2Q_YK6XWJTp"></section>
-    <section id="fashion" aria-label="Fashion: fashion videos and fashion news in each country" data-supabase-url="https://iyhaoagslsrwtkcrxylp.supabase.co" data-supabase-key="sb_publishable_ZnV9HrtfDqeKlBftnDxH2Q_YK6XWJTp"></section>
+    <section id="fashion" aria-label="Fashion: fashion videos in each country" data-supabase-url="https://iyhaoagslsrwtkcrxylp.supabase.co" data-supabase-key="sb_publishable_ZnV9HrtfDqeKlBftnDxH2Q_YK6XWJTp"></section>
     <section id="ai-age" aria-label="Who am I in the age of AI? Stories of people using AI for good in each country" data-supabase-url="https://iyhaoagslsrwtkcrxylp.supabase.co" data-supabase-key="sb_publishable_ZnV9HrtfDqeKlBftnDxH2Q_YK6XWJTp"></section>
     <section id="ai-builders" aria-label="AI Builders: new AI projects on GitHub, every week" data-supabase-url="https://iyhaoagslsrwtkcrxylp.supabase.co" data-supabase-key="sb_publishable_ZnV9HrtfDqeKlBftnDxH2Q_YK6XWJTp"></section>
     <section id="restaurants" aria-label="Restaurants: Michelin-starred restaurants in each country" data-supabase-url="https://iyhaoagslsrwtkcrxylp.supabase.co" data-supabase-key="sb_publishable_ZnV9HrtfDqeKlBftnDxH2Q_YK6XWJTp"></section>
@@ -1510,6 +1519,7 @@ ENERGY</div>
   <script src="/assets/attention.js" defer></script>
   <script src="/assets/trending-widget.js" defer></script>
   <script src="/assets/music-chart-widget.js" defer></script>
+  <script src="/assets/chart-tabs.js" defer></script>
   <script src="/assets/education-widget.js" defer></script>
   <script src="/assets/fashion-widget.js" defer></script>
   <script src="/assets/restaurants-widget.js" defer></script>
