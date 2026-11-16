@@ -238,7 +238,7 @@ function numbersCheckOut(summary, headline, description) {
   return digitsOf(summary).every((n) => source.includes(n));
 }
 
-// Stored translations are reused; new headlines the site can show (each country's
+// Stored translations are reused (redone when a site language is missing); new headlines the site can show (each country's
 // first PHOTO_TARGET with a photo) are translated in batches, top stories first.
 async function addTranslations(rows, env, deps, cfg = WORLD) {
   const stored = new Map();
@@ -252,7 +252,8 @@ async function addTranslations(rows, env, deps, cfg = WORLD) {
     r.title_tr = stored.get(`${r.link}|${r.title}`) || null;
     if (!r.image_url) continue;
     pos[r.country_code] = (pos[r.country_code] || 0) + 1;
-    if (!r.title_tr && pos[r.country_code] <= cfg.photoTarget) todo.push(r);
+    const stale = !r.title_tr || SITE_LANGS.some((l) => typeof r.title_tr[l] !== 'string');
+    if (stale && pos[r.country_code] <= cfg.photoTarget) todo.push(r);
   }
   if (!deps.translate) return { translated: 0, pending: todo.length };
   const check = checkOf(cfg.classify);

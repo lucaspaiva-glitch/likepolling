@@ -846,11 +846,12 @@
     .lp-lang button[aria-pressed="true"] { background: #fff; color: var(--red, #b0000e); box-shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 1px rgba(0,0,0,.04); }
     .lp-lang button:focus-visible { outline: 2px solid var(--red, #b0000e); outline-offset: 1px; }
     html[lang="es"] .ymu th { white-space: nowrap; }
-    @media (max-width: 1100px) { .lp-lang span { display: none; } .lp-lang button { padding: 5px 7px; } }
+    @media (max-width: 1440px) { .lp-lang span { display: none; } .lp-lang button { padding: 5px 7px; } }
     @media (max-width: 520px) {
       header.top:has(> .lp-lang) { flex-wrap: wrap; row-gap: 12px; }
       header.top > .brand, header.top > .live { white-space: nowrap; }
-      .lp-lang { order: 3; margin: 0 0 0 auto; }
+      .lp-lang { order: 3; margin: 0 0 0 auto; max-width: 100%; flex-wrap: wrap; justify-content: center; }
+      .lp-lang button { padding: 5px 3px; }
     }`;
   document.head.appendChild(style);
 
