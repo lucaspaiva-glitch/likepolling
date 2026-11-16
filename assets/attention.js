@@ -42,7 +42,8 @@
       grid = years ? '' : pts.map((p, i) => (i > 0 && p.m.endsWith('-01') ? `<i class="lp-attn-yr" style="left:${x(i).toFixed(2)}%"></i>` : '')).join('');
       // years: one point per year (m: 'YYYY-01'), labelled with the year only.
       ax = `<span class="lp-attn-ax mo${small ? ' sm' : ''}${years ? ' yr' : ''}">${pts.map((p, i) => {
-        if (years) return `<span style="left:${x(i).toFixed(2)}%">${p.m.slice(0, 4)}</span>`;
+        // Over 6 years, label every other one (counting back from the latest) so labels don't touch.
+        if (years) return pts.length > 6 && (pts.length - 1 - i) % 2 ? '' : `<span style="left:${x(i).toFixed(2)}%">${p.m.slice(0, 4)}</span>`;
         const yr = i === 0 || p.m.endsWith('-01') ? `<b>${p.m.slice(0, 4)}</b>` : '';
         return `<span style="left:${x(i).toFixed(2)}%">${esc(f.format(new Date(`${p.m}-01T00:00:00Z`)).replace(/\.$/, ''))}${yr}</span>`;
       }).join('')}</span>`;

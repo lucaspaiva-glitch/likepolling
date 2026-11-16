@@ -239,7 +239,6 @@
     "Show more": ["Ver mais", "Ver más", "Mehr anzeigen", "Показать ещё", "Показати більше", "더 보기", "もっと見る", "Voir plus", "显示更多", "और दिखाएँ"],
     "views per video in {y}": ["visualizações por vídeo em {y}", "vistas por video en {y}", "Aufrufe pro Video {y}", "просмотров на видео в {y}", "переглядів на відео у {y}", "{y}년 영상당 조회수", "{y}年の動画あたり再生数", "vues par vidéo en {y}", "{y}年每个视频的观看次数", "{y} में प्रति वीडियो व्यूज़"],
     "{n} views per video": ["{n} visualizações por vídeo", "{n} vistas por video", "{n} Aufrufe pro Video", "{n} просмотров на видео", "{n} переглядів на відео", "영상당 조회수 {n}회", "動画あたり{n}回再生", "{n} vues par vidéo", "每个视频 {n} 次观看", "प्रति वीडियो {n} व्यूज़"],
-    "{n} videos": ["{n} vídeos", "{n} videos", "{n} Videos", "{n} видео", "{n} відео", "영상 {n}개", "動画{n}本", "{n} vidéos", "{n} 个视频", "{n} वीडियो"],
     "so far": ["até agora", "hasta ahora", "bisher", "пока", "поки що", "현재까지", "現時点", "pour l'instant", "截至目前", "अब तक"],
     "Fashion Share: {c}": ["Participação na moda: {c}", "Cuota de moda: {c}", "Modeanteil: {c}", "Доля в моде: {c}", "Частка в моді: {c}", "패션 점유율: {c}", "ファッションシェア:{c}", "Part de la mode : {c}", "时尚占比：{c}", "फ़ैशन हिस्सेदारी: {c}"],
     "News share: {c}": ["Participação nas notícias: {c}", "Cuota de noticias: {c}", "Nachrichtenanteil: {c}", "Доля в новостях: {c}", "Частка в новинах: {c}", "뉴스 점유율: {c}", "ニュースシェア:{c}", "Part des actualités : {c}", "新闻占比：{c}", "खबरों में हिस्सेदारी: {c}"],

@@ -79,7 +79,7 @@
     if (!brands.length) { attn.hidden = true; return; }
     if (bsel.options.length !== brands.length) bsel.innerHTML = brands.map((b) => `<option value="${esc(b)}">${esc(b)}</option>`).join('');
     if (!brands.includes(bsel.value)) bsel.value = brands[0];
-    const name = bsel.value, yr = by[name], lang = siteLang();
+    const name = bsel.value, yr = by[name];
     attn.querySelector('.lp-cs-name').textContent = name;
     attn.querySelector('.lp-cs-pos').innerHTML = `<span>${brands.indexOf(name) + 1}/${brands.length}</span>`;
     const label = tr('Fashion Share: {c}').replace('{c}', name);
@@ -89,7 +89,7 @@
     const cap = plot.querySelector('.lp-attn-cap');
     const show = (p) => {
       const when = p.y > full ? `${p.y} (${tr('so far')})` : String(p.y);
-      cap.innerHTML = `<b>${esc(when)}</b> · ${esc(tr('{n} views per video').replace('{n}', A.num(p.v)))} · ${esc(tr('{n} videos').replace('{n}', p.n.toLocaleString(lang)))}`;
+      cap.innerHTML = `<b>${esc(when)}</b> · ${esc(tr('{n} views per video').replace('{n}', A.num(p.v)))}`;
     };
     show(yr.find((p) => p.y === full));
     A.pick(plot, yr.length, (i) => show(yr[i]));
