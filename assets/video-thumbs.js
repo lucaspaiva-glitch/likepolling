@@ -48,6 +48,7 @@
 /* Rendered 4x larger and scaled down, so YouTube's own buttons shrink; 10% overscan hides its title bar and logo. */
 .lp-prev { position: absolute; left: -10%; top: -10%; z-index: 1; width: 480%; height: 480%; transform: scale(.25); transform-origin: 0 0; border: 0; background: #000; pointer-events: none; opacity: 0; transition: opacity .25s; }
 .lp-prev.on { opacity: 1; }
+.lp-hold { position: absolute; z-index: 1; overflow: hidden; pointer-events: none; }
 /* Subtitles need a closer view (bigger text) and the bottom edge uncropped. */
 .lp-prev.cc { left: 0; top: -6%; width: 200%; height: 212%; transform: scale(.5); }
 /* Soft blur over the centre while YouTube's small start-up controls fade out. */
@@ -92,6 +93,20 @@ a:hover > .lp-rth img { transform: scale(1.04); }
   // Remembered while the page is open, so the next preview starts the same way.
   const pref = { sound: false, cc: false };
   let box = null, timer = 0, warmed = false, unwatch = null, dog = 0, carried = null;
+  const ROWS = '.ytt-cards, .ymu-cards, .nw-shorts .nw-feed.ysh, .nw-front.nw-ranked .nw-feed-wrap';
+  // Touch screens, sideways rows: the preview sits in a box on the row, laid over the card, so the
+  // same player moves to the next card when swiped. Phones only allow sound in a player the visitor
+  // turned on themselves, so a new player would start muted again.
+  let hold = null;
+  function fit(el, f) {
+    const row = hold.parentNode, d = document.createElement('span');
+    d.className = f.className.replace(/\bon\b/, '');
+    el.querySelector('img').after(d);
+    const cs = getComputedStyle(d), r = el.getBoundingClientRect(), rr = row.getBoundingClientRect();
+    Object.assign(f.style, { left: cs.left, top: cs.top, width: cs.width, height: cs.height });
+    d.remove();
+    Object.assign(hold.style, { left: `${r.left - rr.left - row.clientLeft + row.scrollLeft}px`, top: `${r.top - rr.top - row.clientTop + row.scrollTop}px`, width: `${r.width}px`, height: `${r.height}px`, borderRadius: getComputedStyle(el).borderRadius });
+  }
   const idOf = (el) => (el.querySelector('img')?.src.match(/\/vi\/([A-Za-z0-9_-]{11})\//) || [])[1];
   function warm() {
     if (warmed) return;
@@ -107,6 +122,7 @@ a:hover > .lp-rth img { transform: scale(1.04); }
     clearInterval(dog);
     if (unwatch) { unwatch(); unwatch = null; }
     if (box) box.querySelectorAll('.lp-prev, .lp-veil, .lp-pvc').forEach((n) => n.remove());
+    if (hold) { hold.remove(); hold = null; }
     box = null;
     carried = null;
     if (np) np.classList.remove('on');
@@ -129,6 +145,7 @@ a:hover > .lp-rth img { transform: scale(1.04); }
       ytSend(f, 'setOption', ['captions', 'fontSize', 1]);
     } else ytSend(f, 'unloadModule', ['captions']);
     f.classList.toggle('cc', pref.cc);
+    if (hold?.contains(f)) fit(box, f);
     b.setAttribute('aria-pressed', String(pref.cc));
     b.title = b.ariaLabel = pref.cc ? 'Subtitles off' : 'Subtitles on';
   }
@@ -185,6 +202,7 @@ a:hover > .lp-rth img { transform: scale(1.04); }
         // YouTube sends only what changed, so the latest state and mute are kept here.
         if (typeof info.playerState === 'number') ps = info.playerState;
         if (typeof info.muted === 'boolean') { muted = info.muted; paintSound(snd, !muted); }
+        if (info.playerState === 2 && f.dataset.pass) return ytSend(f, 'playVideo'); // a pause while the next video loads isn't a refusal of sound
         if (!tried && (ps === 1 || info.currentTime > 0)) {
           tried = Date.now();
           applyCc(f, cc);
@@ -193,9 +211,21 @@ a:hover > .lp-rth img { transform: scale(1.04); }
         if (tried && info.playerState === 2 && !blocked && box === el && np?.classList.contains('on')) return stop(); // refused sound while out of view
         if (tried && info.playerState === 2 && !blocked) { blocked = true; ytSend(f, 'mute'); ytSend(f, 'playVideo'); paintSound(snd, false); }
         if (tried && !shown && ps === 1 && (blocked || muted === false || Date.now() - tried > 900)) show();
-        if (shown && info.currentTime >= CONTROLS_GONE) { veil.classList.remove('on'); if (!mouse) done(); }
+        if (info.playerState === 1 && shown && hold?.contains(f)) { f.classList.add('on'); if (f.dataset.pass && pref.sound && muted) applySound(f, snd); delete f.dataset.pass; }
+        if (info.playerState === 0 && hold?.contains(f)) { ytSend(f, 'seekTo', [0, true]); ytSend(f, 'playVideo'); }
+        if (shown && info.currentTime >= CONTROLS_GONE) { veil.classList.remove('on'); if (!mouse && !hold?.contains(f)) done(); }
       });
-      el.querySelector('img').after(f, veil, ctl);
+      const row = !mouse && el.closest(ROWS);
+      if (row && getComputedStyle(row).overflowX === 'auto') {
+        if (getComputedStyle(row).position === 'static') row.style.position = 'relative';
+        hold = document.createElement('span');
+        hold.className = 'lp-hold';
+        f.src = f.src.replace(`&loop=1&playlist=${id}`, ''); // it loops itself, as it plays other videos later
+        hold.append(f);
+        row.append(hold);
+        fit(el, f);
+        el.querySelector('img').after(veil, ctl);
+      } else el.querySelector('img').after(f, veil, ctl);
     }, wait);
   }
   // The thumbnail after el in its section (wrapping to the first), skipping hidden ones.
@@ -276,7 +306,6 @@ a:hover > .lp-rth img { transform: scale(1.04); }
     addEventListener('blur', () => { if (!loud()) stop(); });
     // ‹ › arrows on each sideways row (swipe.css). One click moves one card; a video playing
     // with sound hands it to the card next to it, the same way a swipe does on phones.
-    const ROWS = '.ytt-cards, .ymu-cards, .nw-shorts .nw-feed.ysh, .nw-front.nw-ranked .nw-feed-wrap';
     const CARD = '.ytt-card, .ymu-card, .ysh-card, .ysh-list li, .nw-lead, .nw-row';
     const ARROW = (d) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="${d}"/></svg>`;
     const rows = new Map();
@@ -348,6 +377,17 @@ a:hover > .lp-rth img { transform: scale(1.04); }
       if (d < bestD) { best = el; bestD = d; }
     }
     if (best === box) return;
+    // Sound on: the playing preview moves to the swiped-to card in the same row and keeps its sound.
+    const f = hold?.firstChild;
+    if (best && f && pref.sound && hold.parentNode === best.closest(ROWS) && idOf(best)) {
+      box.querySelectorAll('.lp-veil, .lp-pvc').forEach((n) => best.querySelector('img').after(n));
+      box = best;
+      fit(best, f);
+      f.classList.remove('on'); // the picture shows until the next video is really playing
+      f.dataset.pass = '1';
+      ytSend(f, 'loadVideoById', [idOf(best)]);
+      return;
+    }
     stop();
     if (best) start(best); // starts after DELAY, so videos flicked past quickly never load
   }
