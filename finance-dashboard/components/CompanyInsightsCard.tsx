@@ -1,88 +1,86 @@
-import { Card } from "@tremor/react";
-import { fmtUsd2 } from "@/lib/format";
+"use client";
+
+import { AreaChart, Card } from "@tremor/react";
+import { fmtDate, fmtUsd2 } from "@/lib/format";
 import type { CompanyInsights } from "@/lib/company-insights";
 
 const regions = new Intl.DisplayNames(["en"], { type: "region" });
 const countryName = (c: string) => (c === "XX" ? "Unknown" : (() => { try { return regions.of(c) ?? c; } catch { return c; } })());
-const PRODUCTS: Record<string, string> = { country: "Country report", artist: "Artist report", company: "Company report", ad: "Ad spot" };
-const SOURCES: Record<string, string> = {
-  "news-world-routine": "World news",
-  "news-ai-routine": "AI news",
-  "news-fashion-routine": "Fashion news",
-  "education-routine": "Education",
-  "report-ideas-routine": "Report ideas",
-  ad: "Ad checks",
-};
 const n = (x: number) => x.toLocaleString("en-US");
 
-// Where interest comes from and what each Gemini feature costs, so marketing and spending follow the data.
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-tremor-default border border-tremor-border bg-white/70 p-2 text-center">
+      <p className="text-[11px] text-tremor-content">{label}</p>
+      <p className="text-base font-semibold tabular-nums text-tremor-content-strong">{value}</p>
+    </div>
+  );
+}
+
+// Daily visitors and daily running cost of likepolling.com over the last 30 days.
 export default function CompanyInsightsCard({ data }: { data: CompanyInsights }) {
   if (!data.configured) return null;
-  const top = data.countries.slice(0, 8);
-  const visits = data.countries.reduce((s, c) => s + c.visits, 0);
+  // From the first tracked day through yesterday: earlier days predate counting and today is still partial.
+  const first = data.daily.findIndex((d) => d.visits > 0 || d.cost > 0);
+  const days = first < 0 ? [] : data.daily.slice(first, -1);
+  const visits = days.reduce((s, d) => s + d.visits, 0);
+  const cost = days.reduce((s, d) => s + d.cost, 0);
   const clicks = data.countries.reduce((s, c) => s + c.buyClicks, 0);
-  const geminiTotal = data.geminiBySource.reduce((s, g) => s + g.cost, 0);
+  const avgVisits = days.length ? visits / days.length : 0;
+  const avgCost = days.length ? cost / days.length : 0;
+  const visitPoints = days.map((d) => ({ date: fmtDate(d.date), Visitors: d.visits }));
+  const costPoints = days.map((d) => ({ date: fmtDate(d.date), Cost: Math.round(d.cost * 100) / 100 }));
+  const top = data.countries.filter((c) => c.visits > 0).slice(0, 5);
+
   return (
     <Card className="p-3">
-      <h3 className="text-sm font-medium text-tremor-content-strong">Like Polling · interest and costs</h3>
-      <p className="text-[11px] text-tremor-content">Last {data.days} days · anonymous counts per visitor country</p>
+      <h3 className="text-sm font-medium text-tremor-content-strong">Like Polling · visitors and daily cost</h3>
+      <p className="text-[11px] text-tremor-content">
+        {days.length ? `Since ${fmtDate(days[0].date)} · ${days.length} days` : `Last ${data.days} days`}
+      </p>
       {data.error && <p className="mt-1 text-[11px] text-rose-600">Couldn&apos;t read Like Polling data: {data.error}</p>}
 
-      <p className="mt-3 text-xs font-medium text-tremor-content-strong">Where interest is</p>
-      {top.length === 0 ? (
-        <p className="py-3 text-center text-xs text-tremor-content-subtle">No visits counted yet</p>
-      ) : (
-        <>
-          <table className="mt-1 w-full text-xs">
-            <thead className="text-[11px] text-tremor-content">
-              <tr>
-                <th className="py-1 text-left font-normal">Country</th>
-                <th className="py-1 text-right font-normal">Visits</th>
-                <th className="py-1 text-right font-normal">Searches</th>
-                <th className="py-1 text-right font-normal">Buy clicks</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-tremor-border tabular-nums">
-              {top.map((c) => (
-                <tr key={c.country}>
-                  <td className="py-1 text-tremor-content-emphasis">{countryName(c.country)}</td>
-                  <td className="py-1 text-right text-tremor-content-strong">{n(c.visits)}</td>
-                  <td className="py-1 text-right text-tremor-content-strong">{n(c.searches)}</td>
-                  <td className={`py-1 text-right ${c.buyClicks ? "text-emerald-600" : "text-tremor-content"}`}>{n(c.buyClicks)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <p className="mt-1 text-[11px] text-tremor-content">
-            {n(visits)} visits → {n(clicks)} Buy clicks{visits ? ` (${((clicks / visits) * 100).toFixed(1)}%)` : ""}
-            {data.buyClicks.length > 0 && ` · ${data.buyClicks.map((b) => `${PRODUCTS[b.product] ?? b.product} ${n(b.clicks)}`).join(", ")}`}
-          </p>
-        </>
+      <p className="mt-3 text-xs font-medium text-tremor-content-strong">Visitors per day</p>
+      <div className="mt-1 grid grid-cols-2 gap-2">
+        <Stat label="Average per day" value={n(Math.round(avgVisits))} />
+        <Stat label={`Total, ${days.length} days`} value={n(visits)} />
+      </div>
+      <AreaChart
+        className="mt-2 h-44"
+        data={visitPoints}
+        index="date"
+        categories={["Visitors"]}
+        colors={["blue"]}
+        valueFormatter={n}
+        yAxisWidth={40}
+        allowDecimals={false}
+        showLegend={false}
+        showAnimation={false}
+      />
+      {top.length > 0 && (
+        <p className="mt-1 text-[11px] text-tremor-content">
+          Top countries: {top.map((c) => `${countryName(c.country)} ${n(c.visits)}`).join(" · ")}
+          {` · ${n(clicks)} Buy clicks`}
+        </p>
       )}
 
-      <div className="mt-3 flex items-baseline justify-between gap-2">
-        <p className="text-xs font-medium text-tremor-content-strong">Gemini cost per feature</p>
-        <p className="text-xs tabular-nums text-tremor-content-strong">{fmtUsd2(geminiTotal)}</p>
+      <p className="mt-4 text-xs font-medium text-tremor-content-strong">Website cost per day</p>
+      <div className="mt-1 grid grid-cols-2 gap-2">
+        <Stat label="Average per day" value={fmtUsd2(avgCost)} />
+        <Stat label={`Total, ${days.length} days`} value={fmtUsd2(cost)} />
       </div>
-      {data.geminiBySource.length === 0 ? (
-        <p className="py-3 text-center text-xs text-tremor-content-subtle">No Gemini requests recorded yet</p>
-      ) : (
-        <ul className="mt-1 space-y-1 text-xs">
-          {data.geminiBySource.map((g) => (
-            <li key={g.source}>
-              <div className="flex justify-between gap-2">
-                <span className="text-tremor-content-emphasis">{SOURCES[g.source] ?? g.source}</span>
-                <span className="tabular-nums text-tremor-content-strong">
-                  {fmtUsd2(g.cost)} <span className="text-tremor-content">· {n(g.requests)} req</span>
-                </span>
-              </div>
-              <div className="mt-0.5 h-1 rounded bg-tremor-border">
-                <div className="h-1 rounded bg-blue-500" style={{ width: `${geminiTotal ? Math.max(2, (g.cost / geminiTotal) * 100) : 0}%` }} />
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
+      <AreaChart
+        className="mt-2 h-44"
+        data={costPoints}
+        index="date"
+        categories={["Cost"]}
+        colors={["emerald"]}
+        valueFormatter={fmtUsd2}
+        yAxisWidth={48}
+        showLegend={false}
+        showAnimation={false}
+      />
+      <p className="mt-1 text-[11px] text-tremor-content">Gemini usage, the cost that changes day to day. Monthly bills (Devin, Vercel, Supabase…) are in the Like Polling card.</p>
     </Card>
   );
 }

@@ -15,11 +15,12 @@ export interface CompanyInsights {
   countries: CountryInterest[]; // sorted by visits + searches, highest first
   buyClicks: Array<{ product: string; clicks: number }>;
   geminiBySource: Array<{ source: string; cost: number; requests: number }>;
+  daily: Array<{ date: string; visits: number; cost: number }>; // one row per day, oldest first, zeros included
 }
 
 export const DAYS = 30;
 export const emptyInsights = (configured = false, error: string | null = null): CompanyInsights => ({
-  configured, error, days: DAYS, countries: [], buyClicks: [], geminiBySource: [],
+  configured, error, days: DAYS, countries: [], buyClicks: [], geminiBySource: [], daily: [],
 });
 
 async function all<T>(query: string): Promise<T[]> {
@@ -36,12 +37,12 @@ export async function loadCompanyInsights(today: Date): Promise<CompanyInsights>
   const since = new Date(today.getTime() - (DAYS - 1) * 864e5).toISOString().slice(0, 10);
   try {
     const [interest, searches, usage] = await Promise.all([
-      all<{ country_code: string; kind: string; item: string; n: number }>(
-        `interest_daily?select=country_code,kind,item,n&day=gte.${since}&order=day.asc`,
+      all<{ day: string; country_code: string; kind: string; item: string; n: number }>(
+        `interest_daily?select=day,country_code,kind,item,n&day=gte.${since}&order=day.asc`,
       ),
       all<{ country_code: string; searches: number }>(`search_counts_daily?select=country_code,searches&day=gte.${since}&order=day.asc`),
-      all<{ source: string; model: string; input_tokens: number; output_tokens: number }>(
-        `gemini_usage?select=source,model,input_tokens,output_tokens&status=eq.ok&at=gte.${since}T00:00:00Z&order=id.asc`,
+      all<{ at: string; source: string; model: string; input_tokens: number; output_tokens: number }>(
+        `gemini_usage?select=at,source,model,input_tokens,output_tokens&status=eq.ok&at=gte.${since}T00:00:00Z&order=id.asc`,
       ),
     ]);
 
@@ -51,9 +52,15 @@ export async function loadCompanyInsights(today: Date): Promise<CompanyInsights>
       if (!r) byCountry.set(c, (r = { country: c, visits: 0, searches: 0, buyClicks: 0 }));
       return r;
     };
+    const daily = new Map<string, { visits: number; cost: number }>();
+    for (let i = 0; i < DAYS; i++) daily.set(new Date(Date.parse(since) + i * 864e5).toISOString().slice(0, 10), { visits: 0, cost: 0 });
     const buys = new Map<string, number>();
     for (const r of interest) {
-      if (r.kind === "visit") row(r.country_code).visits += r.n;
+      if (r.kind === "visit") {
+        row(r.country_code).visits += r.n;
+        const d = daily.get(r.day.slice(0, 10));
+        if (d) d.visits += r.n;
+      }
       else if (r.kind === "buy") {
         row(r.country_code).buyClicks += r.n;
         buys.set(r.item, (buys.get(r.item) ?? 0) + r.n);
@@ -64,7 +71,10 @@ export async function loadCompanyInsights(today: Date): Promise<CompanyInsights>
     const gemini = new Map<string, { cost: number; requests: number }>();
     for (const r of usage) {
       const g = gemini.get(r.source) ?? { cost: 0, requests: 0 };
-      g.cost += requestCost(r);
+      const c = requestCost(r);
+      g.cost += c;
+      const d = daily.get(r.at.slice(0, 10));
+      if (d) d.cost += c;
       g.requests += 1;
       gemini.set(r.source, g);
     }
@@ -73,6 +83,7 @@ export async function loadCompanyInsights(today: Date): Promise<CompanyInsights>
       ...emptyInsights(true),
       countries: Array.from(byCountry.values()).sort((a, b) => b.visits + b.searches - (a.visits + a.searches) || b.buyClicks - a.buyClicks),
       buyClicks: Array.from(buys).map(([product, clicks]) => ({ product, clicks })).sort((a, b) => b.clicks - a.clicks),
+      daily: Array.from(daily).map(([date, d]) => ({ date, ...d })),
       geminiBySource: Array.from(gemini).map(([source, g]) => ({ source, ...g })).sort((a, b) => b.cost - a.cost),
     };
   } catch (err) {
