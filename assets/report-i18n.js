@@ -3202,7 +3202,7 @@ window.LP_REPORT_DICT = {
 "Built by Like Polling from its own daily records of open data: Wikipedia page views (Wikimedia Foundation) and news topics and countries (The GDELT Project). YouTube and news headlines are not part of the report.": "Feito pelo Like Polling a partir dos seus registos diários de dados abertos: visualizações da Wikipédia (Wikimedia Foundation) e temas e países das notícias (The GDELT Project). YouTube e manchetes não fazem parte do relatório.",
 "This week's ideas are being written. Check back soon.": "As ideias desta semana estão a ser escritas. Volte em breve.",
 "people updating it this month": "pessoas a atualizá-la este mês"
-}
+},
 "fr": {
 "Since your last snapshot": "Depuis votre dernier cliché",
 "What changed compared with the previous saved snapshot of this report.": "Ce qui a changé par rapport au cliché précédent enregistré de ce rapport.",

@@ -13,7 +13,7 @@ const OLD_COLS = 7;
 const BATCH = 40;
 const UI = path.join(__dirname, '..', 'assets', 'i18n.js');
 const REPORT = path.join(__dirname, '..', 'assets', 'report-i18n.js');
-const holders = (s) => (String(s).match(/\$\d|\{[a-z]+\}|<[^>]+>|https?:\/\/\S+/g) || []).sort().join('|');
+const holders = (s) => (String(s).match(/\$\d|\{[a-z]+\}|<[^>]+>|https?:\/\/[\w./-]*\w/g) || []).sort().join('|');
 
 // Each [ ... ] of exactly OLD_COLS string literals on a line: { line, start, end, values }.
 function arrays(lines) {
@@ -31,7 +31,7 @@ function arrays(lines) {
       if (j >= l.length) continue;
       let v;
       try { v = Function(`return ${l.slice(i, j + 1)}`)(); } catch (e) { continue; }
-      if (Array.isArray(v) && v.length === OLD_COLS && v.every((x) => typeof x === 'string')) {
+      if (Array.isArray(v) && (v.length === OLD_COLS || v.length === OLD_COLS + 3) && v.every((x) => typeof x === 'string')) {
         out.push({ line, start: i, end: j, values: v, context: l.slice(0, i).trim() });
         i = j;
       }
@@ -57,7 +57,7 @@ ${JSON.stringify(todo.map((b) => ({ id: b.id, en: b.en, es: b.es, pt: b.pt })))}
       for (const r of Array.isArray(reply) ? reply : []) {
         const b = todo.find((x) => x.id === r.id);
         if (!b || !Object.keys(NEW).every((k) => typeof r[k] === 'string')) continue;
-        const ok = Object.keys(NEW).every((k) => (b.es === '' ? true : r[k].trim() !== '' && holders(r[k]) === holders(b.en)));
+        const ok = Object.keys(NEW).every((k) => (b.es === '' ? true : r[k].trim() !== '' && holders(r[k]) === holders(b.es)));
         if (ok) done.set(b.id, Object.fromEntries(Object.keys(NEW).map((k) => [k, b.es === '' ? '' : r[k]])));
       }
     }
@@ -77,13 +77,23 @@ async function main() {
 
   // Site UI rows.
   const lines = fs.readFileSync(UI, 'utf8').split('\n');
-  const rows = arrays(lines).filter((a) => !/^(const COLS|const LANGS)/.test(a.context));
-  const uiItems = rows.map((a, id) => ({ id, en: a.context.replace(/^[\[{,\s]+|[:,\s]+$/g, ''), pt: a.values[0], es: a.values[1] }));
+  // English source of a row: the dictionary key as plain text (or the regex source for patterns).
+  const enOf = (a) => {
+    const raw = a.context.replace(/^[\[{,\s]+|[:,\s]+$/g, '');
+    const lit = raw.match(/(["'])(?:\\.|(?!\1).)*\1$/);
+    try { return lit ? Function(`return ${lit[0]}`)() : raw; } catch (e) { return raw; }
+  };
+  const QUOTE = /^[«“"'„「]|[»”"'“」]$/;
+  // Rows still at 7 languages, or filled badly by an earlier run (English fallback, added quotes).
+  const rows = arrays(lines).filter((a) => !/^(const COLS|const LANGS)/.test(a.context))
+    .filter((a) => a.values.length === OLD_COLS || a.values[1] !== '' && (a.values[8] === enOf(a) || a.values[8] === a.context.replace(/^[\[{,\s]+|[:,\s]+$/g, '')
+      || a.values.slice(OLD_COLS).some((v) => QUOTE.test(v)) && !QUOTE.test(a.values[1])));
+  const uiItems = rows.map((a, id) => ({ id, en: enOf(a), pt: a.values[0], es: a.values[1] }));
   // Report text.
   const sandbox = { window: {} };
   vm.runInNewContext(fs.readFileSync(REPORT, 'utf8'), sandbox);
   const dict = sandbox.window.LP_REPORT_DICT;
-  const keys = Object.keys(dict.pt).filter((k) => Object.keys(NEW).some((l) => !(dict[l] && k in dict[l])));
+  const keys = Object.keys(dict.pt).filter((k) => Object.keys(NEW).some((l) => !(dict[l] && k in dict[l]) || dict[l][k] === k));
   const repItems = keys.map((k, i) => ({ id: 100000 + i, en: k, pt: dict.pt[k], es: (dict.es || {})[k] ?? dict.pt[k] }));
   console.log(`ui rows ${uiItems.length}, report keys ${repItems.length}`);
   if (dry) { console.log(uiItems.slice(0, 3), repItems.slice(0, 2)); return; }
@@ -95,22 +105,28 @@ async function main() {
   // Write UI rows back, last array on a line first so offsets stay valid.
   for (const a of [...rows].sort((x, y) => y.line - x.line || y.start - x.start)) {
     const id = rows.indexOf(a);
-    const t = got.get(id) || { fr: a.context.includes('/') ? a.values[1] : uiItems[id].en, zh: uiItems[id].en, hi: uiItems[id].en };
+    if (!got.has(id) && a.values.length > OLD_COLS) continue;
+    const t = got.get(id) || { fr: uiItems[id].en, zh: uiItems[id].en, hi: uiItems[id].en };
     const l = lines[a.line];
-    const add = Object.keys(NEW).map((k) => JSON.stringify(t[k])).join(', ');
-    lines[a.line] = `${l.slice(0, a.end)}, ${add}${l.slice(a.end)}`;
+    const vals = [...a.values.slice(0, OLD_COLS), ...Object.keys(NEW).map((k) => t[k])].map((v) => JSON.stringify(v)).join(', ');
+    lines[a.line] = `${l.slice(0, a.start)}[${vals}]${l.slice(a.end + 1)}`;
   }
   fs.writeFileSync(UI, lines.join('\n'));
 
-  // Append the new report languages before the closing "};".
+  // (Re)write the new report language blocks before the closing "};".
   let rep = fs.readFileSync(REPORT, 'utf8');
-  const blocks = Object.keys(NEW).filter((l) => !dict[l]).map((l) => `${JSON.stringify(l)}: {\n${Object.keys(dict.pt).map((k) => {
+  for (const l of Object.keys(NEW)) {
+    const at = rep.indexOf(`\n${JSON.stringify(l)}: {\n`);
+    if (at >= 0) rep = rep.slice(0, at) + rep.slice(rep.indexOf('\n},', at) + 3);
+  }
+  rep = rep.replace(/\}\s*\};\s*$/, '},\n};\n');
+  const blocks = Object.keys(NEW).map((l) => `${JSON.stringify(l)}: {\n${Object.keys(dict.pt).map((k) => {
     const i = keys.indexOf(k);
-    const v = i >= 0 && got.has(100000 + i) ? got.get(100000 + i)[l] : k;
+    const v = i >= 0 && got.has(100000 + i) ? got.get(100000 + i)[l] : (dict[l] && dict[l][k]) || k;
     return `${JSON.stringify(k)}: ${JSON.stringify(v)},`;
   }).join('\n')}\n},`).join('\n');
   const end = rep.lastIndexOf('};');
-  rep = `${rep.slice(0, end)}${blocks}\n${rep.slice(end)}`;
+  rep = `${rep.slice(0, end)}${blocks.replace(/,$/, '')}\n${rep.slice(end)}`;
   fs.writeFileSync(REPORT, rep);
 }
 
