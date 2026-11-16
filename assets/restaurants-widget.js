@@ -34,7 +34,8 @@
   let reg = '';
   let star = 0;
   // The list shows 10 restaurants at a time, so the section stays short; filters always search the whole list.
-  const STEP = 10;
+  // Phones swipe through every match one card at a time, so they get the whole list.
+  const STEP = matchMedia('(max-width: 560px)').matches ? 500 : 10;
   let limit = STEP;
   const more = mount.querySelector('.rst-more');
   const tr = (x) => (window.LP_I18N ? window.LP_I18N.t(x) : x);
@@ -45,6 +46,7 @@
     const shown = rows.filter((r) => !star || r.stars === star);
     more.hidden = shown.length <= limit;
     more.textContent = `${tr('Show more')} (${shown.length - Math.min(limit, shown.length)})`;
+    list.scrollLeft = 0;
     list.innerHTML = shown.slice(0, limit).map((r) => { const u = r.website || r.wiki; const inner = `<b>${esc(r.name)}</b><span>${esc(r.city || '')}</span><em aria-label="${r.stars} Michelin star${r.stars > 1 ? 's' : ''}">${'★'.repeat(r.stars)}</em>`;
       return `<li class="rst-t${r.stars}">${u ? `<a href="${esc(u)}" target="_blank" rel="noopener">${inner}</a>` : `<div>${inner}</div>`}</li>`; }).join('');
     sum.innerHTML = [3, 2, 1].map((n) => [n, rows.filter((r) => r.stars === n).length]).filter(([, c]) => c).map(([n, c]) => `<button type="button" class="rst-t${n}${star === n ? ' on' : ''}" data-s="${n}" aria-pressed="${star === n}" aria-label="${n} Michelin star${n > 1 ? 's' : ''}: ${c}"><em>${'★'.repeat(n)}</em>${c}</button>`).join('');

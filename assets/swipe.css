@@ -13,7 +13,7 @@
 .ytt-cards > .lp-more, .ymu-cards > .lp-more { display: flex; }
 .ytt-cards:has(> .lp-more) ~ .ytt-table, .ymu-cards:has(> .lp-more) ~ .ymu-table { display: none; }
 .ytt-cards > .ytt-card[style], .ymu-cards > .ymu-card[style] { flex: none; width: 100%; margin-inline: 0; scroll-snap-align: center; scroll-snap-stop: always; }
-.ytt-cards > .ytt-card[style] .ytt-ctt, .ymu-cards > .ymu-card[style] .ymu-ctt { font-size: 14px; }
+.ytt-cards > .ytt-card[style] .ytt-ctt, .ymu-cards > .ymu-card[style] .ymu-ctt, .wrap .ysh-cards .ysh-ctt { font-size: 16px; line-height: 1.3; }
 /* The tall frame crops wide videos at the sides; the hover preview is widened the same way so it fills it. */
 .ytt-card[style] .ytt-cth img, .ymu-card[style] .ymu-cth img { aspect-ratio: 9 / 16; }
 .ytt-card[style] .lp-prev, .ymu-card[style] .lp-prev { left: -139.5%; width: 1517%; }
@@ -49,6 +49,26 @@
 .nw-front.nw-ranked .nw-img { height: 64%; bottom: auto; -webkit-mask-image: linear-gradient(#000 70%, transparent); mask-image: linear-gradient(#000 70%, transparent); animation-name: nw-kbs; }
 .nw-front.nw-ranked .nw-feed-end { flex: none; align-self: center; }
 
+/* AI Builders and Restaurants: the same tall cards, one per swipe. */
+.aib .aib-repos, #restaurants .rst-list {
+  display: flex; flex-direction: row; flex-wrap: nowrap; gap: 12px; width: min(calc(100% - var(--pad)), var(--one)); max-height: none; margin: 0 auto; padding: 12px 0 14px; box-sizing: border-box;
+  overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scrollbar-width: none;
+}
+.aib .aib-repos::-webkit-scrollbar, #restaurants .rst-list::-webkit-scrollbar { display: none; }
+.aib .aib-repos > li, #restaurants .rst-list > li { flex: none; width: 100%; scroll-snap-align: center; scroll-snap-stop: always; }
+.aib .aib-repos .aib-card, #restaurants .rst-list li > * { display: flex; flex-direction: column; justify-content: flex-end; gap: 10px; aspect-ratio: 9 / 16; height: auto; padding: 22px 20px; border: 0; border-radius: 12px; background: linear-gradient(165deg, #2a0004, #7f000a 45%, #b0000e 80%, #d4142a); color: #fff; transform: none; box-shadow: none; }
+.aib .aib-repos li:first-child .aib-card { background: linear-gradient(165deg, #2a0004, #7f000a 45%, #b0000e 80%, #d4142a); }
+.aib-repos .aib-card i { align-self: flex-start; margin-bottom: auto; padding: 5px 7px; border: 1px solid rgba(255,42,60,.6); border-radius: 4px; background: #7f000a; color: #fff; font-size: 13px; }
+.aib-repos .aib-card b { font-size: 22px; line-height: 1.25; color: #fff; }
+.aib-repos .aib-card b small { display: block; margin: 6px 0 0; font-size: 13px; color: rgba(255,255,255,.7); }
+.aib-repos .aib-card span { font-size: 15px; line-height: 1.5; color: rgba(255,255,255,.88); -webkit-line-clamp: 7; }
+.aib-repos .aib-card em { color: #ffd6da; font-size: 13px; }
+.aib-repos .aib-pop { position: absolute; inset: 0; z-index: 3; margin: 0; overflow-y: auto; border-radius: 12px; }
+#restaurants .rst-list > li[class] > * { background: linear-gradient(165deg, #2a0004, #7f000a 45%, #b0000e 80%, #d4142a); border: 0; }
+#restaurants .rst-list li > * { justify-content: center; align-items: center; text-align: center; gap: 12px; }
+#restaurants .rst-list em { order: -1; font-size: 40px; letter-spacing: 4px; background: none; color: #ffd36b; -webkit-text-fill-color: #ffd36b; }
+#restaurants .rst-list b { font-size: 24px; line-height: 1.25; color: #fff; }
+#restaurants .rst-list span { font-size: 14px; color: rgba(255,255,255,.75); }
 /* ‹ › arrows on computers (sized to their row by video-thumbs.js). */
 .lp-swn { position: relative; z-index: 4; height: 0; margin-inline: auto; }
 .lp-swn button { position: absolute; top: calc(var(--h, 240px) / 2 - 18px); display: grid; place-items: center; width: 36px; height: 36px; padding: 0; border: 1px solid rgba(255,42,60,.55); border-radius: 50%; background: rgba(127,0,10,.92); color: #fff; cursor: pointer; box-shadow: 0 4px 14px -4px rgba(0,0,0,.45); transition: opacity .2s, background .15s; }
@@ -58,4 +78,34 @@
 .lp-swn .lp-swx { right: -12px; }
 .lp-swn svg { width: 16px; height: 16px; }
 }
-@media (min-width: 561px) { .lp-swn { display: none; } }
+@media (min-width: 561px) {
+.lp-swn { display: none; }
+/* Computers: AI Builders and Restaurants as large cards in a grid, close in size to the video cards. */
+.aib .aib-repos { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); grid-auto-flow: row; grid-template-rows: none; gap: 14px; padding: 14px 18px 18px; }
+.aib .aib-repos .aib-card { display: flex; flex-direction: column; gap: 8px; min-height: 260px; height: 100%; padding: 18px; }
+.aib .aib-repos .aib-card i { align-self: flex-start; margin-bottom: 6px; font-size: 14px; }
+.aib-repos .aib-card b { font-size: 18px; }
+.aib-repos .aib-card b small { display: block; margin: 4px 0 0; }
+.aib-repos .aib-card span { -webkit-line-clamp: 5; }
+.aib-repos .aib-card em { margin-top: auto; }
+#restaurants .rst-list { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; max-height: none; overflow: visible; padding: 14px 18px 18px; }
+#restaurants .rst-list a, #restaurants .rst-list li > div { display: flex; flex-direction: column; justify-content: center; gap: 8px; align-items: center; text-align: center; min-height: 180px; padding: 20px 18px; }
+#restaurants .rst-list em { order: -1; font-size: 28px; letter-spacing: 3px; }
+#restaurants .rst-list b { font-size: 18px; line-height: 1.3; }
+#restaurants .rst-list span { font-size: 13px; }
+}
+
+/* Easier reading: no tiny text anywhere on the homepage, and less empty space between sections. */
+.wrap > section:not([hidden]):not(#_) { margin-bottom: 36px; }
+@media (max-width: 560px) { .wrap > section:not([hidden]):not(#_) { margin-bottom: 28px; } }
+.wrap :is(.ytt-ctt, .ymu-ctt, .ysh-ctt) { font-size: 14.5px; line-height: 1.3; }
+.wrap :is(.ytt-cch, .ymu-cch, .ysh-cch, .ytt-ch, .ymu-ch, .ysh-ch, .nw-src, .nw-ghint, .nw-pick-l) { font-size: 13px; }
+.wrap :is(.ytt-num, .ymu-num, .ysh-num, .ytt-rank, .ymu-rank, .ysh-rk, .ysh-vt) { font-size: 14px; }
+.wrap :is(.ytt-crk, .ymu-crk, .ysh-crk, .ytt-cvw, .ymu-cvw, .ysh-cvw, .lp-vph, .lp-vph-t, .nw-row-age, .nw-age, .nw-row-note, .nw-read, .nw-feed-end) { font-size: 12px; }
+.wrap :is(.ytt-asof, .ymu-asof, .nw-asof, .ytt-sym, .ymu-sym, .nw-sym, .nw-mono, .nw-sub, .lp-note-i, .lp-note-btn, .lp-cs-name) { font-size: 12px; }
+.wrap .lp-cs-pos { font-size: 11px; }
+.wrap :is(.aia-chip, .aia-top, .aia-info, .aib-card em, .rst-picks button, #restaurants [data-s]) { font-size: 13px; }
+.wrap :is(.ytt-vt, .ymu-vt, .ysh-vt, .nw-tile-title):not(#_) { font-size: 15px; }
+.wrap .nw-badge:not(#_) { font-size: 11px; }
+.wrap .ysh-rk:not(#_) { font-size: 13px; }
+.wrap .fsh-p, .wrap #restaurants .fsh-p { font-size: 15px; line-height: 1.45; }
