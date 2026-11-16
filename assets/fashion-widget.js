@@ -61,7 +61,7 @@
     const top = Math.max(1, ...rows.map((r) => Number(r.views_per_hour) || 0));
     const from = (r) => (r.channel_country && r.channel_country !== r.country_code ? ` · ${esc(regionName(r.channel_country))}` : '');
     return `<div class="ytt-cards">${rows.map((r, i) => `<a class="ytt-card${i > 4 ? ' lp-more' : ''}" style="--i:${i}" href="${watch(r.video_id, ids)}" target="_blank" rel="noopener">
-        <span class="ytt-cth"><img src="${thumb(r.video_id)}" alt="" loading="lazy"><b class="ytt-crk">${pad(r.rank)}</b><i class="ytt-cvw">${fmt(r.view_count)}</i><i class="lp-vph">${vph(r.views_per_hour)}/h</i></span>
+        <span class="ytt-cth"><img src="${thumb(r.video_id).replace('mqdefault', 'maxresdefault')}" alt="" onerror="if(!this.dataset.f){this.dataset.f=1;this.src=this.src.replace('maxresdefault','hqdefault')}" onload="if(this.naturalWidth<=120)if(!this.dataset.f){this.dataset.f=1;this.src=this.src.replace('maxresdefault','hqdefault')}" loading="lazy"><b class="ytt-crk">${pad(r.rank)}</b><i class="ytt-cvw">${fmt(r.view_count)}</i><i class="lp-vph">${vph(r.views_per_hour)}/h</i></span>
         <span class="ytt-ctt" title="${esc(r.title)}" data-no-i18n>${esc(r.title)}</span><span class="ytt-cch" data-no-i18n>${esc(r.channel_title)}${from(r)}</span></a>`).join('')}</div>
       ${rows.length > 5 ? `<table class="ytt-table"><colgroup><col class="ytt-rank-col"><col><col class="ytt-vol-col"><col class="ytt-likes-col"></colgroup>
         <thead><tr><th>#</th><th>Video</th><th class="n">Speed</th><th class="n ytt-likes">Views</th></tr></thead>

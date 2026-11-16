@@ -136,3 +136,11 @@
   .ytt-cards > .ytt-card[style], .ymu-cards > .ymu-card[style] { width: calc(90% * (1 - var(--i, 0) * .012)); margin-inline: auto; }
   .ytt-cards:has(> .lp-more) ~ .ytt-table, .ymu-cards:has(> .lp-more) ~ .ymu-table { display: none; }
 }
+/* Phones: every video sits in a Popular Shorts-size 9:16 frame (wide videos are cropped at the sides);
+   the hover preview is widened the same way so it fills the frame. Wide screens keep 16:9. */
+@media (max-width: 560px) { @container (max-width: 560px) {
+  .ytt-cards > .ytt-card[style], .ymu-cards > .ymu-card[style] { width: calc(min(90%, (100svh - 200px) * 9 / 16) * (1 - var(--i, 0) * .012)); }
+  .ytt-card[style] .ytt-cth img, .ymu-card[style] .ymu-cth img { aspect-ratio: 9 / 16; }
+  .ytt-card[style] .lp-prev, .ymu-card[style] .lp-prev { left: -139.5%; width: 1517%; }
+  .ytt-card[style] .lp-prev.cc, .ymu-card[style] .lp-prev.cc { left: -117.5%; width: 670%; }
+} }

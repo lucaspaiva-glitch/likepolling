@@ -71,7 +71,7 @@
       const ids = rows.map((r) => r.video_id);
       body.innerHTML = `
         <div class="ytt-cards">${rows.map((r, i) => `<a class="ytt-card${i > 4 ? ' lp-more' : ''}" style="--i:${i}" href="${plist(r.video_id, ids)}" target="_blank" rel="noopener">
-            <span class="ytt-cth"><img src="https://i.ytimg.com/vi/${encodeURIComponent(r.video_id)}/mqdefault.jpg" alt="" loading="lazy"><b class="ytt-crk">${String(r.rank).padStart(2, '0')}</b><i class="ytt-cvw">${fmt(r.view_count)}</i>${window.lpVph && lpVph(r.view_count, r.published_at, r.fetched_at) != null ? `<i class="lp-vph">${fmt(lpVph(r.view_count, r.published_at, r.fetched_at))}/h</i>` : ''}</span>
+            <span class="ytt-cth"><img src="https://i.ytimg.com/vi/${encodeURIComponent(r.video_id)}/maxresdefault.jpg" alt="" onerror="if(!this.dataset.f){this.dataset.f=1;this.src=this.src.replace('maxresdefault','hqdefault')}" onload="if(this.naturalWidth<=120)if(!this.dataset.f){this.dataset.f=1;this.src=this.src.replace('maxresdefault','hqdefault')}" loading="lazy"><b class="ytt-crk">${String(r.rank).padStart(2, '0')}</b><i class="ytt-cvw">${fmt(r.view_count)}</i>${window.lpVph && lpVph(r.view_count, r.published_at, r.fetched_at) != null ? `<i class="lp-vph">${fmt(lpVph(r.view_count, r.published_at, r.fetched_at))}/h</i>` : ''}</span>
             <span class="ytt-ctt" title="${esc(r.title)}">${esc(r.title)}</span>
             <span class="ytt-cch">${esc(r.channel_title)}</span></a>`).join('')}</div>
         ${rows.length > 5 ? `<table class="ytt-table">

@@ -384,3 +384,10 @@ html.nw-lock { overflow: hidden; }
   .nw-front.nw-ranked .nw-feed { padding-bottom: 40px; box-sizing: border-box; -webkit-mask-image: linear-gradient(#000 calc(100% - 44px), transparent); mask-image: linear-gradient(#000 calc(100% - 44px), transparent); }
 }
 
+/* Phones: World News and AI age stories in Popular Shorts-size 9:16 frames, 01 the biggest, each rank a little smaller. */
+@media (max-width: 560px) {
+  .nw-front.nw-ranked { --sw: min(90%, calc((100svh - 200px) * 9 / 16)); }
+  .nw-front.nw-ranked .nw-lead { width: var(--sw); height: auto; aspect-ratio: 9 / 16; margin-inline: auto; }
+  .nw-front.nw-ranked .nw-row { width: calc(var(--sw) * (1 - (var(--i, 0) + 1) * .012)); margin-inline: auto; }
+  .nw-front.nw-ranked .nw-row-media { width: 100%; aspect-ratio: 9 / 16; }
+}
