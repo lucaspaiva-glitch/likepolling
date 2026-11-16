@@ -6,7 +6,7 @@
 (function () {
   const PAGES = { '/': 'home', '/index': 'home', '/services': 'services', '/report': 'report', '/ad': 'ad' };
   const PRODUCTS = { udjsyu: 'country', ijixxs: 'artist', linzh: 'company', laijtn: 'ad' };
-  const CURRENCY = { en: 'USD', 'en-GB': 'GBP', pt: 'BRL', uk: 'UAH', ko: 'KRW', ja: 'JPY' };
+  const CURRENCY = { en: 'USD', 'en-GB': 'GBP', pt: 'BRL', uk: 'UAH', ko: 'KRW', ja: 'JPY', zh: 'CNY', hi: 'INR' };
   const send = (kind, item, seconds) => {
     const body = JSON.stringify({ kind, item, seconds });
     try {

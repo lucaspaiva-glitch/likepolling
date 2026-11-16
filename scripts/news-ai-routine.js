@@ -4,7 +4,7 @@
 // medicine, work, creativity, life, or "none" (not mainly about that: risks, scandals,
 // markets, product ads, politics). The site shows only the four kinds. Writes public.news_ai
 // through the service-role RPC replace_news_ai. Run twice a day by .github/workflows/news-ai.yml.
-const { run: runNews, EDITIONS, WORLD } = require('./news-world-routine');
+const { run: runNews, EDITIONS, WORLD, PHOTO_TARGET } = require('./news-world-routine');
 
 // Google News search term for "artificial intelligence" in each edition's language.
 const TERMS = {
@@ -34,7 +34,7 @@ const AI_CHECK = {
 const AI = {
   ...WORLD,
   table: 'news_ai', rpc: 'replace_news_ai', feed: aiUrl, searchTopUp: () => true,
-  maxPerSource: 3, photoTarget: 40, imageLookups: 2000, translations: 2000, classify: AI_CHECK, summaries: true,
+  maxPerSource: 3, photoTarget: 40, summaryTarget: PHOTO_TARGET, imageLookups: 2000, translations: 2000, classify: AI_CHECK, summaries: true,
 };
 
 const run = (env, deps) => runNews(env, deps, AI);

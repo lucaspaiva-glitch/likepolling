@@ -24,8 +24,8 @@
   const FEED_PAGE = 8;
   // British English reads the English Shorts, Creator News and headline translations.
   const dataLang = (l) => (l === 'en-GB' ? 'en' : l);
-  const LANGS = ['en', 'en-GB', 'pt', 'pt-PT', 'es', 'de', 'ru', 'uk', 'ko', 'ja'];
-  const FLAG = { en: 'us', 'en-GB': 'gb', pt: 'br', 'pt-PT': 'pt', es: 'es', de: 'de', ru: 'ru', uk: 'ua', ko: 'kr', ja: 'jp' };
+  const LANGS = ['en', 'en-GB', 'pt', 'pt-PT', 'es', 'fr', 'de', 'ru', 'uk', 'zh', 'hi', 'ko', 'ja'];
+  const FLAG = { en: 'us', 'en-GB': 'gb', pt: 'br', 'pt-PT': 'pt', es: 'es', de: 'de', ru: 'ru', uk: 'ua', ko: 'kr', ja: 'jp', fr: 'fr', zh: 'cn', hi: 'in' };
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const headers = { apikey: key, Authorization: `Bearer ${key}` };
   const siteLang = () => (window.LP_I18N && window.LP_I18N.lang) || 'en';
@@ -46,7 +46,7 @@
   }
   // Country whose Shorts are shown (each country is searched in its own language).
   // Defaults to the site language's country; a dropdown choice is kept until the site language changes.
-  const SHORT_CC = { en: 'US', 'en-GB': 'GB', pt: 'BR', 'pt-PT': 'PT', es: 'MX', de: 'DE', ru: 'RU', uk: 'UA', ko: 'KR', ja: 'JP' };
+  const SHORT_CC = { en: 'US', 'en-GB': 'GB', pt: 'BR', 'pt-PT': 'PT', es: 'MX', de: 'DE', ru: 'RU', uk: 'UA', ko: 'KR', ja: 'JP', fr: 'FR', zh: 'TW', hi: 'IN' };
   const PICK = 'lp-shorts-lang';
   let shortsPick = null;
   try { const v = localStorage.getItem(PICK); if (LANGS.includes(v)) shortsPick = v; } catch (e) { /* no storage */ }
@@ -720,7 +720,7 @@
     try {
       const counts = await worldCounts;
       const world = Object.values(counts).some(Boolean);
-      let cc = worldPick || ({ en: 'US', 'en-GB': 'GB', pt: 'BR', 'pt-PT': 'PT', es: 'MX', de: 'DE', ru: 'RU', uk: 'UA', ko: 'KR', ja: 'JP' })[lang] || 'US';
+      let cc = worldPick || ({ en: 'US', 'en-GB': 'GB', pt: 'BR', 'pt-PT': 'PT', es: 'MX', de: 'DE', ru: 'RU', uk: 'UA', ko: 'KR', ja: 'JP', fr: 'FR', zh: 'CN', hi: 'IN' })[lang] || 'US';
       const inLang = (rs) => rs.map((r) => {
         const t = r.title_tr || {};
         const summary = (t.sum && (t.sum[dataLang(lang)] || t.sum.en)) || '';

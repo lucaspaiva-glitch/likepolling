@@ -7,7 +7,7 @@ set -e
 BASE="${1:-https://www.likepolling.com}"
 CHROME="${2:-google-chrome}"
 OUT="$(mktemp -d)"
-for lang in en en-GB pt pt-PT es de ru uk ko ja; do
+for lang in en en-GB pt pt-PT es fr de ru uk zh hi ko ja; do
   for s in BR-PT:country artist:artist company:company; do
     f="$OUT/$lang-${s#*:}.pdf"
     "$CHROME" --headless=new --no-sandbox --disable-gpu --no-pdf-header-footer --run-all-compositor-stages-before-draw \

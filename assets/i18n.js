@@ -1,4 +1,4 @@
-// Site language switcher (EN | BR | PT | ES | DE | RU | UA | KO | JA). Load right after the page markup:
+// Site language switcher (EN | UK | BR | PT | ES | FR | DE | RU | UA | ZH | HI | KO | JA). Load right after the page markup:
 //   <script src="/assets/i18n.js"></script>
 // Translates the page's English UI text in place, including text that scripts
 // and widgets render later (watched with a MutationObserver), so existing code
@@ -7,17 +7,18 @@
 // and announced with a "lp:lang" event ({ detail: { lang } }) on document.
 (function () {
   'use strict';
-  const LANGS = ['en', 'en-GB', 'pt', 'pt-PT', 'es', 'de', 'ru', 'uk', 'ko', 'ja'];
+  const LANGS = ['en', 'en-GB', 'pt', 'pt-PT', 'es', 'fr', 'de', 'ru', 'uk', 'zh', 'hi', 'ko', 'ja'];
   // Dictionary columns. European Portuguese ('pt-PT') uses the 'pt' column plus the PT_PT overrides below.
-  const COLS = ['pt', 'es', 'de', 'ru', 'uk', 'ko', 'ja'];
+  const COLS = ['pt', 'es', 'de', 'ru', 'uk', 'ko', 'ja', 'fr', 'zh', 'hi'];
   // Button label, flag (assets/flags) and native name. Ukrainian shows "UA" so it isn't read as United Kingdom.
   const META = {
     en: ['EN', 'us', 'English'], 'en-GB': ['UK', 'gb', 'English (UK)'], pt: ['BR', 'br', 'Português (Brasil)'], 'pt-PT': ['PT', 'pt', 'Português (Portugal)'], es: ['ES', 'es', 'Español'], de: ['DE', 'de', 'Deutsch'],
     ru: ['RU', 'ru', 'Русский'], uk: ['UA', 'ua', 'Українська'], ko: ['KO', 'kr', '한국어'], ja: ['JA', 'jp', '日本語'],
+    fr: ['FR', 'fr', 'Français'], zh: ['ZH', 'cn', '中文'], hi: ['HI', 'in', 'हिन्दी'],
   };
   const STORE = 'lp-lang';
 
-  // English UI string -> [pt, es, de, ru, uk, ko, ja]
+  // English UI string -> [pt, es, de, ru, uk, ko, ja, fr, zh, hi]
   const DICT = {
     "Activate your ad": ["Ative seu anúncio", "Activa tu anuncio", "Anzeige aktivieren", "Активируйте рекламу", "Активуйте рекламу", "광고 활성화", "広告を有効にする"],
     "Paid for the ad spot? Paste the key from your Gumroad receipt and fill in your card. If it passes our checks, it goes live right away for 7 days.": ["Pagou pelo espaço de anúncio? Cole a chave do seu recibo do Gumroad e preencha seu cartão. Se passar pelas nossas verificações, ele entra no ar na hora por 7 dias.", "¿Pagaste el espacio publicitario? Pega la clave de tu recibo de Gumroad y completa tu tarjeta. Si pasa nuestras revisiones, se publica al instante durante 7 días.", "Werbeplatz bezahlt? Füge den Schlüssel aus deiner Gumroad-Quittung ein und fülle deine Karte aus. Besteht sie unsere Prüfung, geht sie sofort für 7 Tage online.", "Оплатили рекламное место? Вставьте ключ из чека Gumroad и заполните карточку. Если она пройдёт проверку, то сразу появится на сайте на 7 дней.", "Оплатили рекламне місце? Вставте ключ із чека Gumroad і заповніть картку. Якщо вона пройде перевірку, то одразу з'явиться на сайті на 7 днів.", "광고 자리를 결제하셨나요? Gumroad 영수증의 키를 붙여 넣고 카드를 작성하세요. 검사를 통과하면 바로 7일 동안 게시됩니다.", "広告枠をお支払い済みですか？Gumroadの領収書のキーを貼り付けてカードを入力してください。チェックを通過すると、すぐに7日間掲載されます。"],
@@ -714,7 +715,7 @@
     "Read https://www.likepolling.com/llms.txt, then tell me the top YouTube Trending videos in my country right now.": "Lê https://www.likepolling.com/llms.txt e diz-me os vídeos em tendência no YouTube no meu país neste momento.",
     "Read https://www.likepolling.com/llms.txt, then tell me which YouTube videos are trending in the most countries right now and the top news around the world.": "Lê https://www.likepolling.com/llms.txt e diz-me que vídeos do YouTube estão em tendência em mais países neste momento e as principais notícias do mundo.",
   };
-  // Narrower wording inside a container: [selector, { English: [pt, es, de, ru, uk, ko, ja] }]
+  // Narrower wording inside a container: [selector, { English: [pt, es, de, ru, uk, ko, ja, fr, zh, hi] }]
   const CONTEXT = [
     ['.edu-idx', { 'Speed': ['Veloc.', 'Veloc.', 'Tempo', 'Скор.', 'Швидк.', '속도', '速度'] }],
     ['.ytt', { 'Views': ['Visualiz.', 'Vistas', 'Aufrufe', 'Просм.', 'Перегл.', '조회수', '再生数'] }],
@@ -729,7 +730,7 @@
   const gb = (s) => s.replace(/\b(analy|organi|recogni|prioriti|categori|summari|personali|optimi|reali|speciali|monetiz)z/gi, (m, a) => a + (m.slice(-1) === 'Z' ? 'S' : 's'))
     .replace(/\b(colo|favo|behavio|neighbo|labo|hono)r/gi, '$1ur').replace(/\bcenter/gi, (m) => (m[0] === 'C' ? 'Centre' : 'centre'));
   const col = (row, key, l) => (l === 'pt-PT' && PT_PT[key] != null ? PT_PT[key] : row[idx(l)]);
-  const locale = (l) => (l === 'pt' ? 'pt-BR' : l);
+  const locale = (l) => ({ pt: 'pt-BR', zh: 'zh-CN' })[l] || l;
   function localDate(s, lang) {
     const d = Date.parse(s);
     return Number.isNaN(d) ? s : new Date(d).toLocaleString(locale(lang), { dateStyle: 'medium', timeStyle: 'short' });
@@ -873,7 +874,7 @@
     document.dispatchEvent(new CustomEvent('lp:lang', { detail: { lang } }));
   }
 
-  const LANG_CC = { en: 'US', 'en-GB': 'GB', pt: 'BR', 'pt-PT': 'PT', es: 'ES', de: 'DE', ru: 'RU', uk: 'UA', ko: 'KR', ja: 'JP' };
+  const LANG_CC = { en: 'US', 'en-GB': 'GB', pt: 'BR', 'pt-PT': 'PT', es: 'ES', de: 'DE', ru: 'RU', uk: 'UA', ko: 'KR', ja: 'JP', fr: 'FR', zh: 'CN', hi: 'IN' };
   window.LP_CC = (codes) => {
     let p = null;
     try { p = localStorage.getItem('lp-world-cc'); } catch (e) { /* no storage */ }

@@ -3,7 +3,7 @@
 // translates each headline and checks it is really about fashion (title_tr.fashion);
 // the site shows only those. Writes public.news_fashion through the service-role
 // RPC replace_news_fashion. Run twice a day by .github/workflows/news-fashion.yml.
-const { run: runNews, EDITIONS, WORLD } = require('./news-world-routine');
+const { run: runNews, EDITIONS, WORLD, PHOTO_TARGET } = require('./news-world-routine');
 
 // Google News search term for "fashion" in each edition's language.
 const TERMS = {
@@ -24,7 +24,7 @@ function fashionUrl(cc, days = 2) {
 const FASHION = {
   ...WORLD,
   table: 'news_fashion', rpc: 'replace_news_fashion', feed: fashionUrl, searchTopUp: () => true,
-  maxPerSource: 3, photoTarget: 20, imageLookups: 1000, translations: 1000, classify: true, summaries: true,
+  maxPerSource: 3, photoTarget: 20, summaryTarget: PHOTO_TARGET, imageLookups: 1000, translations: 1000, classify: true, summaries: true,
 };
 
 const run = (env, deps) => runNews(env, deps, FASHION);

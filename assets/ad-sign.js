@@ -44,9 +44,11 @@
   const style = document.createElement('style');
   style.textContent = css;
   document.head.appendChild(style);
-  const letters = (w) => [...w].map((c) => `<b>${c}</b>`).join('');
+  const graphemes = (w) => { try { return [...new Intl.Segmenter(undefined, { granularity: 'grapheme' }).segment(w)].map((x) => x.segment); } catch (e) { return [...w]; } };
+  const letters = (w) => graphemes(w).map((c) => `<b>${c}</b>`).join('');
   const SIGN = { en: ['YOUR', 'AD', 'HERE'], pt: ['SEU', 'ANÚNCIO', 'AQUI'], es: ['TU', 'ANUNCIO', 'AQUÍ'], de: ['IHRE', 'WERBUNG', 'HIER'],
-    ru: ['ВАША', 'РЕКЛАМА', 'ЗДЕСЬ'], uk: ['ВАША', 'РЕКЛАМА', 'ТУТ'], ko: ['광고', '문의'], ja: ['広告', '募集'] };
+    ru: ['ВАША', 'РЕКЛАМА', 'ЗДЕСЬ'], uk: ['ВАША', 'РЕКЛАМА', 'ТУТ'], ko: ['광고', '문의'], ja: ['広告', '募集'],
+    fr: ['VOTRE', 'PUB', 'ICI'], zh: ['广告', '招租'], hi: ['विज्ञापन', 'यहाँ'] };
   const sign = () => { const l = window.LP_I18N ? window.LP_I18N.lang : 'en'; return (SIGN[l] || SIGN[l.slice(0, 2)] || SIGN.en).map(letters).join('<i></i>'); };
   const root = document.createElement('div');
   root.className = 'lp-sign';

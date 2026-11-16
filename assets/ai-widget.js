@@ -13,7 +13,7 @@
 
   const SHOWN = 10;
   const KINDS = { medicine: 'Medicine', work: 'Jobs', creativity: 'Creativity', life: 'Daily life' };
-  const LANG_CC = { en: 'US', 'en-GB': 'GB', pt: 'BR', 'pt-PT': 'PT', es: 'ES', de: 'DE', ru: 'RU', uk: 'UA', ko: 'KR', ja: 'JP' };
+  const LANG_CC = { en: 'US', 'en-GB': 'GB', pt: 'BR', 'pt-PT': 'PT', es: 'ES', de: 'DE', ru: 'RU', uk: 'UA', ko: 'KR', ja: 'JP', fr: 'FR', zh: 'CN', hi: 'IN' };
   const ICON = {
     pause: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/></svg>',
     play: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M8 5.5v13l10.5-6.5z"/></svg>',

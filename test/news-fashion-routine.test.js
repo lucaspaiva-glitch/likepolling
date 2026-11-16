@@ -7,7 +7,7 @@ const env = { SUPABASE_URL: 'https://db.test', SUPABASE_KEY: 'secret' };
 const item = (title, source, link) =>
   `<item><title>${title} - ${source}</title><link>${link}</link><pubDate>Thu, 15 Oct 2026 22:06:00 GMT</pubDate><source url="https://s.test">${source}</source></item>`;
 const text = (status, body) => ({ ok: status >= 200 && status < 300, status, text: async () => body, json: async () => JSON.parse(body) });
-const LANGS = ['en', 'pt', 'pt-PT', 'es', 'de', 'ru', 'uk', 'ko', 'ja'];
+const LANGS = ['en', 'pt', 'pt-PT', 'es', 'de', 'ru', 'uk', 'ko', 'ja', 'fr', 'zh', 'hi'];
 
 test('one local-language fashion search per country', () => {
   for (const [hl] of Object.values(EDITIONS)) assert.ok(TERMS[hl] || hl.startsWith('en'), hl);

@@ -16,7 +16,7 @@ const SECTIONS = ['NATION', 'WORLD', 'BUSINESS', 'ENTERTAINMENT', 'SPORTS', 'TEC
 const SECTION_DEPTH = 15;
 const TOPUP_LOOKUPS_PER_RUN = 400;
 // Headlines are translated once into every site language and reused afterwards.
-const SITE_LANGS = ['en', 'pt', 'pt-PT', 'es', 'de', 'ru', 'uk', 'ko', 'ja'];
+const SITE_LANGS = ['en', 'pt', 'pt-PT', 'es', 'de', 'ru', 'uk', 'ko', 'ja', 'fr', 'zh', 'hi'];
 // Cheapest suitable models first; the next is used if one is retired.
 const { logGemini, isNoCredit } = require('../lib/gemini-usage');
 const GEMINI_MODELS = ['gemini-3.1-flash-lite', 'gemini-3.5-flash-lite'];
@@ -189,7 +189,7 @@ function geminiJson(apiKey) {
   };
 }
 
-const LANG_LIST = 'en (English), pt (Brazilian Portuguese), pt-PT (European Portuguese), es (Spanish), de (German), ru (Russian), uk (Ukrainian), ko (Korean), ja (Japanese)';
+const LANG_LIST = 'en (English), pt (Brazilian Portuguese), pt-PT (European Portuguese), es (Spanish), de (German), ru (Russian), uk (Ukrainian), ko (Korean), ja (Japanese), fr (French), zh (Simplified Chinese), hi (Hindi)';
 const LANG_KEYS = SITE_LANGS.map((l) => `"${l}"`).join(', ');
 
 // Optional AI check stored with each translation (title_tr[key]); cfg.classify: true is the Fashion News one.
@@ -282,7 +282,7 @@ async function addTranslations(rows, env, deps, cfg = WORLD) {
   return { translated, pending: todo.length - translated, errors: errors.slice(0, 3) };
 }
 
-// Each country's first photoTarget translated photo stories get a summary (title_tr.sum, one per
+// Each country's first summaryTarget (default photoTarget) shown, translated photo stories get a summary (title_tr.sum, one per
 // site language), stored with the translations so it's written once. Stories whose article has
 // no description, or whose summary fails the checks, get sum '' (the site shows the headline instead)
 // and aren't looked up again until SUMMARY_VERSION changes (ones stored without sr are retried once).
@@ -293,9 +293,9 @@ async function addSummaries(rows, deps, cfg = WORLD) {
   const todo = [];
   const pos = {};
   for (const r of [...rows].sort((a, b) => a.rank - b.rank)) {
-    if (!r.image_url) continue;
+    if (!r.image_url || !r.title_tr || !shown(r)) continue;
     pos[r.country_code] = (pos[r.country_code] || 0) + 1;
-    if (pos[r.country_code] <= cfg.photoTarget && r.title_tr && (r.title_tr.sum === undefined || r.title_tr.sv !== SUMMARY_VERSION || (r.title_tr.sum === '' && !r.title_tr.sr)) && shown(r)) todo.push([pos[r.country_code], r]);
+    if (pos[r.country_code] <= (cfg.summaryTarget || cfg.photoTarget) && (r.title_tr.sum === undefined || r.title_tr.sv !== SUMMARY_VERSION || (r.title_tr.sum === '' && !r.title_tr.sr))) todo.push([pos[r.country_code], r]);
   }
   // Every country's #1 first, then every #2 and so on, so fill-in stories (low Google rank,
   // high place on the site) aren't left at the back of the queue.

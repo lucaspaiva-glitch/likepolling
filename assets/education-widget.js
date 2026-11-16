@@ -96,7 +96,7 @@
     if (window.LP_CC) return window.LP_CC(codes);
     let lang = '';
     try { lang = localStorage.getItem('lp-lang') || ''; } catch (e) { /* storage blocked */ }
-    const fromLang = { 'en-GB': 'GB', pt: 'BR', 'pt-PT': 'PT', es: 'ES', de: 'DE', ko: 'KR', ja: 'JP' }[lang];
+    const fromLang = { 'en-GB': 'GB', pt: 'BR', 'pt-PT': 'PT', es: 'ES', de: 'DE', ko: 'KR', ja: 'JP', fr: 'FR', zh: 'CN', hi: 'IN' }[lang];
     if (fromLang && codes.includes(fromLang)) return fromLang;
     for (const l of navigator.languages || [navigator.language || '']) {
       const region = (l.split('-')[1] || '').toUpperCase();

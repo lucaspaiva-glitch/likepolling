@@ -29,6 +29,9 @@ const SEARCHES = [
   { lang: 'uk', region: 'UA', hl: 'uk' },
   { lang: 'ko', region: 'KR', hl: 'ko' },
   { lang: 'ja', region: 'JP', hl: 'ja' },
+  { lang: 'fr', region: 'FR', hl: 'fr' },
+  { lang: 'zh', region: 'TW', hl: 'zh-Hans' },
+  { lang: 'hi', region: 'IN', hl: 'hi' },
 ];
 
 function seconds(iso) {
@@ -75,11 +78,13 @@ const WORDS = {
   pt: 'não você uma com meu minha isso do da os é ao pra quando mais na eu ele ela sua seu foi',
   es: 'el los las con una mi y por qué más muy cuando pero del al yo su fue esto',
   de: 'der die das und ist nicht mit ein eine ich du mein wie auf für zu im wenn nur auch',
+  fr: 'le la les et est pas avec un une je tu mon ma des du pour que qui dans sur ce mais',
 };
 const WORD_SETS = Object.fromEntries(Object.entries(WORDS).map(([k, v]) => [k, new Set(v.split(' '))]));
-const LETTERS = { de: /[äöüß]/i, pt: /[ãõç]/i, es: /[ñ¿¡]/i };
+const LETTERS = { de: /[äöüß]/i, pt: /[ãõç]/i, es: /[ñ¿¡]/i, fr: /[èêëàùûœ]/i };
 const UK_LETTERS = /[іїєґІЇЄҐ]/;
-const ALWAYS_FOREIGN = /[\u0590-\u06ff\u0900-\u0eff\u1000-\u109f]/;
+const ALWAYS_FOREIGN = /[\u0590-\u06ff\u0980-\u0eff\u1000-\u109f]/;
+const DEVANAGARI = /[\u0900-\u097f]/;
 const NON_LATIN = /[\u0400-\u04ff\u3040-\u30ff\u3400-\u9fff\uac00-\ud7a3]/;
 
 function langMatch(lang, it) {
@@ -87,9 +92,12 @@ function langMatch(lang, it) {
   const tag = String(it.snippet?.defaultAudioLanguage || it.snippet?.defaultLanguage || '').toLowerCase().slice(0, 2);
   const title = it.snippet?.title || '';
   if (ALWAYS_FOREIGN.test(title)) return false;
+  if (DEVANAGARI.test(title) && base !== 'hi') return false;
   if (tag && tag !== 'zx' && tag !== 'un') return tag === base;
   if (base === 'ko') return /[\uac00-\ud7a3]/.test(title);
   if (base === 'ja') return /[\u3040-\u30ff]/.test(title);
+  if (base === 'hi') return DEVANAGARI.test(title);
+  if (base === 'zh') return /[\u3400-\u9fff]/.test(title) && !/[\u3040-\u30ff\uac00-\ud7a3]/.test(title);
   if (base === 'uk') return UK_LETTERS.test(title);
   if (base === 'ru') return /[\u0400-\u04ff]/.test(title) && !UK_LETTERS.test(title);
   if (NON_LATIN.test(title)) return false;

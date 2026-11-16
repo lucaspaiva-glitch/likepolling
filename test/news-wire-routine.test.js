@@ -43,7 +43,7 @@ test('fetches every feed, filters spam, dedupes and writes one RPC', async () =>
   });
   const s = await run(env, deps(f));
   assert.equal(f.calls.filter((c) => c.url.startsWith('https://news.google.com/rss/search')).length, FEEDS.length);
-  assert.deepEqual(s.langs, { en: 2, pt: 2, 'pt-PT': 2, es: 2, de: 2, ru: 2, uk: 2, ko: 2, ja: 2 });
+  assert.deepEqual(s.langs, { en: 2, pt: 2, 'pt-PT': 2, es: 2, de: 2, ru: 2, uk: 2, ko: 2, ja: 2, fr: 2, zh: 2, hi: 2 });
   const en = payload.filter((r) => r.lang === 'en').map((r) => `${r.category}:${r.title}`).sort();
   assert.deepEqual(en, ['creators:Creator raises fund', 'creators:Shared story']);
   assert.equal(f.calls.at(-1).init.headers.apikey, 'secret');

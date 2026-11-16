@@ -21,6 +21,9 @@ const EDITIONS = {
   uk: 'hl=uk&gl=UA&ceid=UA:uk',
   ko: 'hl=ko&gl=KR&ceid=KR:ko',
   ja: 'hl=ja&gl=JP&ceid=JP:ja',
+  fr: 'hl=fr&gl=FR&ceid=FR:fr',
+  zh: 'hl=zh-CN&gl=CN&ceid=CN:zh-Hans',
+  hi: 'hl=hi&gl=IN&ceid=IN:hi',
 };
 const FEEDS = [
   { lang: 'en', category: 'creators', q: '(YouTuber OR YouTubers OR "creator economy" OR "content creators") when:2d' },
@@ -32,6 +35,9 @@ const FEEDS = [
   { lang: 'uk', category: 'creators', q: '(intitle:ютубер OR intitle:ютубери OR intitle:блогер OR intitle:блогерка) when:2d' },
   { lang: 'ko', category: 'creators', q: '(유튜버 OR 크리에이터) when:2d' },
   { lang: 'ja', category: 'creators', q: '(ユーチューバー OR YouTuber OR 動画クリエイター) when:2d' },
+  { lang: 'fr', category: 'creators', q: '(youtubeur OR youtubeuse OR youtubeurs OR "créateurs de contenu" OR influenceur) when:2d' },
+  { lang: 'zh', category: 'creators', q: '(博主 OR 网红 OR 内容创作者 OR YouTuber) when:2d' },
+  { lang: 'hi', category: 'creators', q: '(यूट्यूबर OR इन्फ्लुएंसर OR "कंटेंट क्रिएटर") when:2d' },
 ];
 
 // Social posts and video pages are not news articles.

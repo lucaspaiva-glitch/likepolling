@@ -58,7 +58,7 @@ test('keeps going when a country fails, and fails when none load', async () => {
 
 test('translates new headlines once and reuses stored translations', async () => {
   let payload;
-  const tr = (t) => Object.fromEntries(['en', 'pt', 'pt-PT', 'es', 'de', 'ru', 'uk', 'ko', 'ja'].map((l) => [l, `${l}:${t}`]));
+  const tr = (t) => Object.fromEntries(['en', 'pt', 'pt-PT', 'es', 'de', 'ru', 'uk', 'ko', 'ja', 'fr', 'zh', 'hi'].map((l) => [l, `${l}:${t}`]));
   const asked = [];
   const f = async (url, init = {}) => {
     if (url.includes('/rpc/')) { payload = JSON.parse(init.body).payload; return text(200, String(payload.length)); }
@@ -109,7 +109,7 @@ test('tops up countries short of photo stories from section feeds, newest first'
 
 test('a batch whose translation reply is invalid JSON is retried in halves', async () => {
   let payload;
-  const tr = (t) => Object.fromEntries(['en', 'pt', 'pt-PT', 'es', 'de', 'ru', 'uk', 'ko', 'ja'].map((l) => [l, `${l}:${t}`]));
+  const tr = (t) => Object.fromEntries(['en', 'pt', 'pt-PT', 'es', 'de', 'ru', 'uk', 'ko', 'ja', 'fr', 'zh', 'hi'].map((l) => [l, `${l}:${t}`]));
   const f = async (url, init = {}) => {
     if (url.includes('/rpc/')) { payload = JSON.parse(init.body).payload; return text(200, String(payload.length)); }
     if (url.includes('/rest/v1/news_world?select=link,image_url')) return text(200, JSON.stringify(Object.keys(EDITIONS).map((cc) => ({ link: `https://news.google.com/rss/articles/${cc}-1`, image_url: 'https://img.test/a.jpg' }))));
@@ -126,7 +126,7 @@ test('a batch whose translation reply is invalid JSON is retried in halves', asy
 
 test("translates only each country's first PHOTO_TARGET photo stories", async () => {
   const asked = [];
-  const tr = (t) => Object.fromEntries(['en', 'pt', 'pt-PT', 'es', 'de', 'ru', 'uk', 'ko', 'ja'].map((l) => [l, `${l}:${t}`]));
+  const tr = (t) => Object.fromEntries(['en', 'pt', 'pt-PT', 'es', 'de', 'ru', 'uk', 'ko', 'ja', 'fr', 'zh', 'hi'].map((l) => [l, `${l}:${t}`]));
   const f = async (url, init = {}) => {
     if (url.includes('/rpc/')) return text(200, '1');
     if (url.includes('/rest/v1/news_world?select=link,image_url')) return text(200, JSON.stringify(Array.from({ length: 30 }, (_, i) => ({ link: `https://news.google.com/rss/articles/US-${i}`, image_url: 'https://img.test/a.jpg' }))));
@@ -142,7 +142,7 @@ test("translates only each country's first PHOTO_TARGET photo stories", async ()
 test("summarizes each translated photo story once from the publisher's description, and reuses stored summaries", async () => {
   let payload;
   const asked = [];
-  const tr = (p) => (t) => Object.fromEntries(['en', 'pt', 'pt-PT', 'es', 'de', 'ru', 'uk', 'ko', 'ja'].map((l) => [l, `${l}:${p}${t.headline || t}`]));
+  const tr = (p) => (t) => Object.fromEntries(['en', 'pt', 'pt-PT', 'es', 'de', 'ru', 'uk', 'ko', 'ja', 'fr', 'zh', 'hi'].map((l) => [l, `${l}:${p}${t.headline || t}`]));
   const f = async (url, init = {}) => {
     if (url.includes('/rpc/replace_news_world')) { payload = JSON.parse(init.body).payload; return text(200, String(payload.length)); }
     if (url.includes('title_tr=not.is.null')) return text(200, JSON.stringify([{ link: 'https://news.google.com/rss/articles/US-1', title: 'First story', title_tr: { ...tr('')('First story'), sum: { en: 'stored summary' }, sv: 4 } }]));
@@ -176,7 +176,7 @@ test("summarizes each translated photo story once from the publisher's descripti
 test("drops a summary whose description doesn't fit or that invents a number, and redoes summaries from older rules", async () => {
   let payload;
   const asked = [];
-  const tr = (p) => (t) => Object.fromEntries(['en', 'pt', 'pt-PT', 'es', 'de', 'ru', 'uk', 'ko', 'ja'].map((l) => [l, `${l}:${p}${t.headline || t}`]));
+  const tr = (p) => (t) => Object.fromEntries(['en', 'pt', 'pt-PT', 'es', 'de', 'ru', 'uk', 'ko', 'ja', 'fr', 'zh', 'hi'].map((l) => [l, `${l}:${p}${t.headline || t}`]));
   const f = async (url, init = {}) => {
     if (url.includes('/rpc/replace_news_world')) { payload = JSON.parse(init.body).payload; return text(200, String(payload.length)); }
     if (url.includes('title_tr=not.is.null')) return text(200, JSON.stringify([{ link: 'https://news.google.com/rss/articles/US-1', title: 'First story', title_tr: { ...tr('')('First story'), sum: { en: 'old summary' } } }]));
@@ -219,7 +219,7 @@ test('a summary may only use numbers found in its headline or description', () =
 test('retries a failed summary batch in halves', async () => {
   let payload;
   const asked = [];
-  const tr = (p) => (t) => Object.fromEntries(['en', 'pt', 'pt-PT', 'es', 'de', 'ru', 'uk', 'ko', 'ja'].map((l) => [l, `${l}:${p}${t.headline || t}`]));
+  const tr = (p) => (t) => Object.fromEntries(['en', 'pt', 'pt-PT', 'es', 'de', 'ru', 'uk', 'ko', 'ja', 'fr', 'zh', 'hi'].map((l) => [l, `${l}:${p}${t.headline || t}`]));
   const f = async (url, init = {}) => {
     if (url.includes('/rpc/replace_news_world')) { payload = JSON.parse(init.body).payload; return text(200, String(payload.length)); }
     if (url.includes('title_tr=not.is.null')) return text(200, JSON.stringify([{ link: 'https://news.google.com/rss/articles/US-1', title: 'First story', title_tr: { ...tr('')('First story'), sum: { en: 'stored summary' }, sv: 4 } }]));
