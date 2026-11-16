@@ -76,7 +76,7 @@
     attn.querySelector('.lp-cs-name').textContent = name;
     attn.querySelector('.lp-cs-pos').innerHTML = `<span>${brands.indexOf(name) + 1}/${brands.length}</span>`;
     const mention = (p) => (p && p.v > 0 ? tr('1 in {n} news stories worldwide mention {c}').replace('{n}', Math.round(100 / p.v).toLocaleString(lang)).replace('{c}', name) : '');
-    const label = tr('News share: {c}').replace('{c}', name);
+    const label = tr('Fashion Share: {c}').replace('{c}', name);
     attn.querySelector('.lp-attn-txt').innerHTML = `<b>${esc(label)}</b><strong>${A.badge(A.change(pts))}<small>${esc(tr('vs last year'))}</small></strong>`;
     const plot = attn.querySelector('.lp-attn-plot');
     plot.innerHTML = A.chart(yr, { label, axis: true }) + '<span class="lp-attn-cap"></span>';

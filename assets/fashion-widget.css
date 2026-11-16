@@ -49,3 +49,4 @@
 }
 
 .fsh-attn .fsh-bnav { grid-column: 1 / -1; justify-self: start; }
+.fsh-attn .fsh-bnav .lp-cs-name { flex: none; }
