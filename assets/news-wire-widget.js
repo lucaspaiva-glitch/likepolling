@@ -56,7 +56,7 @@
     .catch(() => ({}));
 
   // World News Wire: Google News top stories per Trending Index country (public.news_world).
-  const WORLD_CC = ['AR', 'AU', 'BD', 'BE', 'BR', 'CA', 'CL', 'CO', 'DE', 'DZ', 'EC', 'EG', 'ES', 'FR', 'GB', 'ID', 'IE', 'IN', 'IQ', 'IT', 'JP', 'KE', 'KR', 'MA', 'MX', 'MY', 'NG', 'NL', 'PE', 'PH', 'PK', 'PL', 'PT', 'SA', 'TH', 'TR', 'TW', 'UA', 'US', 'VN', 'ZA'];
+  const WORLD_CC = ['BR', 'PT', 'US', 'ES', 'FR', 'DE', 'GB', 'JP', 'KR', 'RU', 'UA', 'MX', 'IN', 'CN']; // FEATURED in scripts/news-world-routine.js
   const WPICK = 'lp-world-cc';
   let worldPick = null;
   try { const v = localStorage.getItem(WPICK); if (WORLD_CC.includes(v)) worldPick = v; } catch (e) { /* no storage */ }
