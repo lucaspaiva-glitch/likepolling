@@ -8,7 +8,7 @@
 // Env: SUPABASE_URL, SUPABASE_KEY (secret key). Node >= 20, no deps.
 'use strict';
 
-const { COUNTRIES } = require('../lib/report.js');
+const { MAIN: COUNTRIES } = require('../lib/countries.js');
 const { FEATURED } = require('./news-world-routine.js');
 const { supabaseHeaders } = require('./memory-common.js');
 const { coverage, termOf } = require('../lib/news-coverage.js');

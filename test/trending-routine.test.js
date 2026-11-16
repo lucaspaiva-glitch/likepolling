@@ -46,23 +46,23 @@ test('fetches every tracked country and replaces the snapshot in one RPC', async
 test('retries rate limits and server errors, keeps going when one country fails', async () => {
   let brAttempts = 0;
   const f = mockFetch([
-    ['/rest/v1/youtube_active_users', () => json(200, [{ country_code: 'BR' }, { country_code: 'XX' }])],
+    ['/rest/v1/youtube_active_users', () => json(200, [{ country_code: 'BR' }, { country_code: 'US' }])],
     ['regionCode=BR', () => (++brAttempts < 3 ? json(brAttempts === 1 ? 503 : 403, { error: { message: 'slow down', errors: [{ reason: 'rateLimitExceeded' }] } }) : json(200, { items: [video('a', 5)] }))],
-    ['regionCode=XX', () => json(400, { error: { message: 'bad region', errors: [{ reason: 'invalidRegionCode' }] } })],
+    ['regionCode=US', () => json(400, { error: { message: 'bad region', errors: [{ reason: 'invalidRegionCode' }] } })],
     ['/rpc/replace_youtube_trending', () => json(200, 1)],
   ]);
   const s = await run(env, { fetch: f, sleep: async () => {}, log: () => {} });
   assert.equal(brAttempts, 3);
-  assert.deepEqual(s.failed, [{ code: 'XX', error: 'bad region' }]);
+  assert.deepEqual(s.failed, [{ code: 'US', error: 'bad region' }]);
   assert.equal(s.updated, 1);
 });
 
 test('stops calling YouTube once the daily quota is exhausted', async () => {
-  const countries = ['AA', 'BB', 'CC', 'DD', 'EE', 'FF', 'GG', 'HH'].map((c) => ({ country_code: c }));
+  const countries = ['BR', 'PT', 'US', 'ES', 'FR', 'DE', 'GB', 'JP'].map((c) => ({ country_code: c }));
   let ytCalls = 0;
   const f = mockFetch([
     ['/rest/v1/youtube_active_users', () => json(200, countries)],
-    ['googleapis.com', (u) => { ytCalls++; return u.includes('regionCode=AA') ? json(200, { items: [video('a', 1)] }) : json(403, { error: { message: 'quota', errors: [{ reason: 'quotaExceeded' }] } }); }],
+    ['googleapis.com', (u) => { ytCalls++; return u.includes('regionCode=BR') ? json(200, { items: [video('a', 1)] }) : json(403, { error: { message: 'quota', errors: [{ reason: 'quotaExceeded' }] } }); }],
     ['/rpc/replace_youtube_trending', () => json(200, 1)],
   ]);
   const s = await run(env, { fetch: f, sleep: async () => {}, log: () => {} });

@@ -8,13 +8,14 @@
 // Env: SUPABASE_URL, SUPABASE_KEY (secret key). Optional DAY. Node >= 20, no deps.
 'use strict';
 
+const { onlyMain } = require('../lib/countries.js');
 const zlib = require('zlib');
 
 const FILES = 'https://data.gdeltproject.org/gdeltv2';
 const CONCURRENCY = 4;
 const MAX_RETRIES = 3;
-// The 41 tracked countries: ISO code -> [FIPS 10-4 code used by ActionGeo_CountryCode, ISO-3 code used by actor fields].
-const COUNTRIES = {
+// The 14 main countries: ISO code -> [FIPS 10-4 code used by ActionGeo_CountryCode, ISO-3 code used by actor fields].
+const COUNTRIES = onlyMain({
   AR: ['AR', 'ARG'], AU: ['AS', 'AUS'], BD: ['BG', 'BGD'], BE: ['BE', 'BEL'], BR: ['BR', 'BRA'], CA: ['CA', 'CAN'],
   CL: ['CI', 'CHL'], CO: ['CO', 'COL'], DE: ['GM', 'DEU'], DZ: ['AG', 'DZA'], EC: ['EC', 'ECU'], EG: ['EG', 'EGY'],
   ES: ['SP', 'ESP'], FR: ['FR', 'FRA'], GB: ['UK', 'GBR'], ID: ['ID', 'IDN'], IE: ['EI', 'IRL'], IN: ['IN', 'IND'],
@@ -22,7 +23,8 @@ const COUNTRIES = {
   MX: ['MX', 'MEX'], MY: ['MY', 'MYS'], NG: ['NI', 'NGA'], NL: ['NL', 'NLD'], PE: ['PE', 'PER'], PH: ['RP', 'PHL'],
   PK: ['PK', 'PAK'], PL: ['PL', 'POL'], PT: ['PO', 'PRT'], SA: ['SA', 'SAU'], TH: ['TH', 'THA'], TR: ['TU', 'TUR'],
   TW: ['TW', 'TWN'], UA: ['UP', 'UKR'], US: ['US', 'USA'], VN: ['VM', 'VNM'], ZA: ['SF', 'ZAF'],
-};
+  RU: ['RS', 'RUS'], CN: ['CH', 'CHN'],
+});
 const BY_FIPS = Object.fromEntries(Object.entries(COUNTRIES).map(([iso, [fips]]) => [fips, iso]));
 const BY_ISO3 = Object.fromEntries(Object.entries(COUNTRIES).map(([iso, [, iso3]]) => [iso3, iso]));
 // GDELT 2.0 event columns (0-based).

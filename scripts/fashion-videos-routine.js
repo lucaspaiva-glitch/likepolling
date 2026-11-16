@@ -12,7 +12,8 @@
 
 const { fetchJson, QuotaError } = require('./trending-routine');
 const { rankVideos, toVideo, recentUploads, videoDetails, pool } = require('./education-routine');
-const CHANNELS = require('./fashion-channels.json');
+const { onlyMain } = require('../lib/countries.js');
+const CHANNELS = onlyMain(require('./fashion-channels.json'));
 
 const WINDOW_DAYS = 30;
 const FILL_MIN = 5;

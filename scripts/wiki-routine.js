@@ -8,6 +8,7 @@
 // Env: SUPABASE_URL, SUPABASE_KEY (secret key). Optional DAYS_BACK. Node >= 20, no deps.
 'use strict';
 
+const { isMain } = require('../lib/countries.js');
 const API = 'https://wikimedia.org/api/rest_v1/metrics/pageviews/top-per-country';
 // Wikimedia asks API clients to identify themselves with a contact.
 const USER_AGENT = 'LikePolling/1.0 (https://www.likepolling.com; lucaspaiva@likepolling.com)';
@@ -59,7 +60,7 @@ async function run(env = process.env, deps = {}) {
   if (missing.length) throw new Error(`Missing env vars: ${missing.join(', ')}`);
 
   const countries = (await fetchJson(`${env.SUPABASE_URL}/rest/v1/youtube_active_users?select=country_code&order=country_code`,
-    { headers: supabaseHeaders(env.SUPABASE_KEY) }, deps)).map((r) => r.country_code);
+    { headers: supabaseHeaders(env.SUPABASE_KEY) }, deps)).map((r) => r.country_code).filter(isMain);
   const days = recentDays(deps.now, Number(env.DAYS_BACK) || DAYS_BACK);
   const queue = countries.flatMap((cc) => days.map((day) => [cc, day]));
   const rows = [];

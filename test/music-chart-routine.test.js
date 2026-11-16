@@ -36,18 +36,18 @@ test('fetches the Music chart for every tracked country and writes one RPC', asy
 });
 
 test('keeps going when a country has no Music chart and stops on quota exhaustion', async () => {
-  const countries = ['AA', 'BB', 'CC', 'DD', 'EE', 'FF', 'GG', 'HH'].map((c) => ({ country_code: c }));
+  const countries = ['BR', 'PT', 'US', 'ES', 'FR', 'DE', 'GB', 'JP'].map((c) => ({ country_code: c }));
   const f = mockFetch([
     ['/rest/v1/youtube_active_users', () => json(200, countries)],
-    ['regionCode=AA', () => json(200, { items: [video('a', 1)] })],
-    ['regionCode=BB', () => json(404, { error: { message: 'chart not found', errors: [{ reason: 'videoChartNotFound' }] } })],
+    ['regionCode=BR', () => json(200, { items: [video('a', 1)] })],
+    ['regionCode=PT', () => json(404, { error: { message: 'chart not found', errors: [{ reason: 'videoChartNotFound' }] } })],
     ['googleapis.com', () => json(403, { error: { message: 'quota', errors: [{ reason: 'quotaExceeded' }] } })],
     ['/rpc/replace_youtube_music_chart', () => json(200, 1)],
   ]);
   const s = await run(env, { fetch: f, sleep: async () => {}, log: () => {} });
   assert.equal(s.quotaHit, true);
   assert.equal(s.updated, 1);
-  assert.ok(s.failed.some((x) => x.code === 'BB' && x.error === 'chart not found'));
+  assert.ok(s.failed.some((x) => x.code === 'PT' && x.error === 'chart not found'));
   assert.ok(f.calls.filter((c) => c.url.includes('googleapis.com')).length <= 6);
 });
 

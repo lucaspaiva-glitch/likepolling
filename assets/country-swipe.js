@@ -36,8 +36,8 @@
     .lp-cs-arr:focus-visible { outline: 2px solid rgba(255,42,60,.6); outline-offset: 2px; }
     @media (max-width: 560px) {
       .lp-cs-arr { width: 32px; height: 28px; }
-      #news-front .nw-head .nw-wpick, #yt-trending .lp-cs-nav, #yt-music .lp-cs-nav, #edu .lp-cs-nav { order: 2; flex-basis: 100%; }
-      #yt-trending .lp-cs-nav, #yt-music .lp-cs-nav, #edu .lp-cs-nav { flex: 0 0 auto; margin-right: 100%; }
+      #news-front .nw-head .nw-wpick, #yt-trending .lp-cs-nav, #yt-music .lp-cs-nav, #edu .lp-cs-nav, #fashion .lp-cs-nav { order: 2; flex-basis: 100%; }
+      #yt-trending .lp-cs-nav, #yt-music .lp-cs-nav, #edu .lp-cs-nav, #fashion .lp-cs-nav { flex: 0 0 auto; margin-right: 100%; }
       #news-front .nw-head .nw-spacer { display: none; }
     }
   `;
@@ -186,9 +186,31 @@
     new MutationObserver(() => shorten(sel)).observe(sel, { childList: true, subtree: true, characterData: true });
   }
 
+  // A section with more than 14 countries shows only the 14 main ones.
+  const MAIN = ['BR', 'PT', 'US', 'ES', 'FR', 'DE', 'GB', 'JP', 'KR', 'RU', 'UA', 'MX', 'IN', 'CN'];
+  const trim = (sel) => {
+    const cc = [...sel.options].filter((o) => /^[A-Z]{2}$/.test(o.value));
+    if (cc.length <= MAIN.length) return;
+    const keep = cc.filter((o) => MAIN.includes(o.value.toUpperCase()));
+    if (!keep.length) return;
+    const was = sel.value;
+    cc.forEach((o) => { if (!keep.includes(o)) o.remove(); });
+    if (sel.value === was) return;
+    sel.value = window.LP_CC ? window.LP_CC(keep.map((o) => o.value)) : keep[0].value;
+    sel.dispatchEvent(new Event('change', { bubbles: true }));
+  };
+  const trimmed = new Set();
+
   const done = new Set(), swiped = new Set();
   let tries = 0;
   const timer = setInterval(() => {
+    PANELS.forEach(([root, q]) => {
+      const sel = document.querySelector(`${root} ${q}`);
+      if (!sel || trimmed.has(sel)) return;
+      trimmed.add(sel);
+      trim(sel);
+      new MutationObserver(() => trim(sel)).observe(sel, { childList: true, subtree: true });
+    });
     PANELS.forEach((p, i) => { if (!done.has(i) && setup(p)) done.add(i); });
     SWIPE.forEach((p, i) => { if (!swiped.has(i) && swipe(p)) swiped.add(i); });
     SWIPE.forEach(([root, q]) => { const sel = document.querySelector(`${root} ${q}`); if (sel && sel.options.length) watchNames(sel); });

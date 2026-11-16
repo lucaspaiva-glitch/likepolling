@@ -17,7 +17,8 @@ const { logGemini, isNoCredit } = require('../lib/gemini-usage');
 const { fetchJson, QuotaError } = require('./trending-routine');
 const { parseItems, fetchText } = require('./news-wire-routine');
 const { EDITIONS } = require('./news-world-routine');
-const CHANNELS = require('./education-channels.json');
+const { onlyMain } = require('../lib/countries.js');
+const CHANNELS = onlyMain(require('./education-channels.json'));
 
 const YT = 'https://www.googleapis.com/youtube/v3/';
 const WINDOW_DAYS = 30;

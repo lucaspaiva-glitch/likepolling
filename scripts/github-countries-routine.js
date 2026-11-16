@@ -8,6 +8,7 @@
 'use strict';
 
 const { TOPICS, topRepos, plainNames } = require('./github-routine.js');
+const { isMain } = require('../lib/countries.js');
 const sleep = (ms) => new Promise((ok) => setTimeout(ok, ms));
 
 const ALIASES = {
@@ -103,7 +104,7 @@ async function main(env = process.env, now = new Date(), argv = process.argv.sli
       }));
       await sleep(1200);
     }
-    const rows = topRepos(lists, month, 100).map(({ language, day, ...r }) => ({ month: day, ...r, description: r.description && r.description.toWellFormed(), location: where.get(r.full_name) || null, country_code: countryOf(where.get(r.full_name)), plain: null }));
+    const rows = topRepos(lists, month, 100).map(({ language, day, ...r }) => ({ month: day, ...r, description: r.description && r.description.toWellFormed(), location: where.get(r.full_name) || null, country_code: [countryOf(where.get(r.full_name))].find(isMain) || null, plain: null }));
     if (!rows.length) continue;
     const known = await fetch(`${base}/rest/v1/github_ai_builders_monthly?select=full_name,plain&month=eq.${month}&plain=not.is.null`, { headers: db }).then((r) => (r.ok ? r.json() : [])).catch(() => []);
     for (const k of known) { const r = rows.find((x) => x.full_name === k.full_name); if (r) r.plain = k.plain; }

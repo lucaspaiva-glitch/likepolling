@@ -2,6 +2,7 @@
 // modelled snapshot of active YouTube users per country, recalculated by pg_cron
 // every 15 minutes. Cached at Vercel's edge until the next refresh.
 const { createSupabase } = require('./metrics');
+const { isMain } = require('../lib/countries.js');
 
 const STEP_S = 900;         // pg_cron schedule: */15 * * * *
 const BUFFER_S = 60;        // let pg_cron finish before the cache turns over
@@ -39,7 +40,7 @@ function createHandler(deps = {}) {
       return res.status(200).json({
         updated_at: updatedAt,
         estimate: true,
-        countries: data.map((r) => ({ code: r.country_code, name: r.country_name, active: Number(r.online_users_estimate) })),
+        countries: data.filter((r) => isMain(r.country_code)).map((r) => ({ code: r.country_code, name: r.country_name, active: Number(r.online_users_estimate) })),
       });
     } catch (err) {
       res.setHeader('Cache-Control', 'no-store');

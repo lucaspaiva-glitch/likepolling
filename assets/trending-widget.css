@@ -63,6 +63,7 @@
   .ytt-cards > :nth-child(3) { width: calc((100% - 12px) * .495); }
   .ytt-cards > :nth-child(4) { width: calc((100% - 12px) * .5); }
   .ytt-cards > :nth-child(5) { width: calc((100% - 12px) * .49); }
+  .ytt-cards:has(> :nth-child(3):last-child) { flex-direction: row; flex-wrap: wrap; column-gap: 12px; }
   .ytt-cards:has(> :nth-child(3):last-child) > :first-child { width: 100%; }
   .ytt-cards:has(> :nth-child(3):last-child) > :not(:first-child) { width: calc((100% - 12px) / 2); }
   .ytt-table { --rw: 42cqi; --st: .01; }

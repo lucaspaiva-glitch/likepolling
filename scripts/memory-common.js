@@ -1,6 +1,7 @@
 // Shared helpers for the daily memory routines (Supabase REST + polite fetching). Node >= 20, no deps.
 'use strict';
 
+const { isMain } = require('../lib/countries.js');
 const USER_AGENT = 'LikePolling/1.0 (https://www.likepolling.com; lucaspaiva@likepolling.com)';
 const MAX_RETRIES = 4;
 const defaultSleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -26,7 +27,7 @@ function setup(env, deps) {
 // The tracked countries (the same list as every other routine).
 async function countries(env, deps) {
   const rows = await fetchBody(`${env.SUPABASE_URL}/rest/v1/youtube_active_users?select=country_code&order=country_code`, { headers: supabaseHeaders(env.SUPABASE_KEY) }, deps);
-  return rows.map((r) => r.country_code);
+  return rows.map((r) => r.country_code).filter(isMain);
 }
 
 const rpc = (env, deps, fn, payload) => fetchBody(`${env.SUPABASE_URL}/rest/v1/rpc/${fn}`,

@@ -2,8 +2,7 @@
 // license key from their receipt (Lemon Squeezy or Gumroad) once, and this browser remembers it (localStorage only).
 (function () {
   'use strict';
-  const COUNTRIES = ['AR', 'AU', 'BD', 'BE', 'BR', 'CA', 'CL', 'CO', 'DE', 'DZ', 'EC', 'EG', 'ES', 'FR', 'GB', 'ID', 'IE', 'IN', 'IQ', 'IT', 'JP', 'KE',
-    'KR', 'MA', 'MX', 'MY', 'NG', 'NL', 'PE', 'PH', 'PK', 'PL', 'PT', 'SA', 'TH', 'TR', 'TW', 'UA', 'US', 'VN', 'ZA'];
+  const COUNTRIES = ['BR', 'DE', 'ES', 'FR', 'GB', 'IN', 'JP', 'KR', 'MX', 'PT', 'UA', 'US'];
   // Language: the site switcher (assets/i18n.js) picks it; report text comes from assets/report-i18n.js.
   const LANG_ID = () => (window.LP_I18N && window.LP_I18N.lang) || 'en';
   const loc = () => (LANG_ID() === 'pt' ? 'pt-BR' : LANG_ID());

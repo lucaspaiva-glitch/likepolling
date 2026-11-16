@@ -53,7 +53,10 @@ test('addEvents maps FIPS/ISO-3 codes to tracked ISO codes and ignores the rest'
     { day: '2026-10-27', country_code: 'PT', root_code: '04', events: 2, articles: 5 },
     { day: '2026-10-27', country_code: 'DE', root_code: '19', events: 1, articles: 5 },
   ]);
-  assert.deepEqual(pairs, [{ day: '2026-10-27', actor1_cc: 'PT', actor2_cc: 'BR', events: 1, articles: 3 }]);
+  assert.deepEqual(pairs, [
+    { day: '2026-10-27', actor1_cc: 'PT', actor2_cc: 'BR', events: 1, articles: 3 },
+    { day: '2026-10-27', actor1_cc: 'CN', actor2_cc: 'US', events: 1, articles: 1 },
+  ]);
 });
 
 const env = { SUPABASE_URL: 'https://db.test', SUPABASE_KEY: 'secret', DAY: '2026-10-27' };

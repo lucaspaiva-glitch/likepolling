@@ -7,6 +7,7 @@
 // Env: YOUTUBE_API_KEY, SUPABASE_URL, SUPABASE_KEY (secret key). Node >= 20, no deps.
 'use strict';
 
+const { isMain } = require('../lib/countries.js');
 const YT_VIDEOS = 'https://www.googleapis.com/youtube/v3/videos';
 const TOP_N = 10;
 const CONCURRENCY = 4;
@@ -43,7 +44,7 @@ function supabaseHeaders(key) {
 async function getCountries(env, deps) {
   const url = `${env.SUPABASE_URL}/rest/v1/youtube_active_users?select=country_code&order=country_code`;
   const rows = await fetchJson(url, { headers: supabaseHeaders(env.SUPABASE_KEY) }, deps);
-  return rows.map((r) => r.country_code);
+  return rows.map((r) => r.country_code).filter(isMain);
 }
 
 function toRows(countryCode, items) {

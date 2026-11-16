@@ -16,8 +16,7 @@
     { id: 'sponsor', sym: 'Ad spot', top: 'Launch rate', name: 'YOUR BRAND\nHERE', sub: 'A card on Like Polling, seen in 41 countries.', mail: 'Sponsoring Like Polling',
       stats: [['41', 'countries'], ['2×', 'updated a day'], ['16', 'brands at a time']] },
   ];
-  const COUNTRIES = ['AR', 'AU', 'BD', 'BE', 'BR', 'CA', 'CL', 'CO', 'DE', 'DZ', 'EC', 'EG', 'ES', 'FR', 'GB', 'ID', 'IE', 'IN', 'IQ', 'IT', 'JP', 'KE',
-    'KR', 'MA', 'MX', 'MY', 'NG', 'NL', 'PE', 'PH', 'PK', 'PL', 'PT', 'SA', 'TH', 'TR', 'TW', 'UA', 'US', 'VN', 'ZA'];
+  const COUNTRIES = ['BR', 'DE', 'ES', 'FR', 'GB', 'IN', 'JP', 'KR', 'MX', 'PT', 'UA', 'US'];
   const AD = 'https://lucaspoll.gumroad.com/l/laijtn';
   const SAMPLES = 'https://iyhaoagslsrwtkcrxylp.supabase.co/storage/v1/object/public/samples';
   const tr = (s) => (window.LP_I18N ? window.LP_I18N.t(s) : s);

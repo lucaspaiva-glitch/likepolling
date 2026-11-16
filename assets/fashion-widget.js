@@ -97,14 +97,14 @@
     const top = Math.max(1, ...rows.map((r) => Number(r.views_per_hour) || 0));
     const from = (r) => (r.channel_country && r.channel_country !== r.country_code ? ` · ${esc(regionName(r.channel_country))}` : '');
     return `<div class="ytt-cards">${rows.slice(0, 5).map((r) => `<a class="ytt-card" href="${watch(r.video_id, ids)}" target="_blank" rel="noopener">
-        <span class="ytt-cth"><img src="${thumb(r.video_id)}" alt="" loading="lazy"><b class="ytt-crk">${pad(r.rank)}</b><i class="ytt-cvw">${fmt(r.views_per_hour)}/h</i></span>
+        <span class="ytt-cth"><img src="${thumb(r.video_id)}" alt="" loading="lazy"><b class="ytt-crk">${pad(r.rank)}</b><i class="ytt-cvw">${vph(r.views_per_hour)}/h</i></span>
         <span class="ytt-ctt" title="${esc(r.title)}" data-no-i18n>${esc(r.title)}</span><span class="ytt-cch" data-no-i18n>${esc(r.channel_title)}${from(r)}</span></a>`).join('')}</div>
       ${rows.length > 5 ? `<table class="ytt-table"><colgroup><col class="ytt-rank-col"><col><col class="ytt-vol-col"><col class="ytt-likes-col"></colgroup>
         <thead><tr><th>#</th><th>Video</th><th class="n">Speed</th><th class="n ytt-likes">Views</th></tr></thead>
         <tbody>${rows.slice(5).map((r) => `<tr><td><span class="ytt-rank">${pad(r.rank)}</span></td>
           <td><a class="ytt-video" href="${watch(r.video_id, ids)}" target="_blank" rel="noopener"><span class="lp-rth" style="--i:${r.rank - 6}"><img src="${thumb(r.video_id)}" alt="" loading="lazy"><b>${pad(r.rank)}</b></span>
             <span class="ytt-text"><span class="ytt-vt" title="${esc(r.title)}" data-no-i18n>${esc(r.title)}</span><span class="ytt-ch" data-no-i18n>${esc(r.channel_title)}${from(r)}</span></span></a></td>
-          <td class="n ytt-vol"><span class="ytt-num">${fmt(r.views_per_hour)}/h</span><div class="ytt-bar" style="width:${Math.max(4, Math.round((Number(r.views_per_hour) || 0) / top * 100))}%"></div></td>
+          <td class="n ytt-vol"><span class="ytt-num">${vph(r.views_per_hour)}/h</span><div class="ytt-bar" style="width:${Math.max(4, Math.round((Number(r.views_per_hour) || 0) / top * 100))}%"></div></td>
           <td class="n ytt-likes"><span class="ytt-num">${fmt(r.view_count)}</span></td></tr>`).join('')}</tbody></table>` : ''}`;
   }
 
@@ -113,6 +113,7 @@
   const pending = {};
   const once = (key, url, store, cc) => store[cc] ? Promise.resolve(store[cc])
     : (pending[key] ||= get(url).then((r) => (store[cc] = r), (e) => { delete pending[key]; throw e; }));
+  const vph = (v) => ((Number(v) || 0) < 1 ? '<1' : fmt(v));
   const videosFor = (cc) => once(`v${cc}`, `fashion_videos?select=rank,video_id,title,channel_title,channel_country,country_code,view_count,views_per_hour,fetched_at&country_code=eq.${encodeURIComponent(cc)}&order=rank&limit=${SHOWN}`, vcache, cc);
   function preload(cc) {
     const list = [...select.options].map((o) => o.value), k = list.indexOf(cc);

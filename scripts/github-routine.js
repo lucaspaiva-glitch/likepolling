@@ -8,7 +8,7 @@
 // Env: SUPABASE_URL, SUPABASE_KEY (secret key), GITHUB_TOKEN (optional, raises the search limit), GEMINI_API_KEY (optional). Node >= 20.
 'use strict';
 
-const { COUNTRIES } = require('../lib/report.js');
+const { MAIN: COUNTRIES } = require('../lib/countries.js');
 const API = 'https://api.github.com/search';
 const TOPICS = ['ai', 'llm', 'artificial-intelligence', 'machine-learning', 'ai-agents', 'generative-ai'];
 const sleep = (ms) => new Promise((ok) => setTimeout(ok, ms));
