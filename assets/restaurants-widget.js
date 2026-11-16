@@ -31,13 +31,15 @@
   const pick = mount.querySelector('.rst-region');
   let all = [];
   let reg = '';
+  let star = 0;
   const tr = (x) => (window.LP_I18N ? window.LP_I18N.t(x) : x);
   const fill = () => { select.innerHTML = COUNTRIES.map((c) => `<option value="${c}"${c === cc ? ' selected' : ''}>${esc(region(c))}</option>`).join(''); };
   function paint() {
     const rows = reg ? all.filter((r) => r.region === reg) : all;
-    list.innerHTML = rows.map((r) => { const u = r.website || r.wiki; const inner = `<b>${esc(r.name)}</b><span>${esc(r.city || '')}</span><em aria-label="${r.stars} Michelin star${r.stars > 1 ? 's' : ''}">${'★'.repeat(r.stars)}</em>`;
+    if (!rows.some((r) => r.stars === star)) star = 0;
+    list.innerHTML = rows.filter((r) => !star || r.stars === star).map((r) => { const u = r.website || r.wiki; const inner = `<b>${esc(r.name)}</b><span>${esc(r.city || '')}</span><em aria-label="${r.stars} Michelin star${r.stars > 1 ? 's' : ''}">${'★'.repeat(r.stars)}</em>`;
       return `<li class="rst-t${r.stars}">${u ? `<a href="${esc(u)}" target="_blank" rel="noopener">${inner}</a>` : `<div>${inner}</div>`}</li>`; }).join('');
-    sum.innerHTML = [3, 2, 1].map((n) => [n, rows.filter((r) => r.stars === n).length]).filter(([, c]) => c).map(([n, c]) => `<span class="rst-t${n}"><em>${'★'.repeat(n)}</em>${c}</span>`).join('');
+    sum.innerHTML = [3, 2, 1].map((n) => [n, rows.filter((r) => r.stars === n).length]).filter(([, c]) => c).map(([n, c]) => `<button type="button" class="rst-t${n}${star === n ? ' on' : ''}" data-s="${n}" aria-pressed="${star === n}" aria-label="${n} Michelin star${n > 1 ? 's' : ''}: ${c}"><em>${'★'.repeat(n)}</em>${c}</button>`).join('');
   }
   async function show() {
     try {
@@ -53,8 +55,10 @@
       mount.hidden = !rows.length;
     } catch { mount.hidden = true; }
   }
-  select.addEventListener('change', () => { cc = select.value; reg = ''; show(); });
+  select.addEventListener('change', () => { cc = select.value; reg = ''; star = 0; show(); });
   pick.addEventListener('change', () => { reg = pick.value; paint(); });
+  // Tapping ★★★, ★★ or ★ shows only those restaurants; tapping it again shows all.
+  sum.addEventListener('click', (e) => { const b = e.target.closest('[data-s]'); if (!b) return; const n = Number(b.dataset.s); star = star === n ? 0 : n; paint(); });
   document.addEventListener('lp:lang', () => { fill(); if (pick.options[0]) pick.options[0].textContent = tr('All states'); });
   fill();
   show();
