@@ -61,8 +61,8 @@
       <div class="lp-sign-pop" id="lp-sign-pop" ${open ? '' : 'hidden'}><section class="svc open">
         <div class="svc-tab" style="cursor:default"><span class="svc-top"><span class="svc-sym">${tr('Ad spot')}</span><span>${tr('Launch rate')}</span></span>
         <span class="svc-name svc-glitch" data-text="${tr('YOUR BRAND\nHERE')}">${tr('YOUR BRAND\nHERE')}</span><span class="svc-bar" aria-hidden="true"></span>
-        <span class="svc-sub">${tr('A card on Like Polling, seen in 41 countries.')}</span></div>
-        <div class="svc-body"><div class="svc-stats"><div><b>41</b><span>${tr('countries')}</span></div><div><b>2×</b><span>${tr('updated a day')}</span></div><div><b>16</b><span>${tr('brands at a time')}</span></div></div>
+        <span class="svc-sub">${tr('A card on Like Polling, seen in 14 countries.')}</span></div>
+        <div class="svc-body"><div class="svc-stats"><div><b>14</b><span>${tr('countries')}</span></div><div><b>2×</b><span>${tr('updated a day')}</span></div><div><b>16</b><span>${tr('brands at a time')}</span></div></div>
         <form class="lp-sign-form" novalidate><p>${tr('We are')} <input name="brand" placeholder="${tr('brand name')}" autocomplete="organization" required>, ${tr('a')} <input name="kind" placeholder="${tr('kind of')}" required> ${tr('company, at')} <input name="site" placeholder="${tr('website')}" inputmode="url" autocomplete="url" required>.</p>
         <a class="svc-btn" href="#">${tr('Buy')} · ${tr('1 week')} · ${PRICE}<span class="lp-local" data-eur="20"></span></a></form><p class="svc-fine lp-ad-line" hidden></p><p class="svc-fine">${tr('Like the Machu Picchu Energy card. Weekly views and clicks included.')} ${tr('No gambling or betting brands.')}</p><p class="svc-fine"><a href="/ad">${tr('Already paid? Activate your ad')} →</a></p></div>
       </section></div>`;

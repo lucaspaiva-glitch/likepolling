@@ -424,8 +424,6 @@
         ...cs.flatMap((c, ci) => (c.searches ? c.searches.top : []).map((q) => [names[ci], q.query, n(q.traffic), n(q.days)]))], [18, 40, 18, 16]);
       sheet(L('Holidays coming up'), [[L('Country'), L('Date'), L('Holiday'), L('Name in English')].map(H),
         ...cs.flatMap((c, ci) => (c.holidays || []).map((h) => [names[ci], day(h.day), h.local_name, h.name]))], [18, 14, 34, 34]);
-      sheet(L('Next rocket launch'), [[L('Country'), L('Date'), L('Next rocket launch')].map(H),
-        ...cs.filter((c) => c.launch).map((c) => [name(c.country), day(c.launch.net.slice(0, 10)), [c.launch.name, c.launch.provider, c.launch.site].filter(Boolean).join(' · ')])], [18, 14, 60]);
       sheet(L('AI builders'), [[L('Country'), L('Year'), 'GitHub', '★', L('Link')].map(H),
         ...cs.flatMap((c, ci) => (c.ai_builders ? c.ai_builders.by_year : []).filter((y) => y.top).map((y) => [names[ci], y.year, y.top.full_name, n(y.top.stars), y.top.url]))], [18, 8, 36, 10, 50]);
       sheet(L('Ideas to copy'), [[L('Country'), L('Title'), L('Idea'), L('Based on')].map(H),

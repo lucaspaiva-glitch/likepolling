@@ -8,13 +8,13 @@
   // buy: Gumroad product link. Empty = the button opens an order email instead.
   const OFFERS = [
     { id: 'country', sym: 'Country', name: 'COUNTRY\nREPORT', sub: 'Everything we saved on a country, next to another.', buy: 'https://lucaspoll.gumroad.com/l/udjsyu', sample: '/samples/country-report.pdf',
-      stats: [['41', 'countries'], ['30', 'days of history'], ['2', 'side by side']] },
+      stats: [['12', 'countries'], ['30', 'days of history'], ['2', 'side by side']] },
     { id: 'artist', sym: 'Person', name: 'PEOPLE\nREPORT', sub: 'Everything we saved on an artist, athlete or star, next to similar people.', buy: 'https://lucaspoll.gumroad.com/l/ijixxs', sample: '/samples/artist-report.pdf',
       stats: [['4', 'people compared'], ['17', 'languages'], ['30', 'days, day by day']] },
     { id: 'company', sym: 'Company', name: 'COMPANY\nREPORT', sub: 'Everything we saved on a company, next to its rivals.', buy: 'https://lucaspoll.gumroad.com/l/linzh', sample: '/samples/company-report.pdf',
       stats: [['4', 'brands compared'], ['17', 'languages'], ['30', 'days, day by day']] },
-    { id: 'sponsor', sym: 'Ad spot', top: 'Launch rate', name: 'YOUR BRAND\nHERE', sub: 'A card on Like Polling, seen in 41 countries.', mail: 'Sponsoring Like Polling',
-      stats: [['41', 'countries'], ['2×', 'updated a day'], ['16', 'brands at a time']] },
+    { id: 'sponsor', sym: 'Ad spot', top: 'Launch rate', name: 'YOUR BRAND\nHERE', sub: 'A card on Like Polling, seen in 14 countries.', mail: 'Sponsoring Like Polling',
+      stats: [['14', 'countries'], ['2×', 'updated a day'], ['16', 'brands at a time']] },
   ];
   const COUNTRIES = ['BR', 'DE', 'ES', 'FR', 'GB', 'IN', 'JP', 'KR', 'MX', 'PT', 'UA', 'US'];
   const AD = 'https://lucaspoll.gumroad.com/l/laijtn';

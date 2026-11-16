@@ -53,7 +53,7 @@ const en = (r) => (r.title_tr && r.title_tr.en && r.title_tr.en !== r.title ? r.
 const md = (s) => String(s ?? '').replace(/\s+/g, ' ').replace(/([\[\]|*_`])/g, '\\$1').trim();
 
 const ABOUT = [
-  'Like Polling (likepolling.com) gathers public information about 41 countries and keeps a daily history: what people watch on YouTube (live viewer estimates, YouTube Trending videos, YouTube Music, education and fashion videos), the top news headlines, Google searches, most-read Wikipedia pages, Michelin-starred restaurants and new AI projects on GitHub.',
+  'Like Polling (likepolling.com) gathers public information about 14 countries and keeps a daily history: what people watch on YouTube (live viewer estimates, YouTube Trending videos, YouTube Music, education and fashion videos), the top news headlines, Google searches, most-read Wikipedia pages, Michelin-starred restaurants and new AI projects on GitHub.',
   'All data is free to read and cite. Please credit "Like Polling (likepolling.com)".',
 ];
 const SECTIONS = [

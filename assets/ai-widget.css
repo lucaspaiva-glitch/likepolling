@@ -70,4 +70,5 @@ a.aia-info, .aia-info { display: inline-flex; align-items: center; gap: 4px; pad
   .aib-pop { position: absolute; left: 0; right: 0; top: 100%; z-index: 20; }
   .aib-repos li:hover .aib-pop, .aib-repos li:focus-within .aib-pop { display: block; }
   .aib-repos li:hover { z-index: 21; }
+  .aib-repos li > .aib-card { height: 100%; box-sizing: border-box; }
 }
