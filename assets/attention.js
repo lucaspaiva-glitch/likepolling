@@ -20,7 +20,7 @@
   // Lines in a 100×30 box stretched to the container, each scaled to its own top month.
   // lines: points, or [{ pts, cls }] (the first line sets the months and gets the area).
   // axis: a dashed line and label at each new year, and the last month at the right end (not when small).
-  function chart(lines, { label = '', axis = false, small = false } = {}) {
+  function chart(lines, { label = '', axis = false, small = false, years = false } = {}) {
     if (Array.isArray(lines) && (!lines.length || lines[0].m)) lines = [{ pts: lines }];
     const pts = (lines[0] && lines[0].pts) || [];
     if (pts.length < 2) return '';
@@ -39,8 +39,10 @@
     if (mo) {
       // A label under every month, plus the year under the first month and each January.
       const f = new Intl.DateTimeFormat(lang(), { month: small ? 'narrow' : 'short', timeZone: 'UTC' });
-      grid = pts.map((p, i) => (i > 0 && p.m.endsWith('-01') ? `<i class="lp-attn-yr" style="left:${x(i).toFixed(2)}%"></i>` : '')).join('');
-      ax = `<span class="lp-attn-ax mo${small ? ' sm' : ''}">${pts.map((p, i) => {
+      grid = years ? '' : pts.map((p, i) => (i > 0 && p.m.endsWith('-01') ? `<i class="lp-attn-yr" style="left:${x(i).toFixed(2)}%"></i>` : '')).join('');
+      // years: one point per year (m: 'YYYY-01'), labelled with the year only.
+      ax = `<span class="lp-attn-ax mo${small ? ' sm' : ''}${years ? ' yr' : ''}">${pts.map((p, i) => {
+        if (years) return `<span style="left:${x(i).toFixed(2)}%">${p.m.slice(0, 4)}</span>`;
         const yr = i === 0 || p.m.endsWith('-01') ? `<b>${p.m.slice(0, 4)}</b>` : '';
         return `<span style="left:${x(i).toFixed(2)}%">${esc(f.format(new Date(`${p.m}-01T00:00:00Z`)).replace(/\.$/, ''))}${yr}</span>`;
       }).join('')}</span>`;
@@ -86,6 +88,7 @@
 .lp-attn-ax.mo span { padding: 0; transform: translateX(-50%); text-align: center; text-transform: capitalize; }
 .lp-attn-ax.mo b { display: block; font-weight: 600; color: #333; }
 .lp-attn-ax.mo.sm { height: 24px; }
+.lp-attn-ax.mo.yr { height: 15px; }
 .lp-attn-yr { position: absolute; top: -2px; bottom: -19px; width: 0; border-left: 1px dashed #cfcfcf; pointer-events: none; }
 .lp-attn-ax.sm ~ * .lp-attn-yr, .fsh-attn-p .lp-attn-yr { bottom: -14px; }
 .lp-attn-cur { position: absolute; top: -2px; bottom: 0; width: 0; border-left: 1.5px solid #111; pointer-events: none; }

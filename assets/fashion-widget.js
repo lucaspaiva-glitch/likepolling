@@ -54,37 +54,44 @@
   const vbody = mount.querySelector('.fsh-vbody');
   const vasof = mount.querySelector('.fsh-vasof');
   const follow = mount.querySelector('.fsh-follow');
-  // News share of 14 fashion brands and magazines, one chart at a time (GDELT, saved weekly by scripts/news-coverage-routine.js).
+  // Average views per video on the 14 biggest fashion YouTube channels, by upload year (saved weekly by scripts/fashion-yearly-routine.js).
   const attn = mount.querySelector('.fsh-attn');
   const bsel = attn.querySelector('select');
-  const BRANDS = ['Vogue', 'ELLE', "Harper's Bazaar", 'GQ', 'Chanel', 'Dior', 'Louis Vuitton', 'Hermès', 'Gucci', 'Prada', 'Burberry', 'Versace', 'Zara', 'Uniqlo'];
+  const BRANDS = ['Vogue', 'GQ', 'Louis Vuitton', "Victoria's Secret", 'Dior', 'Chanel', 'ELLE', 'Teen Vogue', "Harper's Bazaar", 'Gucci', 'Vogue Korea', 'Calvin Klein', 'SHEIN', 'FashionTV'];
+  const YEARS = 10;
   let brandRows = null, brands = [];
-  // The last 25 months are enough for the chart and the change vs last year (and stay under Supabase's 1,000-row limit).
-  const since = () => { const d = new Date(); d.setUTCDate(1); d.setUTCMonth(d.getUTCMonth() - 25); return d.toISOString().slice(0, 10); };
-  const brandData = () => (brandRows = brandRows || fetch(`${base}/rest/v1/brand_coverage_monthly?select=brand,month,share&brand=in.(${encodeURIComponent(BRANDS.map((n) => `"${n}"`).join(','))})&month=gte.${since()}&order=month.asc`, { headers })
+  const brandData = () => (brandRows = brandRows || fetch(`${base}/rest/v1/fashion_channel_yearly?select=name,year,videos,views&year=gte.${new Date().getUTCFullYear() - YEARS + 1}&order=year.asc`, { headers })
     .then((r) => (r.ok ? r.json() : [])).catch(() => []).then((rows) => {
       const by = {};
-      for (const r of rows) (by[r.brand] = by[r.brand] || []).push({ m: r.month.slice(0, 7), v: Number(r.share) });
+      for (const r of rows) if (r.videos > 0) (by[r.name] = by[r.name] || []).push({ m: `${r.year}-01`, y: r.year, n: r.videos, v: Number(r.views) / r.videos });
       return by;
     }));
+  // Last full year against the year before, in %.
+  const full = new Date().getUTCFullYear() - 1;
+  const yoy = (pts) => {
+    const a = pts.find((p) => p.y === full), b = pts.find((p) => p.y === full - 1);
+    return a && b && b.v ? Math.round(((a.v - b.v) / b.v) * 100) : null;
+  };
   async function showBrand() {
     const A = window.LP_ATTN;
     const by = await brandData();
-    brands = BRANDS.filter((b) => (by[b] || []).length >= 2 && A && A.change(by[b]) != null);
+    brands = BRANDS.filter((b) => (by[b] || []).length >= 3 && A && yoy(by[b]) != null);
     if (!brands.length) { attn.hidden = true; return; }
     if (bsel.options.length !== brands.length) bsel.innerHTML = brands.map((b) => `<option value="${esc(b)}">${esc(b)}</option>`).join('');
     if (!brands.includes(bsel.value)) bsel.value = brands[0];
-    const name = bsel.value, pts = by[name], yr = pts.slice(-12), lang = siteLang();
+    const name = bsel.value, yr = by[name], lang = siteLang();
     attn.querySelector('.lp-cs-name').textContent = name;
     attn.querySelector('.lp-cs-pos').innerHTML = `<span>${brands.indexOf(name) + 1}/${brands.length}</span>`;
-    const mention = (p) => (p && p.v > 0 ? tr('1 in {n} news stories worldwide mention {c}').replace('{n}', Math.round(100 / p.v).toLocaleString(lang)).replace('{c}', name) : '');
     const label = tr('Fashion Share: {c}').replace('{c}', name);
-    attn.querySelector('.lp-attn-txt').innerHTML = `<b>${esc(label)}</b><strong>${A.badge(A.change(pts))}<small>${esc(tr('vs last year'))}</small></strong>`;
+    attn.querySelector('.lp-attn-txt').innerHTML = `<b>${esc(label)}</b><strong>${A.badge(yoy(yr))}<small>${esc(tr('views per video in {y}').replace('{y}', full))}</small></strong>`;
     const plot = attn.querySelector('.lp-attn-plot');
-    plot.innerHTML = A.chart(yr, { label, axis: true }) + '<span class="lp-attn-cap"></span>';
+    plot.innerHTML = A.chart(yr, { label, axis: true, years: true }) + '<span class="lp-attn-cap"></span>';
     const cap = plot.querySelector('.lp-attn-cap');
-    const show = (p) => { const t = mention(p); cap.innerHTML = `<b>${esc(A.month(p.m))}</b>${t ? ` · ${esc(t)}` : ''}`; };
-    show([...yr].reverse().find((p) => p.v > 0) || yr[yr.length - 1]);
+    const show = (p) => {
+      const when = p.y > full ? `${p.y} (${tr('so far')})` : String(p.y);
+      cap.innerHTML = `<b>${esc(when)}</b> · ${esc(tr('{n} views per video').replace('{n}', A.num(p.v)))} · ${esc(tr('{n} videos').replace('{n}', p.n.toLocaleString(lang)))}`;
+    };
+    show(yr.find((p) => p.y === full));
     A.pick(plot, yr.length, (i) => show(yr[i]));
     attn.hidden = false;
   }
