@@ -40,8 +40,11 @@
       <select class="ytt-select fsh-select" aria-label="Country"></select></div>
     <section class="ytt fsh-card fsh-vcard" hidden>
       <div class="ytt-head"><h3 class="ytt-title">Fashion Index</h3><span class="ytt-sym">FIX</span><span class="ytt-spacer"></span><span class="ytt-asof fsh-vasof"></span></div>
+      <div class="lp-attn-row fsh-attn" data-no-i18n hidden>
+        <span class="lp-cs-nav fsh-bnav"><button type="button" class="lp-cs-arr" data-d="-1" aria-label="Previous brand">‹</button><span class="lp-cs-grp"><span class="lp-cs-name" aria-hidden="true"></span><span class="lp-cs-pos" aria-hidden="true"></span><select class="lp-cs-sel" aria-label="Brand"></select></span><button type="button" class="lp-cs-arr" data-d="1" aria-label="Next brand">›</button></span>
+        <div class="lp-attn-txt"></div><div class="lp-attn-plot"></div>
+      </div>
       <div class="fsh-vbody"></div>
-      <div class="fsh-attn" data-no-i18n hidden><p class="fsh-attn-h"></p><div class="fsh-attn-grid"></div></div>
       <p class="ytt-foot fsh-follow" hidden>Portugal follows fashion from Italy, Spain, France and the UK, so these are the top videos from their channels.</p>
       <p class="ytt-foot">Fastest-growing uploads of the last 30 days from the fashion magazines, brands and fashion weeks we track in this country, at most 2 per channel. Speed = views per hour since upload. Refreshed twice a day.</p>
       <p class="ytt-foot">Countries with fewer than 5 videos look back 60 days, with up to 3 per channel.</p>
@@ -51,41 +54,45 @@
   const vbody = mount.querySelector('.fsh-vbody');
   const vasof = mount.querySelector('.fsh-vasof');
   const follow = mount.querySelector('.fsh-follow');
-  // Brands in the news: share of world news per month of the brands and magazines in the Fashion Index (GDELT, saved weekly by scripts/news-coverage-routine.js).
+  // News share of 14 fashion brands and magazines, one chart at a time (GDELT, saved weekly by scripts/news-coverage-routine.js).
   const attn = mount.querySelector('.fsh-attn');
-  const BRANDS = [
-    [/^teen vogue/i, 'Teen Vogue'], [/^vogue/i, 'Vogue'], [/^elle\b/i, 'ELLE'],
-    [/^harper'?s bazaar/i, "Harper's Bazaar"], [/^instyle/i, 'InStyle'], [/^wwd\b/i, 'WWD'],
-    [/^gq\b/i, 'GQ'], [/^w korea/i, 'W'], [/^burberry/i, 'Burberry'], [/^chanel/i, 'Chanel'],
-    [/dior/i, 'Dior'], [/^louis vuitton/i, 'Louis Vuitton'], [/^herm[eè]s/i, 'Hermès'],
-    [/^balmain/i, 'Balmain'], [/^gucci/i, 'Gucci'], [/^prada/i, 'Prada'],
-    [/^valentino/i, 'Valentino'], [/^versace/i, 'Versace'], [/^zara\b/i, 'Zara'],
-    [/^mango\b/i, 'Mango'], [/^uniqlo/i, 'Uniqlo'], [/^lakm[eé] fashion week/i, 'Lakmé Fashion Week', 'Lakmé Fashion Week'],
-    [/^tamara kalinic/i, 'Tamara Kalinic'],
-  ];
-  async function showAttn(rows) {
+  const bsel = attn.querySelector('select');
+  const BRANDS = ['Vogue', 'ELLE', "Harper's Bazaar", 'GQ', 'Chanel', 'Dior', 'Louis Vuitton', 'Hermès', 'Gucci', 'Prada', 'Burberry', 'Versace', 'Zara', 'Uniqlo'];
+  let brandRows = null, brands = [];
+  const brandData = () => (brandRows = brandRows || fetch(`${base}/rest/v1/brand_coverage_monthly?select=brand,month,share&brand=in.(${encodeURIComponent(BRANDS.map((n) => `"${n}"`).join(','))})&order=month.asc`, { headers })
+    .then((r) => (r.ok ? r.json() : [])).catch(() => []).then((rows) => {
+      const by = {};
+      for (const r of rows) (by[r.brand] = by[r.brand] || []).push({ m: r.month.slice(0, 7), v: Number(r.share) });
+      return by;
+    }));
+  async function showBrand() {
     const A = window.LP_ATTN;
-    const seen = new Set();
-    for (const r of rows) {
-      const b = BRANDS.find(([re]) => re.test(String(r.channel_title || '').trim()));
-      if (b) seen.add(b[1]);
-    }
-    const list = [...seen].slice(0, 6);
-    if (!A || !list.length) { attn.hidden = true; return; }
-    const mine = token;
-    const got = await fetch(`${base}/rest/v1/brand_coverage_monthly?select=brand,month,share&brand=in.(${encodeURIComponent(list.map((n) => `"${n}"`).join(','))})&order=month.asc`, { headers })
-      .then((r) => (r.ok ? r.json() : [])).catch(() => []);
-    if (mine !== token) return;
-    const cards = list.map((name) => {
-      const pts = got.filter((r) => r.brand === name).map((r) => ({ m: r.month.slice(0, 7), v: Number(r.share) }));
-      const ch = A.change(pts);
-      if (pts.length < 2 || ch == null) return '';
-      return `<div class="fsh-attn-c"><span class="fsh-attn-n"><b>${esc(name)}</b>${A.badge(ch)}</span><span class="fsh-attn-p">${A.chart(pts.slice(-12), { label: name, axis: true, small: true })}</span></div>`;
-    }).join('');
-    attn.querySelector('.fsh-attn-h').innerHTML = `<b>${esc(tr('Brand news share vs last year'))}</b> ${esc(tr('Share of world news per month, last 12 months'))}`;
-    attn.querySelector('.fsh-attn-grid').innerHTML = cards;
-    attn.hidden = !cards;
+    const by = await brandData();
+    brands = BRANDS.filter((b) => (by[b] || []).length >= 2 && A && A.change(by[b]) != null);
+    if (!brands.length) { attn.hidden = true; return; }
+    if (bsel.options.length !== brands.length) bsel.innerHTML = brands.map((b) => `<option value="${esc(b)}">${esc(b)}</option>`).join('');
+    if (!brands.includes(bsel.value)) bsel.value = brands[0];
+    const name = bsel.value, pts = by[name], yr = pts.slice(-12), lang = siteLang();
+    attn.querySelector('.lp-cs-name').textContent = name;
+    attn.querySelector('.lp-cs-pos').innerHTML = `<span>${brands.indexOf(name) + 1}/${brands.length}</span>`;
+    const mention = (p) => (p && p.v > 0 ? tr('1 in {n} news stories worldwide mention {c}').replace('{n}', Math.round(100 / p.v).toLocaleString(lang)).replace('{c}', name) : '');
+    const label = tr('News share: {c}').replace('{c}', name);
+    attn.querySelector('.lp-attn-txt').innerHTML = `<b>${esc(label)}</b><strong>${A.badge(A.change(pts))}<small>${esc(tr('vs last year'))}</small></strong>`;
+    const plot = attn.querySelector('.lp-attn-plot');
+    plot.innerHTML = A.chart(yr, { label, axis: true }) + '<span class="lp-attn-cap"></span>';
+    const cap = plot.querySelector('.lp-attn-cap');
+    const show = (p) => { const t = mention(p); cap.innerHTML = `<b>${esc(A.month(p.m))}</b>${t ? ` · ${esc(t)}` : ''}`; };
+    show(yr[yr.length - 1]);
+    A.pick(plot, yr.length, (i) => show(yr[i]));
+    attn.hidden = false;
   }
+  bsel.addEventListener('change', showBrand);
+  attn.querySelectorAll('[data-d]').forEach((b) => b.addEventListener('click', () => {
+    const k = brands.indexOf(bsel.value);
+    if (k < 0) return;
+    bsel.value = brands[(k + Number(b.dataset.d) + brands.length) % brands.length];
+    showBrand();
+  }));
   const SHOWN = 10;
   const vcache = {};
   let videoCodes = [];
@@ -125,7 +132,7 @@
 
   async function showVideos(cc) {
     const mine = token;
-    if (!videoCodes.includes(cc)) { vcard.hidden = true; attn.hidden = true; return; }
+    if (!videoCodes.includes(cc)) { vcard.hidden = true; return; }
     vcard.hidden = false;
     follow.hidden = cc !== 'PT';
     if (!vcache[cc]) vbody.innerHTML = '';
@@ -135,7 +142,6 @@
       const rows = vcache[cc];
       if (!rows.length) { vcard.hidden = true; return; }
       vbody.innerHTML = videos(rows);
-      showAttn(rows);
       vasof.textContent = `As of ${new Date(rows[0].fetched_at).toISOString().slice(11, 16)} UTC`;
     } catch (err) {
       if (mine !== token) return;
@@ -174,9 +180,11 @@
       select.value = defaultCountry(codes);
       select.addEventListener('change', () => show(select.value));
       document.addEventListener('lp:lang', () => {
-        if (vcache[select.value] && vcache[select.value].length) { vbody.innerHTML = videos(vcache[select.value]); showAttn(vcache[select.value]); }
+        if (vcache[select.value] && vcache[select.value].length) vbody.innerHTML = videos(vcache[select.value]);
+        showBrand();
       });
       show(select.value);
+      showBrand();
     } catch (err) {
       if (err.message !== 'no data') console.error('Fashion widget:', err);
       mount.hidden = true;

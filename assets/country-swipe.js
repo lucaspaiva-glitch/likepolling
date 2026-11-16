@@ -36,8 +36,8 @@
     .lp-cs-arr:focus-visible { outline: 2px solid rgba(255,42,60,.6); outline-offset: 2px; }
     @media (max-width: 560px) {
       .lp-cs-arr { width: 32px; height: 28px; }
-      #news-front .nw-head .nw-wpick, #yt-trending .lp-cs-nav, #yt-music .lp-cs-nav, #edu .lp-cs-nav, #fashion .lp-cs-nav { order: 2; flex-basis: 100%; }
-      #yt-trending .lp-cs-nav, #yt-music .lp-cs-nav, #edu .lp-cs-nav, #fashion .lp-cs-nav { flex: 0 0 auto; margin-right: 100%; }
+      #news-front .nw-head .nw-wpick, #yt-trending .lp-cs-nav, #yt-music .lp-cs-nav, #edu .lp-cs-nav, #fashion .fsh-top .lp-cs-nav { order: 2; flex-basis: 100%; }
+      #yt-trending .lp-cs-nav, #yt-music .lp-cs-nav, #edu .lp-cs-nav, #fashion .fsh-top .lp-cs-nav { flex: 0 0 auto; margin-right: 100%; }
       #news-front .nw-head .nw-spacer { display: none; }
     }
   `;

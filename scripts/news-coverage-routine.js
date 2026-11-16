@@ -16,12 +16,10 @@ const { coverage, termOf } = require('../lib/news-coverage.js');
 // How the news names a country, when it differs from its English short name (GDELT needs 4+ letters).
 const QUERY = { US: '"United States"', GB: '("United Kingdom" OR "Britain")', KR: '"South Korea"', TW: '"Taiwan"',
   TR: '("Turkey" OR "Türkiye")', CI: '"Ivory Coast"', NL: '"Netherlands"', PH: '"Philippines"' };
-// Brands and magazines of the homepage Fashion Index (assets/fashion-widget.js), worded to avoid other meanings.
-const BRANDS = { 'Teen Vogue': '"Teen Vogue"', Vogue: '"Vogue"', ELLE: '"Elle magazine"', "Harper's Bazaar": '"Harpers Bazaar"', InStyle: '"InStyle"',
-  WWD: '"Womens Wear Daily"', GQ: '"GQ magazine"', W: '"W magazine"', Burberry: '"Burberry"', Chanel: '"Chanel"', Dior: '"Dior"',
-  'Louis Vuitton': '"Louis Vuitton"', 'Hermès': '"Hermes" (fashion OR luxury OR Birkin)', Balmain: '"Balmain"', Gucci: '"Gucci"', Prada: '"Prada"',
-  Valentino: '"Valentino" (fashion OR designer)', Versace: '"Versace"', Zara: '"Zara" (fashion OR clothing OR Inditex)', Mango: '"Mango" (fashion OR clothing)',
-  Uniqlo: '"Uniqlo"', 'Lakmé Fashion Week': '"Lakme Fashion Week"', 'Tamara Kalinic': '"Tamara Kalinic"' };
+// The 14 brands and magazines of the homepage Fashion Index chart (assets/fashion-widget.js), worded to avoid other meanings.
+const BRANDS = { Vogue: '"Vogue"', ELLE: '"Elle magazine"', "Harper's Bazaar": '"Harpers Bazaar"', GQ: '"GQ magazine"', Chanel: '"Chanel"', Dior: '"Dior"',
+  'Louis Vuitton': '"Louis Vuitton"', 'Hermès': '"Hermes" (fashion OR luxury OR Birkin)', Gucci: '"Gucci"', Prada: '"Prada"', Burberry: '"Burberry"',
+  Versace: '"Versace"', Zara: '"Zara" (fashion OR clothing OR Inditex)', Uniqlo: '"Uniqlo"' };
 const sleep = (ms) => new Promise((ok) => setTimeout(ok, ms));
 
 function query(cc) {
@@ -45,13 +43,15 @@ async function main(env = process.env, now = new Date(), deps = {}) {
   const snaps = await fetchImpl(`${env.SUPABASE_URL}/rest/v1/report_snapshots?select=subjects&kind=in.(artist,company)&order=saved_at.desc&limit=1000`, { headers })
     .then((r) => (r.ok ? r.json() : [])).catch(() => []);
   const people = [...new Set((Array.isArray(snaps) ? snaps : []).map((r) => termOf(r.subjects)))].filter((t) => t.length >= 3 && t.length <= 60 && !BRANDS[t]);
+  const rank = ([, col, key]) => (col !== 'brand' ? 0 : BRANDS[key] ? 1 : 2);
   const jobs = [...people.map((t) => ['brand_coverage_monthly', 'brand', t, `"${t.replace(/"/g, '')}"`]),
     // World News countries first (the homepage chart), then the rest of the report countries.
     ...[...new Set([...FEATURED, ...COUNTRIES])].map((cc) => ['news_coverage_monthly', 'country_code', cc, query(cc)]),
     ...Object.entries(BRANDS).map(([b, q]) => ['brand_coverage_monthly', 'brand', b, q])]
     .map((j) => [...j, savedAt[`${j[0]}:${j[2]}`] || 0])
     .filter((j) => now - j[4] > 6 * 86400000)
-    .sort((x, y) => x[4] - y[4]);
+    // Oldest first; among equals, report subjects, then the Fashion Index brands (the homepage chart).
+    .sort((x, y) => x[4] - y[4] || rank(y) - rank(x));
   const start = clock();
   let saved = 0, tried = 0, failed = 0;
   for (const [table, col, key, q] of jobs) {
