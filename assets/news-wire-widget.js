@@ -175,44 +175,31 @@
   fLabel.foot.el.textContent = '';
   front.querySelector('.nw-asof').insertAdjacentHTML('beforebegin', '<span class="nw-wpick" hidden><img class="nw-pick-flag" src="" alt="" width="20" height="15"><select class="nw-select" data-no-i18n></select></span>');
   const wPick = front.querySelector('.nw-wpick');
-  // Through time: how much the world read the country's English Wikipedia page each month (assets/attention.js).
-  front.querySelector('.nw-sub').insertAdjacentHTML('afterend', '<div class="lp-attn-row nw-attn" data-no-i18n hidden><div class="lp-attn-txt"></div><div class="lp-attn-plot"></div></div>');
+  // Through time: each month's top story for the country, from the time capsule archive (newest first).
+  front.querySelector('.nw-sub').insertAdjacentHTML('afterend', '<div class="lp-attn-row nw-attn" data-no-i18n hidden><div class="lp-attn-txt"></div><ol class="nw-months"></ol></div>');
   const attn = front.querySelector('.nw-attn');
   let attnFor = null;
-  // The share of the world's news that mentioned the country each month (GDELT, saved weekly by
-  // scripts/news-coverage-routine.js), and each month's top story from the time capsule archive (shown when pointing at or tapping a month).
-  const coverageOf = {}, storiesOf = {};
-  const coverage = (cc) => (coverageOf[cc] = coverageOf[cc] || fetch(`${base}/rest/v1/news_coverage_monthly?select=month,share&country_code=eq.${encodeURIComponent(cc)}&order=month.asc`, { headers })
-    .then((r) => (r.ok ? r.json() : [])).catch(() => []).then((rows) => rows.map((r) => ({ m: r.month.slice(0, 7), v: Number(r.share) }))));
+  const MONTHS = 6;
+  const storiesOf = {};
   const stories = (cc) => (storiesOf[cc] = storiesOf[cc] || fetch(`${base}/rest/v1/rpc/month_top_stories`, { method: 'POST', headers: { ...headers, 'Content-Type': 'application/json' }, body: JSON.stringify({ p_country: cc }) })
-    .then((r) => (r.ok ? r.json() : [])).catch(() => []).then((rows) => new Map(rows.map((r) => [r.month.slice(0, 7), r]))));
+    .then((r) => (r.ok ? r.json() : [])).catch(() => []));
   async function showAttn(cc) {
     const A = window.LP_ATTN;
     attnFor = cc;
     if (!A || !cc) { attn.hidden = true; return; }
-    const [pts, top] = await Promise.all([coverage(cc), stories(cc)]);
+    const rows = await stories(cc);
     if (attnFor !== cc) return;
-    if (pts.length < 2) { attn.hidden = true; return; }
     const lang = siteLang();
+    const list = rows.map((s) => ({ ...s, t: (s.title_tr && s.title_tr[lang]) || s.title_en })).filter((s) => s.t)
+      .sort((x, y) => (x.month < y.month ? 1 : -1)).slice(0, MONTHS);
+    if (!list.length) { attn.hidden = true; return; }
     let name = cc;
     try { name = new Intl.DisplayNames([lang === 'pt' ? 'pt-BR' : lang], { type: 'region' }).of(cc); } catch (e) { /* code only */ }
-    const ch = A.change(pts);
-    const last = pts[pts.length - 1].v > 0 ? pts[pts.length - 1] : null;
-    attn.querySelector('.lp-attn-txt').innerHTML = `<b>${esc(tr('News share: {c}').replace('{c}', name))}</b>${ch == null ? '' : `<strong>${A.badge(ch)}<small>${esc(tr('vs last year'))}</small></strong>`}${last ? `<span>${esc(tr('1 in {n} news stories worldwide mention {c}').replace('{n}', Math.round(100 / last.v).toLocaleString(lang)).replace('{c}', name))}</span>` : ''}`;
-    const plot = attn.querySelector('.lp-attn-plot');
-    const yr = pts.slice(-12);
-    plot.innerHTML = A.chart(yr, { label: tr('News share: {c}').replace('{c}', name), axis: true }) + '<span class="lp-attn-cap"></span>';
-    const cap = plot.querySelector('.lp-attn-cap');
-    const show = (m) => {
-      const s = top.get(m);
-      const t = s && ((s.title_tr && s.title_tr[lang]) || s.title_en);
-      const sum = s && s.title_tr && s.title_tr.sum && (s.title_tr.sum[lang] || s.title_tr.sum.en);
-      cap.innerHTML = t ? `<b>${esc(A.month(m))}</b> · ${esc(tr('Top story'))}: <a href="${esc(s.link)}" target="_blank" rel="noopener">${esc(t)}</a>${sum ? `<small>${esc(sum)}</small>` : ''}`
-        : `<b>${esc(A.month(m))}</b> · ${esc(tr('No top story saved for this month.'))}${m < '2026-10' ? ` ${esc(tr('We started saving them in October 2026.'))}` : ''}`;
-    };
-    const lastStory = [...yr].reverse().find((p) => top.has(p.m));
-    show((lastStory || yr[yr.length - 1]).m);
-    A.pick(plot, yr.length, (i) => show(yr[i].m));
+    attn.querySelector('.lp-attn-txt').innerHTML = `<b>${esc(tr('Top story each month: {c}').replace('{c}', name))}</b>`;
+    attn.querySelector('.nw-months').innerHTML = list.map((s) => {
+      const sum = s.title_tr && s.title_tr.sum && (s.title_tr.sum[lang] || s.title_tr.sum.en);
+      return `<li><b>${esc(A.month(s.month.slice(0, 7)))}</b><a href="${esc(s.link)}" target="_blank" rel="noopener">${esc(s.t)}</a>${sum ? `<small>${esc(sum)}</small>` : ''}</li>`;
+    }).join('');
     attn.hidden = false;
   }
   const wSel = wPick.querySelector('select');
