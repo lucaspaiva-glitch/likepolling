@@ -33,7 +33,28 @@ export function txType(amount: number): "income" | "expense" {
   return amount >= 0 ? "income" : "expense";
 }
 
+// Merrill's own record of dividend/interest cash swept out by ACH; the real move is the "Withdrawal TO BAC" row.
+export const MERRILL_SWEEP = /total div\/int ach/i;
+
+// Merchants whose bank/Plaid category is missing or misleading (e.g. a gym filed under Utilities).
+const MERCHANTS: Array<[RegExp, string]> = [
+  [MERRILL_SWEEP, "Transfer"],
+  [/venice/i, "Subscriptions"],
+  [/hinge|avid technology|native instruments/i, "Subscriptions"],
+  [/xceed|\bticket/i, "Entertainment"],
+  [/holmes place|\bgym\b|fitness/i, "Health"],
+  [/yakuza/i, "Dining"],
+  [/refer estacao|parking|parque/i, "Transportation"],
+];
+
+export function refineCategory(payee: string | null, descriptor: string | null, category: string | null): string | null {
+  const text = `${payee ?? ""} ${descriptor ?? ""}`;
+  for (const [re, cat] of MERCHANTS) if (re.test(text)) return cat;
+  return category;
+}
+
 const KEYWORDS: Array<[RegExp, string]> = [
+  [MERRILL_SWEEP, "Transfer"],
   [/payroll|direct dep|salary|paycheck/i, "Income"],
   [/transfer|zelle|venmo|online banking transfer/i, "Transfer"],
   [/rent|mortgage|hoa\b/i, "Housing"],

@@ -1,6 +1,6 @@
 import "server-only";
 import { getServerSupabase, isSupabaseConfigured } from "@/lib/db/server";
-import { isLiability } from "@/lib/categorize";
+import { isLiability, MERRILL_SWEEP, refineCategory } from "@/lib/categorize";
 import { internalTransferIds } from "@/lib/transfers";
 import { vacationIds } from "@/lib/vacation";
 import { LIKE_POLLING_CATEGORY, LIKE_POLLING_REVENUE_CATEGORY, likePollingRevenueSource, likePollingSummary, likePollingVendor, type LikePollingSummary } from "@/lib/like-polling";
@@ -138,7 +138,7 @@ async function loadSnapshots(accountIds: string[]): Promise<{ rows: Array<{ acco
 // paid on purchase) reduces income.
 function flowOf(t: Transaction, accountType: Map<string, string>, internal: Set<string>, investmentHistoryStart: string | null): Flow | null {
   // "Own accounts": money moved to one of your untracked accounts (e.g. a Portuguese bank) — neither spent nor earned.
-  if (internal.has(t.id) || t.category === "Trades" || t.category === "Own accounts") return null;
+  if (internal.has(t.id) || t.category === "Trades" || t.category === "Own accounts" || MERRILL_SWEEP.test(t.payee ?? "")) return null;
   const type = (t.account_id && accountType.get(t.account_id)) || "";
   if (t.amount >= 0) {
     if (isLiability(type)) {
@@ -212,7 +212,7 @@ export async function getDashboardData(): Promise<DashboardData> {
       // Like Polling running costs (Devin, Google Cloud, ...) get their own category.
       if (vendor && t.amount < 0) return { ...t, category: LIKE_POLLING_CATEGORY };
       if (t.amount > 0 && likePollingRevenueSource(lt.payee, lt.descriptor)) return { ...t, category: LIKE_POLLING_REVENUE_CATEGORY };
-      return vacation.has(t.id) ? { ...t, category: "Vacation" } : t;
+      return vacation.has(t.id) ? { ...t, category: "Vacation" } : { ...t, category: refineCategory(lt.payee, lt.descriptor, t.category) };
     });
   } catch (err) {
     return emptyData(true, err instanceof Error ? err.message : String(err));
