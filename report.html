@@ -109,7 +109,7 @@
     .print-only { display: none; }
     .dates { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 0; }
     .dates div { flex: 1 1 0; min-width: 0; padding: 8px 12px; border: 1px solid #eee; border-radius: 10px; }
-    @media (max-width: 520px) { .dates { gap: 6px; } .dates div { padding: 7px 8px; } .dates dt { font-size: 9.5px; letter-spacing: .03em; } .dates dd { font-size: 12.5px; } }
+    @media (max-width: 520px) { .dates { gap: 6px; } .dates div { flex: 1 1 100%; display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 7px 10px; } .dates dt { font-size: 10px; letter-spacing: .04em; } .dates dd { margin: 0; font-size: 14px; text-align: right; } }
     .dates dt { font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: #6b6b6b; }
     .dates dd { margin: 2px 0 0; font-size: 15px; font-weight: 700; }
     .ehead { display: flex; align-items: center; gap: 16px; margin-top: 10px; }
