@@ -25,3 +25,29 @@ test('topRepos counts copies of one project once and ranks by stars', () => {
   const out = topRepos([[r('a/Checker', 50, 'Scan configs'), r('b/checker', 40, 'Other'), r('c/x', 30, 'Scan configs'), r('d/y', 60, null)]], '2026-11-16');
   assert.deepStrictEqual(out.map((x) => [x.rank, x.full_name]), [[1, 'd/y'], [2, 'a/Checker']]);
 });
+
+test('countryOf reads the country from a free-text profile location', () => {
+  const { countryOf } = require('../scripts/github-countries-routine.js');
+  assert.strictEqual(countryOf('São Paulo, Brazil'), 'BR');
+  assert.strictEqual(countryOf('San Francisco Bay Area'), 'US');
+  assert.strictEqual(countryOf('Hangzhou, China'), 'CN');
+  assert.strictEqual(countryOf('北京'), 'CN');
+  assert.strictEqual(countryOf('Toronto, Ontario, CA'), 'CA');
+  assert.strictEqual(countryOf('Berlin, Germany'), 'DE');
+  assert.strictEqual(countryOf('Earth'), null);
+  assert.strictEqual(countryOf(null), null);
+});
+
+test('aiBuilders keeps each year\'s most-starred project, with empty years kept', () => {
+  const { aiBuilders } = require('../lib/report.js');
+  const months = [{ month: '2024-11-01' }, { month: '2025-06-01' }, { month: '2026-01-01' }];
+  const rows = [
+    { month: '2024-11-01', full_name: 'a/x', stars: 90, url: 'u' },
+    { month: '2026-01-01', full_name: 'b/y', stars: 50, url: 'u' },
+    { month: '2024-03-01', full_name: 'c/z', stars: 10, url: 'u' },
+  ];
+  const b = aiBuilders(months, rows);
+  assert.deepStrictEqual(b.by_year.map((y) => [y.year, y.top && y.top.full_name]), [['2024', 'a/x'], ['2025', null], ['2026', 'b/y']]);
+  assert.strictEqual(b.total, 3);
+  assert.strictEqual(aiBuilders(months, []), null);
+});
