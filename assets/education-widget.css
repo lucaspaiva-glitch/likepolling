@@ -36,3 +36,12 @@
 @media (min-width: 1240px) {
   .wrap:has(> .ytt:not([hidden])) > .edu { grid-column: 1 / -1; grid-row: 8; margin: 0 0 56px; }
 }
+/* Phones: the whole wide picture sits in the tall frame over a blurred copy of itself, instead of a zoomed-in crop. */
+@media (max-width: 560px) {
+  .edu .ytt-card[style] .ytt-cth { background: #111; }
+  .edu .ytt-card[style] .ytt-cth::before { content: ''; position: absolute; inset: -16px; background: var(--th) center / cover; filter: blur(14px) brightness(.75); }
+  .edu .ytt-card[style] .lp-nothumb::before { display: none; }
+  .edu .ytt-card[style] .ytt-cth img { position: relative; object-fit: contain; background: transparent; }
+  .edu .ytt-card[style] .lp-prev { left: -10%; width: 480%; }
+  .edu .ytt-card[style] .lp-prev.cc { left: 0; width: 200%; }
+}

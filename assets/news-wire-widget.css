@@ -397,11 +397,11 @@ html.nw-lock { overflow: hidden; }
   .nw-front.nw-ranked .nw-img { height: 64%; bottom: auto; -webkit-mask-image: linear-gradient(#000 70%, transparent); mask-image: linear-gradient(#000 70%, transparent); animation-name: nw-kbs; }
 }
 @keyframes nw-kbs { from { transform: scale(1) translate(0, 0); } to { transform: scale(1.06) translate(-2%, 1%); } }
-/* Phones: Popular Shorts in one sideways swipe row (01–10), so the section stays short. */
+/* Phones: Popular Shorts one at a time; swipe left or right for the next (01–10). */
 @media (max-width: 560px) {
   .nw-shorts .nw-feed.ysh { display: flex; flex-direction: row; align-items: flex-start; gap: 12px; height: auto; min-height: 0; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; scrollbar-width: none; padding: 4px 0 6px; }
   .nw-shorts .nw-feed.ysh::-webkit-scrollbar { display: none; }
   .nw-shorts .ysh-cards, .nw-shorts .ysh-list { display: contents; }
-  .nw-shorts .ysh-cards > :nth-child(n), .nw-shorts .ysh-list li { flex: none; width: 58%; scroll-snap-align: start; }
+  .nw-shorts .ysh-cards > :nth-child(n), .nw-shorts .ysh-list li { flex: none; width: 100%; scroll-snap-align: center; scroll-snap-stop: always; }
   .nw-shorts .ysh-list a { width: 100%; margin: 0; }
 }
