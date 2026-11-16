@@ -391,3 +391,17 @@ html.nw-lock { overflow: hidden; }
   .nw-front.nw-ranked .nw-row { width: calc(var(--sw) * (1 - (var(--i, 0) + 1) * .012)); margin-inline: auto; }
   .nw-front.nw-ranked .nw-row-media { width: 100%; aspect-ratio: 9 / 16; }
 }
+/* Phones: the photo fills the top of each tall frame and fades into the dark below, so less of it is cut off;
+   it drifts gently instead of zooming. */
+@media (max-width: 560px) {
+  .nw-front.nw-ranked .nw-img { height: 64%; bottom: auto; -webkit-mask-image: linear-gradient(#000 70%, transparent); mask-image: linear-gradient(#000 70%, transparent); animation-name: nw-kbs; }
+}
+@keyframes nw-kbs { from { transform: scale(1) translate(0, 0); } to { transform: scale(1.06) translate(-2%, 1%); } }
+/* Phones: Popular Shorts in one sideways swipe row (01–10), so the section stays short. */
+@media (max-width: 560px) {
+  .nw-shorts .nw-feed.ysh { display: flex; flex-direction: row; align-items: flex-start; gap: 12px; height: auto; min-height: 0; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; scrollbar-width: none; padding: 4px 0 6px; }
+  .nw-shorts .nw-feed.ysh::-webkit-scrollbar { display: none; }
+  .nw-shorts .ysh-cards, .nw-shorts .ysh-list { display: contents; }
+  .nw-shorts .ysh-cards > :nth-child(n), .nw-shorts .ysh-list li { flex: none; width: 58%; scroll-snap-align: start; }
+  .nw-shorts .ysh-list a { width: 100%; margin: 0; }
+}
