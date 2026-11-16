@@ -208,7 +208,7 @@
       const t = s && ((s.title_tr && s.title_tr[lang]) || s.title_en);
       const sum = s && s.title_tr && s.title_tr.sum && (s.title_tr.sum[lang] || s.title_tr.sum.en);
       cap.innerHTML = t ? `<b>${esc(A.month(m))}</b> · ${esc(tr('Top story'))}: <a href="${esc(s.link)}" target="_blank" rel="noopener">${esc(t)}</a>${sum ? `<small>${esc(sum)}</small>` : ''}`
-        : `<b>${esc(A.month(m))}</b>${top.size ? ` · ${esc(tr('Point at or tap a month to see its top story.'))}` : ''}`;
+        : `<b>${esc(A.month(m))}</b> · ${esc(tr('No top story saved for this month.'))}${m < '2026-10' ? ` ${esc(tr('We started saving them in October 2026.'))}` : ''}`;
     };
     const lastStory = [...yr].reverse().find((p) => top.has(p.m));
     show((lastStory || yr[yr.length - 1]).m);
