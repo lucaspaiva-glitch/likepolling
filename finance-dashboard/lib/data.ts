@@ -10,9 +10,17 @@ import { GEMINI_READING_EXTERNAL_ID, emptyGeminiCredit, loadGeminiCredit, type G
 import { emptyInsights, loadCompanyInsights, type CompanyInsights } from "@/lib/company-insights";
 import type { Account, Transaction } from "@/lib/types";
 
+export interface CategoryItem {
+  date: string;
+  payee: string;
+  amount: number;
+}
+
 export interface CategoryPoint {
   name: string;
   value: number;
+  count?: number;
+  items?: CategoryItem[];
 }
 
 export interface PortfolioPoint {
@@ -155,15 +163,23 @@ function flowOf(t: Transaction, accountType: Map<string, string>, internal: Set<
 }
 
 function categoryTotals(txs: Transaction[], since: string, flows: Map<string, Flow>): CategoryPoint[] {
-  const totals = new Map<string, number>();
+  const totals = new Map<string, { value: number; items: CategoryItem[] }>();
   for (const t of txs) {
     const f = flows.get(t.id);
     // Like Polling costs are the business's, shown in its own section rather than your spending.
     if (!f || f.burn === 0 || t.date < since || t.category === LIKE_POLLING_CATEGORY) continue;
     const c = t.category || "Uncategorized";
-    totals.set(c, (totals.get(c) ?? 0) + f.burn);
+    const e = totals.get(c) ?? { value: 0, items: [] };
+    e.value += f.burn;
+    e.items.push({ date: t.date, payee: t.payee ?? "", amount: f.burn });
+    totals.set(c, e);
   }
-  return Array.from(totals, ([name, value]) => ({ name, value: Math.round(value * 100) / 100 }))
+  return Array.from(totals, ([name, e]) => ({
+    name,
+    value: Math.round(e.value * 100) / 100,
+    count: e.items.length,
+    items: e.items.sort((a, b) => b.amount - a.amount).slice(0, 5),
+  }))
     .filter((p) => p.value > 0)
     .sort((a, b) => b.value - a.value);
 }
