@@ -81,7 +81,7 @@ function uniqueItems(items, seen, maxPerSource = Infinity) {
   });
 }
 
-// The World News defaults; scripts/news-fashion-routine.js passes its own.
+// The World News defaults.
 const WORLD = {
   table: 'news_world', rpc: 'replace_news_world', feed: feedUrl, searchTopUp: (cc) => !!SEARCH[cc],
   photoTarget: PHOTO_TARGET, imageLookups: IMAGE_LOOKUPS_PER_RUN, translations: TRANSLATIONS_PER_RUN, classify: false, summaries: true, countries: FEATURED,
