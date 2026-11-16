@@ -60,6 +60,17 @@ export default function LikePollingCard({ data, gemini }: { data: LikePollingSum
           </div>
         ))}
       </div>
+      <div className="mt-2 grid grid-cols-2 gap-2 text-center">
+        {[
+          ["Reports sold", data.units.reports],
+          ["Ad spots sold", data.units.ads],
+        ].map(([label, value]) => (
+          <div key={label} className="rounded border border-tremor-border px-1 py-1">
+            <p className="text-[11px] text-tremor-content">{label}</p>
+            <p className="text-sm font-semibold tabular-nums text-tremor-content-strong">{value}</p>
+          </div>
+        ))}
+      </div>
       {data.cash != null && (
         <div className="mt-2 flex items-center justify-between rounded border border-tremor-border px-2 py-1.5 text-xs">
           <span className="text-tremor-content-emphasis">PayPal balance</span>
@@ -135,19 +146,13 @@ export default function LikePollingCard({ data, gemini }: { data: LikePollingSum
       )}
       {data.plan.vendors.length > 0 && (
         <div className="mt-3">
-          <p className="text-[11px] text-tremor-content">Planned · next 3 months (latest monthly bills, plus Supabase Pro)</p>
+          <p className="text-[11px] text-tremor-content">Fixed monthly charges</p>
           <table className="mt-1 w-full text-xs tabular-nums">
             <tbody className="divide-y divide-tremor-border text-tremor-content-emphasis">
               {data.plan.vendors.map((v) => (
                 <tr key={v.name}>
                   <td className="py-1">{v.name}</td>
                   <td className="py-1 text-right">{fmtUsd(v.monthly)}/mo</td>
-                </tr>
-              ))}
-              {data.plan.months.map((m) => (
-                <tr key={m.month} className="font-medium text-tremor-content-strong">
-                  <td className="py-1">{monthLabel(m.month)}</td>
-                  <td className="py-1 text-right">{fmtUsd(m.total)}</td>
                 </tr>
               ))}
             </tbody>

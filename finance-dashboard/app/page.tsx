@@ -60,13 +60,11 @@ export default async function Page() {
         <div className="flex flex-col gap-2 lg:col-span-3">
           <LikePollingCard data={data.likePolling} gemini={data.geminiCredit} />
           <CompanyInsightsCard data={data.insights} />
-          <div className="flex-1">
-            <CsvDropzone accounts={data.accounts} />
-          </div>
         </div>
       </div>
 
       <TransactionsTable transactions={data.transactions} accounts={data.accounts} />
+      <CsvDropzone accounts={data.accounts} />
     </main>
   );
 }

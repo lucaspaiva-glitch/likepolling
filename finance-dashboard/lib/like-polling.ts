@@ -79,6 +79,7 @@ export interface LikePollingSummary {
   revenue: number;
   months: Array<{ month: string; costs: number; revenue: number }>; // newest first
   plan: LikePollingPlan;
+  units: { reports: number; ads: number }; // Gumroad sales still standing (refunds are removed at sync)
   cash?: number | null; // Like Polling's PayPal balance, when connected
 }
 
@@ -96,8 +97,10 @@ export function likePollingSummary(txs: Transaction[], vendorOf: Map<string, str
   const monthOf = (k: string) => months.get(k) ?? months.set(k, { costs: 0, revenue: 0 }).get(k)!;
   for (const t of rows) monthOf(t.date.slice(0, 7)).costs += -t.amount;
   let revenue = 0;
+  const units = { reports: 0, ads: 0 };
   for (const t of txs.filter((t) => t.category === LIKE_POLLING_REVENUE_CATEGORY)) {
     revenue += t.amount;
+    if (t.amount > 0 && /^gumroad · /i.test(t.payee ?? "")) units[/ad spot/i.test(t.payee ?? "") ? "ads" : "reports"]++;
     monthOf(t.date.slice(0, 7)).revenue += t.amount;
   }
   const list = Array.from(vendors, ([name, total]) => ({ name, total })).sort((a, b) => b.total - a.total);
@@ -110,5 +113,6 @@ export function likePollingSummary(txs: Transaction[], vendorOf: Map<string, str
     revenue,
     months: Array.from(months, ([month, m]) => ({ month, ...m })).sort((a, b) => b.month.localeCompare(a.month)),
     plan: likePollingPlan(rows, vendorOf, today),
+    units,
   };
 }

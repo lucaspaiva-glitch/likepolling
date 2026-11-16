@@ -90,7 +90,7 @@ function emptyData(configured: boolean, error: string | null): DashboardData {
     portfolioSeries: [],
     snapshotsReady: false,
     categories: { d30: [], d90: [], m12: [] },
-    likePolling: { total: 0, since: null, today: isoDay(new Date()), vendors: [], daily: [], revenue: 0, months: [], plan: { basis: "", vendors: [], months: [] }, cash: null },
+    likePolling: { total: 0, since: null, today: isoDay(new Date()), vendors: [], daily: [], revenue: 0, months: [], plan: { basis: "", vendors: [], months: [] }, units: { reports: 0, ads: 0 }, cash: null },
     geminiCredit: emptyGeminiCredit(),
     insights: emptyInsights(),
     lastUpdated: null,
