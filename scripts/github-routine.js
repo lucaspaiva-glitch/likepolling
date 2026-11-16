@@ -2,6 +2,7 @@
 // AI Builders memory: once a week, saves from the GitHub API (free, official) the 10 most-starred AI projects
 // created in the last 7 days into public.github_ai_repos_weekly, and how many new GitHub accounts each tracked
 // country got in those 7 days (by the country written in the profile) into public.github_new_devs_weekly.
+// The same search over the last 30 and 365 days goes into public.github_ai_repos_top (period 'month' / 'year').
 // With GEMINI_API_KEY, each project also gets a plain-language title and sentence in every site language (plain).
 //   node scripts/github-routine.js
 // Env: SUPABASE_URL, SUPABASE_KEY (secret key), GITHUB_TOKEN (optional, raises the search limit), GEMINI_API_KEY (optional). Node >= 20.
@@ -14,9 +15,16 @@ const sleep = (ms) => new Promise((ok) => setTimeout(ok, ms));
 const iso = (d) => d.toISOString().slice(0, 10);
 
 function topRepos(lists, day, n = 10) {
-  const by = new Map();
+  const by = new Map(), seen = new Set();
   for (const r of lists.flat()) if (r && r.full_name && !r.fork && !by.has(r.full_name)) by.set(r.full_name, r);
-  return [...by.values()].sort((a, b) => b.stargazers_count - a.stargazers_count).slice(0, n).map((r, i) => ({
+  // Copies of one project under many accounts (same name or same description) count once.
+  const once = (r) => {
+    const keys = [r.full_name.split('/')[1].toLowerCase(), String(r.description || '').trim().toLowerCase()].filter(Boolean);
+    if (keys.some((k) => seen.has(k))) return false;
+    keys.forEach((k) => seen.add(k));
+    return true;
+  };
+  return [...by.values()].sort((a, b) => b.stargazers_count - a.stargazers_count).filter(once).slice(0, n).map((r, i) => ({
     day, rank: i + 1, full_name: r.full_name.slice(0, 140), description: r.description ? String(r.description).slice(0, 200) : null,
     stars: r.stargazers_count, language: r.language || null, url: r.html_url }));
 }
@@ -55,17 +63,41 @@ async function main(env = process.env, now = new Date()) {
     }
     throw new Error('GitHub rate limit');
   };
-  const to = new Date(now.getTime() - 864e5), from = new Date(now.getTime() - 7 * 864e5);
-  const day = iso(now), span = `${iso(from)}..${iso(to)}`;
-  const lists = [];
-  for (const t of TOPICS) { lists.push((await get(`repositories?q=${encodeURIComponent(`topic:${t} created:${span}`)}`, '&sort=stars&order=desc&per_page=30')).items || []); await sleep(gap); }
-  const repos = topRepos(lists, day);
-  if (env.GEMINI_API_KEY) {
-    try {
-      const plain = await plainNames(repos, require('./news-world-routine.js').geminiJson(env.GEMINI_API_KEY));
-      repos.forEach((r, i) => { r.plain = plain[i]; });
-    } catch (e) { console.error(`plain titles skipped: ${String(e.message).split('\n')[0]}`); }
+  const key = env.SUPABASE_KEY.trim(), base = env.SUPABASE_URL.trim().replace(/\/$/, '');
+  const db = { apikey: key, Authorization: `Bearer ${key}` };
+  const to = new Date(now.getTime() - 864e5), day = iso(now);
+  const since = (days) => `${iso(new Date(now.getTime() - days * 864e5))}..${iso(to)}`;
+  const search = async (span) => {
+    const lists = [];
+    for (const t of TOPICS) { lists.push((await get(`repositories?q=${encodeURIComponent(`topic:${t} created:${span}`)}`, '&sort=stars&order=desc&per_page=30')).items || []); await sleep(gap); }
+    return topRepos(lists, day);
+  };
+  const span = since(7);
+  const repos = await search(span);
+  const tops = [];
+  for (const [period, days] of [['month', 30], ['year', 365]]) {
+    const list = await search(since(days));
+    if (list.length >= 5) tops.push(...list.map((r) => ({ ...r, period })));
   }
+  const all = [...repos, ...tops];
+  const known = new Map();
+  const names = [...new Set(all.map((r) => r.full_name))].map((n) => `"${n.replace(/"/g, '')}"`).join(',');
+  for (const table of ['github_ai_repos_weekly', 'github_ai_repos_top']) {
+    try {
+      const r = await fetch(`${base}/rest/v1/${table}?select=full_name,plain&plain=not.is.null&full_name=in.(${encodeURIComponent(names)})&order=day.desc`, { headers: db });
+      if (r.ok) for (const x of await r.json()) if (!known.has(x.full_name)) known.set(x.full_name, x.plain);
+    } catch { /* write them fresh */ }
+  }
+  const todo = [...new Map(all.filter((r) => !known.has(r.full_name)).map((r) => [r.full_name, r])).values()];
+  if (env.GEMINI_API_KEY && todo.length) {
+    const ask = require('./news-world-routine.js').geminiJson(env.GEMINI_API_KEY);
+    for (let i = 0; i < todo.length; i += 10) {
+      const part = todo.slice(i, i + 10);
+      try { (await plainNames(part, ask)).forEach((p, j) => { if (p) known.set(part[j].full_name, p); }); }
+      catch (e) { console.error(`plain titles skipped: ${String(e.message).split('\n')[0]}`); }
+    }
+  }
+  for (const r of all) r.plain = known.get(r.full_name) || null;
   const en = new Intl.DisplayNames(['en'], { type: 'region' });
   const devs = [];
   for (const cc of COUNTRIES) {
@@ -74,14 +106,15 @@ async function main(env = process.env, now = new Date()) {
     await sleep(gap);
   }
   if (repos.length < 5 || devs.filter((d) => d.accounts).length < 20) throw new Error(`Too little data (${repos.length} repos); not saving.`);
-  const key = env.SUPABASE_KEY.trim(), base = env.SUPABASE_URL.trim().replace(/\/$/, '');
-  for (const [table, rows, on] of [['github_ai_repos_weekly', repos, 'day,full_name'], ['github_new_devs_weekly', devs, 'day,country_code']]) {
+  for (const [table, rows, on] of [['github_ai_repos_weekly', repos, 'day,full_name'], ['github_new_devs_weekly', devs, 'day,country_code'], ['github_ai_repos_top', tops, 'day,period,full_name']]) {
+    if (!rows.length) continue;
+    if (table !== 'github_new_devs_weekly') await fetch(`${base}/rest/v1/${table}?day=eq.${day}`, { method: 'DELETE', headers: db });
     const w = await fetch(`${base}/rest/v1/${table}?on_conflict=${on}`, { method: 'POST', body: JSON.stringify(rows),
-      headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=minimal' } });
+      headers: { ...db, 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=minimal' } });
     if (!w.ok) throw new Error(`write ${table} ${w.status} ${await w.text()}`);
   }
   const top = [...devs].sort((a, b) => b.accounts - a.accounts).slice(0, 5).map((d) => `${d.country_code} ${d.accounts}`).join(', ');
-  console.log(`github: ${repos.length} AI projects (top: ${repos[0].full_name}, ${repos[0].stars} stars); new accounts ${top}`);
+  console.log(`github: ${repos.length} AI projects, ${tops.length} month/year rows (top: ${repos[0].full_name}, ${repos[0].stars} stars); new accounts ${top}`);
 }
 
 if (require.main === module) main().catch((e) => { console.error(e.message); process.exitCode = 1; });

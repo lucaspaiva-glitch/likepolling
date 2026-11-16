@@ -1,7 +1,7 @@
 'use strict';
 const test = require('node:test');
 const assert = require('node:assert');
-const { plainNames } = require('../scripts/github-routine.js');
+const { plainNames, topRepos } = require('../scripts/github-routine.js');
 const { SITE_LANGS } = require('../scripts/news-world-routine.js');
 
 const repos = [{ full_name: 'a/poki', description: 'Let AI agents operate a real iPhone.' }, { full_name: 'b/x', description: null }];
@@ -18,4 +18,10 @@ test('plainNames keeps complete replies per project and drops incomplete ones', 
 
 test('plainNames rejects a reply that is not an array', async () => {
   await assert.rejects(plainNames(repos, async () => ({})), /not an array/);
+});
+
+test('topRepos counts copies of one project once and ranks by stars', () => {
+  const r = (full_name, stars, description) => ({ full_name, stargazers_count: stars, description, html_url: `https://github.com/${full_name}` });
+  const out = topRepos([[r('a/Checker', 50, 'Scan configs'), r('b/checker', 40, 'Other'), r('c/x', 30, 'Scan configs'), r('d/y', 60, null)]], '2026-11-16');
+  assert.deepStrictEqual(out.map((x) => [x.rank, x.full_name]), [[1, 'd/y'], [2, 'a/Checker']]);
 });
