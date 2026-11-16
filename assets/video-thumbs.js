@@ -274,6 +274,49 @@ a:hover > .lp-rth img { transform: scale(1.04); }
     });
     watch = (el) => { seenIo.disconnect(); seenIo.observe(el); };
     addEventListener('blur', () => { if (!loud()) stop(); });
+    // ‹ › arrows on each sideways row (swipe.css). One click moves one card; a video playing
+    // with sound hands it to the card next to it, the same way a swipe does on phones.
+    const ROWS = '.ytt-cards, .ymu-cards, .nw-shorts .nw-feed.ysh, .nw-front.nw-ranked .nw-feed-wrap';
+    const CARD = '.ytt-card, .ymu-card, .ysh-card, .ysh-list li, .nw-lead, .nw-row';
+    const ARROW = (d) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="${d}"/></svg>`;
+    const rows = new Map();
+    function paint(row, nav) {
+      const [p, x] = nav.children;
+      const max = row.scrollWidth - row.clientWidth;
+      nav.style.setProperty('--h', `${row.offsetHeight}px`);
+      nav.style.width = `${row.offsetWidth}px`;
+      p.hidden = max < 4 || row.scrollLeft < 4;
+      x.hidden = max < 4 || row.scrollLeft > max - 4;
+    }
+    function move(row, dir) {
+      const c = [...row.querySelectorAll(CARD)].find((n) => n.getClientRects().length);
+      const gap = parseFloat(getComputedStyle(row).columnGap) || 12;
+      row.scrollBy({ left: dir * (c ? c.getBoundingClientRect().width + gap : row.clientWidth * .8), behavior: 'smooth' });
+      if (!loud() || !row.contains(box)) return;
+      const list = [...row.querySelectorAll(SEL)].filter((n) => n.getClientRects().length && idOf(n));
+      const to = list[list.indexOf(box) + dir];
+      if (to) next(to);
+    }
+    function bind() {
+      for (const [row, nav] of rows) if (!row.isConnected) { nav.remove(); rows.delete(row); }
+      document.querySelectorAll(ROWS).forEach((row) => {
+        let nav = rows.get(row);
+        if (!nav) {
+          nav = document.createElement('div');
+          nav.className = 'lp-swn';
+          nav.innerHTML = `<button type="button" class="lp-swp" aria-label="Previous" hidden>${ARROW('M15 5l-7 7 7 7')}</button><button type="button" class="lp-swx" aria-label="Next" hidden>${ARROW('M9 5l7 7-7 7')}</button>`;
+          nav.addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) move(row, b.classList.contains('lp-swp') ? -1 : 1); });
+          row.addEventListener('scroll', () => paint(row, nav), { passive: true });
+          new ResizeObserver(() => paint(row, nav)).observe(row);
+          rows.set(row, nav);
+        }
+        if (nav.nextElementSibling !== row) row.before(nav);
+        paint(row, nav);
+      });
+    }
+    let bindT = 0;
+    new MutationObserver(() => { clearTimeout(bindT); bindT = setTimeout(bind, 150); }).observe(document.body, { childList: true, subtree: true });
+    bind();
     return;
   }
   // Touch screens: while scrolling, the thumbnail on (or nearest) the middle line of the screen
@@ -300,7 +343,8 @@ a:hover > .lp-rth img { transform: scale(1.04); }
       const r = el.getBoundingClientRect();
       if (r.width < 40 || r.right <= 0 || r.left >= innerWidth || r.bottom <= 0 || r.top >= innerHeight) continue;
       if (el.querySelector('iframe:not(.lp-prev)')) continue; // the section's own player is already showing it
-      const d = r.top > mid ? r.top - mid : r.bottom < mid ? mid - r.bottom : 0;
+      // In a sideways row, the card nearest the middle of the screen across.
+      const d = (r.top > mid ? r.top - mid : r.bottom < mid ? mid - r.bottom : 0) + Math.abs((r.left + r.right - innerWidth) / 2) / 1000;
       if (d < bestD) { best = el; bestD = d; }
     }
     if (best === box) return;

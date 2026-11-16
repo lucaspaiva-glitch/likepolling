@@ -1,0 +1,60 @@
+/* Every video and news ranking works like Popular Shorts: one tall 9:16 card at a time, centred.
+   Phones swipe left or right; computers also get ‹ › arrows (added by video-thumbs.js). Loaded last. */
+:root { --one: calc((100vh - 300px) * 9 / 16); --pad: 36px; }
+@media (max-width: 560px) { :root { --one: calc((100svh - 200px) * 9 / 16); --pad: 28px; } }
+.ytt-cards, .ymu-cards, .nw-shorts .nw-feed.ysh, .nw-front.nw-ranked .nw-feed-wrap {
+  display: flex; flex-direction: row; flex-wrap: nowrap; align-items: flex-start; gap: 12px; box-sizing: border-box; margin-inline: auto;
+  overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scrollbar-width: none;
+}
+.ytt-cards::-webkit-scrollbar, .ymu-cards::-webkit-scrollbar, .nw-shorts .nw-feed.ysh::-webkit-scrollbar, .nw-front.nw-ranked .nw-feed-wrap::-webkit-scrollbar { display: none; }
+
+/* Video charts: all 10 ranks as cards (the 06–10 table is no longer needed). */
+.ytt-cards, .ymu-cards { width: min(calc(100% - var(--pad)), var(--one)); padding-inline: 0; border-bottom: 0; scroll-padding-inline: 0; }
+.ytt-cards > .lp-more, .ymu-cards > .lp-more { display: flex; }
+.ytt-cards:has(> .lp-more) ~ .ytt-table, .ymu-cards:has(> .lp-more) ~ .ymu-table { display: none; }
+.ytt-cards > .ytt-card[style], .ymu-cards > .ymu-card[style] { flex: none; width: 100%; margin-inline: 0; scroll-snap-align: center; scroll-snap-stop: always; }
+.ytt-cards > .ytt-card[style] .ytt-ctt, .ymu-cards > .ymu-card[style] .ymu-ctt { font-size: 14px; }
+/* The tall frame crops wide videos at the sides; the hover preview is widened the same way so it fills it. */
+.ytt-card[style] .ytt-cth img, .ymu-card[style] .ymu-cth img { aspect-ratio: 9 / 16; }
+.ytt-card[style] .lp-prev, .ymu-card[style] .lp-prev { left: -139.5%; width: 1517%; }
+.ytt-card[style] .lp-prev.cc, .ymu-card[style] .lp-prev.cc { left: -117.5%; width: 670%; }
+/* Education: the whole wide picture sits in the frame over a blurred copy of itself. */
+.edu .ytt-card[style] .ytt-cth { background: #111; }
+.edu .ytt-card[style] .ytt-cth::before { content: ''; position: absolute; inset: -16px; background: var(--th) center / cover; filter: blur(14px) brightness(.75); }
+.edu .ytt-card[style] .lp-nothumb::before { display: none; }
+.edu .ytt-card[style] .ytt-cth img { position: relative; object-fit: contain; background: transparent; }
+.edu .ytt-card[style] .lp-prev { left: -10%; width: 480%; }
+.edu .ytt-card[style] .lp-prev.cc { left: 0; width: 200%; }
+
+/* Popular Shorts: 01–10 in one row. */
+.nw-shorts .nw-feed.ysh { width: min(100%, var(--one)); height: auto; min-height: 0; padding: 4px 0 6px; }
+.nw-shorts .ysh-cards, .nw-shorts .ysh-list { display: contents; }
+.nw-shorts .ysh-cards > :nth-child(n), .nw-shorts .ysh-list li { flex: none; width: 100%; scroll-snap-align: center; scroll-snap-stop: always; }
+.nw-shorts .ysh-list li { border-bottom: 0; }
+.nw-shorts .ysh-list a { position: relative; flex-direction: column; align-items: flex-start; gap: 5px; width: 100%; margin: 0; padding: 0; }
+.nw-shorts .ysh-list a:hover { background: none; }
+.nw-shorts .ysh-list .lp-rth-s { width: 100%; border-radius: 8px; }
+.nw-shorts .ysh-list .ysh-rk { position: absolute; left: 6px; top: 6px; z-index: 2; width: auto; padding: 4px 5px; border: 1px solid rgba(255,42,60,.6); border-radius: 4px; background: #7f000a; color: #fff; font: 700 11px/1 ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace; }
+.nw-shorts .ysh-list .ysh-tx { width: 100%; }
+.nw-shorts .ysh-list .ysh-vt { font-size: 12.5px; font-weight: 600; line-height: 1.3; }
+.nw-shorts .ysh-list .ysh-vol { display: flex; align-items: baseline; gap: 8px; width: auto; text-align: left; }
+.nw-shorts .ysh-list .ysh-bar { display: none; }
+
+/* World News and AI Wire: 01–10 as equal tall photo cards in one row. */
+.nw-front.nw-ranked .nw-feed-wrap { width: min(calc(100% - var(--pad)), var(--one)); padding-inline: 0; counter-reset: nw-rank 1; }
+.nw-front.nw-ranked .nw-feed { display: contents; }
+.nw-front.nw-ranked .nw-lead, .nw-front.nw-ranked .nw-row { flex: none; width: 100%; margin-inline: 0; padding: 0; scroll-snap-align: center; scroll-snap-stop: always; }
+.nw-front.nw-ranked .nw-lead { height: auto; aspect-ratio: 9 / 16; }
+.nw-front.nw-ranked .nw-row-media { width: 100%; aspect-ratio: 9 / 16; }
+.nw-front.nw-ranked .nw-img { height: 64%; bottom: auto; -webkit-mask-image: linear-gradient(#000 70%, transparent); mask-image: linear-gradient(#000 70%, transparent); animation-name: nw-kbs; }
+.nw-front.nw-ranked .nw-feed-end { flex: none; align-self: center; }
+@media (min-width: 561px) { .nw-front.nw-ranked .nw-lead .nw-hl { font-size: 22px; line-height: 1.2; } }
+
+/* ‹ › arrows on computers (sized to their row by video-thumbs.js). */
+.lp-swn { position: relative; z-index: 4; height: 0; margin-inline: auto; }
+.lp-swn button { position: absolute; top: calc(var(--h, 240px) / 2 - 18px); display: grid; place-items: center; width: 36px; height: 36px; padding: 0; border: 1px solid rgba(255,42,60,.55); border-radius: 50%; background: rgba(127,0,10,.92); color: #fff; cursor: pointer; box-shadow: 0 4px 14px -4px rgba(0,0,0,.45); transition: opacity .2s, background .15s; }
+.lp-swn button:hover { background: #b0000e; }
+.lp-swn button[hidden] { display: none; }
+.lp-swn .lp-swp { left: -12px; }
+.lp-swn .lp-swx { right: -12px; }
+.lp-swn svg { width: 16px; height: 16px; }
