@@ -52,8 +52,8 @@
     if (!rows.length) return '<div class="ytt-empty">No education data for this country yet.</div>';
     const top = Math.max(...rows.map((r) => Number(r.views_per_hour) || 0), 1);
     const ids = rows.map((r) => r.video_id);
-    return `<div class="ytt-cards">${rows.slice(0, 5).map((r) => `<a class="ytt-card" href="${watch(r.video_id, ids)}" target="_blank" rel="noopener">
-        <span class="ytt-cth"><img src="https://i.ytimg.com/vi/${encodeURIComponent(r.video_id)}/mqdefault.jpg" alt="" onload="if(this.naturalWidth<=120)this.parentElement.classList.add('lp-nothumb')" loading="lazy"><b class="ytt-crk">${pad(r.rank)}</b><i class="ytt-cvw">${fmt(r.views_per_hour)}/h</i></span>
+    return `<div class="ytt-cards">${rows.map((r, i) => `<a class="ytt-card${i > 4 ? ' lp-more' : ''}" style="--i:${i}" href="${watch(r.video_id, ids)}" target="_blank" rel="noopener">
+        <span class="ytt-cth"><img src="https://i.ytimg.com/vi/${encodeURIComponent(r.video_id)}/mqdefault.jpg" alt="" onload="if(this.naturalWidth<=120)this.parentElement.classList.add('lp-nothumb')" loading="lazy"><b class="ytt-crk">${pad(r.rank)}</b><i class="ytt-cvw">${fmt(r.view_count)}</i><i class="lp-vph">${fmt(r.views_per_hour)}/h</i></span>
         <span class="ytt-ctt" title="${esc(r.title)}">${esc(r.title)}</span><span class="ytt-cch">${esc(r.channel_title)}</span></a>`).join('')}</div>
       ${rows.length > 5 ? `<table class="ytt-table"><colgroup><col class="ytt-rank-col"><col><col class="ytt-vol-col"><col class="ytt-likes-col"></colgroup>
         <thead><tr><th>#</th><th>Video</th><th class="n">Speed</th><th class="n ytt-likes">Views</th></tr></thead>

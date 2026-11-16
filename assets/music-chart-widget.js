@@ -60,7 +60,7 @@
     const top = Math.max(...rows.map((r) => Number(r.view_count) || 0), 1);
     const ids = rows.map((r) => r.video_id);
     body.innerHTML = `
-      <div class="ymu-cards">${rows.slice(0, 5).map((r) => `<a class="ymu-card" href="${plist(r.video_id, ids)}" target="_blank" rel="noopener">
+      <div class="ymu-cards">${rows.map((r, i) => `<a class="ymu-card${i > 4 ? ' lp-more' : ''}" style="--i:${i}" href="${plist(r.video_id, ids)}" target="_blank" rel="noopener">
             <span class="ymu-cth"><img src="https://i.ytimg.com/vi/${encodeURIComponent(r.video_id)}/mqdefault.jpg" alt="" loading="lazy"><b class="ymu-crk">${String(r.rank).padStart(2, '0')}</b><i class="ymu-cvw">${fmt(r.view_count)}</i>${window.lpVph && lpVph(r.view_count, r.published_at, r.fetched_at) != null ? `<i class="lp-vph">${fmt(lpVph(r.view_count, r.published_at, r.fetched_at))}/h</i>` : ''}</span>
             <span class="ymu-ctt" title="${esc(r.title)}">${esc(r.title)}</span>
             <span class="ymu-cch">${esc(r.channel_title)}</span></a>`).join('')}</div>

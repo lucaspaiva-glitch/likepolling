@@ -70,7 +70,7 @@
       const top = Math.max(...rows.map((r) => Number(r.view_count) || 0), 1);
       const ids = rows.map((r) => r.video_id);
       body.innerHTML = `
-        <div class="ytt-cards">${rows.slice(0, 5).map((r) => `<a class="ytt-card" href="${plist(r.video_id, ids)}" target="_blank" rel="noopener">
+        <div class="ytt-cards">${rows.map((r, i) => `<a class="ytt-card${i > 4 ? ' lp-more' : ''}" style="--i:${i}" href="${plist(r.video_id, ids)}" target="_blank" rel="noopener">
             <span class="ytt-cth"><img src="https://i.ytimg.com/vi/${encodeURIComponent(r.video_id)}/mqdefault.jpg" alt="" loading="lazy"><b class="ytt-crk">${String(r.rank).padStart(2, '0')}</b><i class="ytt-cvw">${fmt(r.view_count)}</i>${window.lpVph && lpVph(r.view_count, r.published_at, r.fetched_at) != null ? `<i class="lp-vph">${fmt(lpVph(r.view_count, r.published_at, r.fetched_at))}/h</i>` : ''}</span>
             <span class="ytt-ctt" title="${esc(r.title)}">${esc(r.title)}</span>
             <span class="ytt-cch">${esc(r.channel_title)}</span></a>`).join('')}</div>
