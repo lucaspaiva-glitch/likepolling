@@ -9,6 +9,7 @@
 'use strict';
 
 const { COUNTRIES } = require('../lib/report.js');
+const { FEATURED } = require('./news-world-routine.js');
 const { supabaseHeaders } = require('./memory-common.js');
 const { coverage, termOf } = require('../lib/news-coverage.js');
 
@@ -45,7 +46,8 @@ async function main(env = process.env, now = new Date(), deps = {}) {
     .then((r) => (r.ok ? r.json() : [])).catch(() => []);
   const people = [...new Set((Array.isArray(snaps) ? snaps : []).map((r) => termOf(r.subjects)))].filter((t) => t.length >= 3 && t.length <= 60 && !BRANDS[t]);
   const jobs = [...people.map((t) => ['brand_coverage_monthly', 'brand', t, `"${t.replace(/"/g, '')}"`]),
-    ...COUNTRIES.map((cc) => ['news_coverage_monthly', 'country_code', cc, query(cc)]),
+    // World News countries first (the homepage chart), then the rest of the report countries.
+    ...[...new Set([...FEATURED, ...COUNTRIES])].map((cc) => ['news_coverage_monthly', 'country_code', cc, query(cc)]),
     ...Object.entries(BRANDS).map(([b, q]) => ['brand_coverage_monthly', 'brand', b, q])]
     .map((j) => [...j, savedAt[`${j[0]}:${j[2]}`] || 0])
     .filter((j) => now - j[4] > 6 * 86400000)
