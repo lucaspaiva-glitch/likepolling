@@ -27,12 +27,13 @@ export interface GeminiCredit {
   outSince: string | null;
   usdToEur: number | null; // ECB rate via Frankfurter, since AI Studio shows the credit in euros
   reading: GeminiReading | null; // set when "left" counts from an AI Studio reading
+  addedSinceReading: number; // bank top-ups (USD) charged after the reading's day
   leftEur: number | null;
 }
 
 export const emptyGeminiCredit = (configured = false, error: string | null = null): GeminiCredit => ({
   configured, error, topUp: null, topUpDate: null, spent: 0, requests: 0, left: null, outOfCredit: false, outSince: null, usdToEur: null,
-  reading: null, leftEur: null,
+  reading: null, addedSinceReading: 0, leftEur: null,
 });
 
 type UsageRow = { model: string; input_tokens: number; output_tokens: number };
@@ -70,8 +71,10 @@ export async function loadGeminiCredit(
   if (!process.env.LP_SUPABASE_URL || !process.env.LP_SUPABASE_KEY) return emptyGeminiCredit(false);
   try {
     const topUpDate = topUps.reduce<string | null>((d, t) => (!d || t.date > d ? t.date : d), null);
-    // A top-up charged on or before the reading's day is already part of the reading.
-    const useReading = !!reading && (!topUpDate || reading.at.slice(0, 10) >= topUpDate);
+    // The reading is the known balance; top-ups charged after its day are added on top of it.
+    const useReading = !!reading;
+    const readingDay = reading?.at.slice(0, 10) ?? "";
+    const addedSinceReading = useReading ? topUps.filter((t) => t.date > readingDay).reduce((s, t) => s + t.amount, 0) : 0;
     const since = useReading ? new Date(reading!.at).toISOString() : topUpDate ? `${topUpDate}T00:00:00Z` : "";
     const ratePromise = usdToEur();
     const [lastOk, lastOut] = await Promise.all(
@@ -94,8 +97,8 @@ export async function loadGeminiCredit(
     }
     const rate = base.usdToEur;
     if (useReading) {
-      const leftEur = reading!.eur - (rate ? spent * rate : 0);
-      return { ...base, reading, spent, requests, leftEur, left: rate ? leftEur / rate : null };
+      const leftEur = reading!.eur + (rate ? (addedSinceReading - spent) * rate : 0);
+      return { ...base, reading, addedSinceReading, spent, requests, leftEur, left: rate ? leftEur / rate : null };
     }
     const topUp = topUps.filter((t) => t.date === topUpDate).reduce((s, t) => s + t.amount, 0);
     const left = topUp - spent;

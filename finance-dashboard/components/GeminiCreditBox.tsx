@@ -19,7 +19,7 @@ export default function GeminiCreditBox({ data }: { data: GeminiCredit }) {
           <p className="text-xs font-medium text-tremor-content-strong">Gemini credit left (at least)</p>
           <p className="text-[11px] text-tremor-content">
             {data.reading
-              ? `€${data.reading.eur.toFixed(2)} in AI Studio on ${fmtDate(data.reading.at)} − ${fmtUsd2(data.spent)} used since (${data.requests.toLocaleString("en-US")} requests).`
+              ? `€${data.reading.eur.toFixed(2)} in AI Studio on ${fmtDate(data.reading.at)}${data.addedSinceReading ? ` + ${fmtUsd2(data.addedSinceReading)} topped up` : ""} − ${fmtUsd2(data.spent)} used since (${data.requests.toLocaleString("en-US")} requests).`
               : data.topUpDate
               ? `${fmtUsd2(data.topUp ?? 0)} top-up on ${fmtDate(data.topUpDate)} − ${fmtUsd2(data.spent)} used (${data.requests.toLocaleString("en-US")} requests). Older leftover credit not counted.`
               : "Shows once a Google Cloud top-up reaches the bank."}

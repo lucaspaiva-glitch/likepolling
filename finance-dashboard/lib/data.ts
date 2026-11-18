@@ -99,6 +99,25 @@ function emptyData(configured: boolean, error: string | null): DashboardData {
 
 type LoadedTransaction = Transaction & { external_id: string | null; channel: string | null; descriptor: string | null; locked: boolean | null };
 
+// Plaid sometimes posts a charge under a new pending id, leaving the old pending row behind.
+// Drop a pending row when a posted one on the same account, same amount, 1 day before to 7 days after exists.
+function dropStalePending<T extends Transaction>(txs: T[]): T[] {
+  const posted = txs.filter((t) => !t.pending);
+  const used = new Set<string>();
+  const stale = new Set<string>();
+  for (const p of txs.filter((t) => t.pending)) {
+    const pd = Date.parse(p.date);
+    const match = posted.find(
+      (t) => !used.has(t.id) && t.account_id === p.account_id && t.amount === p.amount && Date.parse(t.date) - pd >= -864e5 && Date.parse(t.date) - pd <= 7 * 864e5,
+    );
+    if (match) {
+      used.add(match.id);
+      stale.add(p.id);
+    }
+  }
+  return stale.size ? txs.filter((t) => !stale.has(t.id)) : txs;
+}
+
 async function loadTransactions(since: string): Promise<LoadedTransaction[]> {
   const db = getServerSupabase();
   const out: LoadedTransaction[] = [];
@@ -116,7 +135,7 @@ async function loadTransactions(since: string): Promise<LoadedTransaction[]> {
     out.push(...((data ?? []) as LoadedTransaction[]).map((t) => ({ ...t, amount: Number(t.amount), pending: t.pending === true })));
     if (!data || data.length < PAGE) break;
   }
-  return out;
+  return dropStalePending(out);
 }
 
 type Flow = { income: number; burn: number };
