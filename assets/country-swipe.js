@@ -12,6 +12,8 @@
     ['#restaurants', '.rst-select'],
     ['#ai-age', '.aia-select'],
   ];
+  // Creator News lists languages (pt = Brazil, pt-PT = Portugal), not country codes.
+  const LANG_CC = { en: 'US', 'en-GB': 'GB', pt: 'BR', 'pt-PT': 'PT', es: 'MX', de: 'DE', ru: 'RU', uk: 'UA', ko: 'KR', ja: 'JP', fr: 'FR', zh: 'TW', hi: 'IN' };
   const still = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
   const MONO = "ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace";
 
@@ -35,8 +37,8 @@
     .lp-cs-arr:hover { border-color: #ff2a3c; box-shadow: 0 0 12px -3px rgba(255,42,60,.85); }
     .lp-note-row { display: flex; flex-wrap: wrap; align-items: center; }
     .lp-note-row > .lp-note-body { flex-basis: 100%; }
-    .lp-cs-foot { display: flex; min-width: 0; margin-left: auto; padding: 6px 14px; }
-    .lp-cs-foot.lp-cs-solo { justify-content: center; margin: 0; padding: 12px; }
+    .lp-cs-foot { display: flex; min-width: 0; margin-left: auto; padding: 6px 18px; }
+    .lp-cs-foot.lp-cs-solo { justify-content: center; margin: 0; padding: 12px; border-top: 1px solid var(--line, #ebebeb); }
     .lp-cs-foot[hidden] { display: none; }
     .lp-cs-next { display: inline-flex; align-items: center; gap: 7px; min-width: 0; max-width: 100%; height: 28px; padding: 0 10px; box-sizing: border-box; border: 1px solid #ff2a3c; border-radius: 5px; background: #6e0009; color: #fff; font-family: inherit; cursor: pointer; box-shadow: 0 0 8px -1px rgba(255,42,60,.55); -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
     .lp-cs-next:hover { background: #7f000a; box-shadow: 0 0 12px 0 rgba(255,42,60,.75); }
@@ -212,7 +214,7 @@
       const o = list[(k + 1) % list.length];
       bar.hidden = list.length < 2 || !o;
       if (!o) return;
-      const cc = /^[a-z]{2}$/i.test(o.value) ? o.value.toLowerCase() : '';
+      const cc = (/^[A-Z]{2}$/.test(o.value) ? o.value : LANG_CC[o.value] || '').toLowerCase();
       img.hidden = !cc;
       if (cc && img.getAttribute('src') !== `/assets/flags/${cc}.svg`) img.setAttribute('src', `/assets/flags/${cc}.svg`);
       const t = o.textContent.trim();

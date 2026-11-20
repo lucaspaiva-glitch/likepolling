@@ -109,3 +109,16 @@
 .wrap .nw-badge:not(#_) { font-size: 11px; }
 .wrap .ysh-rk:not(#_) { font-size: 13px; }
 .wrap .fsh-p, .wrap #restaurants .fsh-p { font-size: 15px; line-height: 1.45; }
+
+/* Shared spacing: every homepage section sits the same distance from the next (--lp-gap), and the
+   cards inside a section add no margins of their own, so the gaps can't drift apart again. */
+:root { --lp-gap: 36px; --lp-pad: 14px; }
+@media (max-width: 560px) { :root { --lp-gap: 28px; --lp-pad: 12px; } }
+.wrap > section:not([hidden]):not(#_) { margin-bottom: var(--lp-gap); }
+.wrap > section:not(#news-front):not(#yt-trending):not(#_) { margin-top: 0; }
+.wrap > section > :is(section, div):not(.lp-note):not(#_) { margin-top: 0; margin-bottom: 0; }
+.wrap > section > :is(.fsh-top, .edu-top):not(#_) { margin-bottom: var(--lp-pad); }
+.wrap #fashion .fsh-top { flex-wrap: wrap; row-gap: 10px; }
+@media (max-width: 560px) {
+  .nw-front.nw-ranked .nw-feed-wrap:not(#_) { align-items: stretch; padding-block: var(--lp-pad); }
+}
