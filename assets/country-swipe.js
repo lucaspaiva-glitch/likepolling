@@ -33,11 +33,23 @@
     .lp-cs-nav > select { min-width: 0; max-width: 100%; flex: 0 1 auto; text-overflow: ellipsis; }
     .lp-cs-arr { flex: none; width: 24px; height: 24px; padding: 0 0 2px; margin: 0; box-sizing: border-box; border: 1px solid rgba(255,42,60,.55); border-radius: 5px; background: linear-gradient(180deg, #8c000c, #7f000a 55%, #6e0009); color: #fff; font: 700 16px/1 ${MONO}; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
     .lp-cs-arr:hover { border-color: #ff2a3c; box-shadow: 0 0 12px -3px rgba(255,42,60,.85); }
-    .lp-cs-foot { display: flex; justify-content: center; padding: 14px 12px 4px; }
-    .lp-cs-foot .lp-cs-nav { order: 0 !important; flex: 0 1 auto !important; margin: 0 !important; }
+    .lp-note-row { display: flex; flex-wrap: wrap; align-items: center; }
+    .lp-note-row > .lp-note-body { flex-basis: 100%; }
+    .lp-cs-foot { display: flex; min-width: 0; margin-left: auto; padding: 6px 14px; }
+    .lp-cs-foot.lp-cs-solo { justify-content: center; margin: 0; padding: 12px; }
+    .lp-cs-foot[hidden] { display: none; }
+    .lp-cs-next { display: inline-flex; align-items: center; gap: 7px; min-width: 0; max-width: 100%; height: 28px; padding: 0 10px; box-sizing: border-box; border: 1px solid rgba(255,42,60,.55); border-radius: 5px; background: linear-gradient(180deg, #8c000c, #7f000a 55%, #6e0009); color: #fff; font-family: inherit; cursor: pointer; box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 0 10px -5px rgba(255,42,60,.75); -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+    .lp-cs-next:hover { border-color: #ff2a3c; box-shadow: inset 0 1px 0 rgba(255,255,255,.14), 0 0 12px -3px rgba(255,42,60,.85); }
+    .lp-cs-next:focus-visible { outline: 2px solid rgba(255,42,60,.6); outline-offset: 2px; }
+    .lp-cs-next-l { flex: none; font-family: inherit; font-size: 12px; font-weight: 600; line-height: 1; color: rgba(255,255,255,.8); }
+    .lp-cs-next img { flex: none; width: 16px; height: 12px; border-radius: 2px; box-shadow: 0 0 0 1px rgba(255,255,255,.25); }
+    .lp-cs-next img[hidden] { display: none; }
+    .lp-cs-next .lp-cs-name { padding: 0; }
+    .lp-cs-next-c { flex: none; font: 700 16px/1 ${MONO}; margin-top: -2px; }
     .lp-cs-arr:focus-visible { outline: 2px solid rgba(255,42,60,.6); outline-offset: 2px; }
     @media (max-width: 560px) {
       .lp-cs-arr { width: 32px; height: 28px; }
+      .lp-note-row .lp-cs-foot { flex-basis: 100%; justify-content: center; margin: 0; padding: 0 12px 12px; }
       #news-front .nw-head .nw-wpick, #yt-trending .lp-cs-nav, #yt-music .lp-cs-nav, #edu .lp-cs-nav, #fashion .fsh-top .lp-cs-nav { order: 2; flex-basis: 100%; }
       #yt-trending .lp-cs-nav, #yt-music .lp-cs-nav, #edu .lp-cs-nav, #fashion .fsh-top .lp-cs-nav { flex: 0 0 auto; margin-right: 100%; }
       #news-front .nw-head .nw-spacer { display: none; }
@@ -167,65 +179,62 @@
     return true;
   }
 
-  // The same ‹ strip › again at the bottom of the section, so a reader who reached the end can
-  // change country without scrolling back up. It mirrors the top strip and drives the same <select>,
+  // "Next country: 🇪🇸 Spain ›" in the section's footer row, beside "How this works", so a reader who
+  // reached the end moves on without scrolling back up. It steps the same <select> as the top strip,
   // then brings the section's top into view for the new country.
   function foot(panel, sel, step) {
+    const tr = (t) => (window.LP_I18N ? window.LP_I18N.t(t) : t);
     const bar = document.createElement('div');
     bar.className = 'lp-cs-foot';
-    const grp = document.createElement('span');
-    grp.className = 'lp-cs-grp';
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'lp-cs-next';
+    btn.setAttribute('data-no-i18n', '');
+    const label = document.createElement('span');
+    label.className = 'lp-cs-next-l';
     const img = document.createElement('img');
     img.alt = '';
     img.width = 16; img.height = 12;
     const name = document.createElement('span');
     name.className = 'lp-cs-name';
-    const pos = document.createElement('span');
-    pos.className = 'lp-cs-pos';
-    for (const el of [name, pos]) { el.setAttribute('data-no-i18n', ''); el.setAttribute('aria-hidden', 'true'); }
-    const copy = document.createElement('select');
-    copy.className = 'lp-cs-sel';
-    copy.setAttribute('aria-label', sel.getAttribute('aria-label') || 'Country');
-    grp.append(img, name, pos, copy);
-    const top = () => { if (panel.getBoundingClientRect().top < 0) panel.scrollIntoView({ block: 'start', behavior: still() ? 'auto' : 'smooth' }); };
-    const arrow = (dir, label, ch) => {
-      const b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'lp-cs-arr';
-      b.setAttribute('aria-label', label);
-      b.setAttribute('data-no-i18n', '');
-      b.textContent = ch;
-      b.addEventListener('click', () => { step(dir); top(); });
-      return b;
-    };
-    const nav = document.createElement('span');
-    nav.className = 'lp-cs-nav';
-    nav.append(arrow(-1, 'Previous country', '‹'), grp, arrow(1, 'Next country', '›'));
-    bar.append(nav);
-    copy.addEventListener('change', () => {
-      sel.value = copy.value;
-      sel.dispatchEvent(new Event('change', { bubbles: true }));
-      top();
+    const chev = document.createElement('span');
+    chev.className = 'lp-cs-next-c';
+    chev.textContent = '›';
+    btn.append(label, img, name, chev);
+    bar.append(btn);
+    btn.addEventListener('click', () => {
+      step(1);
+      if (panel.getBoundingClientRect().top < 0) panel.scrollIntoView({ block: 'start', behavior: still() ? 'auto' : 'smooth' });
     });
     const sync = () => {
-      if (copy.innerHTML !== sel.innerHTML) copy.innerHTML = sel.innerHTML;
-      copy.value = sel.value;
-      const src = sel.closest('.lp-cs-grp');
-      const f = src && src.querySelector('img');
-      img.hidden = !f;
-      if (f && img.getAttribute('src') !== f.getAttribute('src')) img.setAttribute('src', f.getAttribute('src'));
-      const n = src && src.querySelector('.lp-cs-name');
-      const o = sel.options[sel.selectedIndex];
-      name.textContent = n ? n.textContent : o ? o.textContent.trim() : '';
-      const p = src && src.querySelector('.lp-cs-pos');
-      pos.innerHTML = p ? p.innerHTML : '';
-      if (!bar.isConnected || bar !== panel.lastElementChild) panel.append(bar);
+      const list = [...sel.options].filter((o) => !o.disabled);
+      const k = list.findIndex((o) => o.value === sel.value);
+      const o = list[(k + 1) % list.length];
+      bar.hidden = list.length < 2 || !o;
+      if (!o) return;
+      const cc = /^[a-z]{2}$/i.test(o.value) ? o.value.toLowerCase() : '';
+      img.hidden = !cc;
+      if (cc && img.getAttribute('src') !== `/assets/flags/${cc}.svg`) img.setAttribute('src', `/assets/flags/${cc}.svg`);
+      const t = o.textContent.trim();
+      if (name.textContent !== t) name.textContent = t;
+      const l = tr('Next country');
+      if (label.textContent !== l) label.textContent = l;
+      btn.setAttribute('aria-label', `${l}: ${t}`);
+      const notes = panel.querySelectorAll('.lp-note');
+      const note = notes[notes.length - 1];
+      if (note && note.offsetParent !== null) {
+        note.classList.add('lp-note-row');
+        bar.classList.remove('lp-cs-solo');
+        if (bar.previousElementSibling !== note.firstElementChild) note.firstElementChild.after(bar);
+      } else {
+        bar.classList.add('lp-cs-solo');
+        if (bar !== panel.lastElementChild) panel.append(bar);
+      }
     };
     const later = () => setTimeout(sync, 0);
     sel.addEventListener('change', later);
     new MutationObserver(later).observe(sel, { childList: true, subtree: true, characterData: true });
-    new MutationObserver(later).observe(panel, { childList: true });
-    setTimeout(() => { const src = sel.closest('.lp-cs-grp'); if (src) new MutationObserver(later).observe(src, { childList: true, subtree: true, characterData: true, attributes: true }); sync(); }, 0);
+    document.addEventListener('lp:lang', later);
     setInterval(sync, 1000);
     sync();
   }
