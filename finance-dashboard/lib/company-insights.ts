@@ -19,6 +19,8 @@ export interface CompanyInsights {
 }
 
 export const DAYS = 30;
+// Visits before this day include Devin's own test browsing (no per-visitor data to filter them out).
+export const VISITS_SINCE = "2026-11-21";
 export const emptyInsights = (configured = false, error: string | null = null): CompanyInsights => ({
   configured, error, days: DAYS, countries: [], buyClicks: [], geminiBySource: [], daily: [],
 });
@@ -56,6 +58,7 @@ export async function loadCompanyInsights(today: Date): Promise<CompanyInsights>
     for (let i = 0; i < DAYS; i++) daily.set(new Date(Date.parse(since) + i * 864e5).toISOString().slice(0, 10), { visits: 0, cost: 0 });
     const buys = new Map<string, number>();
     for (const r of interest) {
+      if (r.day.slice(0, 10) < VISITS_SINCE) continue;
       if (r.kind === "visit") {
         row(r.country_code).visits += r.n;
         const d = daily.get(r.day.slice(0, 10));

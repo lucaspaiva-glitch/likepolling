@@ -2,7 +2,7 @@
 
 import { AreaChart, Card } from "@tremor/react";
 import { fmtDate, fmtUsd2 } from "@/lib/format";
-import type { CompanyInsights } from "@/lib/company-insights";
+import { VISITS_SINCE, type CompanyInsights } from "@/lib/company-insights";
 
 const regions = new Intl.DisplayNames(["en"], { type: "region" });
 const countryName = (c: string) => (c === "XX" ? "Unknown" : (() => { try { return regions.of(c) ?? c; } catch { return c; } })());
@@ -23,12 +23,13 @@ export default function CompanyInsightsCard({ data }: { data: CompanyInsights })
   // From the first tracked day through yesterday: earlier days predate counting and today is still partial.
   const first = data.daily.findIndex((d) => d.visits > 0 || d.cost > 0);
   const days = first < 0 ? [] : data.daily.slice(first, -1);
-  const visits = days.reduce((s, d) => s + d.visits, 0);
+  const visitDays = days.filter((d) => d.date >= VISITS_SINCE);
+  const visits = visitDays.reduce((s, d) => s + d.visits, 0);
   const cost = days.reduce((s, d) => s + d.cost, 0);
   const clicks = data.countries.reduce((s, c) => s + c.buyClicks, 0);
-  const avgVisits = days.length ? visits / days.length : 0;
+  const avgVisits = visitDays.length ? visits / visitDays.length : 0;
   const avgCost = days.length ? cost / days.length : 0;
-  const visitPoints = days.map((d) => ({ date: fmtDate(d.date), Visitors: d.visits }));
+  const visitPoints = visitDays.map((d) => ({ date: fmtDate(d.date), Visitors: d.visits }));
   const costPoints = days.map((d) => ({ date: fmtDate(d.date), Cost: Math.round(d.cost * 100) / 100 }));
   const top = data.countries.filter((c) => c.visits > 0).slice(0, 5);
 
@@ -43,8 +44,12 @@ export default function CompanyInsightsCard({ data }: { data: CompanyInsights })
       <p className="mt-3 text-xs font-medium text-tremor-content-strong">Visitors per day</p>
       <div className="mt-1 grid grid-cols-2 gap-2">
         <Stat label="Average per day" value={n(Math.round(avgVisits))} />
-        <Stat label={`Total, ${days.length} days`} value={n(visits)} />
+        <Stat label={`Total, ${visitDays.length} days`} value={n(visits)} />
       </div>
+      <p className="mt-1 text-[11px] text-tremor-content">
+        Real visitors only, counted since {fmtDate(VISITS_SINCE)}
+        {visitDays.length ? "" : ". The first full day shows up the day after"}.
+      </p>
       <AreaChart
         className="mt-2 h-44"
         data={visitPoints}
