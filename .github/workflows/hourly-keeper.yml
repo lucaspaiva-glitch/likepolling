@@ -2,7 +2,7 @@ name: Hourly Workflow Keeper
 
 # GitHub often drops scheduled runs of busy hourly crons (Trending, Music and
 # Creator News ran only 3-4 times a day). This job stays alive for ~5.5 hours,
-# dispatches any of those workflows whose last run is over 55 minutes old, and
+# dispatches any of those workflows whose last run is over 65 minutes old (so an on-time cron run is never doubled), and
 # then re-dispatches itself. The 4-hourly schedule restarts it if the chain breaks.
 
 on:
@@ -36,8 +36,10 @@ jobs:
               created=${last%% *}
               status=${last##* }
               age=999999
-              [ -n "$created" ] && age=$(( $(date +%s) - $(date -d "$created" +%s) ))
-              if [ "$status" != "queued" ] && [ "$status" != "in_progress" ] && [ "$age" -gt 3300 ]; then
+              if [ -n "$created" ] && [ "$created" != "null" ] && ts=$(date -d "$created" +%s 2>/dev/null); then
+                age=$(( $(date +%s) - ts ))
+              fi
+              if [ "$status" != "queued" ] && [ "$status" != "in_progress" ] && [ "$age" -gt 3900 ]; then
                 echo "$(date -u +%H:%M) $wf last run ${age}s ago; dispatching"
                 gh workflow run "$wf" || echo "dispatch of $wf failed"
               fi
