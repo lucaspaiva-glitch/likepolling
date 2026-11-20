@@ -33,6 +33,8 @@
     .lp-cs-nav > select { min-width: 0; max-width: 100%; flex: 0 1 auto; text-overflow: ellipsis; }
     .lp-cs-arr { flex: none; width: 24px; height: 24px; padding: 0 0 2px; margin: 0; box-sizing: border-box; border: 1px solid rgba(255,42,60,.55); border-radius: 5px; background: linear-gradient(180deg, #8c000c, #7f000a 55%, #6e0009); color: #fff; font: 700 16px/1 ${MONO}; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
     .lp-cs-arr:hover { border-color: #ff2a3c; box-shadow: 0 0 12px -3px rgba(255,42,60,.85); }
+    .lp-cs-foot { display: flex; justify-content: center; padding: 14px 12px 4px; }
+    .lp-cs-foot .lp-cs-nav { order: 0 !important; flex: 0 1 auto !important; margin: 0 !important; }
     .lp-cs-arr:focus-visible { outline: 2px solid rgba(255,42,60,.6); outline-offset: 2px; }
     @media (max-width: 560px) {
       .lp-cs-arr { width: 32px; height: 28px; }
@@ -128,6 +130,7 @@
       return b;
     };
     nav.append(arrow(-1, 'Previous country', '‹'), anchor, arrow(1, 'Next country', '›'));
+    foot(panel, sel, step);
     const skip = (t) => t.closest('input, select, textarea, button, [contenteditable]') || sideScroller(t, panel);
     panel.addEventListener('click', (e) => {
       if (!e.target.closest('.lp-next')) return;
@@ -162,6 +165,69 @@
       if (Math.abs(acc) > 60) { used = true; step(acc > 0 ? 1 : -1); }
     }, { passive: false });
     return true;
+  }
+
+  // The same ‹ strip › again at the bottom of the section, so a reader who reached the end can
+  // change country without scrolling back up. It mirrors the top strip and drives the same <select>,
+  // then brings the section's top into view for the new country.
+  function foot(panel, sel, step) {
+    const bar = document.createElement('div');
+    bar.className = 'lp-cs-foot';
+    const grp = document.createElement('span');
+    grp.className = 'lp-cs-grp';
+    const img = document.createElement('img');
+    img.alt = '';
+    img.width = 16; img.height = 12;
+    const name = document.createElement('span');
+    name.className = 'lp-cs-name';
+    const pos = document.createElement('span');
+    pos.className = 'lp-cs-pos';
+    for (const el of [name, pos]) { el.setAttribute('data-no-i18n', ''); el.setAttribute('aria-hidden', 'true'); }
+    const copy = document.createElement('select');
+    copy.className = 'lp-cs-sel';
+    copy.setAttribute('aria-label', sel.getAttribute('aria-label') || 'Country');
+    grp.append(img, name, pos, copy);
+    const top = () => { if (panel.getBoundingClientRect().top < 0) panel.scrollIntoView({ block: 'start', behavior: still() ? 'auto' : 'smooth' }); };
+    const arrow = (dir, label, ch) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'lp-cs-arr';
+      b.setAttribute('aria-label', label);
+      b.setAttribute('data-no-i18n', '');
+      b.textContent = ch;
+      b.addEventListener('click', () => { step(dir); top(); });
+      return b;
+    };
+    const nav = document.createElement('span');
+    nav.className = 'lp-cs-nav';
+    nav.append(arrow(-1, 'Previous country', '‹'), grp, arrow(1, 'Next country', '›'));
+    bar.append(nav);
+    copy.addEventListener('change', () => {
+      sel.value = copy.value;
+      sel.dispatchEvent(new Event('change', { bubbles: true }));
+      top();
+    });
+    const sync = () => {
+      if (copy.innerHTML !== sel.innerHTML) copy.innerHTML = sel.innerHTML;
+      copy.value = sel.value;
+      const src = sel.closest('.lp-cs-grp');
+      const f = src && src.querySelector('img');
+      img.hidden = !f;
+      if (f && img.getAttribute('src') !== f.getAttribute('src')) img.setAttribute('src', f.getAttribute('src'));
+      const n = src && src.querySelector('.lp-cs-name');
+      const o = sel.options[sel.selectedIndex];
+      name.textContent = n ? n.textContent : o ? o.textContent.trim() : '';
+      const p = src && src.querySelector('.lp-cs-pos');
+      pos.innerHTML = p ? p.innerHTML : '';
+      if (!bar.isConnected || bar !== panel.lastElementChild) panel.append(bar);
+    };
+    const later = () => setTimeout(sync, 0);
+    sel.addEventListener('change', later);
+    new MutationObserver(later).observe(sel, { childList: true, subtree: true, characterData: true });
+    new MutationObserver(later).observe(panel, { childList: true });
+    setTimeout(() => { const src = sel.closest('.lp-cs-grp'); if (src) new MutationObserver(later).observe(src, { childList: true, subtree: true, characterData: true, attributes: true }); sync(); }, 0);
+    setInterval(sync, 1000);
+    sync();
   }
 
   // Long country names get their short form so the ‹ › arrows stay on screen ('United States' -> 'U.S.').
