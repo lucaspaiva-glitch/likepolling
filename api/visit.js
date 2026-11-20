@@ -8,7 +8,7 @@ const { allowed } = require('./search-count');
 
 const READ = ['news', 'fashion', 'ai'];
 const MAX_SECONDS = 1800;
-const BOT_UA = /headless|bot\b|crawl|spider|slurp|playwright|puppeteer|selenium|phantomjs|lighthouse|curl|wget|python-requests|node-fetch|axios/i;
+const BOT_UA = /headless|devin|bot\b|crawl|spider|slurp|playwright|puppeteer|selenium|phantomjs|lighthouse|curl|wget|python-requests|node-fetch|axios/i;
 
 const ITEMS = {
   visit: ['home', 'pulse', 'services', 'report', 'ad'],

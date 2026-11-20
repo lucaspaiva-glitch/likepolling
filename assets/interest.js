@@ -7,7 +7,13 @@
   const PAGES = { '/': 'home', '/index': 'home', '/services': 'services', '/report': 'report', '/ad': 'ad' };
   const PRODUCTS = { udjsyu: 'country', ijixxs: 'artist', linzh: 'company', laijtn: 'ad' };
   const CURRENCY = { en: 'USD', 'en-GB': 'GBP', pt: 'BRL', uk: 'UAH', ko: 'KRW', ja: 'JPY', zh: 'CNY', hi: 'INR' };
-  const automated = navigator.webdriver === true || /HeadlessChrome/.test(navigator.userAgent); // test browsers are not visitors
+  let me = false; // the owner's own devices, opted out once with ?me=1 (undo with ?me=0)
+  try {
+    const flag = location.search.match(/[?&]me=([01])\b/);
+    if (flag) localStorage.setItem('lp:me', flag[1]);
+    me = localStorage.getItem('lp:me') === '1';
+  } catch {}
+  const automated = me || navigator.webdriver === true || /HeadlessChrome|Devin\//.test(navigator.userAgent); // test browsers and the owner's devices (?me=1) are not visitors
   const send = (kind, item, seconds) => {
     if (automated) return;
     const body = JSON.stringify({ kind, item, seconds });
