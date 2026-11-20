@@ -1,0 +1,49 @@
+name: Hourly Workflow Keeper
+
+# GitHub often drops scheduled runs of busy hourly crons (Trending, Music and
+# Creator News ran only 3-4 times a day). This job stays alive for ~5.5 hours,
+# dispatches any of those workflows whose last run is over 55 minutes old, and
+# then re-dispatches itself. The 4-hourly schedule restarts it if the chain breaks.
+
+on:
+  schedule:
+    - cron: '3 */4 * * *'
+  workflow_dispatch:
+
+permissions:
+  actions: write
+  contents: read
+
+concurrency:
+  group: hourly-keeper
+  cancel-in-progress: false
+
+jobs:
+  keep:
+    runs-on: ubuntu-latest
+    timeout-minutes: 345
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: Dispatch overdue hourly workflows
+        run: |
+          set -u
+          end=$(( $(date +%s) + 330 * 60 ))
+          while [ "$(date +%s)" -lt "$end" ]; do
+            for wf in trending.yml music-chart.yml news-wire.yml; do
+              last=$(gh run list -w "$wf" -L 1 --json createdAt,status -q '.[0] | "\(.createdAt) \(.status)"' || true)
+              created=${last%% *}
+              status=${last##* }
+              age=999999
+              [ -n "$created" ] && age=$(( $(date +%s) - $(date -d "$created" +%s) ))
+              if [ "$status" != "queued" ] && [ "$status" != "in_progress" ] && [ "$age" -gt 3300 ]; then
+                echo "$(date -u +%H:%M) $wf last run ${age}s ago; dispatching"
+                gh workflow run "$wf" || echo "dispatch of $wf failed"
+              fi
+            done
+            sleep 300
+          done
+      - name: Restart the keeper
+        if: always()
+        run: gh workflow run hourly-keeper.yml
