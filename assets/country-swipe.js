@@ -38,14 +38,14 @@
     .lp-cs-foot { display: flex; min-width: 0; margin-left: auto; padding: 6px 14px; }
     .lp-cs-foot.lp-cs-solo { justify-content: center; margin: 0; padding: 12px; }
     .lp-cs-foot[hidden] { display: none; }
-    .lp-cs-next { display: inline-flex; align-items: center; gap: 7px; min-width: 0; max-width: 100%; height: 28px; padding: 0 10px; box-sizing: border-box; border: 1px solid rgba(255,42,60,.55); border-radius: 5px; background: linear-gradient(180deg, #b8121f, #a90e1a 55%, #960b16); color: #fff; font-family: inherit; cursor: pointer; box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 0 10px -5px rgba(255,42,60,.75); -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
-    .lp-cs-next:hover { border-color: #ff2a3c; box-shadow: inset 0 1px 0 rgba(255,255,255,.14), 0 0 12px -3px rgba(255,42,60,.85); }
+    .lp-cs-next { display: inline-flex; align-items: center; gap: 7px; min-width: 0; max-width: 100%; height: 28px; padding: 0 10px; box-sizing: border-box; border: 1px solid #ff2a3c; border-radius: 5px; background: #6e0009; color: #fff; font-family: inherit; cursor: pointer; box-shadow: 0 0 8px -1px rgba(255,42,60,.55); -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+    .lp-cs-next:hover { background: #7f000a; box-shadow: 0 0 12px 0 rgba(255,42,60,.75); }
     .lp-cs-next:focus-visible { outline: 2px solid rgba(255,42,60,.6); outline-offset: 2px; }
-    .lp-cs-next-l { flex: none; font-family: inherit; font-size: 12px; font-weight: 600; line-height: 1; color: rgba(255,255,255,.8); }
+    .lp-cs-next-l { flex: none; font-family: inherit; font-size: 12px; font-weight: 600; line-height: 1; color: rgba(255,214,219,.85); }
     .lp-cs-next img { flex: none; width: 16px; height: 12px; border-radius: 2px; box-shadow: 0 0 0 1px rgba(255,255,255,.25); }
     .lp-cs-next img[hidden] { display: none; }
     .lp-cs-next .lp-cs-name { padding: 0; }
-    .lp-cs-next-c { flex: none; font: 700 16px/1 ${MONO}; margin-top: -2px; }
+    .lp-cs-next-c { flex: none; font: 700 16px/1 ${MONO}; margin-top: -2px; color: #fff3c8; text-shadow: 0 0 4px #ffd36b; }
     .lp-cs-arr:focus-visible { outline: 2px solid rgba(255,42,60,.6); outline-offset: 2px; }
     @media (max-width: 560px) {
       .lp-cs-arr { width: 32px; height: 28px; }
