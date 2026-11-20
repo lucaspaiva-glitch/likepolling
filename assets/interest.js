@@ -7,7 +7,9 @@
   const PAGES = { '/': 'home', '/index': 'home', '/services': 'services', '/report': 'report', '/ad': 'ad' };
   const PRODUCTS = { udjsyu: 'country', ijixxs: 'artist', linzh: 'company', laijtn: 'ad' };
   const CURRENCY = { en: 'USD', 'en-GB': 'GBP', pt: 'BRL', uk: 'UAH', ko: 'KRW', ja: 'JPY', zh: 'CNY', hi: 'INR' };
+  const automated = navigator.webdriver === true || /HeadlessChrome/.test(navigator.userAgent); // test browsers are not visitors
   const send = (kind, item, seconds) => {
+    if (automated) return;
     const body = JSON.stringify({ kind, item, seconds });
     try {
       if (!(navigator.sendBeacon && navigator.sendBeacon('/api/visit', body))) fetch('/api/visit', { method: 'POST', body, keepalive: true }).catch(() => {});
@@ -55,7 +57,7 @@
   document.addEventListener('lp:lang', localMoney);
   new MutationObserver(fill).observe(document.body, { childList: true, subtree: true }); // cards re-render on language change
   const page = PAGES[location.pathname.replace(/\.html$/, '').replace(/\/$/, '') || '/'];
-  if (page) {
+  if (page && !automated) {
     fetch('/api/visit', { method: 'POST', body: JSON.stringify({ kind: 'visit', item: page }), keepalive: true }).catch(() => {});
   }
   // Reading time: seconds each news section fills at least half the screen (or half of itself)

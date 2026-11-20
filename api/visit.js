@@ -1,12 +1,14 @@
 // POST /api/visit {"kind":"visit","item":"home"} or {"kind":"buy","item":"country"}: counts one page visit
 // or Gumroad "Buy" click for today, per visitor country (Vercel's x-vercel-ip-country header).
 // Answers with the visitor's country code. No IP, cookie or user data is stored. Only the pages and products below are counted.
+// Automated browsers (headless, test tools, crawlers) get a normal answer but are not counted.
 // POST {"kind":"read","seconds":{"news":42,"fashion":8}} adds one reader and their seconds on screen to each news section.
 'use strict';
 const { allowed } = require('./search-count');
 
 const READ = ['news', 'fashion', 'ai'];
 const MAX_SECONDS = 1800;
+const BOT_UA = /headless|bot\b|crawl|spider|slurp|playwright|puppeteer|selenium|phantomjs|lighthouse|curl|wget|python-requests|node-fetch|axios/i;
 
 const ITEMS = {
   visit: ['home', 'pulse', 'services', 'report', 'ad'],
@@ -33,6 +35,7 @@ function createHandler(deps = {}) {
     if (!allowed(`v|${ip}`)) return res.status(429).json({ error: 'Too many requests.' });
     const geo = String(req.headers?.['x-vercel-ip-country'] || '').toUpperCase();
     const country = /^[A-Z]{2}$/.test(geo) ? geo : 'XX';
+    if (BOT_UA.test(String(req.headers?.['user-agent'] || ''))) return res.status(200).json({ country });
     const key = env.SUPABASE_KEY.trim();
     try {
       const rpc = (name, body) => fetchImpl(`${env.SUPABASE_URL.trim()}/rest/v1/rpc/${name}`, {

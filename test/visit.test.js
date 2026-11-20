@@ -61,3 +61,15 @@ test('adds reading time per news section, capped, ignoring unknown sections', as
     assert.equal(r.statusCode, 400);
   }
 });
+
+test('answers automated browsers without counting them', async () => {
+  let called = false;
+  const handler = createHandler({ env, fetch: async () => { called = true; return { ok: true }; } });
+  for (const ua of ['Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/120.0 Safari/537.36', 'Googlebot/2.1', 'curl/8.4']) {
+    const res = mockRes();
+    await handler(req({ kind: 'visit', item: 'home' }, { 'user-agent': ua, 'x-vercel-ip-country': 'us' }), res);
+    assert.equal(res.statusCode, 200);
+    assert.deepEqual(res.body, { country: 'US' });
+  }
+  assert.equal(called, false);
+});
