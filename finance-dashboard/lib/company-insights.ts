@@ -1,5 +1,6 @@
 import "server-only";
 import { lp, requestCost } from "@/lib/gemini-credit";
+import { VISITS_SINCE } from "@/lib/visits";
 
 // Like Polling's anonymous counters (per visitor country per day) and Gemini usage, for marketing and cost decisions.
 export interface CountryInterest {
@@ -19,8 +20,6 @@ export interface CompanyInsights {
 }
 
 export const DAYS = 30;
-// Visits before this day include Devin's own test browsing (no per-visitor data to filter them out).
-export const VISITS_SINCE = "2026-11-21";
 export const emptyInsights = (configured = false, error: string | null = null): CompanyInsights => ({
   configured, error, days: DAYS, countries: [], buyClicks: [], geminiBySource: [], daily: [],
 });

@@ -2,7 +2,8 @@
 
 import { AreaChart, Card } from "@tremor/react";
 import { fmtDate, fmtUsd2 } from "@/lib/format";
-import { VISITS_SINCE, type CompanyInsights } from "@/lib/company-insights";
+import type { CompanyInsights } from "@/lib/company-insights";
+import { VISITS_SINCE } from "@/lib/visits";
 
 const regions = new Intl.DisplayNames(["en"], { type: "region" });
 const countryName = (c: string) => (c === "XX" ? "Unknown" : (() => { try { return regions.of(c) ?? c; } catch { return c; } })());
