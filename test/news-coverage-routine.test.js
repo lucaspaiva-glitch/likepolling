@@ -1,7 +1,7 @@
 'use strict';
 const test = require('node:test');
 const assert = require('node:assert');
-const { monthly, span, indexed } = require('../lib/news-coverage.js');
+const { monthly, span, indexed, coverage } = require('../lib/news-coverage.js');
 const { query, BRANDS } = require('../scripts/news-coverage-routine.js');
 
 test('monthly averages GDELT daily shares per month; span covers the last 3 full years', () => {
@@ -29,9 +29,36 @@ test('routine refreshes missing and oldest subjects first, skips fresh ones and 
     return { ok: true, text: async () => JSON.stringify({ timeline: [{ data: [{ date: '20261001T000000Z', value: 2 }] }] }) };
   };
   const out = await main({ SUPABASE_URL: 'https://x', SUPABASE_KEY: 'k' }, now, { fetch, sleep: async () => {}, clock: () => (t += 1000), budget: 3500 });
-  assert.strictEqual(asked[0], '"Nike"', 'report subjects first, once');
-  assert.ok(!asked.includes('"Argentina"'), 'saved yesterday: skipped');
-  assert.notStrictEqual(asked[asked.length - 1], '"Brazil"', 'BR (oldest saved) comes after the missing ones');
+  assert.strictEqual(asked[0], 'Nike', 'report subjects first, once');
+  assert.ok(!asked.includes('Argentina'), 'saved yesterday: skipped');
+  assert.notStrictEqual(asked[asked.length - 1], 'Brazil', 'BR (oldest saved) comes after the missing ones');
   assert.strictEqual(out.saved, asked.length);
   assert.ok(out.left > 0 && posted.length === asked.length);
+});
+
+test('coverage unquotes single words but keeps multi-word phrases and query operators', async () => {
+  for (const [input, expected] of [['"Nike"', 'Nike'], ['"Dior"', 'Dior'], ['"Zara" (fashion OR clothing OR Inditex)', 'Zara (fashion OR clothing OR Inditex)'], ['"United States"', '"United States"'], ['"Louis Vuitton"', '"Louis Vuitton"']]) {
+    const rows = await coverage(input, undefined, { fetchImpl: async (url) => {
+      assert.strictEqual(new URL(url).searchParams.get('query'), expected);
+      return { ok: true, status: 200, text: async () => '{"timeline":[{"data":[{"date":"20261001T000000Z","value":2}]}]}' };
+    } });
+    assert.deepStrictEqual(rows, [{ month: '2026-10-01', share: 2 }]);
+  }
+  assert.deepStrictEqual(await coverage('Nike', undefined, { fetchImpl: async () => ({ ok: true, status: 200, text: async () => '{"timeline":[]}' }) }), []);
+});
+
+test('coverage reports HTTP status and a bounded body snippet for non-JSON and HTTP errors', async () => {
+  for (const [status, body] of [[200, 'The specified phrase is too short.'], [200, ''], [200, '{invalid json'], [503, 'x'.repeat(200)]]) {
+    await assert.rejects(coverage('"Nike"', undefined, { tries: 1, fetchImpl: async () => ({ ok: status === 200, status, text: async () => body }) }), (e) => {
+      assert.ok(e.message.includes(`GDELT Nike: HTTP ${status}: ${body.slice(0, 150)}`));
+      assert.ok(!e.message.includes('x'.repeat(151)));
+      return true;
+    });
+  }
+});
+
+test('coverage backs off at least 30 seconds after a 429 and preserves its diagnostic', async () => {
+  const waits = [];
+  await assert.rejects(coverage('Nike', undefined, { tries: 3, wait: async (ms) => waits.push(ms), fetchImpl: async () => ({ ok: false, status: 429, text: async () => 'Please limit requests to one every 5 seconds' }) }), /HTTP 429: Please limit requests to one every 5 seconds/);
+  assert.deepStrictEqual(waits, [30000, 60000]);
 });
