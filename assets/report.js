@@ -1,5 +1,5 @@
 // /report: opens an Extended Country, People (type 'artist') or Company Report (artist/company: renderEntity). ?sample=BR-PT is free; otherwise the buyer pastes the
-// license key from their receipt (Lemon Squeezy or Gumroad) once, and this browser remembers it (localStorage only).
+// Gumroad license key from their receipt once, and this browser remembers it (localStorage only).
 (function () {
   'use strict';
   const COUNTRIES = ['BR', 'DE', 'ES', 'FR', 'GB', 'IN', 'JP', 'KR', 'MX', 'PT', 'UA', 'US'];

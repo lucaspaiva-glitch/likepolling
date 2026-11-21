@@ -4,9 +4,8 @@ const report = require('../lib/report');
 const { createHandler } = require('../api/report');
 const ideas = require('../scripts/report-ideas-routine');
 
-const env = { SUPABASE_URL: 'https://db.test', SUPABASE_KEY: 'secret', LEMONSQUEEZY_STORE_ID: '11', LEMONSQUEEZY_PRODUCT_ID: '22' };
+const env = { SUPABASE_URL: 'https://db.test', SUPABASE_KEY: 'secret' };
 const NOW = new Date('2026-11-20T12:00:00Z');
-const KEY = '38b1460a-5104-4067-a91d-77b872934d51';
 let ipSeq = 0;
 function mockRes() {
   const res = { statusCode: 0, headers: {}, body: undefined };
@@ -87,95 +86,6 @@ test('GET serves only the Brazil vs Portugal sample', async () => {
   assert.equal(res.body.sample, true);
 });
 
-// Fake Lemon Squeezy License API.
-function lemon(state) {
-  const calls = [];
-  const route = async (url, init) => {
-    if (!url.startsWith('https://api.lemonsqueezy.com/')) return null;
-    const p = Object.fromEntries(new URLSearchParams(init && init.body ? init.body : ''));
-    calls.push({ url, p, auth: init && init.headers && init.headers.Authorization });
-    const meta = { store_id: state.store || 11, product_id: 22, customer_email: 'buyer@example.com' };
-    const lk = { id: 5, status: state.status || (state.inst ? 'active' : 'inactive'), key: KEY, activation_usage: state.inst ? 1 : 0, expires_at: '2027-11-20T12:00:00Z' };
-    if (url.endsWith('/licenses/validate')) {
-      if (p.license_key !== KEY) return json({ valid: false, error: 'license_key not found.', license_key: null }, 404);
-      return json({ valid: true, error: null, license_key: lk, instance: state.inst && p.instance_id === state.inst.id ? state.inst : null, meta });
-    }
-    if (url.endsWith('/licenses/activate')) {
-      state.inst = { id: 'inst-123456', name: p.instance_name };
-      return json({ activated: true, error: null, license_key: lk, instance: state.inst, meta });
-    }
-    if (url.includes('/license-key-instances')) return json({ data: state.inst ? [{ attributes: { identifier: state.inst.id, name: state.inst.name } }] : [] });
-    return json({}, 404);
-  };
-  return { calls, route };
-}
-async function post(state, body, envOver = {}) {
-  const ls = lemon(state);
-  const handler = createHandler({ env: { ...env, ...envOver }, fetch: db({ route: ls.route }), now: () => NOW.getTime() });
-  const res = mockRes();
-  await handler({ method: 'POST', body, headers: { 'x-forwarded-for': `10.1.0.${++ipSeq}` } }, res);
-  return { res, calls: ls.calls };
-}
-
-test('first visit asks for countries, then activates the key with them and returns the report', async () => {
-  const state = {};
-  let { res } = await post(state, { key: KEY });
-  assert.equal(res.statusCode, 409);
-  assert.equal(res.body.need_countries, true);
-  ({ res } = await post(state, { key: KEY, countries: 'BR,PT' }));
-  assert.equal(res.statusCode, 200);
-  assert.equal(state.inst.name, 'BR,PT');
-  assert.equal(res.body.instance_id, 'inst-123456');
-  assert.deepEqual(res.body.countries.map((c) => c.country), ['BR', 'PT']);
-  assert.equal(res.headers['Cache-Control'], 'no-store');
-  assert.ok(!JSON.stringify(res.body).includes('buyer@example.com'), 'never returns the buyer email');
-});
-
-test('a paid report is saved as a dated snapshot, once per day', async () => {
-  const saved = [];
-  const handler = createHandler({ env, now: () => NOW.getTime(), fetch: db({ route: async (url, init) => {
-    if (url.includes('report_snapshots')) { saved.push({ url, row: JSON.parse(init.body)[0], prefer: init.headers.Prefer }); return json(null, 201); }
-    return lemon({ inst: { id: 'inst-123456', name: 'BR,PT' } }).route(url, init);
-  } }) });
-  const res = mockRes();
-  await handler({ method: 'POST', body: { key: KEY, instance: 'inst-123456' }, headers: { 'x-forwarded-for': '10.9.0.1' } }, res);
-  assert.equal(res.statusCode, 200);
-  assert.equal(saved.length, 1);
-  assert.match(saved[0].url, /on_conflict=day,kind,subjects/);
-  assert.match(saved[0].prefer, /ignore-duplicates/);
-  assert.deepEqual([saved[0].row.day, saved[0].row.kind, saved[0].row.subjects], [NOW.toISOString().slice(0, 10), 'country', 'BR,PT']);
-  assert.deepEqual(saved[0].row.body.countries.map((c) => c.country), ['BR', 'PT']);
-});
-
-test('later visits use the saved activation; countries can\'t be changed', async () => {
-  const state = { inst: { id: 'inst-123456', name: 'US' } };
-  const { res, calls } = await post(state, { key: KEY, instance: 'inst-123456', countries: 'BR,PT' });
-  assert.equal(res.statusCode, 200);
-  assert.deepEqual(res.body.countries.map((c) => c.country), ['US']);
-  assert.ok(!calls.some((c) => c.url.endsWith('/activate')));
-});
-
-test('a used key on a new browser reopens only with the API key', async () => {
-  const state = { inst: { id: 'inst-123456', name: 'JP' } };
-  let { res } = await post(state, { key: KEY });
-  assert.equal(res.statusCode, 409);
-  assert.ok(!res.body.need_countries);
-  let calls;
-  ({ res, calls } = await post(state, { key: KEY }, { LEMONSQUEEZY_API_KEY: 'lsk' }));
-  assert.equal(res.statusCode, 200);
-  assert.deepEqual(res.body.countries.map((c) => c.country), ['JP']);
-  assert.equal(calls.find((c) => c.url.includes('license-key-instances')).auth, 'Bearer lsk');
-});
-
-test('refuses unknown, other-store, refunded and expired keys, and works only once sales are set up', async () => {
-  assert.equal((await post({}, { key: 'aaaaaaaa-bbbb' })).res.statusCode, 404);
-  assert.equal((await post({ store: 99 }, { key: KEY })).res.statusCode, 404);
-  assert.equal((await post({ status: 'disabled' }, { key: KEY })).res.statusCode, 403);
-  assert.equal((await post({ status: 'expired' }, { key: KEY })).res.statusCode, 403);
-  assert.equal((await post({}, { key: 'x' })).res.statusCode, 400);
-  assert.equal((await post({}, { key: KEY }, { LEMONSQUEEZY_STORE_ID: '' })).res.statusCode, 503);
-});
-
 test('ideas routine sends only open data to Gemini and saves cleaned ideas', async () => {
   const prompts = [];
   const saved = [];
@@ -197,9 +107,8 @@ test('ideas routine fails the job when most countries fail', async () => {
 // Fake Gumroad License API.
 const GKEY = 'A1B2C3D4-E5F60718-9ABCDEF0-1234ABCD';
 const genv = { GUMROAD_PRODUCT_ID: 'gp==', REPORT_TOKEN_SECRET: 'test-secret' };
-async function gpost(state, body, envOver = {}) {
-  const calls = [];
-  const route = async (url, init) => {
+function groute(state, calls = []) {
+  return async (url, init) => {
     if (!url.startsWith('https://api.gumroad.com/')) return null;
     const p = Object.fromEntries(new URLSearchParams(init.body));
     calls.push(p);
@@ -207,11 +116,31 @@ async function gpost(state, body, envOver = {}) {
     if (p.increment_uses_count === 'true') state.uses = (state.uses || 0) + 1;
     return json({ success: true, uses: state.uses || 0, purchase: { email: 'buyer@example.com', refunded: !!state.refunded, disputed: false, chargebacked: false } });
   };
-  const handler = createHandler({ env: { ...env, ...genv, ...envOver }, fetch: db({ route }), now: () => NOW.getTime() });
+}
+async function gpost(state, body, envOver = {}) {
+  const calls = [];
+  const handler = createHandler({ env: { ...env, ...genv, ...envOver }, fetch: db({ route: groute(state, calls) }), now: () => NOW.getTime() });
   const res = mockRes();
   await handler({ method: 'POST', body, headers: { 'x-forwarded-for': `10.2.0.${++ipSeq}` } }, res);
   return { res, calls };
 }
+
+test('a paid report is saved as a dated snapshot, once per day', async () => {
+  const saved = [];
+  const route = groute({});
+  const handler = createHandler({ env: { ...env, ...genv }, now: () => NOW.getTime(), fetch: db({ route: async (url, init) => {
+    if (url.includes('report_snapshots')) { saved.push({ url, row: JSON.parse(init.body)[0], prefer: init.headers.Prefer }); return json(null, 201); }
+    return route(url, init);
+  } }) });
+  const res = mockRes();
+  await handler({ method: 'POST', body: { key: GKEY, countries: 'BR,PT' }, headers: { 'x-forwarded-for': '10.9.0.1' } }, res);
+  assert.equal(res.statusCode, 200);
+  assert.equal(saved.length, 1);
+  assert.match(saved[0].url, /on_conflict=day,kind,subjects/);
+  assert.match(saved[0].prefer, /ignore-duplicates/);
+  assert.deepEqual([saved[0].row.day, saved[0].row.kind, saved[0].row.subjects], [NOW.toISOString().slice(0, 10), 'country', 'BR,PT']);
+  assert.deepEqual(saved[0].row.body.countries.map((c) => c.country), ['BR', 'PT']);
+});
 
 test('Gumroad key: first visit picks countries once, then a signed instance reopens them', async () => {
   const state = {};
@@ -239,8 +168,8 @@ test('Gumroad key: forged instance, used key elsewhere, unknown and refunded key
   assert.equal((await gpost(state, { key: GKEY, countries: 'US' })).res.statusCode, 409);
   assert.equal((await gpost({}, { key: 'ZZZZZZZZ-ZZZZZZZZ' })).res.statusCode, 404);
   assert.equal((await gpost({ refunded: true }, { key: GKEY })).res.statusCode, 403);
-  assert.equal((await gpost({}, { key: GKEY }, { GUMROAD_PRODUCT_ID: '' })).res.statusCode, 404);
-  assert.equal((await gpost({}, { key: GKEY }, { GUMROAD_PRODUCT_ID: '', LEMONSQUEEZY_STORE_ID: '' })).res.statusCode, 503);
+  assert.equal((await gpost({}, { key: 'x' })).res.statusCode, 400);
+  assert.equal((await gpost({}, { key: GKEY }, { GUMROAD_PRODUCT_ID: '' })).res.statusCode, 503);
 });
 
 // Fake Wikipedia / Wikimedia for artist and company reports.
