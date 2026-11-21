@@ -58,7 +58,7 @@ async function main(env = process.env, now = new Date(), deps = {}) {
     if (clock() - start > budget) break;
     tried++;
     try {
-      const rows = (await coverage(q, now, { fetchImpl, wait, tries: 2, timeout: 90000 })).map((r) => ({ [col]: key, ...r, saved_at: now.toISOString() }));
+      const rows = (await coverage(q, now, { fetchImpl, wait, timeout: 90000 })).map((r) => ({ [col]: key, ...r, saved_at: now.toISOString() }));
       if (rows.length) {
         const r = await fetchImpl(`${env.SUPABASE_URL}/rest/v1/${table}?on_conflict=${col},month`,
           { method: 'POST', headers: { ...headers, Prefer: 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(rows) });

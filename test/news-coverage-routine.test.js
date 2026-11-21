@@ -2,7 +2,7 @@
 const test = require('node:test');
 const assert = require('node:assert');
 const { monthly, span, indexed, coverage } = require('../lib/news-coverage.js');
-const { query, BRANDS } = require('../scripts/news-coverage-routine.js');
+const { main, query, BRANDS } = require('../scripts/news-coverage-routine.js');
 
 test('monthly averages GDELT daily shares per month; span covers the last 3 full years', () => {
   const tl = { timeline: [{ data: [{ date: '20231101T000000Z', value: 1 }, { date: '20231102T000000Z', value: 2 }, { date: '20231201T000000Z', value: 4 }] }] };
@@ -17,7 +17,6 @@ test('monthly averages GDELT daily shares per month; span covers the last 3 full
 });
 
 test('routine refreshes missing and oldest subjects first, skips fresh ones and stops at the time budget', async () => {
-  const { main } = require('../scripts/news-coverage-routine.js');
   const now = new Date('2026-11-15T12:00:00Z'), asked = [], posted = [];
   let t = 0;
   const fetch = async (url, opt = {}) => {
@@ -34,6 +33,26 @@ test('routine refreshes missing and oldest subjects first, skips fresh ones and 
   assert.notStrictEqual(asked[asked.length - 1], 'Brazil', 'BR (oldest saved) comes after the missing ones');
   assert.strictEqual(out.saved, asked.length);
   assert.ok(out.left > 0 && posted.length === asked.length);
+});
+
+test('routine saves coverage after repeated GDELT rate limits', async () => {
+  const now = new Date('2026-11-21T00:00:00Z'), waits = [], posted = [];
+  let attempts = 0, t = 0;
+  const fetch = async (url, opt = {}) => {
+    if (opt.method === 'POST') { posted.push(...JSON.parse(opt.body)); return { ok: true }; }
+    if (url.includes('/report_snapshots?')) return { ok: true, json: async () => [{ subjects: 'Nike, Inc.' }] };
+    if (url.startsWith('https://x/')) return { ok: true, json: async () => [] };
+    assert.strictEqual(new URL(url).searchParams.get('query'), 'Nike');
+    if (++attempts < 4) return { ok: false, status: 429, text: async () => 'Please limit requests to one every 5 seconds' };
+    return { ok: true, status: 200, text: async () => '{"timeline":[{"data":[{"date":"20261001T000000Z","value":2}]}]}' };
+  };
+  const out = await main({ SUPABASE_URL: 'https://x', SUPABASE_KEY: 'k' }, now, {
+    fetch, sleep: async (ms) => { waits.push(ms); t += ms; }, clock: () => t, budget: 180000
+  });
+  assert.strictEqual(out.saved, 1);
+  assert.strictEqual(out.failed, 0);
+  assert.deepStrictEqual(waits, [30000, 60000, 90000, 10000]);
+  assert.deepStrictEqual(posted, [{ brand: 'Nike', month: '2026-10-01', share: 2, saved_at: now.toISOString() }]);
 });
 
 test('coverage unquotes single words but keeps multi-word phrases and query operators', async () => {
