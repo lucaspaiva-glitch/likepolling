@@ -20,7 +20,7 @@ test('routine refreshes missing and oldest subjects first, skips fresh ones and 
   const now = new Date('2026-11-15T12:00:00Z'), asked = [], posted = [];
   let t = 0;
   const fetch = async (url, opt = {}) => {
-    if (url.includes('news_coverage_monthly?select')) return { ok: true, json: async () => [{ country_code: 'AR', saved_at: '2026-11-14T00:00:00Z' }, { country_code: 'BR', saved_at: '2026-10-01T00:00:00Z' }] };
+    if (url.includes('news_coverage_monthly?select')) return { ok: true, json: async () => [{ country_code: 'AR', saved_at: '2026-11-14T00:00:00Z' }, { country_code: 'BR', saved_at: '2026-11-05T00:00:00Z' }] };
     if (url.includes('brand_coverage_monthly?select')) return { ok: true, json: async () => [] };
     if (url.includes('report_snapshots')) return { ok: true, json: async () => [{ subjects: 'Nike, Inc.' }, { subjects: 'Nike, Inc.' }] };
     if (opt.method === 'POST') { posted.push(url); return { ok: true }; }
@@ -80,4 +80,22 @@ test('coverage backs off at least 30 seconds after a 429 and preserves its diagn
   const waits = [];
   await assert.rejects(coverage('Nike', undefined, { tries: 3, wait: async (ms) => waits.push(ms), fetchImpl: async () => ({ ok: false, status: 429, text: async () => 'Please limit requests to one every 5 seconds' }) }), /HTTP 429: Please limit requests to one every 5 seconds/);
   assert.deepStrictEqual(waits, [30000, 60000]);
+});
+
+test('routine treats GDELT rate limits as retry-next-run, but fails on real errors and stale subjects', async () => {
+  const run = (gdelt, saved = []) => main({ SUPABASE_URL: 'https://x', SUPABASE_KEY: 'k' }, new Date('2026-11-21T00:00:00Z'), {
+    sleep: async () => {}, clock: () => 0, budget: 1,
+    fetch: async (url, opt = {}) => {
+      if (opt.method === 'POST') return { ok: true };
+      if (url.includes('/report_snapshots?')) return { ok: true, json: async () => [] };
+      if (url.includes('brand_coverage_monthly?select')) return { ok: true, json: async () => saved };
+      if (url.startsWith('https://x/')) return { ok: true, json: async () => [] };
+      return gdelt();
+    },
+  });
+  const busy = await run(() => ({ ok: false, status: 429, text: async () => 'Please limit requests to one every 5 seconds' }));
+  assert.ok(busy.blocked > 0 && !busy.saved && !busy.failed);
+  await assert.rejects(run(() => ({ ok: true, status: 200, text: async () => 'The specified phrase is too short.' })), /real error/);
+  const old = [{ brand: 'Vogue', saved_at: '2026-10-01T00:00:00Z' }];
+  await assert.rejects(run(() => ({ ok: false, status: 429, text: async () => '' }), old), /over 14 days: Vogue/);
 });

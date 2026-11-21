@@ -20,6 +20,7 @@ const QUERY = { US: '"United States"', GB: '("United Kingdom" OR "Britain")', KR
 const BRANDS = { Vogue: '"Vogue"', ELLE: '"Elle magazine"', "Harper's Bazaar": '"Harpers Bazaar"', GQ: '"GQ magazine"', Chanel: '"Chanel"', Dior: '"Dior"',
   'Louis Vuitton': '"Louis Vuitton"', 'Hermès': '"Hermes" (fashion OR luxury OR Birkin)', Gucci: '"Gucci"', Prada: '"Prada"', Burberry: '"Burberry"',
   Versace: '"Versace"', Zara: '"Zara" (fashion OR clothing OR Inditex)', Uniqlo: '"Uniqlo"' };
+const STALE_DAYS = 14;
 const sleep = (ms) => new Promise((ok) => setTimeout(ok, ms));
 
 function query(cc) {
@@ -29,6 +30,7 @@ function query(cc) {
 
 // Each run refreshes the subjects saved longest ago (missing ones first) for up to `budget` ms, so GDELT's
 // rate limits only slow the fill-in instead of failing it. Subjects saved in the last 6 days are skipped.
+// The run fails only on real errors (database, unexpected GDELT answer) or when a saved subject is older than STALE_DAYS.
 async function main(env = process.env, now = new Date(), deps = {}) {
   if (!env.SUPABASE_URL || !env.SUPABASE_KEY) throw new Error('SUPABASE_URL and SUPABASE_KEY are required.');
   const fetchImpl = deps.fetch || fetch, wait = deps.sleep || sleep, clock = deps.clock || Date.now, budget = deps.budget ?? 20 * 60000;
@@ -44,16 +46,18 @@ async function main(env = process.env, now = new Date(), deps = {}) {
     .then((r) => (r.ok ? r.json() : [])).catch(() => []);
   const people = [...new Set((Array.isArray(snaps) ? snaps : []).map((r) => termOf(r.subjects)))].filter((t) => t.length >= 3 && t.length <= 60 && !BRANDS[t]);
   const rank = ([, col, key]) => (col !== 'brand' ? 0 : BRANDS[key] ? 1 : 2);
-  const jobs = [...people.map((t) => ['brand_coverage_monthly', 'brand', t, `"${t.replace(/"/g, '')}"`]),
+  let jobs = [...people.map((t) => ['brand_coverage_monthly', 'brand', t, `"${t.replace(/"/g, '')}"`]),
     // World News countries first (the homepage chart), then the rest of the report countries.
     ...[...new Set([...FEATURED, ...COUNTRIES])].map((cc) => ['news_coverage_monthly', 'country_code', cc, query(cc)]),
     ...Object.entries(BRANDS).map(([b, q]) => ['brand_coverage_monthly', 'brand', b, q])]
-    .map((j) => [...j, savedAt[`${j[0]}:${j[2]}`] || 0])
-    .filter((j) => now - j[4] > 6 * 86400000)
+    .map((j) => [...j, savedAt[`${j[0]}:${j[2]}`] || 0]);
+  const tracked = jobs;
+  jobs = jobs.filter((j) => now - j[4] > 6 * 86400000)
     // Oldest first; among equals, report subjects, then the Fashion Index brands (the homepage chart).
     .sort((x, y) => x[4] - y[4] || rank(y) - rank(x));
   const start = clock();
-  let saved = 0, tried = 0, failed = 0;
+  let saved = 0, tried = 0, failed = 0, blocked = 0;
+  const done = new Set();
   for (const [table, col, key, q] of jobs) {
     if (clock() - start > budget) break;
     tried++;
@@ -64,13 +68,19 @@ async function main(env = process.env, now = new Date(), deps = {}) {
           { method: 'POST', headers: { ...headers, Prefer: 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(rows) });
         if (!r.ok) throw new Error(`Supabase ${r.status}`);
         saved++;
+        done.add(`${table}:${key}`);
       }
-    } catch (e) { failed++; console.error(`${key}: ${e.message}`); }
+    } catch (e) {
+      if (e.temporary) blocked++; else failed++;
+      console.error(`${key}: ${e.temporary ? 'GDELT busy, retried next run. ' : ''}${e.message}`);
+    }
     await wait(10000);
   }
-  console.log(`Saved ${saved} subjects, ${failed} failed, ${jobs.length - tried} left for the next run.`);
-  if (tried && !saved) throw new Error('No subject could be saved.');
-  return { saved, failed, left: jobs.length - tried };
+  const stale = tracked.filter(([table, , key, , at]) => at && !done.has(`${table}:${key}`) && now - at > STALE_DAYS * 86400000).map((j) => j[2]);
+  console.log(`Saved ${saved} subjects, ${blocked} blocked by GDELT (retried next run), ${failed} failed, ${jobs.length - tried} left for the next run.`);
+  if (failed) throw new Error(`${failed} subject(s) failed with a real error (see above).`);
+  if (stale.length) throw new Error(`Not refreshed for over ${STALE_DAYS} days: ${stale.join(', ')}`);
+  return { saved, failed, blocked, left: jobs.length - tried, stale };
 }
 
 if (require.main === module) main().catch((e) => { console.error(e.message); process.exitCode = 1; });
