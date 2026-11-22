@@ -718,6 +718,19 @@
     open({ key, countries: countries || String(localStorage.getItem('lp_report_countries') || ''), choice });
   });
 
+  // Embedded in a search page (/s/…): the page sends the data and asks for downloads; this reports its height.
+  if (params.has('embed') && parent !== window) {
+    document.documentElement.classList.add('embed');
+    const tell = (m) => parent.postMessage(m, location.origin);
+    window.addEventListener('message', (e) => {
+      if (e.origin !== location.origin || !e.data) return;
+      if (e.data.lp === 'data') render(e.data.data);
+      if (e.data.lp === 'export') { const b = $('report').querySelector(`[data-ex="${e.data.kind}"]`); if (b) b.click(); }
+    });
+    new ResizeObserver(() => tell({ lp: 'height', h: document.body.scrollHeight })).observe(document.body);
+    show('loading');
+    return tell({ lp: 'ready' });
+  }
   if (params.has('sample')) return openSample();
   const saved = hash.get('k') ? { key: hash.get('k'), instance: hash.get('i') || '' } : store.get('lp_report');
   if (saved && saved.key) return open({ key: saved.key, instance: saved.instance || '', countries: String(localStorage.getItem('lp_report_countries') || '') });

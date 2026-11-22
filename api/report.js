@@ -2,6 +2,8 @@
 // no buyer data: Gumroad sells the report and emails a license key; this checks the key with Gumroad's License API on
 // each visit and never saves it, the email or anything else about the buyer.
 //   GET  /api/report?country=BR&compare=PT   the free sample (only Brazil vs Portugal)
+//   GET  /api/report?page=shakira             one of the free search-page samples (PAGES)
+//   GET  /api/report?about=Title              free basics for any search page (Wikipedia)
 //   POST /api/report {"key":"…","instance":"…","countries":"BR,PT"}
 // Env: GUMROAD_PRODUCT_ID / GUMROAD_ARTIST_PRODUCT_ID / GUMROAD_COMPANY_PRODUCT_ID + REPORT_TOKEN_SECRET. Gumroad keys
 // have no activations, so the first visit bumps the key's use count and the browser gets a signed "instance" that
@@ -10,8 +12,30 @@
 const crypto = require('crypto');
 const report = require('../lib/report');
 const entity = require('../lib/entity-report');
+const free = require('../lib/free-page');
 
 const LIMIT_PER_MIN = 10;
+// Free search-page samples, one per category, full history unlocked.
+const PAGES = {
+  shakira: { type: 'artist', subject: 'Shakira', peers: [] },
+  zara: { type: 'company', subject: 'Zara (retailer)', peers: [] },
+  brazil: { country: 'BR' },
+  benfica: { type: 'company', subject: 'S.L. Benfica', peers: [] },
+  'lula-vs-bolsonaro': { type: 'artist', subject: 'Luiz Inácio Lula da Silva', peers: ['Jair Bolsonaro'] },
+};
+const COUNTRY_NAMES = new Intl.DisplayNames(['en'], { type: 'region' });
+
+// Free part of a search page, plus a rough category for the colors and the right Gumroad product.
+async function about(fetchImpl, q) {
+  const body = await free.freePage(fetchImpl, q, { countryNames: (c) => COUNTRY_NAMES.of(c) });
+  if (!body) throw fail(404, 'Nothing found for that search.');
+  if (body.disambiguation) throw fail(404, 'That name means several things. Try a fuller name.');
+  const desc = body.description;
+  const cc = report.COUNTRIES.find((c) => COUNTRY_NAMES.of(c) === body.title || (c === 'US' && body.title === 'United States') || (c === 'GB' && body.title === 'United Kingdom'));
+  const cat = cc ? 'country' : entity.TYPES.artist.words.test(desc) || /politician|president|minister|chancellor|mayor|governor|senator|congress|parliament|party leader|monarch|king of|queen of|player|coach|person/i.test(desc) ? 'person'
+    : /club|team|football|league/i.test(desc) ? 'sport' : entity.TYPES.company.words.test(desc) ? 'brand' : 'topic';
+  return { ...body, cat, country: cc || null };
+}
 const hits = new Map();
 
 function allowed(ip, now = Date.now()) {
@@ -188,6 +212,20 @@ function createHandler(deps = {}) {
     try {
       if (!env.SUPABASE_URL || !env.SUPABASE_KEY) throw fail(500, 'Server is missing its database settings.');
       const get = report.rest(env, fetchImpl);
+      if (req.method === 'GET' && req.query.about) {
+        const body = await about(fetchImpl, String(req.query.about).slice(0, 120));
+        res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=86400');
+        return res.status(200).json(body);
+      }
+      const page = req.method === 'GET' && Object.prototype.hasOwnProperty.call(PAGES, req.query.page) && PAGES[req.query.page];
+      if (page) {
+        const body = page.country ? await report.buildReport(get, [page.country], new Date(now), { fetchImpl })
+          : await entity.buildEntityReport(get, page.type, page, { fetchImpl, rest: get, now: new Date(now) });
+        if (!page.country) await saveStates(env, fetchImpl, body);
+        await saveSnapshot(env, fetchImpl, body);
+        res.setHeader('Cache-Control', 'public, max-age=300, s-maxage=21600, stale-while-revalidate=86400');
+        return res.status(200).json({ ...body, sample: true, page: req.query.page });
+      }
       if (req.method === 'GET' && entity.TYPES[req.query.type]) {
         const body = await entity.buildEntityReport(get, req.query.type, entity.SAMPLES[req.query.type], { fetchImpl, rest: get, now: new Date(now) });
         await saveStates(env, fetchImpl, body);
@@ -231,3 +269,4 @@ function createHandler(deps = {}) {
 
 module.exports = createHandler();
 module.exports.createHandler = createHandler;
+module.exports.PAGES = PAGES;

@@ -13,6 +13,8 @@
   <link rel="stylesheet" href="/assets/fonts/fonts.css">
   <link rel="stylesheet" href="/assets/offers.css">
   <link rel="stylesheet" href="/assets/suggest.css">
+  <link rel="stylesheet" href="/assets/lp-search.css">
+  <script>if (/^\/s(\/|$)/.test(location.pathname)) document.documentElement.classList.add('lp-subj');</script>
   <link rel="stylesheet" href="/assets/news-wire-widget.css">
   <link rel="stylesheet" href="/assets/trending-widget.css">
   <link rel="stylesheet" href="/assets/music-chart-widget.css">
@@ -628,6 +630,12 @@
     #tr-tab > svg { color: #fff; filter: drop-shadow(0 0 2px rgba(255,42,60,.9)); }
     #tr-tab .lp-mq, #tr-tab .lp-mq span, #tr-tab .lp-mq i { color: #ffe3e6; text-shadow: 0 0 2px #ff2a3c, 0 0 6px rgba(255,42,60,.7); }
     #tr-tab:focus-visible { outline-color: #ff2a3c; }
+    #pol-tab, #pol-tab:hover, #pol-tab:focus-visible, #pol-tab[aria-expanded="true"] { background: linear-gradient(90deg, #5a0007, #6e0009 60%, #7f000a); color: #ff4a5c; border-color: rgba(255,42,60,.7); box-shadow: inset 0 0 0 2px #630008, inset 0 0 0 2.5px rgba(255,42,60,.25), inset 0 0 6px rgba(255,42,60,.2), 0 0 8px -3px rgba(255,42,60,.6); }
+    #pol-tab:hover, #pol-tab:focus-visible, #pol-tab[aria-expanded="true"] { background: linear-gradient(90deg, #6a0008, #7f000a 60%, #94000c); border-color: #ff2a3c; box-shadow: inset 0 0 0 2px #7f000a, inset 0 0 0 2.5px rgba(255,42,60,.35), inset 0 0 8px rgba(255,42,60,.28), 0 0 10px -3px rgba(255,42,60,.75); }
+    #pol-tab::before { background: #ff2a3c; opacity: .8; box-shadow: 0 0 3px rgba(255,42,60,.55); }
+    #pol-tab > svg { color: #fff; filter: drop-shadow(0 0 2px rgba(255,42,60,.9)); }
+    #pol-tab .lp-mq, #pol-tab .lp-mq span, #pol-tab .lp-mq i { color: #ffe3e6; text-shadow: 0 0 2px #ff2a3c, 0 0 6px rgba(255,42,60,.7); }
+    #pol-tab:focus-visible { outline-color: #ff2a3c; }
     /* "Trending in the most countries" card (the list itself is built by news-wire-widget.js). */
     .lp-trp { width: min(330px, calc(100vw - 56px)); }
     .lp-trp .nw-rank { max-height: calc(100vh - 80px); max-height: calc(100dvh - 80px); overflow-y: auto; overscroll-behavior: contain; padding: 2px 12px 0; border: 0; scrollbar-width: thin; scrollbar-color: rgba(255,42,60,.5) transparent; }
@@ -774,20 +782,9 @@
       <div class="live">Live data, 24/7</div>
       <div class="lp-ext-wrap"><a class="lp-ext" href="https://chromewebstore.google.com/detail/creators-+/ibajjhdapncbacoinjjcagimpcjpahbn" target="_blank" rel="noopener" aria-label="Add to Chrome"><svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path d="M8 2v8m0 0L4.8 6.8M8 10l3.2-3.2M3 13h10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Add to Chrome</span></a><button type="button" class="lp-ext-info" id="cp-link" aria-controls="cp-pop" aria-expanded="false">Free Extension</button></div>
     </header>
-    <div class="lp-rep" id="lp-rep">
-      <button type="button" class="lp-fold" aria-expanded="false" aria-controls="lp-free"><i aria-hidden="true"></i><span>Reports</span></button>
-      <div class="lp-free" id="lp-free">
-        <div class="lp-row"><span class="lp-pp lp-pp-paid" data-rep="country"><a class="lp-chip" href="/report" target="_blank" rel="noopener"><i aria-hidden="true"></i><span>Country report</span><em class="lp-price" data-eur="4" data-no-i18n>€4</em></a></span> <span class="lp-pp lp-pp-paid" data-rep="artist"><a class="lp-chip" href="/report" target="_blank" rel="noopener"><i aria-hidden="true"></i><span>People report</span><em class="lp-price" data-eur="4" data-no-i18n>€4</em></a></span> <span class="lp-pp lp-pp-paid" data-rep="company"><a class="lp-chip" href="/report" target="_blank" rel="noopener"><i aria-hidden="true"></i><span>Company report</span><em class="lp-price" data-eur="4" data-no-i18n>€4</em></a></span></div>
-      </div>
+    <section class="lps-search" id="lps" aria-label="Search"><div class="lps-sbox"><div class="lps-status"><span>SEARCH</span><span>Built by bots, checked by people</span></div><div class="lps-swrap"><span aria-hidden="true" class="lps-bot still" style="left:14%;top:-34px"><svg viewBox="-4 -4 40 38" width="40" height="38"><rect class="l1" x="9" y="25" width="4" height="8" rx="1.5" fill="#3a3a3c"/><rect class="l2" x="15" y="25" width="4" height="8" rx="1.5" fill="#3a3a3c"/><rect x="7" y="14" width="14" height="12" rx="3" fill="#b0000e"/><rect x="7" y="18" width="14" height="2" fill="#f5c400"/><rect x="8" y="5" width="12" height="9" rx="3" fill="#1c1c1e"/><circle class="lps-eye" cx="11.6" cy="9.6" r="1.4" fill="#ff5a5a"/><circle class="lps-eye" cx="16.4" cy="9.6" r="1.4" fill="#ff5a5a"/><path d="M7 6.6a7 5.6 0 0 1 14 0z" fill="#f5c400"/><rect x="5.4" y="6" width="17.2" height="1.9" rx=".9" fill="#e0a800"/><path d="M20 18l7 3" stroke="#3a3a3c" stroke-width="2" stroke-linecap="round"/><circle class="lps-spark" cx="29" cy="22" r="2.6" fill="#ffd60a"/><circle class="lps-spark" cx="31" cy="19" r="1" fill="#ff9f0a"/><circle class="lps-spark" cx="31.5" cy="24.5" r=".9" fill="#ff9f0a"/></svg></span><span aria-hidden="true" class="lps-bot still flip" style="right:16%;top:-34px"><svg viewBox="-4 -4 40 38" width="40" height="38"><rect class="l1" x="9" y="25" width="4" height="8" rx="1.5" fill="#3a3a3c"/><rect class="l2" x="15" y="25" width="4" height="8" rx="1.5" fill="#3a3a3c"/><rect x="7" y="14" width="14" height="12" rx="3" fill="#b0000e"/><rect x="7" y="18" width="14" height="2" fill="#f5c400"/><rect x="8" y="5" width="12" height="9" rx="3" fill="#1c1c1e"/><circle class="lps-eye" cx="11.6" cy="9.6" r="1.4" fill="#ff5a5a"/><circle class="lps-eye" cx="16.4" cy="9.6" r="1.4" fill="#ff5a5a"/><path d="M7 6.6a7 5.6 0 0 1 14 0z" fill="#f5c400"/><rect x="5.4" y="6" width="17.2" height="1.9" rx=".9" fill="#e0a800"/><g class="lps-ham"><path d="M20 18l6-7" stroke="#3a3a3c" stroke-width="2" stroke-linecap="round"/><rect x="23" y="6" width="7" height="3.6" rx="1" fill="#636366"/></g></svg></span><form class="lps-sform" action="/s" role="search"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><label for="lps-q" class="lps-vh">Search</label><input id="lps-q" name="find" placeholder="Search anything" autocomplete="off" required><button type="submit">Search</button></form></div><div class="lps-samples"><span class="lps-sl">Free samples</span><a class="lps-chip" href="/s/shakira" style="--c:#b0000e"><i></i><span data-no-i18n>Shakira</span><em>Person</em></a><a class="lps-chip" href="/s/zara" style="--c:#141414"><i></i><span data-no-i18n>Zara</span><em>Brand</em></a><a class="lps-chip" href="/s/brazil" style="--c:#009c3b"><img src="/assets/flags/br.svg" alt="" width="16" height="12"><span data-no-i18n>Brazil</span><em>Country</em></a><a class="lps-chip" href="/s/benfica" style="--c:#0a7a3d"><i></i><span data-no-i18n>Benfica</span><em>Sport</em></a><a class="lps-chip" href="/s/lula-vs-bolsonaro" style="--c:#3a4a66"><i></i><span data-no-i18n>Lula vs Bolsonaro</span><em>Topic</em></a></div><div class="lps-track" aria-hidden="true"><span class="lps-bot walk" style="--a:2%;--b:40%;--d:11s"><svg viewBox="-4 -4 40 38" width="40" height="38"><rect class="l1" x="9" y="25" width="4" height="8" rx="1.5" fill="#3a3a3c"/><rect class="l2" x="15" y="25" width="4" height="8" rx="1.5" fill="#3a3a3c"/><rect x="7" y="14" width="14" height="12" rx="3" fill="#b0000e"/><rect x="7" y="18" width="14" height="2" fill="#f5c400"/><rect x="8" y="5" width="12" height="9" rx="3" fill="#1c1c1e"/><circle class="lps-eye" cx="11.6" cy="9.6" r="1.4" fill="#ff5a5a"/><circle class="lps-eye" cx="16.4" cy="9.6" r="1.4" fill="#ff5a5a"/><path d="M7 6.6a7 5.6 0 0 1 14 0z" fill="#f5c400"/><rect x="5.4" y="6" width="17.2" height="1.9" rx=".9" fill="#e0a800"/><path d="M8 17 5 3M20 17l3-14" stroke="#3a3a3c" stroke-width="2" stroke-linecap="round"/><rect x="-3" y="0" width="34" height="3.4" rx="1" fill="#8e8e93"/><rect x="-3" y="0" width="34" height="1.2" fill="#aeaeb2"/></svg></span><span class="lps-bot walk" style="--a:48%;--b:86%;--d:9s;animation-delay:-3s"><svg viewBox="-4 -4 40 38" width="40" height="38"><rect class="l1" x="9" y="25" width="4" height="8" rx="1.5" fill="#3a3a3c"/><rect class="l2" x="15" y="25" width="4" height="8" rx="1.5" fill="#3a3a3c"/><rect x="7" y="14" width="14" height="12" rx="3" fill="#b0000e"/><rect x="7" y="18" width="14" height="2" fill="#f5c400"/><rect x="8" y="5" width="12" height="9" rx="3" fill="#1c1c1e"/><circle class="lps-eye" cx="11.6" cy="9.6" r="1.4" fill="#ff5a5a"/><circle class="lps-eye" cx="16.4" cy="9.6" r="1.4" fill="#ff5a5a"/><path d="M7 6.6a7 5.6 0 0 1 14 0z" fill="#f5c400"/><rect x="5.4" y="6" width="17.2" height="1.9" rx=".9" fill="#e0a800"/><path d="M20 19l6 2" stroke="#3a3a3c" stroke-width="2" stroke-linecap="round"/><path d="M24 19h10l-2.5 6h-6z" fill="#8e8e93"/><rect x="25" y="16" width="7" height="4" rx="1" fill="#b0000e"/><circle cx="29.5" cy="29" r="2.4" fill="#3a3a3c"/></svg></span><span class="lps-bot walk ph-hide" style="--a:30%;--b:70%;--d:13s;animation-delay:-6s"><svg viewBox="-4 -4 40 38" width="40" height="38"><rect class="l1" x="9" y="25" width="4" height="8" rx="1.5" fill="#3a3a3c"/><rect class="l2" x="15" y="25" width="4" height="8" rx="1.5" fill="#3a3a3c"/><rect x="7" y="14" width="14" height="12" rx="3" fill="#b0000e"/><rect x="7" y="18" width="14" height="2" fill="#f5c400"/><rect x="8" y="5" width="12" height="9" rx="3" fill="#1c1c1e"/><circle class="lps-eye" cx="11.6" cy="9.6" r="1.4" fill="#ff5a5a"/><circle class="lps-eye" cx="16.4" cy="9.6" r="1.4" fill="#ff5a5a"/><path d="M7 6.6a7 5.6 0 0 1 14 0z" fill="#f5c400"/><rect x="5.4" y="6" width="17.2" height="1.9" rx=".9" fill="#e0a800"/><rect x="4" y="13" width="20" height="12" rx="1.5" fill="#d9a441"/><path d="M4 19h20M14 13v12" stroke="#a8761f" stroke-width="1"/><text x="14" y="22.4" font-size="5" text-anchor="middle" font-family="monospace" font-weight="700" fill="#5a3b06">DATA</text></svg></span></div><span class="lps-crane" aria-hidden="true"><svg viewBox="0 0 120 90" width="120" height="90"><path d="M100 90V8M92 90l8-82 8 82M10 10h104" stroke="#3a3a3c" stroke-width="2.5" fill="none"/><path d="M100 18l-18-8M100 18l18-8" stroke="#8e8e93" stroke-width="1.4"/><rect x="104" y="12" width="12" height="9" fill="#b0000e"/><rect x="96" y="4" width="8" height="6" rx="1" fill="#f5c400"/></svg><span class="lps-hook"><i></i><b>DATA</b></span></span></div></section>
     </div>
-    </div>
-
-    <script>
-      (function () {
-        const rep = document.getElementById('lp-rep'), btn = rep && rep.querySelector('.lp-fold');
-        if (btn) btn.addEventListener('click', () => btn.setAttribute('aria-expanded', String(rep.classList.toggle('unfold'))));
-      })();
-    </script>
+    <div class="lps-page" id="lps-page" hidden></div>
     <section class="nw nw-front" id="news-front" aria-label="World News: top news headlines in each country"></section>
     <div class="tm-tabs" id="tm-tabs" role="tablist" aria-label="Charts"><button type="button" role="tab" aria-selected="false" data-tm="trending">Trending</button><button type="button" role="tab" aria-selected="true" data-tm="music">Music</button></div>
     <section class="ytt" id="yt-trending" aria-label="YouTube Trending: most popular videos in each country" data-supabase-url="https://iyhaoagslsrwtkcrxylp.supabase.co" data-supabase-key="sb_publishable_ZnV9HrtfDqeKlBftnDxH2Q_YK6XWJTp"></section>
@@ -805,6 +802,7 @@
     <button type="button" class="lp-tab lp-ad-tab" id="ad-tab" aria-controls="ad-pop" aria-expanded="false" aria-label="Sponsored: Machu Picchu Energy"><svg class="mpe-can" viewBox="0 -7 20 39" width="14" height="27" aria-hidden="true"><defs><linearGradient id="mpe-can-body" x1="0" x2="1"><stop offset="0" stop-color="#b87800"/><stop offset=".3" stop-color="#ffd84a"/><stop offset=".55" stop-color="#f5b400"/><stop offset="1" stop-color="#9a6200"/></linearGradient><linearGradient id="mpe-can-band" x1="0" x2="1"><stop offset="0" stop-color="#8f0f18"/><stop offset=".32" stop-color="#ff4a55"/><stop offset=".55" stop-color="#e0232f"/><stop offset="1" stop-color="#7a0a12"/></linearGradient><linearGradient id="mpe-can-metal" x1="0" x2="1"><stop offset="0" stop-color="#7a7a7a"/><stop offset=".42" stop-color="#f4f4f4"/><stop offset="1" stop-color="#6a6a6a"/></linearGradient></defs><g class="mpe-can-shake"><path d="M4.2 6 5.3 3.4h9.4L15.8 6Z" fill="url(#mpe-can-metal)"/><rect x="3" y="6" width="14" height="22.5" rx="2" fill="url(#mpe-can-body)"/><rect x="3" y="6" width="14" height="4" fill="url(#mpe-can-band)"/><path d="M5 11.6h10M5 13.2h10" stroke="#1d1d1b" stroke-width=".9"/><circle cx="10" cy="19.4" r="3.6" fill="none" stroke="#1d1d1b" stroke-width=".7"/><path d="M7.2 21 9.4 17.4l1 1.4.9-1 1.6 3.2Z" fill="#1d1d1b"/><rect x="3.4" y="27.6" width="13.2" height="2.4" rx="1.2" fill="url(#mpe-can-metal)"/><g class="mpe-can-pull"><path d="M8.2 3.5h3.6" stroke="#d9d9d9" stroke-width="1.1" stroke-linecap="round"/><circle cx="12.2" cy="3.5" r=".9" fill="none" stroke="#bdbdbd" stroke-width=".6"/></g><g class="mpe-can-fizz" fill="#f7b500"><circle cx="9" cy="1.5" r=".9"/><circle cx="11.6" cy=".5" r=".65"/><circle cx="10.2" cy="-1" r=".55"/></g></g></svg><span class="lp-mq" data-no-i18n><span class="lp-mq-t"><span>Machu Picchu Energy</span><i aria-hidden="true">&bull;</i><span aria-hidden="true">Machu Picchu Energy</span><i aria-hidden="true">&bull;</i></span></span><small data-no-i18n>AD</small></button>
     <button type="button" class="lp-tab" id="search-tab" aria-controls="search-drawer" aria-expanded="false"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span class="lp-mq"><span class="lp-mq-t"><span>Search any YouTube Channel</span><i aria-hidden="true">&bull;</i><span aria-hidden="true">Search any YouTube Channel</span><i aria-hidden="true">&bull;</i></span></span></button>
     <button type="button" class="lp-tab lp-tr-tab" id="tr-tab" aria-controls="tr-pop" aria-expanded="false"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.5 3.9 5.5 3.9 9s-1.3 6.5-3.9 9c-2.6-2.5-3.9-5.5-3.9-9S9.4 5.5 12 3Z"/></svg><span class="lp-mq"><span class="lp-mq-t"><span>Trending in the most countries</span><i aria-hidden="true">&bull;</i><span aria-hidden="true">Trending in the most countries</span><i aria-hidden="true">&bull;</i></span></span></button>
+    <button type="button" class="lp-tab lp-tr-tab" id="pol-tab" aria-controls="pol-pop" aria-expanded="false" hidden><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 21h18M5 21V10M9.5 21V10M14.5 21V10M19 21V10M2.5 10 12 3l9.5 7Z"/></svg><span class="lp-mq"><span class="lp-mq-t"><span>Trending politicians</span><i aria-hidden="true">&bull;</i><span aria-hidden="true">Trending politicians</span><i aria-hidden="true">&bull;</i></span></span></button>
     <span class="lp-truck-papers" aria-hidden="true"><svg viewBox="0 0 18 11" preserveAspectRatio="none"><rect class="p" x="1" y="7" width="16" height="3.4" rx=".6"/><rect class="p" x="2" y="3.6" width="15" height="3.4" rx=".6"/><rect class="p" x=".5" y=".4" width="15.5" height="3.2" rx=".6"/><path class="t" d="M3 2H9M3 5.3H8M4 8.7H11"/><path class="s" d="M12.6 0V11M12.6 5.4H17.4"/></svg></span>
     <span class="lp-truck-back" aria-hidden="true"></span>
     <span class="lp-truck-cab" aria-hidden="true"><svg viewBox="0 0 20 40" preserveAspectRatio="none">
@@ -858,6 +856,12 @@ ENERGY</div>
     <div class="lp-sp-card">
       <div class="mpe-top"><span class="mpe-sym" data-no-i18n>TOP</span><span>Trending in the most countries</span></div>
       <div class="lp-trp-body" id="tr-pop-body"></div>
+    </div>
+  </div>
+  <div class="mpe-pop lp-sp lp-trp lp-polp" id="pol-pop" hidden>
+    <div class="lp-sp-card">
+      <div class="mpe-top"><span class="mpe-sym" data-no-i18n>POL</span><span>Trending politicians</span></div>
+      <div class="lp-pol-body" id="pol-pop-body" data-supabase-url="https://iyhaoagslsrwtkcrxylp.supabase.co" data-supabase-key="sb_publishable_ZnV9HrtfDqeKlBftnDxH2Q_YK6XWJTp"></div>
     </div>
   </div>
   <div class="lp-scrim" id="search-scrim"></div>
@@ -1263,6 +1267,7 @@ ENERGY</div>
       const sPop = $('search-pop'), sIn = $('sp-input'), sOut = $('sp-out');
       const cpTab = $('cp-link'), cpPop = $('cp-pop');
       const trTab = $('tr-tab'), trPop = $('tr-pop');
+      const polTab = $('pol-tab'), polPop = $('pol-pop');
       let raf = 0, idle = 0, cur = null, target = 0, glide = 0, spin = 0, popY = 0;
       const still = matchMedia('(prefers-reduced-motion: reduce)');
       const cab = rail.querySelector('.lp-truck-cab');
@@ -1283,6 +1288,7 @@ ENERGY</div>
         placeSearchPop();
         placeCpPop();
         placeTrPop();
+        placePolPop();
         if (cur !== target) glide = requestAnimationFrame(step); else last = 0;
       }
       function placePop() {
@@ -1300,6 +1306,11 @@ ENERGY</div>
         if (trPop.hidden) return;
         const r = trTab.getBoundingClientRect();
         trPop.style.setProperty('--pop-y', Math.round(Math.max(8, Math.min(r.top, innerHeight - trPop.offsetHeight - 8))) + 'px');
+      }
+      function placePolPop() {
+        if (polPop.hidden) return;
+        const r = polTab.getBoundingClientRect();
+        polPop.style.setProperty('--pop-y', Math.round(Math.max(8, Math.min(r.top, innerHeight - polPop.offsetHeight - 8))) + 'px');
       }
       function placeSearchPop() {
         if (sPop.hidden) return;
@@ -1328,6 +1339,7 @@ ENERGY</div>
           if (!adPop.hidden) setAd(false);
           if (!cpPop.hidden) setCp(false);
           if (!trPop.hidden) setTr(false);
+          if (!polPop.hidden) setPol(false);
         }
         rail.classList.add('moving');
         clearTimeout(idle);
@@ -1338,7 +1350,7 @@ ENERGY</div>
       place();
       function setAd(on) {
         if (!on) hoverOpen = false;
-        if (on) { setSearch(false); setCp(false); setTr(false); popY = scrollY; }
+        if (on) { setSearch(false); setCp(false); setTr(false); setPol(false); popY = scrollY; }
         adPop.hidden = !on;
         adTab.setAttribute('aria-expanded', String(on));
         placePop();
@@ -1371,7 +1383,7 @@ ENERGY</div>
       let sHover = false, sT = 0, sToken = 0;
       function setSearch(on) {
         if (!on) { sHover = false; clearTimeout(sT); }
-        if (on) { setAd(false); setCp(false); setTr(false); }
+        if (on) { setAd(false); setCp(false); setTr(false); setPol(false); }
         sPop.hidden = !on;
         tab.setAttribute('aria-expanded', String(on));
         placeSearchPop();
@@ -1437,7 +1449,7 @@ ENERGY</div>
       let cHover = false, cT = 0;
       function setCp(on) {
         if (!on) { cHover = false; clearTimeout(cT); }
-        if (on) { setAd(false); setSearch(false); setTr(false); popY = scrollY; }
+        if (on) { setAd(false); setSearch(false); setTr(false); setPol(false); popY = scrollY; }
         cpPop.hidden = !on;
         cpTab.setAttribute('aria-expanded', String(on));
         placeCpPop();
@@ -1454,7 +1466,7 @@ ENERGY</div>
       let tHover = false, tT = 0;
       function setTr(on) {
         if (!on) { tHover = false; clearTimeout(tT); }
-        if (on) { setAd(false); setSearch(false); setCp(false); popY = scrollY; }
+        if (on) { setAd(false); setSearch(false); setCp(false); setPol(false); popY = scrollY; }
         trPop.hidden = !on;
         trTab.setAttribute('aria-expanded', String(on));
         placeTrPop();
@@ -1468,6 +1480,24 @@ ENERGY</div>
       ['pointerdown', 'wheel', 'touchmove'].forEach((ev) => trPop.addEventListener(ev, () => { tHover = false; clearTimeout(tT); }, { passive: true }));
       trTab.addEventListener('click', (e) => { e.stopPropagation(); if (tHover) { tHover = false; clearTimeout(tT); return; } setTr(trPop.hidden); });
       document.addEventListener('click', (e) => { if (!trPop.hidden && !trPop.contains(e.target)) setTr(false); });
+      // "Trending politicians" compartment (assets/politics-widget.js fills it): same rules again.
+      let pHover = false, pT = 0;
+      function setPol(on) {
+        if (!on) { pHover = false; clearTimeout(pT); }
+        if (on) { setAd(false); setSearch(false); setCp(false); setTr(false); popY = scrollY; }
+        polPop.hidden = !on;
+        polTab.setAttribute('aria-expanded', String(on));
+        placePolPop();
+      }
+      if (matchMedia('(hover: hover) and (pointer: fine)').matches) {
+        [polTab, polPop].forEach((el) => {
+          el.addEventListener('pointerenter', (e) => { if (e.pointerType !== 'mouse') return; clearTimeout(pT); if (polPop.hidden) pT = setTimeout(() => { setPol(true); pHover = true; }, 150); });
+          el.addEventListener('pointerleave', (e) => { if (e.pointerType !== 'mouse') return; clearTimeout(pT); if (pHover) pT = setTimeout(() => { if (pHover) setPol(false); }, 350); });
+        });
+      }
+      ['pointerdown', 'wheel', 'touchmove'].forEach((ev) => polPop.addEventListener(ev, () => { pHover = false; clearTimeout(pT); }, { passive: true }));
+      polTab.addEventListener('click', (e) => { e.stopPropagation(); if (pHover) { pHover = false; clearTimeout(pT); return; } setPol(polPop.hidden); });
+      document.addEventListener('click', (e) => { if (!polPop.hidden && !polPop.contains(e.target)) setPol(false); });
       function setOpen(on) {
         setTr(false);
         setCp(false);
@@ -1490,6 +1520,7 @@ ENERGY</div>
         else if (!sPop.hidden) { setSearch(false); tab.focus({ preventScroll: true }); }
         else if (!cpPop.hidden) { setCp(false); cpTab.focus({ preventScroll: true }); }
         else if (!trPop.hidden) { setTr(false); trTab.focus({ preventScroll: true }); }
+        else if (!polPop.hidden) { setPol(false); polTab.focus({ preventScroll: true }); }
         else if (drawer.classList.contains('open')) setOpen(false);
       });
       if (new URLSearchParams(location.search).get('q')) setOpen(true);
@@ -1515,6 +1546,8 @@ ENERGY</div>
   </script>
   <script src="/assets/offers.js" defer></script>
   <script src="/assets/suggest.js" defer></script>
+  <script src="/assets/lp-search.js" defer></script>
+  <script src="/assets/politics-widget.js" defer></script>
   <script src="/assets/pulse-pop.js" defer></script>
   <script src="/assets/ad-sign.js" defer></script>
   <script src="/assets/video-thumbs.js" defer></script>

@@ -13,6 +13,8 @@
     { "source": "/services", "destination": "/services.html" },
     { "source": "/report", "destination": "/report.html" },
     { "source": "/terms", "destination": "/terms.html" },
-    { "source": "/ad", "destination": "/ad.html" }
+    { "source": "/ad", "destination": "/ad.html" },
+    { "source": "/s", "destination": "/index.html" },
+    { "source": "/s/:slug", "destination": "/index.html" }
   ]
 }
