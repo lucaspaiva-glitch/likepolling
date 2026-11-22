@@ -1,24 +1,15 @@
-// Google-style name suggestions for the artist/company boxes, straight from Wikipedia (free; nothing goes to Like Polling).
+// Google-style name suggestions for the search and report boxes, from Google Trends through /api/report?suggest=.
 // LPSuggest(input, { type: () => 'artist' | 'company', onPick(item) }). Mouse, keyboard and touch.
 (() => {
-  const API = 'https://en.wikipedia.org/w/api.php?';
   const FIT = {
-    artist: /\b(singer|rapper|musician|band|group|songwriter|DJ|producer|composer|duo|trio|artist|actor|actress|entertainer|performer|idol|vocalist|guitarist|pianist|drummer|YouTuber|influencer|comedian)\b/i,
-    company: /\b(company|corporation|brand|manufacturer|retailer|business|conglomerate|airline|bank|multinational|chain|firm|maker|platform|enterprise|group|cooperative|subsidiary|startup|fashion house|label|store|network|service|operator|developer|publisher|franchise|restaurant|carrier|holding|beverage|drink|automaker|clothing|apparel|cosmetics|beer|website|app|marketplace|streaming)\b/i,
+    artist: /\b(singer|rapper|musician|band|group|songwriter|DJ|producer|composer|duo|trio|artist|actor|actress|entertainer|performer|idol|vocalist|guitarist|pianist|drummer|YouTuber|influencer|comedian|player|footballer|athlete|politician|president|minister)\b/i,
+    company: /\b(company|corporation|brand|manufacturer|retailer|business|conglomerate|airline|bank|multinational|chain|firm|maker|platform|enterprise|group|startup|label|store|network|club|team)\b/i,
   };
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const query = (p) => fetch(API + new URLSearchParams({ action: 'query', format: 'json', formatversion: '2', origin: '*', redirects: '1', prop: 'description|pageimages|pageprops', ppprop: 'disambiguation', piprop: 'thumbnail', pithumbsize: '80', ...p }))
-    .then((r) => r.json()).then((j) => (j.query?.pages || []).sort((a, b) => (a.index || 0) - (b.index || 0))).catch(() => []);
-  const ok = (p) => !p.missing && !p.pageprops && !/^Lists? of /.test(p.title);
-
   async function find(text, type) {
-    let pages = (await query({ generator: 'prefixsearch', gpssearch: text, gpslimit: '10' })).filter(ok);
-    if (pages.length < 4) {
-      const seen = new Set(pages.map((p) => p.title));
-      pages = pages.concat((await query({ generator: 'search', gsrsearch: text, gsrlimit: '8' })).filter((p) => ok(p) && !seen.has(p.title)));
-    }
+    const j = await fetch(`/api/report?suggest=${encodeURIComponent(text)}`).then((r) => (r.ok ? r.json() : { items: [] })).catch(() => ({ items: [] }));
     const fit = FIT[type] || /$^/;
-    return pages.map((p, i) => ({ title: p.title, description: p.description || '', image: p.thumbnail?.source || '', fit: fit.test(p.description || ''), i }))
+    return (j.items || []).map((t, i) => ({ title: t.title, description: t.type || '', mid: t.mid, image: '', fit: fit.test(t.type || ''), i }))
       .sort((a, b) => b.fit - a.fit || a.i - b.i).slice(0, 6);
   }
 
@@ -57,7 +48,7 @@
       const typed = input.value.trim();
       if (typed.length < 2) { items = []; return close(); }
       const n = ++seq;
-      timer = setTimeout(async () => { const found = await find(typed, type()); if (n === seq) { items = found; render(typed); } }, 150);
+      timer = setTimeout(async () => { const found = await find(typed, type()); if (n === seq) { items = found; render(typed); } }, 250);
     });
     input.addEventListener('keydown', (e) => {
       if (box.hidden) return;

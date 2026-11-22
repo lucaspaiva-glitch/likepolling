@@ -29,12 +29,12 @@
       const day = new Date(`${nd[pk].day}T00:00:00Z`).toLocaleDateString(loc(), { day: 'numeric', month: 'short', timeZone: 'UTC' });
       $('pv-take').innerHTML = `${region('BR')}: ${L('Busiest day: {day} with {n} articles', { day: `<b>${day}</b>`, n: num(max) })}. ${L('{n} news articles mentioned both countries together.', { n: num(d.shared.articles_together) })}`;
     }
-    const top = br.wikipedia.slice(0, 3), m = (top[0] && top[0].views) || 1;
+    const top = ((br.searches && br.searches.top) || []).slice(0, 3), m = (top[0] && top[0].traffic) || 1;
     $('pv-tag').textContent = L('Extended Country Report');
     $('pv-title').textContent = `${region('BR')} vs ${region('PT')}`;
     $('pv-nl').textContent = L('News coverage per day');
-    $('pv-rank-l').textContent = `${L('Most-read on Wikipedia')} · ${region('BR')}`;
-    $('pv-rank').innerHTML = top.map((w) => `<li><div class="l"><span>${esc(w.title)}</span><b>${num(w.views)}</b></div><i style="--w:${((w.views / m) * 100).toFixed(0)}%"></i></li>`).join('');
+    $('pv-rank-l').textContent = `${L('Searched on Google')} · ${region('BR')}`;
+    $('pv-rank').innerHTML = top.map((w) => `<li><div class="l"><span>${esc(w.query)}</span><b>${num(w.traffic)}</b></div><i style="--w:${((w.traffic / m) * 100).toFixed(0)}%"></i></li>`).join('');
   }
 
 })();

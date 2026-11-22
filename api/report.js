@@ -3,7 +3,8 @@
 // each visit and never saves it, the email or anything else about the buyer.
 //   GET  /api/report?country=BR&compare=PT   the free sample (only Brazil vs Portugal)
 //   GET  /api/report?page=shakira             one of the free search-page samples (PAGES)
-//   GET  /api/report?about=Title              free basics for any search page (Wikipedia)
+//   GET  /api/report?about=Title              free basics for any search page (Google Trends + official sources)
+//   GET  /api/report?suggest=Text             Google's name suggestions for the search box
 //   POST /api/report {"key":"…","instance":"…","countries":"BR,PT"}
 // Env: GUMROAD_PRODUCT_ID / GUMROAD_ARTIST_PRODUCT_ID / GUMROAD_COMPANY_PRODUCT_ID + REPORT_TOKEN_SECRET. Gumroad keys
 // have no activations, so the first visit bumps the key's use count and the browser gets a signed "instance" that
@@ -14,30 +15,28 @@ const report = require('../lib/report');
 const entity = require('../lib/entity-report');
 const free = require('../lib/free-page');
 const stats = require('../lib/key-stats');
+const topicReport = require('../lib/topic-report');
 
 const LIMIT_PER_MIN = 10;
 // Free search-page samples, one per category, full history unlocked.
 const PAGES = {
-  shakira: { type: 'artist', subject: 'Shakira', peers: [], stats: { cat: 'person', title: 'Shakira', description: 'singer' } },
-  zara: { type: 'company', subject: 'Zara (retailer)', peers: [], stats: { cat: 'brand', title: 'Zara (retailer)', parent: 'Inditex' } },
+  shakira: { type: 'artist', subject: 'Shakira', mid: '/m/01wj18h', kind: 'Colombian singer-songwriter', peers: [] },
+  zara: { type: 'company', subject: 'Zara', mid: '/m/044_xs', kind: 'Retail company', peers: [] },
   brazil: { country: 'BR', stats: { cat: 'country', iso2: 'BR' } },
-  benfica: { type: 'company', subject: 'S.L. Benfica', peers: [], stats: { cat: 'sport', title: 'S.L. Benfica' } },
-  'lula-vs-bolsonaro': { type: 'artist', subject: 'Luiz Inácio Lula da Silva', peers: ['Jair Bolsonaro'], stats: { election: 'br-2022' } },
+  benfica: { type: 'company', subject: 'S.L. Benfica', mid: '/m/02rh_0', kind: 'Soccer club', peers: [] },
+  'lula-vs-bolsonaro': { type: 'artist', subject: 'Luiz Inácio Lula da Silva', mid: '/m/0pc9q', kind: 'President of Brazil',
+    peers: [{ mid: '/m/04g5q20', title: 'Jair Bolsonaro', kind: 'Former President of Brazil' }], stats: { election: 'br-2022' } },
 };
 const COUNTRY_NAMES = new Intl.DisplayNames(['en'], { type: 'region' });
 // World Bank rows saved weekly by scripts/worldbank-routine.js, used when the live API is down.
 const savedIndicators = (get) => (iso2) => get(`country_indicators?select=indicator,year,value&country_code=eq.${iso2}&order=year.asc`);
 
-// Free part of a search page, plus a rough category for the colors and the right Gumroad product.
-async function about(fetchImpl, q, saved = null) {
-  const countryOf = (title) => report.COUNTRIES.find((c) => COUNTRY_NAMES.of(c) === title || (c === 'US' && title === 'United States') || (c === 'GB' && title === 'United Kingdom'));
-  const classify = (desc, title) => (countryOf(title) ? 'country'
-    : entity.TYPES.artist.words.test(desc) || /politician|president|minister|chancellor|mayor|governor|senator|congress|parliament|party leader|monarch|king of|queen of|player|coach|person/i.test(desc) ? 'person'
-      : /club|team|football|league/i.test(desc) ? 'sport' : entity.TYPES.company.words.test(desc) ? 'brand' : 'topic');
-  const body = await free.freePage(fetchImpl, q, { countryNames: (c) => COUNTRY_NAMES.of(c), classify, iso2Of: countryOf, saved });
+// Free part of a search page; the category picks the colors and the right Gumroad product.
+const countryOf = (title) => report.COUNTRIES.find((c) => COUNTRY_NAMES.of(c) === title || (c === 'US' && title === 'United States') || (c === 'GB' && title === 'United Kingdom'));
+async function about(fetchImpl, q, saved = null, rest = null) {
+  const body = await free.freePage(fetchImpl, q, { countryNames: (c) => { try { return COUNTRY_NAMES.of(c); } catch { return c; } }, countryOf, saved, rest });
   if (!body) throw fail(404, 'Nothing found for that search.');
-  if (body.disambiguation) throw fail(404, 'That name means several things. Try a fuller name.');
-  return { ...body, country: countryOf(body.title) || null };
+  return body;
 }
 const hits = new Map();
 
@@ -194,10 +193,8 @@ async function unlockGumroad(env, fetchImpl, { key, instance, countries, choice 
     picked = entity.parseChoice(choice);
     if (!picked) throw fail(409, `Pick the ${type} for your report.`, { need_choice: type });
     if (!picked.confirm) {
-      const r = await entity.resolveSubject(type, picked.subject, { fetchImpl });
-      const brand = !r.page && type === 'company' ? await entity.findBrandSubject(picked.subject, { fetchImpl, rest: report.rest(env, fetchImpl) }).catch(() => null) : null;
-      if (brand) throw fail(409, 'Is this the one? Your report is set once per key.', { need_choice: type, confirm: { title: brand.title, description: brand.description || brand.website || '', image: brand.image, brand: true }, options: r.options });
-      if (!r.page) throw fail(404, `We couldn't find "${picked.subject}" on Wikipedia. Pick it from the suggestions.`, { need_choice: type, options: r.options });
+      const r = await topicReport.resolveTopic(fetchImpl, type, picked.subject);
+      if (!r.page) throw fail(404, `We couldn't find "${picked.subject}". Pick it from the suggestions.`, { need_choice: type, options: r.options });
       throw fail(409, 'Is this the one? Your report is set once per key.', { need_choice: type, confirm: r.page, options: r.options });
     }
   }
@@ -215,23 +212,28 @@ function createHandler(deps = {}) {
     try {
       if (!env.SUPABASE_URL || !env.SUPABASE_KEY) throw fail(500, 'Server is missing its database settings.');
       const get = report.rest(env, fetchImpl);
+      if (req.method === 'GET' && req.query.suggest) {
+        const list = await free.suggest(fetchImpl, String(req.query.suggest).slice(0, 80));
+        res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=86400');
+        return res.status(200).json({ items: list });
+      }
       if (req.method === 'GET' && req.query.about) {
-        const body = await about(fetchImpl, String(req.query.about).slice(0, 120), savedIndicators(get));
+        const body = await about(fetchImpl, String(req.query.about).slice(0, 120), savedIndicators(get), get);
         res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=86400');
         return res.status(200).json(body);
       }
       const page = req.method === 'GET' && Object.prototype.hasOwnProperty.call(PAGES, req.query.page) && PAGES[req.query.page];
       if (page) {
-        const [built, keyStats] = await Promise.all([page.country ? report.buildReport(get, [page.country], new Date(now), { fetchImpl })
-          : entity.buildEntityReport(get, page.type, page, { fetchImpl, rest: get, now: new Date(now) }), stats.keyStats(fetchImpl, { ...page.stats, saved: savedIndicators(get) })]);
-        const body = { ...built, key_stats: keyStats };
+        const body = page.country
+          ? await Promise.all([report.buildReport(get, [page.country], new Date(now), { fetchImpl }), stats.keyStats(fetchImpl, { ...page.stats, saved: savedIndicators(get) })]).then(([b, k]) => ({ ...b, key_stats: k }))
+          : await topicReport.buildTopicReport(get, page.type, { ...page, title: page.subject }, { fetchImpl, rest: get, now: new Date(now) });
         if (!page.country) await saveStates(env, fetchImpl, body);
         await saveSnapshot(env, fetchImpl, body);
         res.setHeader('Cache-Control', 'public, max-age=300, s-maxage=21600, stale-while-revalidate=86400');
         return res.status(200).json({ ...body, sample: true, page: req.query.page });
       }
       if (req.method === 'GET' && entity.TYPES[req.query.type]) {
-        const body = await entity.buildEntityReport(get, req.query.type, entity.SAMPLES[req.query.type], { fetchImpl, rest: get, now: new Date(now) });
+        const body = await topicReport.buildTopicReport(get, req.query.type, entity.SAMPLES[req.query.type], { fetchImpl, rest: get, now: new Date(now) });
         await saveStates(env, fetchImpl, body);
         await saveSnapshot(env, fetchImpl, body);
         res.setHeader('Cache-Control', 'public, max-age=300, s-maxage=21600, stale-while-revalidate=86400');
@@ -254,7 +256,7 @@ function createHandler(deps = {}) {
         const i = String(instance || '').trim();
         if (!/^[A-Za-z0-9-]{8,64}$/.test(k)) throw fail(400, 'Paste the license key from your receipt email.');
         const args = { key: k, instance: /^[A-Za-z0-9._-]{8,700}$/.test(i) ? i : '', countries, choice };
-        const build = (type, picked) => entity.buildEntityReport(get, type, picked, { fetchImpl, rest: get, now: new Date(now) });
+        const build = (type, picked) => topicReport.buildTopicReport(get, type, picked, { fetchImpl, rest: get, now: new Date(now) });
         const access = await unlockGumroad(env, fetchImpl, args, build);
         const body = access.body || await report.buildReport(get, access.countries, new Date(now), { fetchImpl });
         if (access.body) await saveStates(env, fetchImpl, access.body);

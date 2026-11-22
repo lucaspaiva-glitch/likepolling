@@ -172,16 +172,13 @@
     const max = Math.max(...items.map(val)) || 1;
     return `<ol class="rank">${items.map((it) => `<li><div class="rl"><span>${label(it)}</span><b>${num(val(it))}</b></div><i style="--w:${Math.max(2, (val(it) / max) * 100).toFixed(1)}%"></i>${extra ? `<div class="rx">${extra(it)}</div>` : ''}</li>`).join('')}</ol>`;
   };
-  const wikiLabel = (w) => `<a href="${esc(w.link)}" target="_blank" rel="noopener">${esc(w.title)}</a>`;
-  const wikiExtra = (c) => (w) => `${spark(w.series)}<small>${L('{d} of {t} days in the daily top 30 · first seen {day}', { d: w.days, t: c.wikipedia_days.length, day: `<span style="white-space:nowrap">${dshort(w.first_day)}</span>` })}</small>`;
 
   const sum = (a) => a.reduce((t, n) => t + n, 0);
   function facts(c) {
     const nd = c.news_daily || [];
     const busy = nd.reduce((m, d) => (!m || d.articles > m.articles ? d : m), null);
     const calm = nd.reduce((m, d) => (!m || d.articles < m.articles ? d : m), null);
-    const views = sum(c.wikipedia_daily_total || []);
-    return { nd, busy, calm, views, top: c.wikipedia[0], partner: c.news_partners[0], f: c.news_focus };
+    return { nd, busy, calm, partner: c.news_partners[0], f: c.news_focus };
   }
 
   const oneIn = (p) => (p >= 95 ? L('almost all') : p < 5 ? L('fewer than 1 in 10') : L('{n} in 10', { n: Math.round(p / 10) }));
@@ -199,7 +196,6 @@
     ctry: 'More days in a country\'s top 30 means steady interest there, not just one viral moment.',
   mentions: 'Many articles or posts mean people are talking, not that they like it. Check a few headlines before you act.',
   states: 'State numbers compare shares, not totals: a small state can score 100 when many of its searches are about this.',
-  sponsors: 'A sponsor pays to be seen by a person\'s fans. The more people read about that person, in more languages, the further the brand travels.',
   field: 'Compare with real rivals, not with everyone. A small brand can lead its niche and still look tiny next to the giants.',
   searches: 'A search spike shows curiosity, not love. People also search for things they fear or just heard about.',
   holidays: 'On holidays people shop, travel and go online differently. Plan posts a week or two ahead.',
@@ -214,10 +210,9 @@
   function knowCountry(cs) {
     const rise = [], hol = [], top = [];
     cs.forEach((c) => {
-      const k = facts(c), r = c.wikipedia_rising[0], h = (c.holidays || [])[0];
-      if (r) rise.push({ big: short(r.views), line: L('{t} is the newest big interest in {c}.', { c: name(c.country), t: r.title }) });
+      const r = c.searches && c.searches.top[0], h = (c.holidays || [])[0];
+      if (r) rise.push({ big: `~${short(r.traffic)}`, line: L('{t} was the biggest Google search in {c}.', { c: name(c.country), t: r.query }) });
       if (h) hol.push({ big: dshort(h.day), line: L('Next holiday in {c}: {h} on {d}.', { c: name(c.country), h: h.local_name, d: dshort(h.day) }).replace(/\.\.$/, '.') });
-      if (k.top && k.views) top.push({ big: `${pct(k.top.views, k.views)}%`, line: L('of top-30 views in {c} went to one page: {t}.', { c: name(c.country), t: k.top.title }) });
     });
     const pp = cs.map((c) => (c.gdp || []).filter((d) => d.per_person != null).pop());
     let money = null;
@@ -232,8 +227,6 @@
     const k = facts(c), q = c.searches && c.searches.top[0];
     const g = (c.gdp || []).filter((d) => d.per_person != null).pop();
     return `<div class="kpis">${[
-      k.top ? kcard(esc(k.top.title), L('Most-read page'), L('{n} views', { n: num(k.top.views) }), area(k.top.series)) : '',
-      c.wikipedia_rising.length ? kcard(String(c.wikipedia_rising.length), L('New this week'), L('pages that just entered the top 30'), cols(c.wikipedia_rising.map((w) => w.views), 0)) : '',
       q ? kcard(esc(q.query), L('Searched on Google'), `~${num(q.traffic)}`) : '',
       k.partner ? kcard(esc(name(k.partner.country)), L('Most in the news with'), L('{n} articles together', { n: num(k.partner.articles) }), meter(pct(k.partner.articles, k.f.articles))) : '',
       g ? kcard(num(Math.round(g.per_person)), L('GDP per person, US$'), String(g.year)) : '',
@@ -246,11 +239,9 @@
   const SECTIONS = [
     ['Since your last snapshot', 'What changed compared with the previous saved snapshot of this report.', (c) => (c.since_last
       ? (c.since_last.same ? `<p class="take">${L('No change in the top topics since {date}.', { date: dlong(c.since_last.day) })}</p>`
-        : `<ul class="hol stack">${[['New in most-read', c.since_last.new_read], ['New searches', c.since_last.new_searches], ['Dropped out', c.since_last.gone_read]].filter(([, l]) => l.length)
+        : `<ul class="hol stack">${[['New searches', c.since_last.new_searches], ['Dropped out', c.since_last.gone_searches]].filter(([, l]) => l.length)
           .map(([h, l]) => `<li><b>${L(h)}</b><span>${l.map(esc).join(' · ')}</span></li>`).join('')}</ul><p class="take">${L('Compared with the snapshot of {date}.', { date: dlong(c.since_last.day) })}</p>`)
       : '')],
-    ['Most-read on Wikipedia', 'Total views over the period. The small line shows that page\'s views day by day.', (c) => (c.wikipedia.length ? rank(c.wikipedia.slice(0, 6), (w) => w.views, wikiLabel, wikiExtra(c)) + `<p class="take">${L('People in {c} cared most about {t}.', { c: esc(name(c.country)), t: `<b>${esc(c.wikipedia[0].title)}</b>` })}</p>` : ''), 'top'],
-    ['Rising this week', 'Pages that entered the daily top 30 only in the last 7 days. Often the best early signals.', (c) => (c.wikipedia_rising.length ? rank(c.wikipedia_rising.slice(0, 6), (w) => w.views, wikiLabel, wikiExtra(c)) + `<p class="take">${L('{t} is the newest big interest in {c}.', { c: esc(name(c.country)), t: `<b>${esc(c.wikipedia_rising[0].title)}</b>` })}</p>` : ''), 'rising'],
     ['In the news with', 'Countries that appeared in the same news articles most often. A sign of who the country deals with.', (c) => (c.news_partners.length ? rank(c.news_partners, (p) => p.articles, (p) => esc(name(p.country))) + `<p class="take">${L('{p} shows up next to {c} in the news more than any other country.', { c: esc(name(c.country)), p: `<b>${esc(name(c.news_partners[0].country))}</b>` })}</p>` : ''), 'partners'],
     ['Searched on Google', 'Searches that suddenly grew on Google in the country (Google Trends). The numbers are Google\'s rough estimates.', (c) => (c.searches && c.searches.top.length
       ? rank(c.searches.top.slice(0, 6), (q) => q.traffic, (q) => esc(q.query), c.searches.days > 1 ? (q) => `<small>${L(q.days === 1 ? 'trending on 1 day' : 'trending on {n} days', { n: q.days })}</small>` : null)
@@ -258,8 +249,8 @@
     ['Holidays coming up', 'National public holidays in the next months. Good dates to plan campaigns around.', (c) => (c.holidays && c.holidays.length
       ? `<ul class="hol">${c.holidays.slice(0, 4).map((h) => `<li><b>${dshort(h.day)}</b><span>${esc(h.local_name)}${h.name && h.name !== h.local_name ? ` <small>${esc(h.name)}</small>` : ''}</span></li>`).join('')}</ul>`
         + `<p class="take">${L('Next holiday in {c}: {h} on {d}.', { c: esc(name(c.country)), h: `<b>${esc(c.holidays[0].local_name)}</b>`, d: dshort(c.holidays[0].day) }).replace(/\.\.$/, '.')}</p>` : ''), 'holidays'],
-    ['Through time', 'From the Like Polling archive: the most-read pages, top search and news coverage in each month since we started.', (c) => (c.through_time && c.through_time.length
-      ? `${byMonthChart(c.news_by_month, L('News share per month, since 2017 (100 = busiest month)'))}${newsOneIn(c.news_by_month, esc(name(c.country))) ? `<p class="take">${newsOneIn(c.news_by_month, esc(name(c.country)))}</p>` : ''}<ul class="hol stack">${c.through_time.slice(-6).reverse().map((m) => `<li><b>${monthName(m.month)}</b><span>${m.most_read.slice(0, 2).map(wikiLabel).join('<br>')}${[m.searches[0] && L('Top search: {x}', { x: esc(m.searches[0].query) }), m.news_articles && L('News articles: {n}', { n: num(m.news_articles) }), m.top_story && L('Top story: {x}', { x: `<a href="${esc(m.top_story.link)}" target="_blank" rel="noopener">${esc((m.top_story.title_tr && m.top_story.title_tr[LANG_ID() === 'en-GB' ? 'en' : LANG_ID()]) || m.top_story.title)}</a>` })].filter(Boolean).map((x) => `<small>${x}</small>`).join('')}</span></li>`).join('')}</ul>`
+    ['Through time', 'From the Like Polling archive: the top search and news coverage in each month since we started.', (c) => (c.through_time && c.through_time.length
+      ? `${byMonthChart(c.news_by_month, L('News share per month, since 2017 (100 = busiest month)'))}${newsOneIn(c.news_by_month, esc(name(c.country))) ? `<p class="take">${newsOneIn(c.news_by_month, esc(name(c.country)))}</p>` : ''}<ul class="hol stack">${c.through_time.slice(-6).reverse().map((m) => `<li><b>${monthName(m.month)}</b><span>${[m.searches[0] && L('Top search: {x}', { x: esc(m.searches[0].query) }), m.news_articles && L('News articles: {n}', { n: num(m.news_articles) }), m.top_story && L('Top story: {x}', { x: `<a href="${esc(m.top_story.link)}" target="_blank" rel="noopener">${esc((m.top_story.title_tr && m.top_story.title_tr[LANG_ID() === 'en-GB' ? 'en' : LANG_ID()]) || m.top_story.title)}</a>` })].filter(Boolean).map((x) => `<small>${x}</small>`).join('')}</span></li>`).join('')}</ul>`
         + `<p class="take">${L('Like Polling has kept a daily record of {c} since {date}. Every new report adds to it.', { c: esc(name(c.country)), date: dlong(STARTED) })}</p>` : '')],
     ['AI builders', "The most-starred new AI project on GitHub each year from a builder in this country.", (c) => (c.ai_builders
       ? `<ul class="hol aip">${c.ai_builders.by_year.map((y) => { if (!y.top) return `<li class="none"><b>${y.year}</b><span>—</span></li>`; const r = y.top, p = r.plain && (r.plain[LANG_ID() === 'en-GB' ? 'en' : LANG_ID()] || r.plain.en); const d = String((p ? p.d : r.description) || '').replace(/:[a-z0-9_+-]+:/g, '').trim(); return `<li><b>${y.year}</b><span><a href="${esc(r.url)}" target="_blank" rel="noopener">${esc(p ? p.t : r.full_name.split('/')[1])}</a> <em>★ ${short(r.stars)}</em>${d ? `<small>${esc(d)}</small>` : ''}</span></li>`; }).join('')}</ul>`
@@ -270,8 +261,7 @@
   ];
 
   const terms = () => [
-    [L('Views'), L('Times a Wikipedia page was opened from that country. Wikimedia rounds them up a little to protect privacy.')],
-    [L('Days in the top 30'), L('On how many recorded days the page was among the country\'s 30 most-read. More days means lasting interest, not a one-day spike.')],
+    [L('Searches'), L('Google\'s rough estimate of how many times a trending search was made in that country (Google Trends).')],
     [L('News articles'), L('Online news articles worldwide that mention the country, counted by The GDELT Project. One article can count for two countries.')],
     [L('Period'), `${L('Like Polling has recorded its sources every day since {date}, the day we started.', { date: dlong(STARTED) })} ${L('Each report covers up to the last 30 recorded days.')}`],
   ];
@@ -305,7 +295,7 @@
     let ok = true;
     const was = btn && btn.innerHTML;
     if (btn) { btn.disabled = true; btn.textContent = L('Preparing…'); }
-    try { await window.LP_EXPORT[kind](data, x); } catch (e) { ok = false; if (!embedded()) alert(L('Couldn\'t make the file. Please try again.')); } finally {
+    try { await window.LP_EXPORT[kind](data, x); } catch (e) { ok = false; console.error(e); if (!embedded()) alert(L('Couldn\'t make the file. Please try again.')); } finally {
       busy = false;
       if (btn) { btn.disabled = false; btn.innerHTML = was; }
       if (embedded()) parent.postMessage({ lp: 'exported', kind, ok }, location.origin);
@@ -350,7 +340,7 @@
       const pts = days.map((d, i) => `${x(i).toFixed(1)},${y(byDay.get(d) || 0).toFixed(1)}`).join(' ');
       return `<polyline points="${pts}" class="${k ? 'ln2' : 'ln1'}" style="stroke:${COLORS[k]}"/>`;
     }).join('');
-    return `<figure class="chart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Wikipedia views per day">${grid}${ticks}${paths}</svg></figure>
+    return `<figure class="chart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Chart">${grid}${ticks}${paths}</svg></figure>
       <ul class="legend">${lines.map((l, k) => `<li><i style="background:${COLORS[k]}"></i>${esc(l.label)}</li>`).join('')}</ul>`;
   }
 
@@ -403,62 +393,29 @@
       ${kp}${lists.length ? `<div class="cols n${lists.length}">${lists.join('')}</div>` : ''}<p class="take">${take}</p>${learn('mentions')}</section>`;
   };
 
-  // Extra open-data pages for People and Company reports (Wikidata, MusicBrainz, Google Trends, Wikipedia spikes).
-  const yr = (f) => (f && f.year ? String(f.year) : '');
-  function profileSec(data, title) {
-    const p = data.profile;
-    if (!p) return '';
-    const f = p.facts || {}, j = (a) => (a || []).join(', ');
-    const rows = (data.type === 'artist'
-      ? [['Born', f.born && (f.born.day ? dlong(f.born.day) : yr(f.born))], ['From', j(f.from)], ['Known for', j(f.occupation)], ['Genres', j(f.genre)], ['Record labels', j(f.label)], ['Teams', j(f.team)], ['Notable work', j(f.works)]]
-      : [['Founded', yr(f.founded)], ['Founders', j(f.founders)], ['Chief executive', j(f.ceo)], ['Headquarters', j(f.hq)], ['Industry', j(f.industry)], ['Employees', f.employees && `${num(f.employees.n)}${f.employees.year ? ` (${f.employees.year})` : ''}`], ['Brands it owns', j(f.owns)], ['Companies it owns', j(f.subsidiaries)], ['Stock indexes', j(f.part_of)], ['Shares trade on', j(f.exchange)]])
-      .concat([['Website', p.website && `<a href="${esc(p.website)}" target="_blank" rel="noopener">${esc(host(p.website))}</a>`]]).filter((r) => r[1]);
-    const hon = [...(p.awards || []).map((a) => ({ ...a, k: L('Won') })), ...(p.nominations || []).map((a) => ({ ...a, k: L('Nominated') }))];
-    if (rows.length + hon.length < 3) return '';
-    return `<section class="rsec"><h2>${L('Profile')}</h2><p class="note">${L('Facts about {s} recorded on Wikidata, the open database behind Wikipedia.', { s: esc(title) })}</p>
-      <dl class="facts">${rows.map(([k, v]) => `<dt>${L(k)}</dt><dd>${k === 'Website' ? v : esc(v)}</dd>`).join('')}</dl>
-      ${hon.length ? `<h3 class="sub">${L('Awards and nominations')}</h3><ul class="chips">${hon.slice(0, 12).map((a) => `<li>${esc(a.name)}<small>${a.k}${a.year ? ` · ${a.year}` : ''}</small></li>`).join('')}</ul>` : ''}</section>`;
+  // One row per kind of number in a People or Company report: what it is, where it comes from, how to treat it.
+  function quality(data) {
+    const m = data.mentions || {};
+    return [
+      data.searches && [L('Google searches'), 'Google Trends', L('Index (0–100)'), L('Last 5 years, week by week')],
+      (data.world || []).length && [L('Where people search'), 'Google Trends', L('Index (0–100)'), L('Last 12 months')],
+      data.states && [L('Top states'), 'Google Trends', L('Index (0–100)'), L('Last 30 days')],
+      (data.trends || []).length && [L('Trending on Google'), `Google Trends, ${L('saved daily by Like Polling')}`, L('Rough estimate'), L('Last 30 days')],
+      (data.youtube_yearly || []).length && [L('Views per video on YouTube'), 'YouTube Data API', L('Measured'), L('Yearly')],
+      data.releases && [L('Music releases'), 'MusicBrainz (CC0)', L('Public record'), L('Yearly')],
+      data.business && [L('How the business is doing'), 'US SEC (EDGAR)', L('Reported by the company'), L('Yearly')],
+      m.news && [L('News articles'), 'The GDELT Project', L('Measured'), L('Last 30 days')],
+      m.social && [L('Bluesky posts'), 'Bluesky', L('Measured'), L('Last 30 days')],
+      data.products && [L('Products on shelves'), 'Open Food Facts (ODbL)', L('Public record'), L('Latest record')],
+    ].filter(Boolean);
   }
-  function followersSec(data, title) {
-    const fl = ((data.profile && data.profile.followers) || []).filter((x) => x.years.length);
-    if (!fl.length) return '';
-    const top = fl[0], a = top.years[0], b = top.years[top.years.length - 1];
-    const g = top.years.length > 1 && a.followers ? Math.round(((b.followers - a.followers) / a.followers) * 100) : null;
-    return `<section class="rsec"><h2>${L('Followers over time')}</h2><p class="note">${L('Social media followers recorded on Wikidata, latest count each year. Not live numbers.')}</p>
-      <div class="vs ${fl.length > 1 ? 'n2' : 'n1'}">${fl.slice(0, 2).map((x) => `<div><h3>${esc(x.platform)}</h3>${x.years.length > 1 ? yearBars([{ gdp: x.years }], 'followers', short) : `<p class="big">${short(x.years[0].followers)}</p><small class="muted">${x.years[0].year}</small>`}</div>`).join('')}</div>
-      <p class="take">${g != null ? L('{s} went from {a} to {b} followers on {p} ({y1}–{y2}).', { s: esc(title), a: short(a.followers), b: `<b>${short(b.followers)}</b>`, p: esc(top.platform), y1: a.year, y2: b.year }) : L('{s} had {n} followers on {p} in {y}.', { s: esc(title), n: `<b>${short(b.followers)}</b>`, p: esc(top.platform), y: b.year })}</p></section>`;
-  }
-  function releasesSec(data, title) {
-    const r = data.releases;
-    if (!r || !r.total) return '';
-    const t = r.types || {};
-    const cards = [kcard(num(r.total), L('Releases'), L('all time')), t.Single ? kcard(num(t.Single), L('Singles'), '') : '', t.Album ? kcard(num(t.Album), L('Albums'), '') : '', t.EP ? kcard(num(t.EP), L('EPs'), '') : ''].join('');
-    return `<section class="rsec"><h2>${L('Music releases')}</h2><p class="note">${L('Singles, albums and EPs listed on MusicBrainz, the open music database.')}</p>
-      <div class="kpis">${cards}</div><div class="vs n2"><div><h3>${L('Releases per year')}</h3>${yearBars([{ gdp: r.by_year }], 'releases', num)}</div>
-      <div><h3>${L('Latest releases')}</h3><ol class="plain">${(r.latest || []).map((x) => `<li><b>${esc(x.title)}</b> <small class="muted">${esc(L(x.type))} · ${/^\d{4}-\d\d-\d\d$/.test(x.date) ? dlong(x.date) : esc(x.date)}</small></li>`).join('')}</ol></div></div></section>`;
-  }
-  function searchesSec(data, title) {
-    const g = data.searches;
-    if (!g || !g.days || g.days.length < 7) return '';
-    const lines = g.names.map((n, i) => ({ label: n, points: g.days.map((d) => ({ day: d.day, value: d.values[i] })) }));
-    const order = g.names.map((n, i) => ({ n, a: g.averages[i] })).sort((a, b) => b.a - a.a);
-    const me = g.averages[0], best = order[0];
-    const take = best.n === g.names[0] && order[1] && order[1].a ? L('On Google, {a} was searched {x}× as much as {b}.', { a: `<b>${esc(best.n)}</b>`, x: times(best.a, order[1].a), b: esc(order[1].n) })
-      : best.n !== g.names[0] && me ? L('On Google, {a} was searched {x}× as much as {b}.', { a: `<b>${esc(best.n)}</b>`, x: times(best.a, me), b: esc(g.names[0]) }) : '';
-    return `<section class="rsec"><h2>${L('Searched on Google')}</h2><p class="note">${L('Google searches per day worldwide, last 30 days. 100 is the busiest day of any of them (Google Trends).')}</p>
-      ${multiChart(lines)}${take ? `<p class="take">${take}</p>` : ''}</section>`;
-  }
-  function momentsSec(data, title) {
-    const m = data.moments;
-    if (!m || !m.list.length) return '';
-    const kind = (c) => L({ single: 'Released the single', album: 'Released the album', ep: 'Released the EP', award: 'Won', nomination: 'Nominated for', event: 'Event:' }[c.kind] || 'Released');
-    const list = [...m.list].sort((a, b) => b.views - a.views);
-    return `<section class="rsec${list.length > 6 ? ' long' : ''}"><h2>${L('Best media moments')}</h2><p class="note">${L(list.length < 10 ? 'All the days, in the last 12 months, when Wikipedia views of {s} were at least twice a normal day.' : 'The 10 days, in the last 12 months, when the most people read about {s} on Wikipedia.', { s: esc(title) })}</p>
-      ${rank(list, (x) => x.views, (x) => `<b>${dlong(x.day)}</b> · ${L('{x}× a normal day', { x: x.times.toLocaleString(loc()) })}`, (x) => `<small>${x.cause ? `${kind(x.cause)} ${esc(x.cause.name)} (${dshort(x.cause.day)})` : ''}${x.cause && x.countries ? ' · ' : ''}${x.countries ? L('In the daily top 100 in {c}', { c: x.countries.map((c) => esc(name(c))).join(', ') }) : ''}</small>`)}
-      <p class="take">${L('The biggest moment was {d}, with {n} views: {x}× a normal day.', { d: `<b>${dlong(list[0].day)}</b>`, n: num(list[0].views), x: list[0].times.toLocaleString(loc()) })}</p></section>`;
-  }
-  // Food and drink products of the brand on Open Food Facts (open data), and the countries they're sold in.
-  function productsSec(data, title) {
+  const sgnPct = (p) => (p == null ? '—' : `${p > 0 ? '+' : ''}${p}%`);
+  const withSources = (html, head, text, gloss = '') => {
+    const i = html.lastIndexOf('</section>');
+    const foot = `<div class="srcfoot">${gloss}<h3>${L(head)}</h3><p class="small">${text}</p></div>`;
+    return i < 0 ? html + `<section class="rsec sources">${foot}</section>` : html.slice(0, i) + foot + html.slice(i);
+  };
+function productsSec(data, title) {
     const p = data.products;
     if (!p || !p.countries.length) return '';
     const n = `${num(p.products)}${p.more ? '+' : ''}`;
@@ -467,107 +424,63 @@
       <h3 class="sub">${L('Products by country')}</h3>${rank(p.countries, (c) => c.products, (c) => esc(name(c.code)))}
       <p class="take">${L('{s} has {n} products listed on Open Food Facts, most of them sold in {c}.', { s: esc(title), n: `<b>${n}</b>`, c: esc(name(p.countries[0].code)) })}</p></section>`;
   }
-  // The source list sits at the bottom of the last page instead of on a page of its own.
-  const withSources = (html, head, text, gloss = '') => {
-    const i = html.lastIndexOf('</section>');
-    const foot = `<div class="srcfoot">${gloss}<h3>${L(head)}</h3><p class="small">${text}</p></div>`;
-    return i < 0 ? html + `<section class="rsec sources">${foot}</section>` : html.slice(0, i) + foot + html.slice(i);
-  };
-  const extraSrc = (data) => `${data.releases ? ` ${L('Releases: MusicBrainz (CC0).')}` : ''}${data.searches ? ` ${L('Searches per day: Google Trends.')}` : ''}${data.products ? ` ${L('Products: Open Food Facts (ODbL).')}` : ''}`;
-
-  function renderBrand(data) {
-    const s = data.subject;
-    const plain = (x) => x.replace(/ \([^)]*\)$/, '');
-    const tag = L('Extended Brand Report');
-    const ppl = data.people.map((p, k) => ({ ...p, title: plain(p.title), color: COLORS[k] || '#9a9a9a' }));
-    const f = data.field;
-    const fn = f ? (f.names || {})[LANG_ID().split('-')[0]] || f.name : '';
-    const top = ppl[0];
-    const total = sum(ppl.map((p) => p.views));
-    const site = s.website ? `<p class="bsite"><a href="${esc(s.website)}" target="_blank" rel="noopener">${esc(host(s.website))} ↗</a>${s.instagram ? ` · <a href="https://www.instagram.com/${esc(s.instagram)}/" target="_blank" rel="noopener">@${esc(s.instagram)}</a>` : ''}</p>` : '';
-    document.title = `${vsTitle} · ${tag} · Like Polling`;
-    const head = `<header class="rhead"><span class="tag">${tag}</span>
-      <div class="ehead">${s.image ? `<img src="${esc(s.image)}" alt="">` : ''}<div><h1>${esc(s.title)}</h1>${s.description ? `<p class="muted" style="margin:4px 0 0">${esc(s.description)}</p>` : ''}${site}</div></div>
-      <p class="muted">${L('No Wikipedia page of its own yet. This report shows what the open web says about it.')}</p>
-      ${dates(data.from, data.to, data.generated_at)}${exportBar(data, '/services#company')}</header>`;
-    const know = [];
-    if (ppl.length) know.push({ big: String(ppl.length), line: L(ppl.length === 1 ? '1 person names {s} as a sponsor on Wikipedia.' : '{n} people name {s} as a sponsor on Wikipedia.', { s: s.title, n: ppl.length }) });
-    if (top) know.push({ big: short(top.views), line: L('{a} had {n} Wikipedia views in 30 days, read in {k} languages.', { a: top.title, n: num(top.views), k: top.languages }) });
-    if (f) know.push({ big: `${f.share_pct}%`, line: L('{a} leads {f} with {p}% of the attention.', { a: plain(f.ranked[0].title), f: fn, p: f.share_pct }) });
-    const kpis = `<div class="kpis">${[
-      s.website ? kcard(`<span class="kurl">${esc(host(s.website))}</span>`, L('Website'), '') : '',
-      ppl.length ? kcard(String(ppl.length), L('Sponsored people'), L('named on Wikipedia'), ppl.length > 1 ? cols(ppl.map((p) => p.views), 0) : '') : '',
-      total ? kcard(short(total), L('Their Wikipedia views'), L('last 30 days, all added')) : '',
-      top ? kcard(String(Math.max(...ppl.map((p) => p.languages || 1))), L('Wikipedia languages'), L('with a page about them')) : '',
-      f ? kcard(esc(plain(f.ranked[0].title)), L('Category leader'), esc(fn)) : '',
-    ].join('')}</div>`;
-    const peopleSec = ppl.length ? `<section class="rsec"><h2>${L('People it sponsors')}</h2><p class="note">${L('Athletes and stars who name {s} as a sponsor on Wikipedia, ranked by English Wikipedia views, last 30 days.', { s: esc(s.title) })}</p>
-      ${cbars(ppl, (p) => p.views, short)}<p class="take">${L('{a} is the most-read of them, with {n} views.', { a: `<b>${esc(top.title)}</b>`, n: num(top.views) })}</p>${learn('sponsors')}</section>` : '';
-    const fRows = f ? f.ranked.map((p, k) => ({ title: plain(p.title), views: p.views, color: k ? '#9a9a9a' : COLORS[0] })) : [];
-    const fieldSec = f ? `<section class="rsec"><h2>${L('Top in its field')}</h2><p class="note">${L('{f}: the {n} biggest pages in this Wikipedia category, ranked by English Wikipedia views, last 30 days.', { f: esc(fn), n: f.compared })}</p>
-      ${cbars(fRows, (it) => it.views, short)}<p class="take">${L('{a} leads {f} with {p}% of the attention.', { a: `<b>${esc(fRows[0].title)}</b>`, f: esc(fn), p: f.share_pct })}</p>${learn('field')}</section>` : '';
-    const gt = data.trends || [];
-    const gtr = gt.length ? `<section class="rsec"><h2>${L('Trending on Google')}</h2><p class="note">${L('Days {s} was among the trending Google searches in each country (Google Trends).', { s: esc(s.title) })}</p>
-      ${rank(gt.slice(0, 10), (t) => t.days, (t) => esc(name(t.country)))}${learn('searches')}</section>` : '';
-    const srcText = `${s.website ? `${L('Website: {u}.', { u: host(s.website) })} ` : ''}${L('Wikipedia page views and pages: Wikimedia Foundation (wikimedia.org), open data.')} ${L('Sponsors: Wikipedia infoboxes.')}${data.states ? ` ${L('States: Google Trends.')}` : ''}${data.mentions ? ` ${L('News: The GDELT Project. Posts: Bluesky public API, counts only.')}` : ''}${gt.length ? ` ${L('Trending searches: Google Trends.')}` : ''}${extraSrc(data)} ${L(data.mentions ? 'No YouTube data.' : 'No YouTube or news data.')}`;
-
-    $('report').innerHTML = head + withSources(knowSec(know, kpis) + peopleSec + productsSec(data, s.title) + fieldSec + mentionsSec(data, s.title) + gtr, 'Sources', esc(srcText));
-    plainWords();
-    wire(data, ctx(data, { know, tag, title: s.title, subtitle: s.description || '', dates: dateList(data.from, data.to, data.generated_at), sources: srcText, fieldName: fn }));
-    show('report');
-    window.scrollTo(0, 0);
-  }
-
-  // One row per kind of number in a People or Company report: what it is, where it comes from, how to treat it.
-  function quality(data) {
-    const daily = `Wikimedia Foundation, ${L('saved daily by Like Polling')}`;
-    const m = data.mentions || {};
-    return [
-      [L('Wikipedia views'), 'Wikimedia Foundation', L('Measured'), L('Last 30 days')],
-      [L('Growth and share of attention'), 'Wikimedia Foundation · Google Trends', L('Calculated by Like Polling'), L('Last 30 days and the same days last year')],
-      data.field && [L('Top in its field'), 'Wikimedia Foundation', L('Measured'), L('Last 30 days')],
-      data.searches && [L('Google searches per day'), 'Google Trends', L('Index (0–100)'), L('Last 30 days')],
-      (data.trends || []).length && [L('Trending on Google'), `Google Trends, ${L('saved daily by Like Polling')}`, L('Rough estimate'), L('Last 30 days')],
-      data.countries.length && [L('Trending in countries'), daily, L('Measured'), L('Last 30 days')],
-      data.languages.length && [L('Wikipedia languages'), 'Wikimedia Foundation', L('Measured'), L('Last 30 days')],
-      data.moments && [L('Best media moments'), 'Wikimedia Foundation', L('Calculated by Like Polling'), L('Last 12 months')],
-      (data.youtube_yearly || []).length && [L('Views per video on YouTube'), 'YouTube Data API', L('Measured'), L('Yearly')],
-      data.releases && [L('Music releases'), 'MusicBrainz (CC0)', L('Public record'), L('Yearly')],
-      data.business && [L('How the business is doing'), 'US SEC (EDGAR)', L('Reported by the company'), L('Yearly')],
-      m.news && [L('News articles'), 'The GDELT Project', L('Measured'), L('Last 30 days')],
-      m.social && [L('Bluesky posts'), 'Bluesky', L('Measured'), L('Last 30 days')],
-      data.products && [L('Products on shelves'), 'Open Food Facts (ODbL)', L('Public record'), L('Latest record')],
-      ((data.sponsors || []).length || (data.sponsored || []).length) && [L('Sponsors'), 'Wikipedia', L('Public record'), L('Latest record')],
-    ].filter(Boolean);
+function releasesSec(data, title) {
+    const r = data.releases;
+    if (!r || !r.total) return '';
+    const t = r.types || {};
+    const cards = [kcard(num(r.total), L('Releases'), L('all time')), t.Single ? kcard(num(t.Single), L('Singles'), '') : '', t.Album ? kcard(num(t.Album), L('Albums'), '') : '', t.EP ? kcard(num(t.EP), L('EPs'), '') : ''].join('');
+    return `<section class="rsec"><h2>${L('Music releases')}</h2><p class="note">${L('Singles, albums and EPs listed on MusicBrainz, the open music database.')}</p>
+      <div class="kpis">${cards}</div><div class="vs n2"><div><h3>${L('Releases per year')}</h3>${yearBars([{ gdp: r.by_year }], 'releases', num)}</div>
+      <div><h3>${L('Latest releases')}</h3><ol class="plain">${(r.latest || []).map((x) => `<li><b>${esc(x.title)}</b> <small class="muted">${esc(L(x.type))} · ${/^\d{4}-\d\d-\d\d$/.test(x.date) ? dlong(x.date) : esc(x.date)}</small></li>`).join('')}</ol></div></div></section>`;
   }
   function renderEntity(data) {
-    if (data.brand) return renderBrand(data);
     const s = data.subject;
-    const kind = data.type === 'artist' ? 'Artist' : 'Company';
     const artist = data.type === 'artist';
-    const plain = (x) => x.replace(/ \([^)]*\)$/, '');
-    s.title = plain(s.title);
-    const all = [{ ...s, me: true }, ...data.peers.map((p) => ({ ...p, title: plain(p.title) }))].map((p, k) => ({ ...p, color: COLORS[k] }));
-    const langTotal = sum(data.languages.map((l) => l.views));
-    const abroad = 100 - pct(s.views, langTotal);
-    const second = [...all].sort((a, b) => b.views - a.views).find((p) => !p.me);
-    let tag = L(artist ? 'Extended People Report' : `Extended ${kind} Report`);
-    // The words follow the subject: a club is compared with clubs, a politician with politicians.
+    const all = [{ ...s, me: true }, ...data.peers].map((p, k) => ({ ...p, color: COLORS[k] || '#9a9a9a' }));
+    let tag = L(artist ? 'Extended People Report' : 'Extended Company Report');
     const d = String(s.description || '');
     const sub = /\b(club|team)\b/i.test(d) ? 'clubs' : /politician|president|minister|chancellor|senator|mayor|governor|party leader/i.test(d) ? 'politicians'
       : artist && /footballer|player|athlete|racing driver|boxer|cyclist|swimmer/i.test(d) ? 'athletes' : artist ? 'people' : 'brands';
-    const SIM = { people: ['Compared with {n} similar people.', 'Among similar people', '{s} among similar people, by views.'], brands: ['Compared with {n} similar brands.', 'Among similar brands', '{s} among similar brands, by views.'],
-      clubs: ['Compared with {n} similar clubs.', 'Among similar clubs', '{s} among similar clubs, by views.'], politicians: ['Compared with {n} other politicians.', 'Among similar politicians', '{s} among similar politicians, by views.'],
-      athletes: ['Compared with {n} similar athletes.', 'Among similar athletes', '{s} among similar athletes, by views.'] }[sub];
+    const SIM = { people: 'Compared with {n} similar people.', brands: 'Compared with {n} similar brands.', clubs: 'Compared with {n} similar clubs.', politicians: 'Compared with {n} other politicians.', athletes: 'Compared with {n} similar athletes.' }[sub];
     if (sub === 'clubs') tag = L('Extended Club Report');
-    const vsTitle = data.peers_chosen && data.peers.length === 1 ? `${s.title} vs ${plain(data.peers[0].title)}` : s.title;
-    const f = data.field;
-    const fn = f ? (f.names || {})[LANG_ID().split('-')[0]] || f.name : '';
-    const sign = (p) => `${p > 0 ? '+' : ''}${p}%`;
-    const ft = f ? `${L('{s} is #{r} of {n} in {f}, with {p}% of the attention.', { s: s.title, r: f.rank, n: f.compared, f: fn, p: f.share_pct })}${f.change_pct != null && s.change_pct != null ? ` ${L('Its views changed {a} this month; the whole field changed {b}.', { a: sign(s.change_pct), b: sign(f.change_pct) })}` : ''}` : '';
-    const fRows = f ? [...f.ranked, ...(f.ranked.some((p) => p.me) ? [] : [{ title: data.subject.title, views: s.views, me: true }])].map((p) => ({ title: plain(p.title), views: p.views, me: p.me, color: p.me ? COLORS[0] : '#9a9a9a' })) : [];
-    const fieldSec = f ? `<section class="rsec"><h2>${L('Top in its field')}</h2><p class="note">${L('{f}: the {n} biggest pages in this Wikipedia category, ranked by English Wikipedia views, last 30 days.', { f: esc(fn), n: f.compared })}</p>
-      ${cbars(fRows, (it) => it.views, short)}<p class="take">${esc(ft)}</p>${learn('field')}</section>` : '';
+    const vsTitle = data.peers_chosen && data.peers.length === 1 ? `${s.title} vs ${data.peers[0].title}` : s.title;
+    document.title = `${vsTitle} · ${tag} · Like Polling`;
+    const head = `<header class="rhead"><span class="tag">${data.sample ? `${L('Free sample')} · ${tag}` : tag}</span>
+      <div class="ehead">${s.image ? `<img src="${esc(s.image)}" alt="">` : ''}<div><h1>${esc(vsTitle)}</h1><p class="muted" style="margin:4px 0 0">${esc(s.description)}</p></div></div>
+      ${all.length > 1 && !(data.peers_chosen && data.peers.length === 1) ? `<p class="muted">${L(SIM, { n: all.length - 1 })}</p>` : ''}
+      ${dates(data.from, data.to, data.generated_at)}
+      ${exportBar(data, `/services#${data.type}`)}</header>`;
+    const top = (data.world || [])[0];
+    const nw = data.mentions && data.mentions.news;
+    const months = (s.months || []).slice(-24);
+    const kpis = `<div class="kpis">${[
+      s.change_pct != null ? kcard(sgnPct(s.change_pct), L('Google searches'), L('last 4 weeks vs the 4 before'), area(months.map((m) => m.value))) : '',
+      s.yoy_pct != null ? kcard(sgnPct(s.yoy_pct), L('vs a year ago'), L('same 4 weeks last year')) : '',
+      s.share_pct != null ? kcard(`${s.share_pct}%`, L('Share of searches'), L('among these {n}', { n: all.length }), cols(all.map((p) => p.now || 0), 0)) : '',
+      s.peak ? kcard(dshort(s.peak.day), L('Busiest week'), s.peak.times ? L('{x}× a normal week', { x: s.peak.times }) : '') : '',
+      top ? kcard(esc(name(top.code)), L('Searches most'), L('for its size, last 12 months')) : '',
+      nw ? kcard(short(nw.articles), L('News articles'), L('last 30 days, worldwide')) : '',
+    ].join('')}</div>`;
+    const know = [];
+    if (s.change_pct) know.push({ big: sgnPct(s.change_pct), line: L(s.change_pct > 0 ? 'more Google searches for {s} than the 4 weeks before.' : 'fewer Google searches for {s} than the 4 weeks before.', { s: s.title }) });
+    if (s.peak && s.peak.times >= 2) know.push({ big: `${s.peak.times}×`, line: L('In the week of {day}, {s} was searched {x}× as much as a normal week.', { day: dlong(s.peak.day), s: s.title, x: s.peak.times }) });
+    if (s.share_pct != null && all.length > 1) know.push({ big: `${s.share_pct}%`, line: L('of the Google searches among these {n} were for {s}.', { n: all.length, s: s.title }) });
+    if (top) know.push({ big: name(top.code), line: L('searches for {s} the most, for its size.', { s: s.title }) });
+    const lines = all.filter((p) => (p.months || []).length > 2).map((p) => ({ label: p.title, points: p.months.map((m) => ({ day: `${m.month}-01`, value: m.value })) }));
+    const searchSec = lines.length ? `<section class="rsec"><h2>${L('Searched on Google')}</h2><p class="note">${L('Google searches worldwide, month by month for 5 years. 100 is the busiest week of any of them (Google Trends).')}</p>
+      ${lines.length > 1 ? multiChart(lines) : lineChart(lines[0].points, L('Google searches'), monthShort)}
+      ${s.yoy_pct != null ? `<p class="take">${L('Compared with the same weeks last year, searches for {s} changed {p}.', { s: `<b>${esc(s.title)}</b>`, p: sgnPct(s.yoy_pct) })}</p>` : ''}</section>` : '';
+    const growSec = all.length > 1 ? `<section class="rsec"><h2>${L('Growth and share of searches')}</h2><p class="note">${L('Google searches in the last 4 weeks, compared with the 4 weeks before and the same weeks last year, and each one\'s share among them.')}</p>
+      <div class="tight" style="overflow-x:auto"><table class="cmp"><thead><tr><th>${L('Name')}</th><th>${L('Searches now (0-100)')}</th><th>${L('vs 4 weeks before')}</th><th>${L('vs last year')}</th><th>${L('Share of searches')}</th></tr></thead>
+      <tbody>${[...all].sort((a, b) => (b.now || 0) - (a.now || 0)).map((p) => `<tr><th>${p.me ? `<b>${esc(p.title)}</b>` : esc(p.title)}</th><td>${p.now ?? '—'}</td><td>${sgnPct(p.change_pct)}</td><td>${sgnPct(p.yoy_pct)}</td><td>${p.share_pct == null ? '—' : `${p.share_pct}%`}</td></tr>`).join('')}</tbody></table></div>
+      ${s.share_pct != null ? `<p class="take">${L('{s} had {p}% of the Google searches among these {n}.', { s: `<b>${esc(s.title)}</b>`, p: s.share_pct, n: all.length })}</p>` : ''}</section>` : '';
+    const sp = s.spikes || [];
+    const spikeSec = sp.length ? `<section class="rsec"><h2>${L('Biggest search moments')}</h2><p class="note">${L('Weeks in the last 12 months when {s} was searched at least twice as much as a normal week.', { s: esc(s.title) })}</p>
+      ${rank(sp, (x) => x.value, (x) => `<b>${L('Week of {d}', { d: dlong(x.day) })}</b> · ${L('{x}× a normal week', { x: x.times.toLocaleString(loc()) })}`)}
+      <p class="take">${L('The biggest was the week of {d}. Check the news from those days to see why.', { d: `<b>${dlong(sp[0].day)}</b>` })}</p></section>` : '';
+    const w = data.world || [];
+    const worldSec = w.length ? `<section class="rsec"><h2>${L('Where people search for {s}', { s: esc(s.title) })}</h2><p class="note">${L('Google searches by country, last 12 months. 100 is the country where it is searched most for its size.')}</p>
+      ${rank(w.slice(0, 10), (c) => c.value, (c) => esc(name(c.code)))}<p class="take">${L('{s} is searched most in {c}, for its size.', { s: esc(s.title), c: `<b>${esc(name(w[0].code))}</b>` })}</p></section>` : '';
     const b = data.business;
     const unit = b && Math.max(...b.years.map((y) => Math.abs(y.revenue || 0))) >= 1e9 ? 1e9 : 1e6;
     const money = (v) => (v / unit).toLocaleString(loc(), { maximumFractionDigits: 1 });
@@ -584,84 +497,31 @@
     }
     const bizSec = b ? `<section class="rsec"><h2>${L('How the business is doing')}</h2><p class="note">${esc(bizNote)}</p>
       <div class="vs n2">${[['revenue', bizHeads[0]], ['profit', bizHeads[1]]].map(([k, h]) => { const c = yearBars([{ gdp: b.years }], k, money); return c ? `<div><h3>${h}</h3>${c}</div>` : ''; }).join('')}</div>
-      ${bizTake ? `<p class="take">${esc(bizTake)}</p>` : ''}${learn('biz')}</section>` : '';
-    document.title = `${vsTitle} · ${tag} · Like Polling`;
-    const head = `<header class="rhead"><span class="tag">${data.sample ? `${L('Free sample')} · ${tag}` : tag}</span>
-      <div class="ehead">${s.image ? `<img src="${esc(s.image)}" alt="">` : ''}<div><h1>${esc(vsTitle)}</h1><p class="muted" style="margin:4px 0 0">${esc(s.description)}</p></div></div>
-      ${all.length > 1 && !(data.peers_chosen && data.peers.length === 1) ? `<p class="muted">${L(SIM[0], { n: all.length - 1 })}</p>` : ''}
-      ${dates(data.from, data.to, data.generated_at)}
-      ${since('This report also uses Wikimedia\'s public view history.')}
-      ${exportBar(data, `/services#${data.type}`)}</header>`;
-    const kpis = `<div class="kpis">${[
-      kcard(`${short(s.views)}${delta(s.change_pct)}`, L('Wikipedia views'), L('last 30 days, vs the 30 before'), area(s.series.map((d) => d.views))),
-      f ? kcard(L('#{r} of {n}', { r: f.rank, n: f.compared }), L('In its field'), esc(fn), cols(f.ranked.map((p) => p.views), f.rank <= f.ranked.length ? f.rank - 1 : -1))
-        : all.length > 1 ? kcard(L('#{r} of {n}', { r: s.rank, n: all.length }), L(SIM[1]), L('by views'), cols([...all].sort((a, b) => b.views - a.views).map((p) => p.views), s.rank - 1)) : '',
-      kcard(String(s.languages), L('Wikipedia languages'), L('with a page about them'), meter(pct(s.languages, Math.max(...all.map((p) => p.languages))))),
-      langTotal ? kcard(`${abroad}%`, L('Read outside English'), L('of {n} views in {k} languages', { n: short(langTotal), k: data.languages.length }), ring(abroad)) : '',
-      s.peak ? kcard(dshort(s.peak.day), L('Busiest day'), L('{n} views', { n: num(s.peak.views) }), cols(s.series.map((d) => d.views), s.series.findIndex((d) => d.day === s.peak.day))) : '',
-      data.countries.length ? kcard(String(data.countries.length), L('Countries trending'), L('days in a daily top 100')) : '',
-    ].join('')}</div>`;
-    const ratio = (a, b) => (a / (b || 1)).toLocaleString(loc(), { maximumFractionDigits: 1, minimumFractionDigits: 1 });
-    const growth = [...all].sort((a, b) => (b.change_pct ?? -1e9) - (a.change_pct ?? -1e9));
-    const sgn = (p) => (p == null ? '—' : `${p > 0 ? '+' : ''}${p}%`);
-    const gs = data.searches && data.searches.averages ? data.searches : null;
-    const gTotal = gs ? sum(gs.averages.filter((a) => a > 0)) : 0;
-    const base = (t) => t.replace(/,? (Inc|Ltd|Corp|Corporation|plc|S\.A|AG|SE|Co|Group)\.?$/i, '').toLowerCase();
-    const gShare = (p) => { const i = gTotal ? gs.names.findIndex((x) => base(x) === base(p.title)) : -1; return i < 0 ? null : pct(gs.averages[i], gTotal); };
-    const vTotal = sum(all.map((p) => p.views));
-    const growSec = all.length > 1 || s.yoy_pct != null ? `<section class="rsec"><h2>${L('Growth and share of attention')}</h2><p class="note">${L('How each one did in the last 30 days, compared with the 30 days before and the same 30 days last year, and its share of all views and searches among them.')}</p>
-      <div class="tight" style="overflow-x:auto"><table class="cmp"><thead><tr><th>${L('Name')}</th><th>${L('Views, 30 days')}</th><th>${L('vs previous 30 days')}</th><th>${L('vs same days last year')}</th>${all.length > 1 ? `<th>${L('Share of Wikipedia views')}</th>` : ''}${gTotal ? `<th>${L('Share of Google searches')}</th>` : ''}</tr></thead>
-      <tbody>${[...all].sort((a, b) => b.views - a.views).map((p) => `<tr><th>${p.me ? `<b>${esc(p.title)}</b>` : esc(p.title)}</th><td>${num(p.views)}</td><td>${sgn(p.change_pct)}</td><td>${sgn(p.yoy_pct)}</td>${all.length > 1 ? `<td>${pct(p.views, vTotal)}%</td>` : ''}${gTotal ? `<td>${gShare(p) == null ? '—' : `${gShare(p)}%`}</td>` : ''}</tr>`).join('')}</tbody></table></div>
-      <p class="take">${[all.length > 1 ? (gTotal && gShare(all[0]) != null ? L('{s} had {p}% of the Wikipedia views and {q}% of the Google searches among these {n}.', { s: `<b>${esc(s.title)}</b>`, p: pct(s.views, vTotal), q: gShare(all[0]), n: all.length }) : L('{s} had {p}% of the Wikipedia views among these {n}.', { s: `<b>${esc(s.title)}</b>`, p: pct(s.views, vTotal), n: all.length })) : '', s.yoy_pct != null ? L('Compared with the same 30 days last year, views of {s} changed {a}.', { s: esc(s.title), a: sgn(s.yoy_pct) }) : ''].filter(Boolean).join(' ')}</p></section>` : '';
+      ${bizTake ? `<p class="take">${esc(bizTake)}</p>` : ''}</section>` : '';
     const tt = data.through_time || [];
-    const yr = (a) => sum(a.map((d) => d.value));
-    const ttChange = tt.length >= 24 && yr(tt.slice(-24, -12)) ? Math.round(((yr(tt.slice(-12)) - yr(tt.slice(-24, -12))) / yr(tt.slice(-24, -12))) * 100) : null;
-    const ttPeak = tt.reduce((m, d) => (!m || d.value > m.value ? d : m), null);
+    const ttPeak = tt.reduce((m, x) => (!m || x.value > m.value ? x : m), null);
     const timeSec = tt.length > 1 ? `<section class="rsec"><h2>${L('Through time')}</h2><p class="note">${L('How much of the world\'s news mentioned {s} each month, since 2017 (100 = its busiest month).', { s: esc(s.title) })}</p>
-      ${lineChart(tt, L('News share'), monthShort)}<p class="take">${newsOneIn(tt, esc(s.title)) || L('It was most in the news in {m}.', { m: monthName(ttPeak.day.slice(0, 7)) })}${ttChange != null ? ` ${L('In the last 12 months, its news share changed {p} compared with the 12 months before.', { p: sign(ttChange) })}` : ''}</p></section>` : '';
+      ${lineChart(tt, L('News share'), monthShort)}<p class="take">${newsOneIn(tt, esc(s.title)) || L('It was most in the news in {m}.', { m: monthName(ttPeak.day.slice(0, 7)) })}</p></section>` : '';
     const yt = data.youtube_yearly || [];
     const ytLast = yt.filter((y) => y.year < new Date().getUTCFullYear()).pop();
     const ytSec = yt.length ? `<section class="rsec"><h2>${L('Views per video on YouTube')}</h2><p class="note">${L('Average views per video on the official YouTube channel, by the year each video was posted. Views are counted as of today, so recent years can look lower.')}</p>
       ${rank([...yt].reverse(), (y) => y.avg_views, (y) => String(y.year)).replace('<ol class="rank">', '<ol class="rank years">')}${ytLast ? `<p class="take">${L('In {y}, its videos averaged {n} views each.', { y: ytLast.year, n: `<b>${num(ytLast.avg_views)}</b>` })}</p>` : ''}</section>` : '';
+    const gt = data.trends || [];
+    const gtr = gt.length ? `<section class="rsec"><h2>${L('Trending on Google')}</h2><p class="note">${L('Days {s} was among the trending Google searches in each country (Google Trends).', { s: esc(s.title) })}</p>
+      ${rank(gt.slice(0, 10), (t) => t.days, (t) => esc(name(t.country)))}</section>` : '';
     const qual = quality(data);
     const qualSec = `<section class="rsec"><h2>${L('Sources and data quality')}</h2><p class="note">${L('Where each number comes from, and what kind of number it is. No number in this report was made by AI.')}</p>
       <div class="tight" style="overflow-x:auto"><table class="cmp"><thead><tr><th>${L('What')}</th><th>${L('Source')}</th><th>${L('Type')}</th><th>${L('Covers')}</th></tr></thead><tbody>${qual.map((r) => `<tr><th>${esc(r[0])}</th>${r.slice(1).map((c) => `<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div></section>`;
-    const langs = `<section class="rsec"><h2>${L('Where people read about {s}', { s: esc(s.title) })}</h2><p class="note">${L('Views by Wikipedia language, last 30 days.')}</p>
-      ${langTotal ? `<div class="split"><i style="--w:${100 - abroad}%"></i></div><div class="splitl"><span><b>${100 - abroad}%</b> ${esc(langName('en'))}</span><span><b>${abroad}%</b> ${L('other languages')}</span></div>` : ''}
-      ${rank(data.languages.slice(0, 8), (l) => l.views, (l) => esc(langName(l.lang)), (l) => `<small>${L('{p}% of all views', { p: pct(l.views, langTotal) })}</small>`)}
-      ${data.languages[1] ? `<p class="take">${L('After English, the most readers are in {l}.', { l: `<b>${esc(langName(data.languages[1].lang))}</b>` })}</p>` : ''}${learn('langs')}</section>`;
-    const ctry = data.countries.length ? `<section class="rsec"><h2>${L('Trending in countries')}</h2><p class="note">${L('Days the page was in a country\'s daily top 100.')}</p>
-      ${rank(data.countries.slice(0, 10), (c) => c.days, (c) => esc(name(c.country)))}<p class="take">${L('{s} is followed most in {c}.', { s: esc(s.title), c: `<b>${esc(name(data.countries[0].country))}</b>` })}</p>${learn('ctry')}</section>` : '';
-    const gt = data.trends || [];
-    const gtr = gt.length ? `<section class="rsec"><h2>${L('Trending on Google')}</h2><p class="note">${L('Days {s} was among the trending Google searches in each country (Google Trends).', { s: esc(s.title) })}</p>
-      ${rank(gt.slice(0, 10), (t) => t.days, (t) => esc(name(t.country)))}<p class="take">${gt.length === 1 ? L('{s} was a trending Google search in {c}.', { s: esc(s.title), c: esc(name(gt[0].country)) }) : L('{s} was a trending Google search in {n} countries.', { s: esc(s.title), n: gt.length })}</p>${learn('searches')}</section>` : '';
-    const sp = data.sponsors || [];
-    const spSec = sp.length ? `<section class="rsec"><h2>${L('Sponsors')}</h2><p class="note">${L('Brands named as {s}\'s sponsors on Wikipedia.', { s: esc(s.title) })}</p>
-      <ul class="chips">${sp.map((x) => { const u = x.website || x.link; return `<li>${u ? `<a href="${esc(u)}" target="_blank" rel="noopener">${esc(x.name)}</a>` : esc(x.name)}${x.website ? `<small>${esc(host(x.website))}</small>` : ''}</li>`; }).join('')}</ul>
-      <p class="take">${L(sp.length === 1 ? '{s} has 1 sponsor named on Wikipedia.' : '{s} has {n} sponsors named on Wikipedia.', { s: esc(s.title), n: sp.length })}</p>${learn('sponsors')}</section>` : '';
-    const sd = (data.sponsored || []).map((p, k) => ({ ...p, title: plain(p.title), color: k ? '#9a9a9a' : COLORS[0] }));
-    const sdSec = sd.length ? `<section class="rsec"><h2>${L('People it sponsors')}</h2><p class="note">${L('Athletes and stars who name {s} as a sponsor on Wikipedia, ranked by English Wikipedia views, last 30 days.', { s: esc(s.title) })}</p>
-      ${cbars(sd, (p) => p.views, short)}<p class="take">${L('{a} is the most-read of them, with {n} views.', { a: `<b>${esc(sd[0].title)}</b>`, n: num(sd[0].views) })}</p>${learn('sponsors')}</section>` : '';
-    const srcText = `${L('Wikipedia page views and pages: Wikimedia Foundation (wikimedia.org), open data.')} ${L(data.peers_chosen ? 'Comparisons chosen by the buyer.' : 'Similar pages picked by Wikipedia\'s "more like this" search.')}${gt.length ? ` ${L('Trending searches: Google Trends.')}` : ''} ${b ? ` ${L('Sales and profit: US SEC filings (EDGAR), public data.')}` : ''}${sp.length || sd.length ? ` ${L('Sponsors: Wikipedia infoboxes.')}` : ''}${data.states ? ` ${L('States: Google Trends.')}` : ''}${data.mentions ? ` ${L('News: The GDELT Project. Posts: Bluesky public API, counts only.')}` : ''}${extraSrc(data)} ${L(data.mentions ? 'No YouTube data.' : 'No YouTube or news data.')}`;
-
-    const know = [];
-    if (s.change_pct) know.push({ big: `${s.change_pct > 0 ? '+' : '−'}${Math.abs(s.change_pct)}%`, line: L(s.change_pct > 0 ? 'more Wikipedia views for {s} than the month before.' : 'fewer Wikipedia views for {s} than the month before.', { s: s.title }) });
-    if (langTotal && data.languages.length > 1) know.push({ big: oneIn(abroad), line: L('readers of {s} used a language other than English.', { s: s.title }) });
-    if (second && s.views >= second.views && s.views >= 1.2 * second.views) know.push({ big: `${times(s.views, second.views)}×`, line: L('{s} had {x}× the views of {b}, the next most-viewed.', { s: s.title, x: times(s.views, second.views), b: second.title }) });
-    else if (second && !f) know.push({ big: L('#{r} of {n}', { r: s.rank, n: all.length }), line: L(SIM[2], { s: s.title }) });
-    const avg = s.series.length > 2 ? sum(s.series.map((d) => d.views)) / s.series.length : 0;
-    if (s.peak && avg && s.peak.views >= 1.5 * avg) know.push({ big: `${times(s.peak.views, avg)}×`, line: L('On {day}, views of {s} were {x}× a normal day.', { day: dshort(s.peak.day), s: s.title, x: times(s.peak.views, avg) }) });
-    if (f) know.unshift({ big: L('#{r} of {n}', { r: f.rank, n: f.compared }), line: L('{s} in {f}, by Wikipedia views.', { s: s.title, f: fn }) });
-    const mo = data.moments && data.moments.list.length ? [...data.moments.list].sort((a, b) => b.views - a.views)[0] : null;
-    if (mo && mo.times >= 3) know.splice(1, 0, { big: `${Math.round(mo.times)}×`, line: L('On {day}, {s} had its biggest media moment of the year: {x}× a normal day on Wikipedia.', { day: dlong(mo.day), s: s.title, x: Math.round(mo.times) }) });
-    $('report').innerHTML = head + withSources(knowSec(know.slice(0, 3), kpis) + growSec + timeSec + ytSec + fieldSec + spSec + sdSec + bizSec + productsSec(data, s.title) + momentsSec(data, s.title) + searchesSec(data, s.title) + releasesSec(data, s.title) + langs + ctry + mentionsSec(data, s.title) + gtr + qualSec, 'Sources', srcText) ;
+    const srcText = [L('Google searches: Google Trends.'), data.peers_chosen ? L('Comparisons chosen by the buyer.') : data.peers.length ? L('Similar names: Deezer related artists or Yahoo Finance similar stocks.') : '',
+      data.mentions ? L('News: The GDELT Project.') : '', b ? L('Sales and profit: US SEC (EDGAR).') : '', data.releases ? L('Releases: MusicBrainz (CC0).') : '', data.products ? L('Products: Open Food Facts (ODbL).') : '', yt.length ? 'YouTube Data API.' : ''].filter(Boolean).join(' ');
+    $('report').innerHTML = head + withSources(knowSec(know.slice(0, 3), kpis) + searchSec + growSec + spikeSec + worldSec + statesSec(data, s.title) + timeSec + bizSec + ytSec + productsSec(data, s.title) + releasesSec(data, s.title) + mentionsSec(data, s.title) + gtr + qualSec, 'Sources', esc(srcText));
     plainWords();
-    wire(data, ctx(data, { know: know.slice(0, 3), fieldName: fn, fieldTake: ft, tag, title: s.title, subtitle: s.description, dates: dateList(data.from, data.to, data.generated_at), sources: srcText, quality: qual, bizNote, bizHeads, bizTake, bizUnit: unit }));
+    wire(data, ctx(data, { know: know.slice(0, 3), tag, title: s.title, subtitle: s.description, dates: dateList(data.from, data.to, data.generated_at), sources: srcText, quality: qual, bizNote, bizHeads, bizTake, bizUnit: unit }));
     show('report');
     window.scrollTo(0, 0);
   }
 
-  // Google-style name suggestions for the artist/company fields (straight from Wikipedia; nothing goes to Like Polling).
+  // Google-style name suggestions for the artist/company fields (from Google Trends).
   ['e1', 'e2', 'e3', 'e4'].forEach((id) => window.LPSuggest($(id), { type: () => $('pick-e').dataset.kind }));
 
   let last = null;
@@ -689,7 +549,7 @@
     if (data.type === 'artist' || data.type === 'company') return renderEntity(data);
     const cs = data.countries;
     const title = cs.map((c) => name(c.country)).join(' vs ');
-    const allDays = [...new Set(cs.flatMap((c) => (c.wikipedia_days || []).concat((c.news_daily || []).map((d) => d.day))))].sort();
+    const allDays = [...new Set(cs.flatMap((c) => (c.news_daily || []).map((d) => d.day)))].sort();
     const tag = L('Extended Country Report');
     document.title = `${title} · ${tag} · Like Polling`;
     const head = `<header class="rhead"><span class="tag">${data.sample ? `${L('Free sample')} · ${tag}` : tag}</span>
@@ -700,9 +560,9 @@
       ${exportBar(data, '/services#country')}</header>`;
     const econ = econSec(cs);
     const body = SECTIONS.filter(([h]) => !(econ.html && h === 'In the news with')).map(([h, note, fn, t]) => [h, note, cs.map(fn), t]).filter(([, , out]) => out.some((x) => x && x !== empty()))
-      .map(([h, note, out, t]) => `<section class="rsec${/^(Most-read|Rising)/.test(h) ? ' long' : ''}"><h2>${esc(L(h))}</h2><p class="note">${esc(L(note))}</p><div class="cols n${cs.length}">${cs.map((c, i) => `<div class="col">${cs.length > 1 ? `<h3>${esc(name(c.country))}</h3>` : ''}${out[i] || empty()}</div>`).join('')}</div>${t ? learn(t) : ''}</section>`)
+      .map(([h, note, out, t]) => `<section class="rsec${''}"><h2>${esc(L(h))}</h2><p class="note">${esc(L(note))}</p><div class="cols n${cs.length}">${cs.map((c, i) => `<div class="col">${cs.length > 1 ? `<h3>${esc(name(c.country))}</h3>` : ''}${out[i] || empty()}</div>`).join('')}</div>${t ? learn(t) : ''}</section>`)
     if (econ.html) body.splice(body.length - (cs.some((c) => c.ideas.length) ? 1 : 0), 0, econ.html);
-    const srcText = L(cs.some((c) => c.ideas.length) ? 'Built by Like Polling from its own daily records of open data: Wikipedia page views (Wikimedia Foundation) and news topics and countries (The GDELT Project). Ideas are written by AI (Google Gemini) and can contain mistakes. YouTube and news headlines are not part of the report.' : 'Built by Like Polling from its own daily records of open data: Wikipedia page views (Wikimedia Foundation) and news topics and countries (The GDELT Project). YouTube and news headlines are not part of the report.') + (econ.html ? ` ${L('GDP figures come from the World Bank\'s open data.')}` : '')
+    const srcText = L(cs.some((c) => c.ideas.length) ? 'Built by Like Polling from its own daily records of open data: news topics and countries (The GDELT Project). Ideas are written by AI (Google Gemini) and can contain mistakes. YouTube and news headlines are not part of the report.' : 'Built by Like Polling from its own daily records of open data: news topics and countries (The GDELT Project). YouTube and news headlines are not part of the report.') + (econ.html ? ` ${L('GDP figures come from the World Bank\'s open data.')}` : '')
       + (cs.some((c) => c.searches && c.searches.top.length) ? ` ${L('Trending searches: Google Trends.')}` : '') + (cs.some((c) => c.holidays && c.holidays.length) ? ` ${L('Holidays: Nager.Date, open data.')}` : '') + (cs.some((c) => c.ai_builders) ? ` ${L('AI projects: GitHub API.')}` : '');
 
     const know = knowCountry(cs);

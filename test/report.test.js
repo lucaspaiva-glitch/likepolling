@@ -48,13 +48,6 @@ test('parseCountries keeps up to 2 known countries, isSample is order-free', () 
   assert.ok(!report.isSample(['BR']));
 });
 
-test('wikipedia skips home pages, namespaces and adult sites, and finds rising pages', () => {
-  const w = report.wikipedia(WIKI, NOW);
-  assert.deepEqual(w.top.map((a) => [a.title, a.views, a.days]), [['Lula', 1700, 2], ['Halloween', 500, 1]]);
-  assert.deepEqual(w.rising.map((a) => a.title), ['Halloween']);
-  assert.equal(w.top[0].link, 'https://pt.wikipedia.org/wiki/Lula');
-});
-
 test('newsFocus and partners turn GDELT counts into shares and other countries', () => {
   assert.deepEqual(report.newsFocus([{ root_code: '04', articles: 60 }, { root_code: '19', articles: 40 }]),
     { articles: 100, cooperation_pct: 60, topics: [{ topic: 'Talks and meetings', pct: 60 }, { topic: 'Fighting', pct: 40 }] });
@@ -67,7 +60,6 @@ test('a comparison report uses open data only and adds what both countries share
   const out = await report.buildReport(report.rest(env, f), ['BR', 'PT'], NOW);
   assert.equal(out.countries.length, 2);
   assert.equal(out.shared.articles_together, 7);
-  assert.deepEqual(out.shared.read_in_both.map((a) => a.title), ['Lula', 'Halloween']);
   assert.equal(out.countries[0].ideas[0].title, 'T');
   assert.ok(!('all_partners' in out.countries[0]));
   assert.ok(f.seen.every((u) => /wiki_top_daily|gdelt_|report_insights|trends_daily|holidays|report_snapshots|news_coverage_monthly|news_archive|github_ai_builders_monthly/.test(u)), 'no YouTube tables, only the news archive');
@@ -96,7 +88,7 @@ test('ideas routine sends only open data to Gemini and saves cleaned ideas', asy
   });
   assert.deepEqual(out.done, ['BR']);
   assert.equal(saved[0].ideas.length, 3);
-  assert.match(prompts[0], /Wikipedia/);
+  assert.doesNotMatch(prompts[0], /wikipedia/i);
   assert.doesNotMatch(prompts[0], /youtube/i);
 });
 
@@ -172,22 +164,21 @@ test('Gumroad key: forged instance, used key elsewhere, unknown and refunded key
   assert.equal((await gpost({}, { key: GKEY }, { GUMROAD_PRODUCT_ID: '' })).res.statusCode, 503);
 });
 
-// Fake Wikipedia / Wikimedia for artist and company reports.
+// Fake Google Trends for artist and company reports.
 const entity = require('../lib/entity-report');
-function wikiRoute(url) {
-  if (url.startsWith('https://wikimedia.org/api/rest_v1/metrics/pageviews/')) {
-    const title = decodeURIComponent(url.split('/user/')[1].split('/')[0]);
-    const base = title.startsWith('Anitta') ? 100 : 10;
-    const items = Array.from({ length: 60 }, (_, i) => ({ timestamp: `${new Date(Date.UTC(2026, 8, 21) + i * 864e5).toISOString().slice(0, 10).replace(/-/g, '')}00`, views: base + (i >= 30 ? 10 : 0) }));
-    return json({ items });
+const TOPICS = { anitta: [{ mid: '/g/11f10lszn1', title: 'Anitta', type: 'Singer' }], ludmilla: [{ mid: '/m/0ludm', title: 'Ludmilla', type: 'Singer' }] };
+const gtext = (body) => ({ ok: true, status: 200, text: async () => `)]}'\n${JSON.stringify(body)}`, json: async () => body });
+function trendsRoute(url) {
+  if (!url.startsWith('https://trends.google.com/')) return null;
+  const req = () => JSON.parse(new URL(url).searchParams.get('req'));
+  if (url.includes('/api/autocomplete/')) return gtext({ default: { topics: TOPICS[decodeURIComponent(url.split('/api/autocomplete/')[1].split('?')[0]).toLowerCase().split(' ')[0]] || [] } });
+  if (url.includes('/api/explore?')) return gtext({ widgets: [{ id: 'TIMESERIES', token: 't', request: { n: req().comparisonItem.length } }, { id: 'GEO_MAP', token: 'g', request: {} }] });
+  if (url.includes('/widgetdata/multiline')) {
+    const { n } = req();
+    return gtext({ default: { timelineData: Array.from({ length: 60 }, (_, i) => ({ time: String(Date.UTC(2025, 8, 21) / 1000 + i * 7 * 86400), value: Array.from({ length: n }, (_, k) => (k ? 20 : 40) + (i >= 56 ? 10 : 0)) })) } });
   }
-  if (!url.startsWith('https://en.wikipedia.org/w/api.php')) return null;
-  const q = Object.fromEntries(new URL(url).searchParams);
-  if (q.list === 'search') return json({ query: { search: [{ title: 'Ludmilla (singer)' }, { title: 'Anitta discography' }, { title: 'Rio de Janeiro' }] } });
-  if (q.prop === 'langlinks') return json({ query: { pages: [{ title: q.titles, langlinks: [{ lang: 'pt', title: q.titles.replace(' (singer)', '') }, { lang: 'xx', title: 'skip' }, { lang: 'yy', title: 'skip' }, { lang: 'zz', title: 'skip' }] }] } });
-  if (q.prop === 'revisions') return json({ query: { pages: [{ revisions: [{}, {}, {}] }] } });
-  const desc = { 'Anitta (singer)': 'Brazilian singer', 'Ludmilla (singer)': 'Brazilian singer', 'Rio de Janeiro': 'City in Brazil' };
-  return json({ query: { pages: q.titles.split('|').filter((t) => desc[t]).map((t) => ({ title: t, description: desc[t] })) } });
+  if (url.includes('/widgetdata/comparedgeo')) return gtext({ default: { geoMapData: [{ geoCode: 'BR', geoName: 'Brazil', value: [100] }, { geoCode: 'PT', geoName: 'Portugal', value: [40] }] } });
+  return gtext({});
 }
 
 test('parseChoice keeps a subject and up to 3 different peers', () => {
@@ -196,28 +187,25 @@ test('parseChoice keeps a subject and up to 3 different peers', () => {
   assert.equal(entity.parseChoice('x'), null);
 });
 
-test('artist sample: no YouTube data, similar artists picked by type', async () => {
-  const f = db({ route: async (url) => wikiRoute(url) });
+test('artist sample: Google searches, no Wikipedia and no YouTube', async () => {
+  const f = db({ route: async (url) => trendsRoute(url) });
   const handler = createHandler({ env, fetch: f, now: () => NOW.getTime() });
   const res = mockRes();
   await handler({ method: 'GET', query: { type: 'artist' }, headers: {} }, res);
   assert.equal(res.statusCode, 200);
   assert.equal(res.body.sample, true);
-  assert.equal(res.body.subject.title, 'Anitta (singer)');
-  assert.deepEqual(res.body.peers.map((p) => p.title), ['Ludmilla (singer)']);
-  assert.equal(res.body.subject.views, 3300);
-  assert.equal(res.body.subject.change_pct, 10);
-  assert.equal(res.body.subject.rank, 1);
-  assert.equal(res.body.subject.languages, 5);
-  assert.deepEqual(res.body.languages.map((l) => l.lang).sort(), ['en', 'pt']);
-  assert.ok(f.seen.every((u) => !/youtube/i.test(u)));
+  assert.equal(res.body.subject.title, 'Anitta');
+  assert.equal(res.body.subject.now, 50);
+  assert.equal(res.body.subject.change_pct, 25);
+  assert.equal(res.body.world[0].code, 'BR');
+  assert.ok(f.seen.every((u) => !/youtube|wikipedia|wikimedia/i.test(u)));
 });
 
 test('Gumroad artist key: picks the artist once, then a signed instance reopens it', async () => {
   const state = {};
   const aenv = { GUMROAD_ARTIST_PRODUCT_ID: 'ga==' };
   const route = async (url, init) => {
-    const w = wikiRoute(url);
+    const w = trendsRoute(url);
     if (w) return w;
     if (!url.startsWith('https://api.gumroad.com/')) return null;
     const p = Object.fromEntries(new URLSearchParams(init.body));
@@ -237,11 +225,11 @@ test('Gumroad artist key: picks the artist once, then a signed instance reopens 
   res = await call({ key: GKEY, choice: { subject: 'Nobody Here' } });
   assert.equal(res.statusCode, 404);
   assert.equal(state.uses, undefined, 'a wrong name does not use up the key');
-  res = await call({ key: GKEY, choice: { subject: 'Anitta (singer)', peers: ['Ludmilla (singer)'] } });
+  res = await call({ key: GKEY, choice: { subject: 'Anitta', peers: ['Ludmilla'] } });
   assert.equal(res.statusCode, 409);
-  assert.equal(res.body.confirm.title, 'Anitta (singer)', 'a typed name is confirmed before the key is used');
+  assert.equal(res.body.confirm.title, 'Anitta', 'a typed name is confirmed before the key is used');
   assert.equal(state.uses, undefined);
-  res = await call({ key: GKEY, choice: { subject: 'Anitta (singer)', peers: ['Ludmilla (singer)'], confirm: true } });
+  res = await call({ key: GKEY, choice: { subject: 'Anitta', peers: ['Ludmilla'], confirm: true } });
   assert.equal(res.statusCode, 200);
   assert.equal(state.uses, 1);
   assert.match(res.body.instance_id, /^g-a\.[A-Za-z0-9_-]+\.[0-9a-f]{32}$/);
@@ -250,7 +238,7 @@ test('Gumroad artist key: picks the artist once, then a signed instance reopens 
   const inst = res.body.instance_id;
   res = await call({ key: GKEY, instance: inst, choice: { subject: 'Someone Else' } });
   assert.equal(res.statusCode, 200);
-  assert.equal(res.body.subject.title, 'Anitta (singer)');
+  assert.equal(res.body.subject.title, 'Anitta');
   assert.equal(state.uses, 1);
   res = await call({ key: GKEY, instance: inst.replace(/.$/, (c) => (c === '0' ? '1' : '0')) });
   assert.equal(res.statusCode, 409);
@@ -348,20 +336,20 @@ function secRoute(url) {
   return json({}, 404);
 }
 
-test('company business: yearly SEC sales and profit via Wikidata, none for companies without SEC filings', async () => {
+test('company business: yearly SEC sales and profit from the SEC number, none without one', async () => {
   const get = async (url) => { const r = secRoute(url); return r.status === 404 ? null : r.json(); };
-  const nike = await entity.business(get, 'Nike, Inc.');
+  const nike = await entity.business(get, { cik: '320187', listings: [{ exchange: 'New York Stock Exchange', ticker: 'NKE' }] });
   assert.equal(nike.ticker, 'NKE');
   assert.equal(nike.exchange, 'New York Stock Exchange');
   assert.deepEqual(nike.years, [{ year: 2015, revenue: 30e9, profit: null }, { year: 2016, revenue: 32e9, profit: 3.8e9 }, { year: 2017, revenue: 34e9, profit: 4.2e9 }, { year: 2018, revenue: 36e9, profit: -1e9 }]);
-  assert.equal(await entity.business(get, 'Zara (retailer)'), null);
+  assert.equal(await entity.business(get, null), null);
 });
 
 test('company business: Like Polling\'s saved history comes before the live SEC', async () => {
   const seen = [];
   const get = async (url) => { seen.push(url); const r = secRoute(url); return r.status === 404 ? null : r.json(); };
   const rest = async (path) => (path.startsWith('company_financials') && path.includes('cik=eq.320187') && path.includes('offset=0') ? [{ year: 2026, revenue: 46e9, profit: 3e9 }, { year: 2025, revenue: 46e9, profit: null }, { year: 2024, revenue: 51e9, profit: 5e9 }] : []);
-  const nike = await entity.business(get, 'Nike, Inc.', rest);
+  const nike = await entity.business(get, { cik: '320187', listings: [] }, rest);
   assert.deepEqual(nike.years.map((y) => y.year), [2024, 2025, 2026]);
   assert.equal(nike.years[1].profit, null);
   assert.ok(!seen.some((u) => u.includes('data.sec.gov')));
@@ -382,32 +370,24 @@ test('company business: no SEC number on Wikidata -> the same name in the saved 
   assert.equal(await entity.cikByName(async () => [{ cik: 317540, name: 'COCA-COLA CONSOLIDATED, INC.' }], 'Coca-Cola'), null);
 });
 
-test('a confirmed brand without a Wikipedia page keeps its brand flag', () => {
-  assert.deepEqual(entity.parseChoice({ subject: 'Machu Picchu Energy', confirm: true, brand: true }), { subject: 'Machu Picchu Energy', peers: [], confirm: true, brand: true });
-  assert.equal(entity.parseChoice({ subject: 'X', brand: 'yes' }).brand, undefined);
-});
-
-test('throughTime groups most-read pages, searches and news coverage by month', () => {
+test('throughTime groups searches and news coverage by month', () => {
   const { throughTime } = require('../lib/report');
-  const out = throughTime(
-    [{ day: '2026-10-25', project: 'pt.wikipedia', article: 'X_Y', views_ceil: 5 }, { day: '2026-10-26', project: 'pt.wikipedia', article: 'X_Y', views_ceil: 5 }],
-    [{ day: '2026-11-03', query: 'q', traffic: 100 }],
+  const out = throughTime([{ day: '2026-10-25', query: 'q', traffic: 100 }, { day: '2026-11-03', query: 'r', traffic: 50 }],
     [{ day: '2026-10-27', articles: 7 }, { day: '2026-10-28', articles: 3 }]);
   assert.deepEqual(out.map((m) => m.month), ['2026-10', '2026-11']);
-  assert.deepEqual(out[0].most_read[0], { title: 'X Y', link: 'https://pt.wikipedia.org/wiki/X_Y', views: 10 });
   assert.equal(out[0].news_articles, 10);
-  assert.equal(out[1].searches[0].query, 'q');
+  assert.equal(out[0].searches[0].query, 'q');
+  assert.equal(out[1].searches[0].query, 'r');
 });
 
-test('sinceLast lists new and dropped topics against the earlier snapshot', () => {
+test('sinceLast lists new and dropped searches against the earlier snapshot', () => {
   const { sinceLast } = require('../lib/report');
-  const now = { wikipedia: [{ title: 'A' }, { title: 'B' }], searches: { top: [{ query: 'x' }] } };
-  const prev = { wikipedia: [{ title: 'B' }, { title: 'C' }], searches: { top: [{ query: 'X' }] } };
-  assert.deepEqual(sinceLast(now, prev, '2026-11-14'), { day: '2026-11-14', new_read: ['A'], gone_read: ['C'], new_searches: [] });
+  const now = { searches: { top: [{ query: 'x' }, { query: 'y' }] } };
+  const prev = { searches: { top: [{ query: 'X' }, { query: 'z' }] } };
+  assert.deepEqual(sinceLast(now, prev, '2026-11-14'), { day: '2026-11-14', new_searches: ['y'], gone_searches: ['z'] });
   assert.equal(sinceLast(now, now, '2026-11-14').same, true);
   assert.equal(sinceLast(now, null, null), null);
 });
-
 
 test('topStories keeps, per country and month, the #1 story that stayed longest', () => {
   const { topStories } = require('../lib/report');

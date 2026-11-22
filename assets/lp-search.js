@@ -1,4 +1,4 @@
-// Homepage search bar (Wikipedia suggestions) and the search pages at /s/<sample> or /s?q=<name>.
+// Homepage search bar (Google suggestions) and the search pages at /s/<sample> or /s?q=<name>.
 // Samples are fully unlocked: their full history is the existing report (report.html?embed=1 in an iframe).
 (() => {
   const SAMPLES = {
@@ -54,7 +54,7 @@
   if (slug && !sample) { location.replace(`/s?find=${encodeURIComponent(slug.replace(/-/g, ' '))}`); return; }
   if (input) input.value = sample ? sample.name : q;
   page.hidden = false;
-  const STEPS = ['Finding {n}', 'Counting Wikipedia reads', 'Checking Google searches', 'Reading the news', 'Building the page'];
+  const STEPS = ['Finding {n}', 'Checking Google searches', 'Reading the news', 'Fetching official numbers', 'Building the page'];
   const wait = (what) => `<section class="lps-card lps-search lps-load" aria-live="polite"><div class="lps-term" aria-hidden="true"><i></i><i></i><i></i><span>bots — build</span></div><div class="lps-wait"><b>Bots are building <span data-no-i18n>${esc(what)}</span>’s page</b>
     <div class="lps-bar" role="progressbar" aria-label="Loading" aria-valuemin="0" aria-valuemax="100"><i></i></div><ol class="lps-steps">${STEPS.map((t, i) => `<li data-i="${i}">${esc(t.replace('{n}', what))}</li>`).join('')}</ol></div>
     <div class="lps-track" aria-hidden="true">${document.querySelector('.lps-track') ? document.querySelector('.lps-track').innerHTML : ''}</div></section>`;
@@ -82,22 +82,19 @@
   function profile(data, cat) {
     if (!data.subject) {
       const c = data.countries[0];
-      const reads = (c.wikipedia_daily_total || []).reduce((t, n) => t + n, 0);
-      const top = c.wikipedia && c.wikipedia[0], search = c.searches && c.searches.top && c.searches.top[0];
-      return [`<div class="lps-prof"><img class="lps-av flag" src="/assets/flags/${c.country.toLowerCase()}.svg" alt=""><div class="lps-who">${tags(cat, true)}<h1 data-no-i18n>Brazil</h1><p>What Brazil reads, searches and is in the news for.</p></div></div>`, `<h2>What Brazil reads and searches</h2>
-        <div class="lps-stats">${stat(short(reads), 'Wikipedia reads of its top pages, 30 days')}${stat(short(c.news_focus ? c.news_focus.articles : 0), 'News stories about Brazil, 30 days')}
-        ${top ? stat(esc(top.title), 'Most-read page', '', true) : ''}${search ? stat(esc(search.query), 'Top Google search', '', true) : ''}</div>`];
+      const search = c.searches && c.searches.top && c.searches.top[0], video = c.youtube && c.youtube[0];
+      return [`<div class="lps-prof"><img class="lps-av flag" src="/assets/flags/${c.country.toLowerCase()}.svg" alt=""><div class="lps-who">${tags(cat, true)}<h1 data-no-i18n>Brazil</h1><p>What Brazil searches, watches and is in the news for.</p></div></div>`, `<h2>What Brazil searches and watches</h2>
+        <div class="lps-stats">${stat(short(c.news_focus ? c.news_focus.articles : 0), 'News stories about Brazil, 30 days')}
+        ${search ? stat(esc(search.query), 'Top Google search', '', true) : ''}${video ? stat(esc(video.title), `Top YouTube video · ${short(video.views)} views`, '', true) : ''}</div>`];
     }
     const s = data.subject;
-    const f = data.field;
-    if (slug === 'lula-vs-bolsonaro' && data.peers && data.peers[0]) {
-      const side = (p) => `<div>${p.image ? `<img src="${esc(p.image)}" alt="">` : ''}<h3 data-no-i18n>${esc(plain(p.title))}</h3><b data-no-i18n>${short(p.views)}</b><span>Wikipedia reads, 30 days</span>${delta(p.change_pct, 'vs the 30 days before')}<b data-no-i18n>${num(p.languages)}</b><span>Wikipedia languages</span></div>`;
-      return [`<div class="lps-who">${tags(cat, true)}<h1 data-no-i18n>Lula vs Bolsonaro</h1><p>Brazil’s two biggest political names, side by side.</p></div>`, `<h2>Who gets more attention?</h2><p class="lps-sub">Wikipedia reads, last 30 days.</p><div class="lps-vs">${side(s)}${side(data.peers[0])}</div>`];
+    if (slug === 'lula-vs-bolsonaro' && data.peers && data.peers[0] && (s.share_pct != null || data.peers[0].share_pct != null)) {
+      const side = (p) => `<div>${p.image ? `<img src="${esc(p.image)}" alt="">` : ''}<h3 data-no-i18n>${esc(plain(p.title))}</h3><b data-no-i18n>${p.share_pct == null ? '–' : `${p.share_pct}%`}</b><span>of the Google searches for the two, last 4 weeks</span>${p.change_pct != null ? `<b data-no-i18n>${signed(p.change_pct)}</b><span>vs the 4 weeks before</span>` : ''}</div>`;
+      return [`<div class="lps-who">${tags(cat, true)}<h1 data-no-i18n>Lula vs Bolsonaro</h1><p>Brazil’s two biggest political names, side by side.</p></div>`, `<h2>Who is searched more?</h2><p class="lps-sub">Google searches worldwide (Google Trends).</p><div class="lps-vs">${side(s)}${side(data.peers[0])}</div>`];
     }
     const name = sample.name;
-    return [`<div class="lps-prof">${s.image ? `<img class="lps-av" src="${esc(s.image)}" alt="">` : ''}<div class="lps-who">${tags(cat, true)}<h1 data-no-i18n>${esc(name)}</h1><p>${esc(s.description)}</p></div></div>`, `<h2>How many people read about <span data-no-i18n>${esc(name)}</span>?</h2>
-      <div class="lps-stats">${stat(short(s.views), 'Wikipedia reads, last 30 days', delta(s.change_pct, 'vs the 30 days before'))}${stat(s.yoy_pct == null ? '–' : `${s.yoy_pct >= 0 ? '+' : ''}${s.yoy_pct}%`, 'Compared with a year ago')}
-      ${stat(num(s.languages), 'Wikipedia languages')}${f && f.rank ? stat(`#${f.rank}`, `Most read of ${f.compared}: ${esc(f.name)}`) : s.peak ? stat(short(s.peak.views), `Reads on its busiest day, ${new Date(`${s.peak.day}T00:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' })}`) : ''}</div>`];
+    return [`<div class="lps-prof">${s.image ? `<img class="lps-av" src="${esc(s.image)}" alt="">` : ''}<div class="lps-who">${tags(cat, true)}<h1 data-no-i18n>${esc(name)}</h1><p>${esc(s.description)}</p></div></div>`,
+      /<b/.test(searchStats(s, data.world)) ? `<h2>Is <span data-no-i18n>${esc(name)}</span> searched more?</h2>${searchStats(s, data.world)}` : ''];
   }
 
   async function openSample() {
@@ -109,7 +106,7 @@
       const cat = sample.cat;
       const who = sample.name;
       const [head, attn] = profile(data, cat);
-      page.innerHTML = `<section class="lps-card" style="--cat:${CATS[cat].color}">${head}</section>${statsHtml(data.key_stats, CATS[cat], slug === 'lula-vs-bolsonaro' ? 'Lula vs Bolsonaro' : who)}<section class="lps-card lps-attn" style="--cat:${CATS[cat].color}">${attn}</section>
+      page.innerHTML = `<section class="lps-card" style="--cat:${CATS[cat].color}">${head}</section>${statsHtml(data.key_stats, CATS[cat], slug === 'lula-vs-bolsonaro' ? 'Lula vs Bolsonaro' : who)}${attn ? `<section class="lps-card lps-attn" style="--cat:${CATS[cat].color}">${attn}</section>` : ''}
         <section class="lps-card" id="lps-hist" style="--cat:${CATS[cat].color}"><h2>Full history</h2><p class="lps-sub">Graphs since 2017, saved snapshots and every number, ready to download. Unlocked in this free sample.</p>
         <div class="lps-acts lps-dl"><button type="button" data-act="pdf"><b>↓ Graphs</b><small>PDF</small></button><button type="button" data-act="pptx"><b>↓ Presentation</b><small>PowerPoint · Keynote · Google Slides</small></button><button type="button" data-act="xlsx"><b>↓ Excel</b><small>Excel · Google Sheets · Numbers</small></button></div>
         <p class="lps-dlerr" role="status" hidden>Couldn’t make the file. Please try again.</p>
@@ -146,41 +143,12 @@
   const bars = (rows, label, value, suffix, flag) => `<ul class="lps-bars">${rows.map((r) => `<li>${flag ? `<img src="/assets/flags/${r.code.toLowerCase()}.svg" alt="" width="18" height="13">` : ''}<span data-no-i18n>${esc(label(r))}</span><i><b style="--w:${Math.max(3, value(r))}%"></b></i><em data-no-i18n>${value(r)}${suffix}</em></li>`).join('')}</ul>`;
   function chart(months, name, extra = '') {
     if (months.length < 3) return '';
-    const max = Math.max(...months.map((m) => m.views)) || 1;
-    const top = months.reduce((b, m) => (m.views > b.views ? m : b), months[0]);
-    const lastM = months[months.length - 1];
-    return `<section class="lps-card lps-chart"><h2>Is <span data-no-i18n>${esc(name)}</span> getting more attention?</h2>
-      <p class="lps-sub">Most reads in <b data-no-i18n>${mon(top.month)}</b>. Last month: <b data-no-i18n>${short(lastM.views)}</b> Wikipedia reads. Tap a month.</p>${extra}
-      <div class="lps-cols" role="list">${months.map((m) => `<button type="button" role="listitem" class="${m === top ? 'top' : ''}" data-tip="${mon(m.month)}: ${short(m.views)} reads" style="--h:${Math.max(2, Math.round((m.views / max) * 100))}%"><i></i><span data-no-i18n>${mon(m.month).split(' ')[0]}</span></button>`).join('')}</div>
-      <p class="lps-tip" aria-live="polite" data-no-i18n>${mon(top.month)}: ${short(top.views)} reads</p></section>`;
-  }
-  const FACTS = {
-    person: [['born', 'Born'], ['from', 'From'], ['occupation', 'Known as'], ['genre', 'Music'], ['team', 'Plays for'], ['label', 'Record labels'], ['works', 'Known for']],
-    company: [['founded', 'Founded'], ['founders', 'Founded by'], ['ceo', 'CEO'], ['hq', 'Headquarters'], ['industry', 'Industry'], ['employees', 'Employees'], ['exchange', 'Stock exchange'], ['part_of', 'Part of']],
-    country: [['capital', 'Capital'], ['population', 'Population'], ['languages', 'Languages'], ['head_state', 'Head of state'], ['head_gov', 'Head of government'], ['currency', 'Currency']],
-  };
-  const age = (y, m = '') => { const n = new Date().getUTCFullYear() - y - (m && m > new Date().toISOString().slice(5, 10) ? 1 : 0); return n; };
-  function factValue(k, v, name) {
-    if (Array.isArray(v)) { const l = v.filter((x) => x !== name); return l.length ? esc((k === 'from' ? l.slice(0, 1) : l.slice(0, 3)).join(', ')) : ''; }
-    if (v && v.n != null) return `${short(v.n)}${v.year ? ` <small>(${v.year})</small>` : ''}`;
-    if (v && v.year) return k === 'born' ? `${v.day ? new Date(`${v.day}T00:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }) : v.year} <small>(age ${age(v.year, v.day ? v.day.slice(5) : '')})</small>` : `${v.year} <small>(${age(v.year)} years ago)</small>`;
-    return '';
-  }
-  function factsHtml(a, c) {
-    const set = FACTS[a.cat === 'person' ? 'person' : a.cat === 'country' ? 'country' : 'company'];
-    const f = a.facts || {};
-    const tiles = set.map(([k, label]) => [label, factValue(k, f[k], a.title)]).filter(([, v]) => v);
-    const owns = [...(f.owns || []), ...(f.subsidiaries || [])].filter((x, i, l) => x !== a.title && l.indexOf(x) === i).slice(0, 10);
-    const aw = a.awards && a.awards.count ? a.awards : null;
-    const fol = (a.followers || []).filter((x) => x.followers > 0);
-    if (!tiles.length && !owns.length && !aw && !fol.length) return '';
-    const title = a.cat === 'person' ? `Who is <span data-no-i18n>${esc(a.name)}</span>?` : a.cat === 'country' ? `<span data-no-i18n>${esc(a.name)}</span> at a glance` : `About <span data-no-i18n>${esc(a.name)}</span>`;
-    return `<section class="lps-card lps-facts" style="--cat:${c.color}"><h2>${title}</h2><p class="lps-sub">From Wikidata, the free database behind Wikipedia.</p>
-      ${tiles.length ? `<dl class="lps-fgrid">${tiles.map(([l, v]) => `<div><dt>${l}</dt><dd data-no-i18n>${v}</dd></div>`).join('')}</dl>` : ''}
-      ${owns.length ? `<h3>What <span data-no-i18n>${esc(a.name)}</span> owns</h3><div class="lps-chips" data-no-i18n>${owns.map((o) => `<a href="/s?find=${encodeURIComponent(o)}">${esc(o)}</a>`).join('')}</div>` : ''}
-      ${aw ? `<h3><span class="lps-big" data-no-i18n>${aw.count}</span> ${aw.count === 1 ? "award" : "awards"}</h3><ul class="lps-awards" data-no-i18n>${aw.recent.map((x) => `<li><b>${esc(x.name)}</b>${x.year ? `<span>${x.year}</span>` : ''}</li>`).join('')}</ul>` : ''}
-      ${fol.length ? `<h3>Followers</h3><div class="lps-fol" data-no-i18n>${fol.map((x) => `<div><b>${short(x.followers)}</b><span>${esc(x.platform)} · ${x.year}</span></div>`).join('')}</div>` : ''}
-      ${a.website ? `<p class="lps-site"><a href="${esc(a.website)}" target="_blank" rel="noopener">Official website ↗</a></p>` : ''}</section>`;
+    const max = Math.max(...months.map((m) => m.value)) || 1;
+    const top = months.reduce((b, m) => (m.value > b.value ? m : b), months[0]);
+    return `<section class="lps-card lps-chart"><h2>Is <span data-no-i18n>${esc(name)}</span> searched more?</h2>
+      <p class="lps-sub">Google searches worldwide, month by month. 100 = the busiest week. Most searched in <b data-no-i18n>${mon(top.month)}</b>. Tap a month.</p>${extra}
+      <div class="lps-cols" role="list">${months.map((m) => `<button type="button" role="listitem" class="${m === top ? 'top' : ''}" data-tip="${mon(m.month)}: ${m.value} of 100" style="--h:${Math.max(2, Math.round((m.value / max) * 100))}%"><i></i><span data-no-i18n>${mon(m.month).split(' ')[0]}</span></button>`).join('')}</div>
+      <p class="lps-tip" aria-live="polite" data-no-i18n>${mon(top.month)}: ${top.value} of 100</p></section>`;
   }
   // Real numbers from official or first-party sources (World Bank, SEC, Yahoo Finance, Deezer, TheSportsDB, TSE).
   const money = (v) => { const a = Math.abs(v), sg = v < 0 ? '−' : ''; return a >= 1e12 ? `${sg}$${(a / 1e12).toFixed(2)}T` : a >= 1e9 ? `${sg}$${(a / 1e9).toFixed(1)}B` : a >= 1e6 ? `${sg}$${(a / 1e6).toFixed(1)}M` : `${sg}$${num(Math.round(a))}`; };
@@ -211,19 +179,22 @@
       <p class="lps-sub">${k.owner ? `Numbers for <span data-no-i18n>${esc(k.owner)}</span>, the company that owns <span data-no-i18n>${n}</span>. ` : ''}Source: <span data-no-i18n>${sources}</span></p>
       ${tiles}${sp}${series}${list}</section>`;
   }
+  const signed = (p) => `${p > 0 ? '+' : p < 0 ? '−' : ''}${Math.abs(p)}%`;
+  const searchStats = (g, world) => `<div class="lps-stats three">${[
+    g && g.change_pct != null ? stat(signed(g.change_pct), 'Google searches, last 4 weeks vs the 4 before') : '',
+    g && g.yoy_pct != null ? stat(signed(g.yoy_pct), 'Google searches vs the same weeks last year') : g && g.peak ? stat(dayLabel(g.peak.day), g.peak.times >= 1.5 ? `its busiest week of the year: ${g.peak.times}× a normal week` : 'its busiest week of the year') : '',
+    world && world[0] ? stat(`<span data-no-i18n>${esc(world[0].name)}</span>`, 'searches for it most, for its size', '', true) : '',
+  ].join('')}</div>`;
   function freeHtml(a, c) {
     const name = a.name;
-    const img = a.country ? `<img class="lps-av flag" src="/assets/flags/${a.country.toLowerCase()}.svg" alt="">` : a.image ? `<img class="lps-av" src="${esc(a.image)}" alt="">` : '';
-    const peak = a.peak ? (a.peak.times >= 2 ? stat(`<span class="lps-count" data-n="${a.peak.times}" data-d="1">${a.peak.times}</span>×`, `a normal day’s reads on ${dayLabel(a.peak.day)}, the busiest day`)
-      : stat(`<span class="lps-count" data-n="${a.peak.views}">${short(a.peak.views)}</span>`, `reads on ${dayLabel(a.peak.day)}, the busiest day`)) : '';
-    const where = a.countries && a.countries.length >= 2 ? `<div><h3>Where do people search for <span data-no-i18n>${esc(name)}</span>?</h3><p class="lps-sub">Google searches in our 14 countries, last 30 days. 100 = the most.</p>${bars(a.countries, (r) => r.name, (r) => r.value, '', true)}</div>` : '';
-    const langs = a.top_languages && a.top_languages.length >= 2 ? `<div><h3>Which languages read about <span data-no-i18n>${esc(name)}</span>?</h3><p class="lps-sub">Share of Wikipedia reads, last 30 days.</p>${bars(a.top_languages, (r) => langName(r.lang), (r) => r.share, '%')}</div>` : '';
-    const news = a.headlines && a.headlines.length ? `<section class="lps-card"><h2>What’s in the news?</h2><p class="lps-sub">The latest headlines that name <span data-no-i18n>${esc(name)}</span>.</p>
+    const img = a.country ? `<img class="lps-av flag" src="/assets/flags/${a.country.toLowerCase()}.svg" alt="" onerror="this.remove()">` : a.image ? `<img class="lps-av" src="${esc(a.image)}" alt="">` : `<span class="lps-av lps-mono" aria-hidden="true">${esc(name[0] || '?')}</span>`;
+    const g = a.searches;
+    const where = a.world && a.world.length >= 2 ? `<section class="lps-card"><h2>Where do people search for <span data-no-i18n>${esc(name)}</span>?</h2><p class="lps-sub">Google searches by country, last 12 months. 100 = the country that searches it most for its size.</p>${bars(a.world, (r) => r.name, (r) => r.value, '', true)}</section>` : '';
+    const news = a.headlines && a.headlines.length ? `<section class="lps-card"><h2>What’s in the news?</h2><p class="lps-sub">The latest headlines that name <span data-no-i18n>${esc(name)}</span> (Google News).</p>
       <ul class="lps-news" data-no-i18n>${a.headlines.map((h) => `<li><a href="${esc(h.link)}" target="_blank" rel="noopener"><b>${esc(h.title)}</b><span>${esc(h.source)}${h.day ? ` · ${dayLabel(h.day)}` : ''}</span></a></li>`).join('')}</ul></section>` : '';
-    const headCard = `<section class="lps-card" style="--cat:${c.color}"><div class="lps-prof">${img}<div class="lps-who"><div class="lps-tags"><span class="lps-tag">${c.label}</span></div><h1 data-no-i18n>${esc(name)}</h1><p>${esc(a.description || a.extract)}</p></div></div></section>`;
-    const wiki = `<div class="lps-stats three">${stat(`<span class="lps-count" data-n="${a.views_30d}">${short(a.views_30d)}</span>`, 'Wikipedia reads, last 30 days', delta(a.change_pct, 'vs the 30 days before'))}${peak}${stat(`<span class="lps-count" data-n="${a.languages}">${num(a.languages)}</span>`, 'languages have a Wikipedia page about them')}</div>`;
+    const headCard = `<section class="lps-card" style="--cat:${c.color}"><div class="lps-prof">${img}<div class="lps-who"><div class="lps-tags"><span class="lps-tag">${c.label}</span></div><h1 data-no-i18n>${esc(name)}</h1><p data-no-i18n>${esc(a.description)}</p>${a.website ? `<p class="lps-site"><a href="${esc(a.website)}" target="_blank" rel="noopener">Official website ↗</a></p>` : ''}</div></div></section>`;
     return `${headCard}
-      ${statsHtml(a.key_stats, c, name)}${factsHtml(a, c)}${chart(a.months || [], name, wiki) || `<section class="lps-card lps-attn"><h2>How many people read about <span data-no-i18n>${esc(name)}</span>?</h2>${wiki}</section>`}${where || langs ? `<section class="lps-card lps-two">${where}${langs}</section>` : ''}${news}`;
+      ${statsHtml(a.key_stats, c, name)}${g ? chart(g.months || [], name, searchStats(g, a.world)) : ''}${where}${news}`;
   }
   // Numbers count up, bars grow, months answer a tap: small touches so the page feels alive (off with reduced motion).
   function liven() {

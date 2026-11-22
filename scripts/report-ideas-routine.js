@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Weekly "ideas to copy" for the Country Inspiration Report: for each tracked country, Gemini reads
-// that country's last-30-days report (lib/report.js: Wikipedia, GDELT, holidays) and writes 3 short ideas a brand or
+// that country's last-30-days report (lib/report.js: Google searches, GDELT, holidays) and writes 3 short ideas a brand or
 // creator from another country could adapt. Saved in public.report_insights (private).
 //   node scripts/report-ideas-routine.js        Env: SUPABASE_URL, SUPABASE_KEY (secret), GEMINI_API_KEY
 'use strict';
@@ -33,8 +33,7 @@ function geminiJson(apiKey) {
 function digest(c) {
   return {
     country: c.country,
-    most_read_wikipedia: c.wikipedia.map((w) => `${w.title} (${w.days} days in the top 30)`),
-    rising_on_wikipedia_this_week: c.wikipedia_rising.map((w) => w.title),
+    top_google_searches: ((c.searches && c.searches.top) || []).map((q) => `${q.query} (about ${q.traffic} searches, ${q.days} days trending)`),
     news_topics: c.news_focus.topics.map((t) => `${t.topic} ${t.pct}%`),
     news_cooperation_share: c.news_focus.cooperation_pct,
     countries_most_mentioned_with: c.news_partners.map((p) => p.country),
@@ -44,9 +43,9 @@ function digest(c) {
 
 function prompt(d) {
   return `You advise marketing agencies and creators who want inspiration from other countries.
-Below is what people in country ${d.country} read most on Wikipedia, what the news there talked about (GDELT), over the last 30 days, and its next public holidays.
+Below is what people in country ${d.country} searched most on Google, what the news there talked about (GDELT), over the last 30 days, and its next public holidays.
 Write exactly 3 concrete content or campaign ideas that a brand or creator from ANOTHER country could adapt from this.
-Each idea starts from ONE specific item in the data (a rising or most-read page, or an upcoming holiday) and says what to post, on which platform and when. No generic ideas such as "a content series about trends".
+Each idea starts from ONE specific item in the data (a top search, or an upcoming holiday) and says what to post, on which platform and when. No generic ideas such as "a content series about trends".
 Rules: use only the data below; never invent numbers, names or facts; no politics, tragedies, deaths or violence as campaign hooks; plain English.
 Reply with only a JSON array of 3 objects: {"title": at most 8 words, "idea": at most 30 words, "based_on": the item(s) from the data it comes from, at most 12 words}.
 
