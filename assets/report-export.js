@@ -19,6 +19,7 @@
     document.head.appendChild(s);
   }));
   const save = (blob, file) => {
+    if (document.documentElement.classList.contains('embed') && parent !== window) return parent.postMessage({ lp: 'file', blob, name: file }, location.origin);
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = file;
@@ -78,7 +79,7 @@
         charts: [yc(L('GDP per person, US$'), 'per_person'), yc(L('Growth after inflation'), 'growth_pct', 'pct1')], take: x.econTake || '' });
     }
     slides.push({ type: 'text', title: L('How to read the numbers'), terms: x.glossary, foot: x.sources });
-    return { slides, title: names.join(' vs '), file: `like-polling-${cs.map((c) => c.country.toLowerCase()).join('-')}-report` };
+    return { slides, title: names.join(' vs '), file: `${cs.map((c) => c.country.toLowerCase()).join('-')}-report` };
   }
 
   const host = (u) => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return u; } };
@@ -139,7 +140,7 @@
       take: L('{a} leads {f} with {p}% of the attention.', { a: plain(f.ranked[0].title), f: x.fieldName, p: f.share_pct }) });
     mentionsSlide(slides, data, s.title, x);
     slides[slides.length - 1].foot = `${L('Sources')}: ${x.sources}`;
-    return { slides, title: s.title, file: `like-polling-brand-${s.title.toLowerCase().normalize('NFD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-report` };
+    return { slides, title: s.title, file: `${s.title.toLowerCase().normalize('NFD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-report` };
   }
 
   function entityDeck(data, x) {
@@ -197,7 +198,7 @@
     extraSlides(slides, data, s.title, x);
     mentionsSlide(slides, data, s.title, x);
     slides[slides.length - 1].foot = `${L('Sources')}: ${x.sources}`;
-    return { slides, title: s.title, file: `like-polling-${data.type}-${s.title.toLowerCase().normalize('NFD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-report` };
+    return { slides, title: s.title, file: `${s.title.toLowerCase().normalize('NFD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-report` };
   }
 
   const deckOf = (data, x) => {
@@ -433,5 +434,36 @@
     save(blob, `${deckOf(data, x).file}.xlsx`);
   }
 
-  window.LP_EXPORT = { pptx, xlsx, deck: deckOf };
+  // Graphs as a PDF file: each report section drawn to an image (html2canvas) and laid out on A4 pages (jsPDF).
+  const SVG_STYLE = ['fill', 'fill-opacity', 'stroke', 'stroke-width', 'stroke-opacity', 'stroke-dasharray', 'stroke-linecap', 'stroke-linejoin', 'opacity', 'font-size', 'font-family', 'font-weight', 'text-anchor', 'dominant-baseline'];
+  const inlineSvg = (svg) => [svg, ...svg.querySelectorAll('*')].forEach((el) => {
+    const cs = getComputedStyle(el);
+    SVG_STYLE.forEach((k) => el.style.setProperty(k, cs.getPropertyValue(k)));
+  });
+  async function pdf(data, x) {
+    const [h2c, lib] = await Promise.all([load('/assets/vendor/html2canvas-1.4.1.min.js', 'html2canvas'), load('/assets/vendor/jspdf-4.2.1.umd.min.js', 'jspdf')]);
+    const root = document.getElementById('report');
+    root.querySelectorAll('svg').forEach(inlineSvg);
+    const doc = new lib.jsPDF({ unit: 'pt', format: 'a4', compress: true });
+    const PW = doc.internal.pageSize.getWidth(), PH = doc.internal.pageSize.getHeight(), M = 28, W = PW - 2 * M, MAXH = PH - 2 * M;
+    const skip = (n) => !!(n.classList && (n.classList.contains('exports') || n.classList.contains('print-only')));
+    let y = M;
+    for (const el of root.querySelectorAll(':scope > .rhead, :scope > .rsec')) {
+      const c = await h2c(el, { scale: 1.6, backgroundColor: '#ffffff', useCORS: true, logging: false, ignoreElements: skip });
+      if (!c.width || !c.height) continue;
+      const k = W / c.width, step = Math.floor(MAXH / k);
+      for (let top = 0; top < c.height; top += step) {
+        const part = document.createElement('canvas');
+        part.width = c.width; part.height = Math.min(step, c.height - top);
+        part.getContext('2d').drawImage(c, 0, top, c.width, part.height, 0, 0, c.width, part.height);
+        const h = part.height * k;
+        if (y + h > PH - M && y > M) { doc.addPage(); y = M; }
+        doc.addImage(part.toDataURL('image/jpeg', 0.88), 'JPEG', M, y, W, h);
+        y += h + 14;
+      }
+    }
+    save(doc.output('blob'), `${deckOf(data, x).file} - graphs.pdf`);
+  }
+
+  window.LP_EXPORT = { pdf, pptx, xlsx, deck: deckOf };
 })();

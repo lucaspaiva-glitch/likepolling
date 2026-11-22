@@ -250,3 +250,13 @@ html.lp-subj .wrap > section, html.lp-subj .wrap > .tm-tabs { display: none !imp
 .lps-load .lps-steps li.done::before { content: "✓ "; color: #1e7e34; }
 @keyframes lps-cursor { 50% { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .lps-load .lps-steps li.now::after { animation: none; } }
+
+/* Full history: downloads only; the report itself renders off screen to build the files. */
+.lps-frame { position: absolute; left: -10000px; top: 0; width: 900px; height: 600px; pointer-events: none; }
+.lps-dl { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.lps-dl button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; padding: 14px 12px; border-radius: 14px; line-height: 1.15; text-align: center; }
+.lps-dl b { font-size: 16px; }
+.lps-dl small { font-size: 12px; font-weight: 500; opacity: .85; }
+.lps-dl button.busy { cursor: progress; opacity: .75; }
+.lps-dlerr { margin: 10px 0 0; color: #d70015; font-size: 15px; }
+@media (max-width: 560px) { .lps-dl { grid-template-columns: 1fr; } }

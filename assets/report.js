@@ -285,7 +285,7 @@
   const snapshot = (printed) => `<p class="since snap"><b>${L('A snapshot in time.')}</b> ${L('This report captures {date}. Like Polling keeps a dated copy in its archive, so this moment can be compared with any later one.', { date: dlong(isoDay(printed)) })}</p>`;
   const dates = (from, to, printed) => `${snapshot(printed)}<dl class="dates"><div><dt>${L('Gathered from')}</dt><dd>${dlong(from)}</dd></div><div><dt>${L('Latest data')}</dt><dd>${dlong(to)}</dd></div><div><dt>${L('Printed')}</dt><dd>${dlong(isoDay(printed))}</dd></div></dl>`;
   const exportBar = (data, own) => `<div class="actions exports"><span class="exl">${L('Download as')}</span>
-    <button class="btn" type="button" data-ex="pdf">PDF</button>
+    <button class="btn" type="button" data-ex="pdf">${L('Graphs')}<small>PDF</small></button>
     <button class="btn ghost" type="button" data-ex="pptx">${L('Presentation')}<small>PowerPoint · Keynote · Google Slides</small></button>
     <button class="btn ghost" type="button" data-ex="xlsx">Excel<small>Excel · Google Sheets · Numbers</small></button>
     </div>`;
@@ -298,15 +298,17 @@
   function wire(data, x) {
     $('report').querySelectorAll('[data-ex]').forEach((b) => b.addEventListener('click', () => exportAs(b.dataset.ex, data, x, b)));
   }
+  const embedded = () => document.documentElement.classList.contains('embed') && parent !== window;
   async function exportAs(kind, data, x, btn) {
-    if (kind === 'pdf') return window.print();
-    if (busy || !window.LP_EXPORT) return;
+    if (busy || !window.LP_EXPORT) { if (embedded()) parent.postMessage({ lp: 'exported', kind, ok: false }, location.origin); return; }
     busy = true;
+    let ok = true;
     const was = btn && btn.innerHTML;
     if (btn) { btn.disabled = true; btn.textContent = L('Preparing…'); }
-    try { await window.LP_EXPORT[kind](data, x); } catch (e) { alert(L('Couldn\'t make the file. Please try again.')); } finally {
+    try { await window.LP_EXPORT[kind](data, x); } catch (e) { ok = false; if (!embedded()) alert(L('Couldn\'t make the file. Please try again.')); } finally {
       busy = false;
       if (btn) { btn.disabled = false; btn.innerHTML = was; }
+      if (embedded()) parent.postMessage({ lp: 'exported', kind, ok }, location.origin);
     }
   }
   const COLORS = ['#b0000e', '#1d1d1f', '#9a9a9a', '#d08a2e'];

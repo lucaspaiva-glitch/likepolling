@@ -110,21 +110,32 @@
       const who = sample.name;
       const [head, attn] = profile(data, cat);
       page.innerHTML = `<section class="lps-card" style="--cat:${CATS[cat].color}">${head}</section>${statsHtml(data.key_stats, CATS[cat], slug === 'lula-vs-bolsonaro' ? 'Lula vs Bolsonaro' : who)}<section class="lps-card lps-attn" style="--cat:${CATS[cat].color}">${attn}</section>
-        <section class="lps-card" id="lps-hist" style="--cat:${CATS[cat].color}"><h2>Full history</h2><p class="lps-sub">Graphs since 2017, saved snapshots and downloads. Unlocked in this free sample.</p>
-        <div class="lps-acts"><button type="button" data-act="graphs">Graphs</button><button type="button" class="ghost" data-act="pdf">Download PDF presentation</button><button type="button" class="ghost" data-act="xlsx"><span data-no-i18n>${esc(who)}’s</span> data in Excel</button></div>
-        <iframe class="lps-frame" id="lps-frame" title="Full history of ${esc(who)}" src="/report?embed=1"></iframe></section>`;
+        <section class="lps-card" id="lps-hist" style="--cat:${CATS[cat].color}"><h2>Full history</h2><p class="lps-sub">Graphs since 2017, saved snapshots and every number, ready to download. Unlocked in this free sample.</p>
+        <div class="lps-acts lps-dl"><button type="button" data-act="pdf"><b>↓ Graphs</b><small>PDF</small></button><button type="button" data-act="pptx"><b>↓ Presentation</b><small>PowerPoint · Keynote · Google Slides</small></button><button type="button" data-act="xlsx"><b>↓ Excel</b><small>Excel · Google Sheets · Numbers</small></button></div>
+        <p class="lps-dlerr" role="status" hidden>Couldn’t make the file. Please try again.</p>
+        <iframe class="lps-frame" id="lps-frame" title="Full history of ${esc(who)}" src="/report?embed=1" aria-hidden="true" tabindex="-1"></iframe></section>`;
       liven();
       const frame = document.getElementById('lps-frame');
+      const errLine = page.querySelector('.lps-dlerr');
       const send = (m) => frame.contentWindow && frame.contentWindow.postMessage(m, location.origin);
+      let ready = false, queued = null;
+      const btns = [...page.querySelectorAll('.lps-dl button')];
+      const busy = (b, on) => { b.disabled = on; b.classList.toggle('busy', on); const sm = b.querySelector('small'); if (on) { b.dataset.was = sm.textContent; sm.textContent = 'Preparing…'; } else if (b.dataset.was) sm.textContent = b.dataset.was; };
       window.addEventListener('message', (e) => {
         if (e.origin !== location.origin || e.source !== frame.contentWindow || !e.data) return;
-        if (e.data.lp === 'ready') send({ lp: 'data', data });
-        if (e.data.lp === 'height') frame.style.height = `${Math.max(400, e.data.h + 4)}px`;
+        if (e.data.lp === 'ready') { send({ lp: 'data', data }); ready = true; if (queued) { send({ lp: 'export', kind: queued }); queued = null; } }
+        if (e.data.lp === 'file' && e.data.blob) {
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(e.data.blob); a.download = e.data.name || 'report';
+          document.body.appendChild(a); a.click();
+          setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000);
+        }
+        if (e.data.lp === 'exported') { btns.filter((b) => b.dataset.act === e.data.kind).forEach((b) => busy(b, false)); errLine.hidden = e.data.ok !== false; }
       });
-      page.querySelector('.lps-acts').addEventListener('click', (e) => {
-        const b = e.target.closest('button'); if (!b) return;
-        if (b.dataset.act === 'graphs') frame.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        else send({ lp: 'export', kind: b.dataset.act });
+      page.querySelector('.lps-dl').addEventListener('click', (e) => {
+        const b = e.target.closest('button'); if (!b || b.disabled) return;
+        errLine.hidden = true; busy(b, true);
+        if (ready) send({ lp: 'export', kind: b.dataset.act }); else queued = b.dataset.act;
       });
     } catch (err) { fail(err.message); }
   }
