@@ -54,12 +54,12 @@
 /* Soft blur over the centre while YouTube's small start-up controls fade out. */
 .lp-veil { position: absolute; left: 32%; top: 28%; z-index: 1; width: 36%; height: 44%; border-radius: 50%; backdrop-filter: blur(7px); -webkit-backdrop-filter: blur(7px); -webkit-mask-image: radial-gradient(closest-side, #000 55%, transparent); mask-image: radial-gradient(closest-side, #000 55%, transparent); pointer-events: none; opacity: 0; transition: opacity .4s; }
 .lp-veil.on { opacity: 1; }
-.lp-pvc { position: absolute; left: 6px; top: 34px; z-index: 3; display: flex; flex-direction: column; gap: 4px; opacity: 0; transition: opacity .2s; }
+.lp-pvc { position: absolute; left: 0; top: 30px; z-index: 3; display: flex; flex-direction: column; gap: 8px; padding: 6px; opacity: 0; transition: opacity .2s; }
 .lp-pvc.on { opacity: 1; }
-.lp-pvc button { display: grid; place-items: center; width: 22px; height: 22px; padding: 0; border: 1px solid rgba(255,255,255,.25); border-radius: 50%; background: rgba(0,0,0,.6); color: #fff; cursor: pointer; font: 800 8px/1 ui-monospace, 'SF Mono', Menlo, Consolas, monospace; letter-spacing: .02em; }
+.lp-pvc button { display: grid; place-items: center; width: 38px; height: 38px; padding: 0; border: 1px solid rgba(255,255,255,.25); border-radius: 50%; background: rgba(0,0,0,.6); color: #fff; cursor: pointer; font: 800 12px/1 ui-monospace, 'SF Mono', Menlo, Consolas, monospace; letter-spacing: .02em; }
 .lp-pvc button:hover { background: rgba(0,0,0,.85); }
 .lp-pvc button[aria-pressed="true"] { border-color: rgba(255,42,60,.8); background: #b0000e; }
-.lp-pvc svg { width: 12px; height: 12px; }
+.lp-pvc svg { width: 18px; height: 18px; }
 ${SEL.split(', ').map((s) => `${s} > b, ${s} > i:not(.lp-vph)`).join(', ')} { z-index: 2; }
 .ci-th { overflow: hidden; border-radius: 8px; }
 /* Lower-ranked rows: a smaller screen with the same preview. Rank badge shows only where the rank column is hidden. */
@@ -68,8 +68,8 @@ ${SEL.split(', ').map((s) => `${s} > b, ${s} > i:not(.lp-vph)`).join(', ')} { z-
 a:hover > .lp-rth img { transform: scale(1.04); }
 .lp-rth > b { display: none; position: absolute; left: 5px; top: 5px; padding: 3px 4px; border: 1px solid rgba(255,42,60,.6); border-radius: 3px; background: #7f000a; color: #fff; font: 700 10px/1 ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace; }
 .lp-rth-s { width: 63px; aspect-ratio: 9 / 16; background: #111; }
-.lp-rth .lp-pvc { left: 5px; top: 27px; }
-.lp-rth .lp-pvc button { width: 20px; height: 20px; }
+.lp-rth .lp-pvc { left: 0; top: auto; bottom: 0; flex-direction: row; gap: 6px; padding: 4px; }
+.lp-rth .lp-pvc button { width: 30px; height: 30px; font-size: 10px; }
 @media (max-width: 560px) { .lp-rth-s { width: 50px; } }
 /* Desktop: the video playing with sound, while it's scrolled out of view. */
 .lp-np { position: fixed; left: 44px; bottom: 16px; z-index: 58; display: flex; align-items: center; gap: 8px; padding: 5px 8px 5px 5px; border: 1px solid rgba(255,42,60,.45); border-radius: 9px; background: rgba(20,0,4,.92); box-shadow: 0 8px 24px -8px rgba(60,0,6,.5); opacity: 0; transform: translateY(8px); visibility: hidden; transition: opacity .2s, transform .2s, visibility 0s .2s; }

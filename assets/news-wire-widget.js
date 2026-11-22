@@ -24,6 +24,7 @@
   const FEED_PAGE = 8;
   // British English reads the English Shorts, Creator News and headline translations.
   const dataLang = (l) => (l === 'en-GB' ? 'en' : l);
+  const NEWS_LANG = { US: 'en', GB: 'en', IN: 'en', BR: 'pt', PT: 'pt', MX: 'es', ES: 'es', DE: 'de', FR: 'fr', RU: 'ru', UA: 'uk', KR: 'ko', JP: 'ja', CN: 'zh' };
   const LANGS = ['en', 'en-GB', 'pt', 'pt-PT', 'es', 'fr', 'de', 'ru', 'uk', 'zh', 'hi', 'ko', 'ja'];
   const FLAG = { en: 'us', 'en-GB': 'gb', pt: 'br', 'pt-PT': 'pt', es: 'es', de: 'de', ru: 'ru', uk: 'ua', ko: 'kr', ja: 'jp', fr: 'fr', zh: 'cn', hi: 'in' };
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -684,6 +685,8 @@
         const t = r.title_tr || {};
         const summary = (t.sum && (t.sum[dataLang(lang)] || t.sum.en)) || '';
         const out = summary ? { ...r, summary } : r;
+        // Headlines already in the reader's language stay as the newspaper wrote them.
+        if (NEWS_LANG[r.country_code] === String(lang).split('-')[0]) return out;
         return t[dataLang(lang)] && t[dataLang(lang)] !== r.title ? { ...out, title: t[dataLang(lang)], title_orig: r.title } : out;
       });
       let rows;
