@@ -140,7 +140,7 @@
   const mon = (m) => new Date(`${m}-01T00:00:00Z`).toLocaleDateString('en-GB', { month: 'short', year: 'numeric', timeZone: 'UTC' });
   const dayLabel = (d) => new Date(`${d}T00:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' });
   const langName = (l) => { try { return new Intl.DisplayNames(['en'], { type: 'language' }).of(l); } catch { return l; } };
-  const bars = (rows, label, value, suffix, flag) => `<ul class="lps-bars">${rows.map((r) => `<li>${flag ? `<img src="/assets/flags/${r.code.toLowerCase()}.svg" alt="" width="18" height="13">` : ''}<span data-no-i18n>${esc(label(r))}</span><i><b style="--w:${Math.max(3, value(r))}%"></b></i><em data-no-i18n>${value(r)}${suffix}</em></li>`).join('')}</ul>`;
+  const bars = (rows, label, value, suffix, flag) => `<ul class="lps-bars">${rows.map((r) => `<li>${flag ? `<img src="/assets/flags/${r.code.toLowerCase()}.svg" alt="" width="18" height="13" onerror="this.remove()">` : ''}<span data-no-i18n>${esc(label(r))}</span><i><b style="--w:${Math.max(3, value(r))}%"></b></i><em data-no-i18n>${value(r)}${suffix}</em></li>`).join('')}</ul>`;
   function chart(months, name, extra = '') {
     if (months.length < 3) return '';
     const max = Math.max(...months.map((m) => m.value)) || 1;
