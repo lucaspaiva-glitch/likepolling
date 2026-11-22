@@ -1,0 +1,30 @@
+name: Trending politicians
+
+on:
+  schedule:
+    - cron: '40 6 * * *'
+  push:
+    branches: ['devin/**']
+    paths: ['scripts/politics-routine.js']
+  workflow_dispatch:
+
+concurrency:
+  group: politics
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+      - run: npm ci --omit=dev
+      - name: Top 5 politicians in each country's headlines, with Gemini
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: node scripts/politics-routine.js
