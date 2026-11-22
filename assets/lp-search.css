@@ -178,11 +178,11 @@ html.lp-subj .wrap > section, html.lp-subj .wrap > .tm-tabs { display: none !imp
 .lps-attn .lps-stats { margin-top: 14px; }
 /* Closed: only the bar shows; tapping it opens the samples and the bots. */
 .lps-sbox { transition: padding .35s ease; }
-.lps-search:not(.open) .lps-sbox { padding-top: 12px; padding-bottom: 12px; }
+.lps-search:not(.open) .lps-sbox { padding-top: 12px; padding-bottom: 30px; }
 .lps-samples { max-height: 0; margin-top: 0; opacity: 0; overflow: hidden; transition: max-height .45s ease, margin-top .35s ease, opacity .35s ease .1s; }
 .lps-search.open .lps-samples { max-height: 200px; margin-top: 12px; opacity: 1; }
-.lps-track { opacity: 0; transform: translateY(8px); transition: opacity .4s ease .2s, transform .4s ease .2s; }
-.lps-search.open .lps-track { opacity: 1; transform: none; }
+.lps-bot.more { transition: opacity .4s ease .25s, transform .4s ease .25s; }
+.lps-search:not(.open) .lps-bot.more { opacity: 0; transform: translateY(10px); }
 .lps-search:not(.open) .lps-sform { cursor: text; }
 .lps-sform button .lps-go { display: none; }
 @media (max-width: 560px) {
@@ -192,4 +192,4 @@ html.lp-subj .wrap > section, html.lp-subj .wrap > .tm-tabs { display: none !imp
   .lps-sform button span { display: none; }
   .lps-sform button .lps-go { display: block; color: #fff; }
 }
-@media (prefers-reduced-motion: reduce) { .lps-sbox, .lps-samples, .lps-track { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .lps-sbox, .lps-samples, .lps-bot.more { transition: none; } }
