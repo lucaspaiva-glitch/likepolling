@@ -37,6 +37,13 @@
     form.addEventListener('submit', (e) => { e.preventDefault(); go(input.value); });
     if (window.LPSuggest) window.LPSuggest(input, { onPick: (it) => go(it.title) });
   }
+  const box = document.getElementById('lps');
+  if (box && input) {
+    const open = () => box.classList.add('open');
+    input.addEventListener('focus', open);
+    box.addEventListener('pointerdown', open);
+    if (document.documentElement.classList.contains('lp-subj')) open();
+  }
 
   const page = document.getElementById('lps-page');
   if (!page || !document.documentElement.classList.contains('lp-subj')) return;

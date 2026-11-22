@@ -176,3 +176,20 @@ html.lp-subj .wrap > section, html.lp-subj .wrap > .tm-tabs { display: none !imp
 @media (max-width: 560px) { .lps-kcols { height: 120px; } .lps-split { font-size: 13px; } .lps-split i, .lps-split b { padding: 0 8px; } }
 .lps-chart .lps-stats { margin: 0 0 18px; }
 .lps-attn .lps-stats { margin-top: 14px; }
+/* Closed: only the bar shows; tapping it opens the samples and the bots. */
+.lps-sbox { transition: padding .35s ease; }
+.lps-search:not(.open) .lps-sbox { padding-top: 12px; padding-bottom: 12px; }
+.lps-samples { max-height: 0; margin-top: 0; opacity: 0; overflow: hidden; transition: max-height .45s ease, margin-top .35s ease, opacity .35s ease .1s; }
+.lps-search.open .lps-samples { max-height: 200px; margin-top: 12px; opacity: 1; }
+.lps-track { opacity: 0; transform: translateY(8px); transition: opacity .4s ease .2s, transform .4s ease .2s; }
+.lps-search.open .lps-track { opacity: 1; transform: none; }
+.lps-search:not(.open) .lps-sform { cursor: text; }
+.lps-sform button .lps-go { display: none; }
+@media (max-width: 560px) {
+  .lps-sbox { padding-left: 10px; padding-right: 10px; }
+  .lps-sform { padding-left: 12px; gap: 6px; }
+  .lps-sform button { width: 38px; height: 38px; padding: 0; display: grid; place-items: center; }
+  .lps-sform button span { display: none; }
+  .lps-sform button .lps-go { display: block; color: #fff; }
+}
+@media (prefers-reduced-motion: reduce) { .lps-sbox, .lps-samples, .lps-track { transition: none; } }
