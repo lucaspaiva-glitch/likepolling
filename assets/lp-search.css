@@ -155,3 +155,24 @@ html.lp-subj .wrap > section, html.lp-subj .wrap > .tm-tabs { display: none !imp
 @media (max-width: 760px) { .lps-stats.three { grid-template-columns: 1fr; } .lps-two { grid-template-columns: 1fr; } .lps-cols { gap: 3px; height: 160px; } .lps-cols button span { font-size: 11px; } }
 @media (prefers-reduced-motion: reduce) { .lps-bars i b, .lps-cols button i { transition: none; } }
 .lps-stat b .lps-count { display: inline; margin: 0; font-size: inherit; color: inherit; line-height: inherit; }
+/* facts card */
+.lps-fgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin: 0; }
+.lps-fgrid div { padding: 12px 14px; border-radius: 14px; background: #f5f5f7; min-width: 0; transition: transform .2s; }
+.lps-fgrid div:hover { transform: translateY(-2px); }
+.lps-fgrid dt { font-size: 13px; color: #6e6e73; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; }
+.lps-fgrid dd { margin: 4px 0 0; font-size: 17px; font-weight: 650; line-height: 1.35; overflow-wrap: anywhere; }
+.lps-fgrid small { font-weight: 500; color: #6e6e73; }
+.lps-facts h3 { margin: 20px 0 10px; }
+.lps-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.lps-chips a { padding: 8px 14px; border-radius: 999px; border: 1px solid #e5e5ea; background: #fff; color: #1d1d1f; font-size: 15px; font-weight: 600; text-decoration: none; transition: border-color .2s, color .2s; }
+.lps-chips a:hover { border-color: var(--cat); color: var(--cat); }
+.lps-big { color: var(--cat); font-size: 26px; }
+.lps-awards { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.lps-awards li { display: flex; justify-content: space-between; gap: 12px; padding: 10px 14px; border-radius: 12px; background: #fbf1f1; font-size: 15px; }
+.lps-awards span { color: #6e6e73; font-weight: 600; }
+.lps-fol { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.lps-fol div { padding: 12px 14px; border-radius: 14px; background: #f5f5f7; }
+.lps-fol b { display: block; font-size: 24px; }
+.lps-fol span { font-size: 14px; color: #6e6e73; }
+.lps-site { margin: 16px 0 0; } .lps-site a { color: #b0000e; font-weight: 650; text-decoration: none; }
+@media (max-width: 560px) { .lps-fgrid { grid-template-columns: 1fr 1fr; } .lps-fgrid dd { font-size: 15px; } }

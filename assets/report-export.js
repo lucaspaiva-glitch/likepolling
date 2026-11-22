@@ -154,7 +154,7 @@
     slides.push({ type: 'kpis', title: L('At a glance'), groups: [{ head: '', cards: [
       { n: `${short(s.views)}${s.change_pct == null ? '' : ` ${s.change_pct >= 0 ? '▲' : '▼'} ${Math.abs(s.change_pct)}%`}`, label: L('Wikipedia views'), sub: L('last 30 days, vs the 30 before') },
       data.field ? { n: L('#{r} of {n}', { r: data.field.rank, n: data.field.compared }), label: L('In its field'), sub: x.fieldName }
-        : all.length > 1 && { n: L('#{r} of {n}', { r: s.rank, n: all.length }), label: L(artist ? 'Among similar people' : 'Among similar brands'), sub: L('by views') },
+        : all.length > 1 && { n: L('#{r} of {n}', { r: s.rank, n: all.length }), label: L(/\b(club|team)\b/i.test(s.description || '') ? 'Among similar clubs' : /politician|president|minister|chancellor|senator|mayor|governor|party leader/i.test(s.description || '') ? 'Among similar politicians' : artist ? 'Among similar people' : 'Among similar brands'), sub: L('by views') },
       { n: String(s.languages), label: L('Wikipedia languages'), sub: L('with a page about them') },
       langTotal && { n: `${abroad}%`, label: L('Read outside English'), sub: L('of {n} views in {k} languages', { n: short(langTotal), k: data.languages.length }) },
       s.peak && { n: dshort(s.peak.day), label: L('Busiest day'), sub: L('{n} views', { n: num(s.peak.views) }) },

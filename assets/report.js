@@ -284,16 +284,15 @@
   const isoDay = (iso) => String(iso).slice(0, 10);
   const snapshot = (printed) => `<p class="since snap"><b>${L('A snapshot in time.')}</b> ${L('This report captures {date}. Like Polling keeps a dated copy in its archive, so this moment can be compared with any later one.', { date: dlong(isoDay(printed)) })}</p>`;
   const dates = (from, to, printed) => `${snapshot(printed)}<dl class="dates"><div><dt>${L('Gathered from')}</dt><dd>${dlong(from)}</dd></div><div><dt>${L('Latest data')}</dt><dd>${dlong(to)}</dd></div><div><dt>${L('Printed')}</dt><dd>${dlong(isoDay(printed))}</dd></div></dl>`;
-  const getYours = () => `<p class="print-only"><span>${L('Get your own report at {site}. From €4, no sign-up.', { site: '<b>likepolling.com/services</b>' })}</span></p>`;
   const exportBar = (data, own) => `<div class="actions exports"><span class="exl">${L('Download as')}</span>
     <button class="btn" type="button" data-ex="pdf">PDF</button>
     <button class="btn ghost" type="button" data-ex="pptx">${L('Presentation')}<small>PowerPoint · Keynote · Google Slides</small></button>
     <button class="btn ghost" type="button" data-ex="xlsx">Excel<small>Excel · Google Sheets · Numbers</small></button>
-    ${data.sample ? `<a class="btn ghost" href="${own}">${L('Get your own report')}</a>` : ''}</div>`;
+    </div>`;
   const plainWords = () => $('report').querySelectorAll('.take').forEach((t) => t.insertAdjacentHTML('afterbegin', `<b class="wtm">${L('What this means')}</b>`));
   const ctx = (data, extra) => ({ L, name, langName, num, short, dshort, tip, wtm: L('What this means'), learnL: L('Learn'),
     since: `${L('Gathered since day one.')} ${L('Like Polling has recorded its sources every day since {date}, the day we started.', { date: dlong(STARTED) })}`,
-    cta: data.sample ? L('Get your own report at {site}. From €4, no sign-up.', { site: 'likepolling.com/services' }) : '', ...extra });
+    cta: '', ...extra });
   const dateList = (from, to, printed) => [[L('Gathered from'), dlong(from)], [L('Latest data'), dlong(to)], [L('Printed'), dlong(isoDay(printed))]];
   let busy = false;
   function wire(data, x) {
@@ -484,7 +483,7 @@
     const top = ppl[0];
     const total = sum(ppl.map((p) => p.views));
     const site = s.website ? `<p class="bsite"><a href="${esc(s.website)}" target="_blank" rel="noopener">${esc(host(s.website))} ↗</a>${s.instagram ? ` · <a href="https://www.instagram.com/${esc(s.instagram)}/" target="_blank" rel="noopener">@${esc(s.instagram)}</a>` : ''}</p>` : '';
-    document.title = `${s.title} · ${tag} · Like Polling`;
+    document.title = `${vsTitle} · ${tag} · Like Polling`;
     const head = `<header class="rhead"><span class="tag">${tag}</span>
       <div class="ehead">${s.image ? `<img src="${esc(s.image)}" alt="">` : ''}<div><h1>${esc(s.title)}</h1>${s.description ? `<p class="muted" style="margin:4px 0 0">${esc(s.description)}</p>` : ''}${site}</div></div>
       <p class="muted">${L('No Wikipedia page of its own yet. This report shows what the open web says about it.')}</p>
@@ -550,7 +549,16 @@
     const langTotal = sum(data.languages.map((l) => l.views));
     const abroad = 100 - pct(s.views, langTotal);
     const second = [...all].sort((a, b) => b.views - a.views).find((p) => !p.me);
-    const tag = L(artist ? 'Extended People Report' : `Extended ${kind} Report`);
+    let tag = L(artist ? 'Extended People Report' : `Extended ${kind} Report`);
+    // The words follow the subject: a club is compared with clubs, a politician with politicians.
+    const d = String(s.description || '');
+    const sub = /\b(club|team)\b/i.test(d) ? 'clubs' : /politician|president|minister|chancellor|senator|mayor|governor|party leader/i.test(d) ? 'politicians'
+      : artist && /footballer|player|athlete|racing driver|boxer|cyclist|swimmer/i.test(d) ? 'athletes' : artist ? 'people' : 'brands';
+    const SIM = { people: ['Compared with {n} similar people.', 'Among similar people', '{s} among similar people, by views.'], brands: ['Compared with {n} similar brands.', 'Among similar brands', '{s} among similar brands, by views.'],
+      clubs: ['Compared with {n} similar clubs.', 'Among similar clubs', '{s} among similar clubs, by views.'], politicians: ['Compared with {n} other politicians.', 'Among similar politicians', '{s} among similar politicians, by views.'],
+      athletes: ['Compared with {n} similar athletes.', 'Among similar athletes', '{s} among similar athletes, by views.'] }[sub];
+    if (sub === 'clubs') tag = L('Extended Club Report');
+    const vsTitle = data.peers_chosen && data.peers.length === 1 ? `${s.title} vs ${plain(data.peers[0].title)}` : s.title;
     const f = data.field;
     const fn = f ? (f.names || {})[LANG_ID().split('-')[0]] || f.name : '';
     const sign = (p) => `${p > 0 ? '+' : ''}${p}%`;
@@ -575,17 +583,17 @@
     const bizSec = b ? `<section class="rsec"><h2>${L('How the business is doing')}</h2><p class="note">${esc(bizNote)}</p>
       <div class="vs n2">${[['revenue', bizHeads[0]], ['profit', bizHeads[1]]].map(([k, h]) => { const c = yearBars([{ gdp: b.years }], k, money); return c ? `<div><h3>${h}</h3>${c}</div>` : ''; }).join('')}</div>
       ${bizTake ? `<p class="take">${esc(bizTake)}</p>` : ''}${learn('biz')}</section>` : '';
-    document.title = `${s.title} · ${tag} · Like Polling`;
+    document.title = `${vsTitle} · ${tag} · Like Polling`;
     const head = `<header class="rhead"><span class="tag">${data.sample ? `${L('Free sample')} · ${tag}` : tag}</span>
-      <div class="ehead">${s.image ? `<img src="${esc(s.image)}" alt="">` : ''}<div><h1>${esc(s.title)}</h1><p class="muted" style="margin:4px 0 0">${esc(s.description)}</p></div></div>
-      <p class="muted">${L(artist ? 'Compared with {n} similar people.' : 'Compared with {n} similar brands.', { n: all.length - 1 })}</p>
+      <div class="ehead">${s.image ? `<img src="${esc(s.image)}" alt="">` : ''}<div><h1>${esc(vsTitle)}</h1><p class="muted" style="margin:4px 0 0">${esc(s.description)}</p></div></div>
+      ${all.length > 1 && !(data.peers_chosen && data.peers.length === 1) ? `<p class="muted">${L(SIM[0], { n: all.length - 1 })}</p>` : ''}
       ${dates(data.from, data.to, data.generated_at)}
       ${since('This report also uses Wikimedia\'s public view history.')}
       ${exportBar(data, `/services#${data.type}`)}</header>`;
     const kpis = `<div class="kpis">${[
       kcard(`${short(s.views)}${delta(s.change_pct)}`, L('Wikipedia views'), L('last 30 days, vs the 30 before'), area(s.series.map((d) => d.views))),
       f ? kcard(L('#{r} of {n}', { r: f.rank, n: f.compared }), L('In its field'), esc(fn), cols(f.ranked.map((p) => p.views), f.rank <= f.ranked.length ? f.rank - 1 : -1))
-        : all.length > 1 ? kcard(L('#{r} of {n}', { r: s.rank, n: all.length }), L(artist ? 'Among similar people' : 'Among similar brands'), L('by views'), cols([...all].sort((a, b) => b.views - a.views).map((p) => p.views), s.rank - 1)) : '',
+        : all.length > 1 ? kcard(L('#{r} of {n}', { r: s.rank, n: all.length }), L(SIM[1]), L('by views'), cols([...all].sort((a, b) => b.views - a.views).map((p) => p.views), s.rank - 1)) : '',
       kcard(String(s.languages), L('Wikipedia languages'), L('with a page about them'), meter(pct(s.languages, Math.max(...all.map((p) => p.languages))))),
       langTotal ? kcard(`${abroad}%`, L('Read outside English'), L('of {n} views in {k} languages', { n: short(langTotal), k: data.languages.length }), ring(abroad)) : '',
       s.peak ? kcard(dshort(s.peak.day), L('Busiest day'), L('{n} views', { n: num(s.peak.views) }), cols(s.series.map((d) => d.views), s.series.findIndex((d) => d.day === s.peak.day))) : '',
@@ -638,13 +646,13 @@
     if (s.change_pct) know.push({ big: `${s.change_pct > 0 ? '+' : '−'}${Math.abs(s.change_pct)}%`, line: L(s.change_pct > 0 ? 'more Wikipedia views for {s} than the month before.' : 'fewer Wikipedia views for {s} than the month before.', { s: s.title }) });
     if (langTotal && data.languages.length > 1) know.push({ big: oneIn(abroad), line: L('readers of {s} used a language other than English.', { s: s.title }) });
     if (second && s.views >= second.views && s.views >= 1.2 * second.views) know.push({ big: `${times(s.views, second.views)}×`, line: L('{s} had {x}× the views of {b}, the next most-viewed.', { s: s.title, x: times(s.views, second.views), b: second.title }) });
-    else if (second && !f) know.push({ big: L('#{r} of {n}', { r: s.rank, n: all.length }), line: L(artist ? '{s} among similar people, by views.' : '{s} among similar brands, by views.', { s: s.title }) });
+    else if (second && !f) know.push({ big: L('#{r} of {n}', { r: s.rank, n: all.length }), line: L(SIM[2], { s: s.title }) });
     const avg = s.series.length > 2 ? sum(s.series.map((d) => d.views)) / s.series.length : 0;
     if (s.peak && avg && s.peak.views >= 1.5 * avg) know.push({ big: `${times(s.peak.views, avg)}×`, line: L('On {day}, views of {s} were {x}× a normal day.', { day: dshort(s.peak.day), s: s.title, x: times(s.peak.views, avg) }) });
     if (f) know.unshift({ big: L('#{r} of {n}', { r: f.rank, n: f.compared }), line: L('{s} in {f}, by Wikipedia views.', { s: s.title, f: fn }) });
     const mo = data.moments && data.moments.list.length ? [...data.moments.list].sort((a, b) => b.views - a.views)[0] : null;
     if (mo && mo.times >= 3) know.splice(1, 0, { big: `${Math.round(mo.times)}×`, line: L('On {day}, {s} had its biggest media moment of the year: {x}× a normal day on Wikipedia.', { day: dlong(mo.day), s: s.title, x: Math.round(mo.times) }) });
-    $('report').innerHTML = head + withSources(knowSec(know.slice(0, 3), kpis) + growSec + timeSec + ytSec + fieldSec + spSec + sdSec + bizSec + productsSec(data, s.title) + momentsSec(data, s.title) + searchesSec(data, s.title) + releasesSec(data, s.title) + langs + ctry + mentionsSec(data, s.title) + gtr + qualSec, 'Sources', srcText) + (data.sample ? getYours() : '');
+    $('report').innerHTML = head + withSources(knowSec(know.slice(0, 3), kpis) + growSec + timeSec + ytSec + fieldSec + spSec + sdSec + bizSec + productsSec(data, s.title) + momentsSec(data, s.title) + searchesSec(data, s.title) + releasesSec(data, s.title) + langs + ctry + mentionsSec(data, s.title) + gtr + qualSec, 'Sources', srcText) ;
     plainWords();
     wire(data, ctx(data, { know: know.slice(0, 3), fieldName: fn, fieldTake: ft, tag, title: s.title, subtitle: s.description, dates: dateList(data.from, data.to, data.generated_at), sources: srcText, quality: qual, bizNote, bizHeads, bizTake, bizUnit: unit }));
     show('report');
@@ -697,7 +705,7 @@
 
     const know = knowCountry(cs);
     const glanceCols = `<div class="cols n${cs.length}">${cs.map((c) => `<div class="col">${cs.length > 1 ? `<h3>${esc(name(c.country))}</h3>` : ''}${glance(c)}</div>`).join('')}</div>`;
-    $('report').innerHTML = head + withSources(knowSec(know, glanceCols) + body.join(''), 'Sources and limits', srcText, glossary()) + (data.sample ? getYours() : '');
+    $('report').innerHTML = head + withSources(knowSec(know, glanceCols) + body.join(''), 'Sources and limits', srcText, glossary()) ;
     plainWords();
     wire(data, ctx(data, { know, tag, title, subtitle: L(cs.length > 1 ? 'What these countries read and talked about.' : 'What this country read and talked about.'),
       dates: allDays.length ? dateList(allDays[0], allDays[allDays.length - 1], data.generated_at) : [], sources: srcText, glossary: terms(), econTake: econ.take || '' }));

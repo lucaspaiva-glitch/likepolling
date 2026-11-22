@@ -27,14 +27,14 @@ const COUNTRY_NAMES = new Intl.DisplayNames(['en'], { type: 'region' });
 
 // Free part of a search page, plus a rough category for the colors and the right Gumroad product.
 async function about(fetchImpl, q) {
-  const body = await free.freePage(fetchImpl, q, { countryNames: (c) => COUNTRY_NAMES.of(c) });
+  const countryOf = (title) => report.COUNTRIES.find((c) => COUNTRY_NAMES.of(c) === title || (c === 'US' && title === 'United States') || (c === 'GB' && title === 'United Kingdom'));
+  const classify = (desc, title) => (countryOf(title) ? 'country'
+    : entity.TYPES.artist.words.test(desc) || /politician|president|minister|chancellor|mayor|governor|senator|congress|parliament|party leader|monarch|king of|queen of|player|coach|person/i.test(desc) ? 'person'
+      : /club|team|football|league/i.test(desc) ? 'sport' : entity.TYPES.company.words.test(desc) ? 'brand' : 'topic');
+  const body = await free.freePage(fetchImpl, q, { countryNames: (c) => COUNTRY_NAMES.of(c), classify });
   if (!body) throw fail(404, 'Nothing found for that search.');
   if (body.disambiguation) throw fail(404, 'That name means several things. Try a fuller name.');
-  const desc = body.description;
-  const cc = report.COUNTRIES.find((c) => COUNTRY_NAMES.of(c) === body.title || (c === 'US' && body.title === 'United States') || (c === 'GB' && body.title === 'United Kingdom'));
-  const cat = cc ? 'country' : entity.TYPES.artist.words.test(desc) || /politician|president|minister|chancellor|mayor|governor|senator|congress|parliament|party leader|monarch|king of|queen of|player|coach|person/i.test(desc) ? 'person'
-    : /club|team|football|league/i.test(desc) ? 'sport' : entity.TYPES.company.words.test(desc) ? 'brand' : 'topic';
-  return { ...body, cat, country: cc || null };
+  return { ...body, country: countryOf(body.title) || null };
 }
 const hits = new Map();
 

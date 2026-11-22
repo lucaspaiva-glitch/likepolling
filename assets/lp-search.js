@@ -134,6 +134,34 @@
       <div class="lps-cols" role="list">${months.map((m) => `<button type="button" role="listitem" class="${m === top ? 'top' : ''}" data-tip="${mon(m.month)}: ${short(m.views)} reads" style="--h:${Math.max(2, Math.round((m.views / max) * 100))}%"><i></i><span data-no-i18n>${mon(m.month).split(' ')[0]}</span></button>`).join('')}</div>
       <p class="lps-tip" aria-live="polite" data-no-i18n>${mon(top.month)}: ${short(top.views)} reads</p></section>`;
   }
+  const FACTS = {
+    person: [['born', 'Born'], ['from', 'From'], ['occupation', 'Known as'], ['genre', 'Music'], ['team', 'Plays for'], ['label', 'Record labels'], ['works', 'Known for']],
+    company: [['founded', 'Founded'], ['founders', 'Founded by'], ['ceo', 'CEO'], ['hq', 'Headquarters'], ['industry', 'Industry'], ['employees', 'Employees'], ['exchange', 'Stock exchange'], ['part_of', 'Part of']],
+    country: [['capital', 'Capital'], ['population', 'Population'], ['languages', 'Languages'], ['head_state', 'Head of state'], ['head_gov', 'Head of government'], ['currency', 'Currency']],
+  };
+  const age = (y, m = '') => { const n = new Date().getUTCFullYear() - y - (m && m > new Date().toISOString().slice(5, 10) ? 1 : 0); return n; };
+  function factValue(k, v, name) {
+    if (Array.isArray(v)) { const l = v.filter((x) => x !== name); return l.length ? esc((k === 'from' ? l.slice(0, 1) : l.slice(0, 3)).join(', ')) : ''; }
+    if (v && v.n != null) return `${short(v.n)}${v.year ? ` <small>(${v.year})</small>` : ''}`;
+    if (v && v.year) return k === 'born' ? `${v.day ? new Date(`${v.day}T00:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }) : v.year} <small>(age ${age(v.year, v.day ? v.day.slice(5) : '')})</small>` : `${v.year} <small>(${age(v.year)} years ago)</small>`;
+    return '';
+  }
+  function factsHtml(a, c) {
+    const set = FACTS[a.cat === 'person' ? 'person' : a.cat === 'country' ? 'country' : 'company'];
+    const f = a.facts || {};
+    const tiles = set.map(([k, label]) => [label, factValue(k, f[k], a.title)]).filter(([, v]) => v);
+    const owns = [...(f.owns || []), ...(f.subsidiaries || [])].filter((x, i, l) => x !== a.title && l.indexOf(x) === i).slice(0, 10);
+    const aw = a.awards && a.awards.count ? a.awards : null;
+    const fol = (a.followers || []).filter((x) => x.followers > 0);
+    if (!tiles.length && !owns.length && !aw && !fol.length) return '';
+    const title = a.cat === 'person' ? `Who is <span data-no-i18n>${esc(a.name)}</span>?` : a.cat === 'country' ? `<span data-no-i18n>${esc(a.name)}</span> at a glance` : `About <span data-no-i18n>${esc(a.name)}</span>`;
+    return `<section class="lps-card lps-facts" style="--cat:${c.color}"><h2>${title}</h2><p class="lps-sub">From Wikidata, the free database behind Wikipedia.</p>
+      ${tiles.length ? `<dl class="lps-fgrid">${tiles.map(([l, v]) => `<div><dt>${l}</dt><dd data-no-i18n>${v}</dd></div>`).join('')}</dl>` : ''}
+      ${owns.length ? `<h3>What <span data-no-i18n>${esc(a.name)}</span> owns</h3><div class="lps-chips" data-no-i18n>${owns.map((o) => `<a href="/s?find=${encodeURIComponent(o)}">${esc(o)}</a>`).join('')}</div>` : ''}
+      ${aw ? `<h3><span class="lps-big" data-no-i18n>${aw.count}</span> ${aw.count === 1 ? "award" : "awards"}</h3><ul class="lps-awards" data-no-i18n>${aw.recent.map((x) => `<li><b>${esc(x.name)}</b>${x.year ? `<span>${x.year}</span>` : ''}</li>`).join('')}</ul>` : ''}
+      ${fol.length ? `<h3>Followers</h3><div class="lps-fol" data-no-i18n>${fol.map((x) => `<div><b>${short(x.followers)}</b><span>${esc(x.platform)} · ${x.year}</span></div>`).join('')}</div>` : ''}
+      ${a.website ? `<p class="lps-site"><a href="${esc(a.website)}" target="_blank" rel="noopener">Official website ↗</a></p>` : ''}</section>`;
+  }
   function freeHtml(a, c) {
     const name = a.name;
     const img = a.country ? `<img class="lps-av flag" src="/assets/flags/${a.country.toLowerCase()}.svg" alt="">` : a.image ? `<img class="lps-av" src="${esc(a.image)}" alt="">` : '';
@@ -145,7 +173,7 @@
       <ul class="lps-news" data-no-i18n>${a.headlines.map((h) => `<li><a href="${esc(h.link)}" target="_blank" rel="noopener"><b>${esc(h.title)}</b><span>${esc(h.source)}${h.day ? ` · ${dayLabel(h.day)}` : ''}</span></a></li>`).join('')}</ul></section>` : '';
     return `<section class="lps-card" style="--cat:${c.color}"><div class="lps-prof">${img}<div class="lps-who"><div class="lps-tags"><span class="lps-tag">${c.label}</span></div><h1 data-no-i18n>${esc(name)}</h1><p>${esc(a.description || a.extract)}</p></div></div>
       <div class="lps-stats three">${stat(`<span class="lps-count" data-n="${a.views_30d}">${short(a.views_30d)}</span>`, 'Wikipedia reads, last 30 days', delta(a.change_pct, 'vs the 30 days before'))}${peak}${stat(`<span class="lps-count" data-n="${a.languages}">${num(a.languages)}</span>`, 'languages have a Wikipedia page about them')}</div></section>
-      ${chart(a.months || [], name)}${where || langs ? `<section class="lps-card lps-two">${where}${langs}</section>` : ''}${news}`;
+      ${factsHtml(a, c)}${chart(a.months || [], name)}${where || langs ? `<section class="lps-card lps-two">${where}${langs}</section>` : ''}${news}`;
   }
   // Numbers count up, bars grow, months answer a tap: small touches so the page feels alive (off with reduced motion).
   function liven() {
