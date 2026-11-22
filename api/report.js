@@ -33,8 +33,8 @@ const savedIndicators = (get) => (iso2) => get(`country_indicators?select=indica
 
 // Free part of a search page; the category picks the colors and the right Gumroad product.
 const countryOf = (title) => report.COUNTRIES.find((c) => COUNTRY_NAMES.of(c) === title || (c === 'US' && title === 'United States') || (c === 'GB' && title === 'United Kingdom'));
-async function about(fetchImpl, q, saved = null, rest = null) {
-  const body = await free.freePage(fetchImpl, q, { countryNames: (c) => { try { return COUNTRY_NAMES.of(c); } catch { return c; } }, countryOf, saved, rest });
+async function about(fetchImpl, q, saved = null, rest = null, mid = '') {
+  const body = await free.freePage(fetchImpl, q, { mid, countryNames: (c) => { try { return COUNTRY_NAMES.of(c); } catch { return c; } }, countryOf, saved, rest });
   if (!body) throw fail(404, 'Nothing found for that search.');
   return body;
 }
@@ -218,7 +218,7 @@ function createHandler(deps = {}) {
         return res.status(200).json({ items: list });
       }
       if (req.method === 'GET' && req.query.about) {
-        const body = await about(fetchImpl, String(req.query.about).slice(0, 120), savedIndicators(get), get);
+        const body = await about(fetchImpl, String(req.query.about).slice(0, 120), savedIndicators(get), get, /^\/[mg]\/[\w-]{2,40}$/.test(String(req.query.mid || '')) ? String(req.query.mid) : '');
         res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=86400');
         return res.status(200).json(body);
       }

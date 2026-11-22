@@ -260,3 +260,10 @@ html.lp-subj .wrap > section, html.lp-subj .wrap > .tm-tabs { display: none !imp
 .lps-dl button.busy { cursor: progress; opacity: .75; }
 .lps-dlerr { margin: 10px 0 0; color: #d70015; font-size: 15px; }
 @media (max-width: 560px) { .lps-dl { grid-template-columns: 1fr; } }
+/* Suggestions span the whole search bar and float over the page below. */
+.lps-sform { position: relative; }
+.lps-sform .lp-sug-wrap { position: static; }
+.lps-sform .lp-sug { top: calc(100% + 8px); text-align: left; max-height: min(60vh, 360px); overflow-y: auto; }
+.lps-search:has(.lp-sug:not([hidden])) { overflow: visible; z-index: 60; }
+.lps-search:has(.lp-sug:not([hidden]))::before { display: none; }
+.lps-mono { display: grid; place-items: center; font: 750 40px Inter, sans-serif; color: var(--cat); }

@@ -21,21 +21,25 @@
   const delta = (p, what) => (p == null ? '' : `<em class="${p >= 0 ? 'up' : 'down'}">${p >= 0 ? '▲' : '▼'} ${Math.abs(p)}% ${what}</em>`);
   const plain = (t) => String(t || '').replace(/ \([^)]*\)$/, '');
   const slugOf = (q) => {
-    const t = q.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-    if (/\blula\b|bolsonaro/.test(t)) return 'lula-vs-bolsonaro';
-    if (/^shakira\b/.test(t)) return 'shakira';
-    if (/^zara\b/.test(t)) return 'zara';
+    const t = q.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
+    if (/^(lula|bolsonaro) (vs|x|versus|e|and) (lula|bolsonaro)$/.test(t) && /lula/.test(t) && /bolsonaro/.test(t)) return 'lula-vs-bolsonaro';
+    if (t === 'shakira') return 'shakira';
+    if (t === 'zara') return 'zara';
     if (/^(brazil|brasil)$/.test(t)) return 'brazil';
-    if (/benfica/.test(t)) return 'benfica';
+    if (/^(s ?l )?benfica$/.test(t)) return 'benfica';
     return '';
   };
-  const go = (q) => { q = String(q || '').trim(); if (!q) return; const s = slugOf(q); location.href = s ? `/s/${s}` : `/s?find=${encodeURIComponent(q)}`; };
+  const go = (q, mid = '') => {
+    q = String(q || '').trim(); if (!q) return;
+    const s = slugOf(q);
+    location.href = s ? `/s/${s}` : `/s?${new URLSearchParams(mid ? { find: q, mid } : { find: q })}`;
+  };
 
   const form = document.querySelector('.lps-sform');
   const input = document.getElementById('lps-q');
   if (form && input) {
     form.addEventListener('submit', (e) => { e.preventDefault(); go(input.value); });
-    if (window.LPSuggest) window.LPSuggest(input, { onPick: (it) => go(it.title) });
+    if (window.LPSuggest) window.LPSuggest(input, { onPick: (it) => go(it.title, it.mid) });
   }
   const box = document.getElementById('lps');
   if (box && input) {
@@ -49,6 +53,7 @@
   if (!page || !document.documentElement.classList.contains('lp-subj')) return;
   const slug = location.pathname.replace(/^\/s\/?/, '').replace(/\/$/, '');
   const q = new URLSearchParams(location.search).get('find') || '';
+  const mid = new URLSearchParams(location.search).get('mid') || '';
   if (!slug && !q) { location.replace('/'); return; }
   const sample = SAMPLES[slug];
   if (slug && !sample) { location.replace(`/s?find=${encodeURIComponent(slug.replace(/-/g, ' '))}`); return; }
@@ -216,7 +221,7 @@
 
   async function openSearch() {
     try {
-      const res = await fetch(`/api/report?about=${encodeURIComponent(q)}`);
+      const res = await fetch(`/api/report?${new URLSearchParams(mid ? { about: q, mid } : { about: q })}`);
       const a = await res.json();
       if (!res.ok) throw new Error(a.error || 'Nothing found for that search.');
       loaded();
