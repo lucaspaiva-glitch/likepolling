@@ -55,7 +55,7 @@
   if (input) input.value = sample ? sample.name : q;
   page.hidden = false;
   const STEPS = ['Finding {n}', 'Counting Wikipedia reads', 'Checking Google searches', 'Reading the news', 'Building the page'];
-  const wait = (what) => `<section class="lps-card lps-search lps-load" aria-live="polite"><div class="lps-wait"><b>Bots are building <span data-no-i18n>${esc(what)}</span>’s page</b>
+  const wait = (what) => `<section class="lps-card lps-search lps-load" aria-live="polite"><div class="lps-term" aria-hidden="true"><i></i><i></i><i></i><span>bots — build</span></div><div class="lps-wait"><b>Bots are building <span data-no-i18n>${esc(what)}</span>’s page</b>
     <div class="lps-bar" role="progressbar" aria-label="Loading" aria-valuemin="0" aria-valuemax="100"><i></i></div><ol class="lps-steps">${STEPS.map((t, i) => `<li data-i="${i}">${esc(t.replace('{n}', what))}</li>`).join('')}</ol></div>
     <div class="lps-track" aria-hidden="true">${document.querySelector('.lps-track') ? document.querySelector('.lps-track').innerHTML : ''}</div></section>`;
   let loadTimer = 0;
