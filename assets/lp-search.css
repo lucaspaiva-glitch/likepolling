@@ -1,61 +1,42 @@
-/* Search strip with construction bots (homepage) and search pages /s/… (assets/lp-search.js). */
+/* Search strip with Tron-style bots (homepage) and search pages /s/… (assets/lp-search.js). */
 .lp-head > .lps-search { margin: 16px 0 0; }
-.lps-search { display: block; border-radius: 18px; border: 1px solid #ebebeb; }
-.lps-sbox { padding: 34px 28px 30px; text-align: center; }
-.lps-sbox h1 { margin: 0 0 8px; font-size: clamp(24px, 4vw, 34px); font-weight: 750; letter-spacing: -.02em; }
-.lps-sbox h1 em { font-style: normal; color: var(--red); }
-.lps-sbox > p { margin: 0 auto 20px; max-width: 520px; font-size: 16px; line-height: 1.5; color: #6e6e73; }
-.lps-sform { display: flex; align-items: center; gap: 8px; max-width: 640px; margin: 0 auto; padding: 6px 6px 6px 18px; border: 1.5px solid #d2d2d7; border-radius: 999px; background: #fff; box-shadow: 0 6px 22px -14px rgba(176,0,14,.45); }
-.lps-sform svg { flex: none; color: #8e8e93; }
-.lps-sform input { flex: 1; min-width: 0; border: 0; outline: 0; font-size: 17px; padding: 10px 0; background: none; color: #1d1d1f; }
-.lps-sform button { flex: none; border: 0; border-radius: 999px; background: var(--red); color: #fff; font-weight: 650; font-size: 16px; padding: 12px 22px; }
-.lps-samples { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px; margin-top: 22px; }
-.lps-sl { width: 100%; font: 600 11.5px ui-monospace, Menlo, monospace; letter-spacing: .1em; text-transform: uppercase; color: #8e8e93; margin-bottom: 2px; }
-.lps-chip { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px 8px 10px; border-radius: 999px; background: #fff; border: 1px solid #e5e5ea; font-size: 15px; font-weight: 600; color: #1d1d1f; text-decoration: none; }
-.lps-chip i { width: 10px; height: 10px; border-radius: 50%; background: var(--c); }
-.lps-chip img { width: 16px; height: 12px; border-radius: 2px; }
-.lps-chip em { font-style: normal; font-size: 12px; font-weight: 600; color: var(--c); }
-@media (max-width: 560px) { .lps-sbox { padding: 26px 16px 22px; } .lps-sform { padding-left: 14px; } .lps-sform input { font-size: 16px; } .lps-sform button { padding: 11px 16px; } .lps-chip { font-size: 14px; } }
-.lps-search { position: relative; overflow: hidden; background:
-  linear-gradient(rgba(176,0,14,.055) 1px, transparent 1px) 0 0/22px 22px,
-  linear-gradient(90deg, rgba(176,0,14,.055) 1px, transparent 1px) 0 0/22px 22px,
-  linear-gradient(180deg, #fff, #fbf6f6); }
-.lps-search::before { content: ""; position: absolute; left: 0; right: 0; height: 60px; top: -60px; background: linear-gradient(180deg, transparent, rgba(176,0,14,.07), transparent); animation: lps-scan 6s linear infinite; pointer-events: none; }
-@keyframes lps-scan { to { top: 100%; } }
-.lps-sbox { position: relative; padding: 18px 28px 64px; }
-.lps-status { display: flex; justify-content: space-between; font: 600 11px ui-monospace, Menlo, monospace; letter-spacing: .12em; color: #8e8e93; margin-bottom: 52px; }
-.lps-status i { display: inline-block; width: 7px; height: 7px; margin-right: 6px; border-radius: 50%; background: #34c759; box-shadow: 0 0 0 3px rgba(52,199,89,.18); animation: lps-blink 1.6s ease-in-out infinite; }
-.lps-swrap { position: relative; max-width: 620px; margin: 0 auto; }
-.lps-swrap .lps-sform { margin: 0; }
+.lps-search { display: block; position: relative; overflow: hidden; border-radius: 16px; border: 1px solid rgba(255,42,60,.55); color: #f5f5f7; background:
+  linear-gradient(rgba(255,42,60,.09) 1px, transparent 1px) 0 0/26px 26px,
+  linear-gradient(90deg, rgba(255,42,60,.09) 1px, transparent 1px) 0 0/26px 26px,
+  radial-gradient(120% 140% at 50% 0%, #161a22, #07080b 70%);
+  box-shadow: 0 0 0 1px rgba(255,42,60,.12), 0 0 24px -6px rgba(255,42,60,.45), inset 0 0 30px -12px rgba(255,42,60,.5); }
+.lps-search::before { content: ""; position: absolute; left: -40%; top: 0; width: 40%; height: 1px; background: linear-gradient(90deg, transparent, #ff2a3c, transparent); box-shadow: 0 0 8px #ff2a3c; animation: lps-scan 5s linear infinite; pointer-events: none; }
+@keyframes lps-scan { to { left: 100%; } }
+.lps-sbox { position: relative; padding: 18px 22px 36px; text-align: center; }
+.lps-swrap { position: relative; max-width: 600px; margin: 0 auto; }
+.lps-sform { display: flex; align-items: center; gap: 8px; margin: 0; padding: 4px 4px 4px 16px; border: 1px solid rgba(255,42,60,.7); border-radius: 999px; background: rgba(7,8,11,.85); box-shadow: 0 0 14px -4px rgba(255,42,60,.7), inset 0 0 10px -6px rgba(255,42,60,.8); transition: box-shadow .2s, border-color .2s; }
+.lps-sform:focus-within { border-color: #ff4a5c; box-shadow: 0 0 20px -2px rgba(255,42,60,.9), inset 0 0 12px -6px rgba(255,42,60,.9); }
+.lps-sform svg { flex: none; color: #ff4a5c; }
+.lps-sform input { flex: 1; min-width: 0; border: 0; outline: 0; font-size: 16px; padding: 9px 0; background: none; color: #fff; letter-spacing: .01em; }
 .lps-sform input::placeholder { color: #8e8e93; }
-.lps-track { position: absolute; left: 0; right: 0; bottom: 0; height: 52px; border-top: 0; }
-.lps-track::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 7px; background: repeating-linear-gradient(-45deg, #f5c400 0 10px, #1c1c1e 10px 20px); opacity: .9; }
-.lps-bot { position: absolute; width: 40px; height: 38px; z-index: 1; }
+.lps-sform button { flex: none; border: 0; border-radius: 999px; background: #ff2a3c; color: #fff; font-weight: 650; font-size: 15px; padding: 9px 18px; cursor: pointer; box-shadow: 0 0 12px rgba(255,42,60,.6); }
+.lps-samples { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px; margin-top: 12px; }
+.lps-sl { font: 600 11px ui-monospace, Menlo, monospace; letter-spacing: .1em; text-transform: uppercase; color: #8e8e93; margin-right: 4px; }
+.lps-chip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px 5px 9px; border-radius: 999px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.16); font-size: 14px; font-weight: 600; color: #f5f5f7; text-decoration: none; transition: border-color .2s, box-shadow .2s; }
+.lps-chip:hover { border-color: #ff2a3c; box-shadow: 0 0 10px -2px rgba(255,42,60,.7); }
+.lps-chip i { width: 7px; height: 7px; border-radius: 50%; background: #ff2a3c; box-shadow: 0 0 6px #ff2a3c; }
+.lps-chip img { width: 14px; height: 10px; border-radius: 2px; }
+.lps-chip em { display: none; }
+.lps-track { position: absolute; left: 0; right: 0; bottom: 0; height: 22px; }
+.lps-track::after { content: ""; position: absolute; left: 0; right: 0; bottom: 3px; height: 1px; background: linear-gradient(90deg, transparent, rgba(255,42,60,.9) 15%, rgba(255,42,60,.9) 85%, transparent); box-shadow: 0 0 6px #ff2a3c; }
+.lps-bot { position: absolute; width: 30px; height: 18px; z-index: 1; filter: drop-shadow(0 0 3px rgba(255,42,60,.9)); }
 .lps-bot svg { display: block; overflow: visible; }
-.lps-bot.walk { bottom: 7px; animation: lps-walk var(--d) linear infinite alternate; }
+.lps-bot.walk { bottom: 3px; animation: lps-walk var(--d) ease-in-out infinite alternate; }
 .lps-bot.walk svg { animation: lps-flip calc(var(--d) * 2) steps(1) infinite; animation-delay: inherit; }
-.lps-bot.flip svg { transform: scaleX(-1); }
-.lps-bot .l1 { animation: lps-step .45s ease-in-out infinite alternate; }
-.lps-bot .l2 { animation: lps-step .45s ease-in-out infinite alternate-reverse; }
-.lps-bot.still .l1, .lps-bot.still .l2 { animation: none; }
-.lps-spark { animation: lps-blink .25s steps(2) infinite; }
-.lps-ham { transform-origin: 20px 18px; animation: lps-swing .5s ease-in-out infinite alternate; }
-.lps-eye { animation: lps-blink 3s steps(1) infinite; }
+.lps-bot.walk::before { content: ""; position: absolute; right: 100%; bottom: 2px; width: 34px; height: 2px; border-radius: 2px; background: linear-gradient(90deg, transparent, rgba(255,42,60,.8)); animation: lps-trail calc(var(--d) * 2) steps(1) infinite; animation-delay: inherit; }
+.lps-visor { animation: lps-blink 2.4s ease-in-out infinite; }
+.lps-spark { animation: lps-blink .3s steps(2) infinite; }
 @keyframes lps-walk { from { left: var(--a); } to { left: var(--b); } }
 @keyframes lps-flip { 0% { transform: scaleX(1); } 50% { transform: scaleX(-1); } }
-@keyframes lps-step { from { transform: translateY(0); } to { transform: translateY(-2px); } }
-@keyframes lps-swing { from { transform: rotate(-25deg); } to { transform: rotate(20deg); } }
+@keyframes lps-trail { 0% { right: 100%; left: auto; transform: none; } 50% { right: auto; left: 100%; transform: scaleX(-1); } }
 @keyframes lps-blink { 50% { opacity: .35; } }
-.lps-crane { position: absolute; right: 22px; top: 34px; width: 120px; height: 90px; opacity: .9; pointer-events: none; }
-.lps-hook { position: absolute; left: 76px; top: 10px; display: flex; flex-direction: column; align-items: center; animation: lps-hook 3.5s ease-in-out infinite alternate; }
-.lps-hook i { width: 1.5px; height: 30px; background: #3a3a3c; }
-.lps-hook b { padding: 3px 6px; border-radius: 3px; background: #d9a441; color: #5a3b06; font: 700 9px ui-monospace, Menlo, monospace; }
-@keyframes lps-hook { to { transform: translateY(14px); } }
-@media (max-width: 900px) { .lps-crane { display: none; } }
-@media (max-width: 560px) { .lps-sbox { padding: 14px 14px 60px; } .lps-status { margin-bottom: 48px; letter-spacing: .04em; font-size: 11px; } .ph-hide { display: none; } }
+@media (max-width: 560px) { .lps-sbox { padding: 14px 12px 32px; } .lps-sform { padding-left: 12px; } .lps-sform button { padding: 8px 14px; } .lps-chip { font-size: 13px; } .lps-sl { width: 100%; margin: 0 0 2px; } .ph-hide { display: none; } }
 @media (prefers-reduced-motion: reduce) { .lps-search *, .lps-search::before { animation: none !important; } }
-.lps-sform button { cursor: pointer; }
-.lps-chip:hover { border-color: var(--c); }
 .lps-swrap .lp-sug-wrap { flex: 1; min-width: 0; display: flex; }
 .lps-swrap .lp-sug { text-align: left; }
 /* search pages */
@@ -119,12 +100,14 @@ html.lp-subj .wrap > section, html.lp-subj .wrap > .tm-tabs { display: none !imp
 .lp-pol-list i { font-style: normal; font-size: 12px; color: rgba(255,190,195,.85); }
 .lp-pol-note { margin: 8px 0 0; font-size: 11px; line-height: 1.4; color: rgba(255,190,195,.75); }
 /* loading bar */
-.lps-load .lps-wait b { display: block; color: #1d1d1f; font-size: 18px; margin-bottom: 14px; }
-.lps-bar { max-width: 420px; height: 12px; margin: 0 auto 14px; border-radius: 999px; background: repeating-linear-gradient(-45deg, #f5c400 0 8px, #1c1c1e 8px 16px); padding: 2px; }
+.lps-card.lps-load { padding: 0; border-color: rgba(255,42,60,.55); background: linear-gradient(rgba(255,42,60,.09) 1px, transparent 1px) 0 0/26px 26px, linear-gradient(90deg, rgba(255,42,60,.09) 1px, transparent 1px) 0 0/26px 26px, radial-gradient(120% 140% at 50% 0%, #161a22, #07080b 70%); }
+.lps-load .lps-wait { padding: 30px 20px 48px; color: #aeaeb2; }
+.lps-load .lps-wait b { display: block; color: #fff; font-size: 18px; margin-bottom: 14px; }
+.lps-bar { max-width: 420px; height: 12px; margin: 0 auto 14px; border-radius: 999px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,42,60,.5); padding: 2px; }
 .lps-bar i { display: block; width: 0; height: 100%; border-radius: 999px; background: linear-gradient(90deg, #b0000e, #ff2a3c); box-shadow: 0 0 10px rgba(255,42,60,.6); transition: width .2s linear; }
 .lps-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 15px; color: #aeaeb2; }
-.lps-steps li.now { color: #b0000e; font-weight: 650; }
-.lps-steps li.done { color: #1e7e34; }
+.lps-steps li.now { color: #ff4a5c; font-weight: 650; }
+.lps-steps li.done { color: #34c759; }
 .lps-steps li.done::before { content: "✓ "; }
 /* free page */
 .lps-stats.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -191,3 +174,5 @@ html.lp-subj .wrap > section, html.lp-subj .wrap > .tm-tabs { display: none !imp
 .lps-klist li { padding: 10px 0; border-top: 1px solid #ebebeb; }
 .lps-klist b { font-size: 15px; }
 @media (max-width: 560px) { .lps-kcols { height: 120px; } .lps-split { font-size: 13px; } .lps-split i, .lps-split b { padding: 0 8px; } }
+.lps-chart .lps-stats { margin: 0 0 18px; }
+.lps-attn .lps-stats { margin-top: 14px; }
