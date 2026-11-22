@@ -215,3 +215,14 @@ html.lp-subj .wrap > section, html.lp-subj .wrap > .tm-tabs { display: none !imp
 }
 .lp-head > .lps-search { margin: 16px 0 -24px; }
 @media (max-width: 560px) { .lp-head > .lps-search { margin: 16px 0 0; } .lp-head:has(> .lps-search) { padding-bottom: 8px; } }
+
+/* Silver strip: light metallic panel, red neon kept for edges, rail and bots. */
+.lps-search { color: #1d1d1f; border-color: rgba(255,42,60,.45); background:
+  linear-gradient(rgba(255,42,60,.07) 1px, transparent 1px) 0 0/26px 26px,
+  linear-gradient(90deg, rgba(255,42,60,.07) 1px, transparent 1px) 0 0/26px 26px,
+  linear-gradient(180deg, #fbfbfd 0%, #eceef2 55%, #dfe2e8 100%);
+  box-shadow: 0 0 0 1px rgba(255,42,60,.08), 0 0 18px -8px rgba(255,42,60,.45), inset 0 1px 0 #fff; }
+.lps-sform { background: #fff; border-color: rgba(255,42,60,.6); box-shadow: 0 0 10px -4px rgba(255,42,60,.55), inset 0 1px 2px rgba(0,0,0,.05); }
+.lps-sform input { color: #1d1d1f; }
+.lps-sl { color: #6e6e73; }
+.lps-chip { background: #fff; border-color: #d2d2d7; color: #1d1d1f; }
