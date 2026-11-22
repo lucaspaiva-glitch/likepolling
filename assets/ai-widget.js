@@ -64,7 +64,7 @@
   document.addEventListener('click', (e) => { if (!about.hidden && !about.contains(e.target)) toggle(false); });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !about.hidden) { toggle(false); info.focus(); } });
   const cache = {};
-  let kind = 'all';
+  let kind = '';
   let token = 0;
   let spare = [];
   let codes = [];
@@ -179,9 +179,9 @@
     const cc = select.value;
     flag.src = `/assets/flags/${cc.toLowerCase()}.svg`;
     const present = Object.keys(KINDS).filter((k) => rows.some((r) => r.title_tr.ai === k));
-    if (kind !== 'all' && !present.includes(kind)) kind = 'all';
-    kindsBox.innerHTML = present.length > 1 ? ['all', ...present].map((k) => `<button type="button" class="aia-chip" aria-pressed="${k === kind}" data-kind="${k}">${esc(k === 'all' ? 'All' : KINDS[k])}</button>`).join('') : '';
-    const list = rows.filter((r) => kind === 'all' || r.title_tr.ai === kind);
+    if (!present.includes(kind)) kind = present[0] || '';
+    kindsBox.innerHTML = present.length > 1 ? present.map((k) => `<button type="button" class="aia-chip" aria-pressed="${k === kind}" data-kind="${k}">${esc(KINDS[k])}</button>`).join('') : '';
+    const list = rows.filter((r) => !kind || r.title_tr.ai === kind);
     spare = list.slice(SHOWN);
     const top = list.slice(0, SHOWN);
     topLabel.textContent = top.length >= SHOWN ? `${tr('Top 10')} · ${regionName(cc)}` : regionName(cc);
@@ -288,7 +288,7 @@
       if (!codes.length) throw new Error('no data');
       fillPicker();
       select.value = defaultCountry(codes);
-      select.addEventListener('change', () => { kind = 'all'; show(select.value); });
+      select.addEventListener('change', () => { kind = ''; show(select.value); });
       document.addEventListener('lp:lang', () => { fillPicker(); if (cache[select.value]) draw(cache[select.value]); });
       await show(select.value);
     } catch (err) {
