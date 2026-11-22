@@ -176,3 +176,18 @@ html.lp-subj .wrap > section, html.lp-subj .wrap > .tm-tabs { display: none !imp
 .lps-fol span { font-size: 14px; color: #6e6e73; }
 .lps-site { margin: 16px 0 0; } .lps-site a { color: #b0000e; font-weight: 650; text-decoration: none; }
 @media (max-width: 560px) { .lps-fgrid { grid-template-columns: 1fr 1fr; } .lps-fgrid dd { font-size: 15px; } }
+
+/* Real numbers card (World Bank, SEC, Yahoo Finance, Deezer, TheSportsDB, TSE) */
+.lps-key .lps-sub a { color: inherit; font-weight: 600; }
+.lps-kgrid div small { display: block; margin-top: 4px; font-size: 13px; line-height: 1.4; color: #6e6e73; overflow-wrap: anywhere; }
+.lps-kgrid div small em { font-style: normal; font-weight: 600; white-space: nowrap; }
+.lps-kgrid em.up { color: #0a7a3d; } .lps-kgrid em.down { color: #b0000e; }
+.lps-kcols { grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); height: 150px; }
+.lps-kcols button.neg i { background: #9a9aa0; }
+.lps-split { display: flex; height: 40px; margin: 16px 0 6px; border-radius: 12px; overflow: hidden; font-size: 14px; font-weight: 650; }
+.lps-split i, .lps-split b { display: flex; align-items: center; padding: 0 12px; min-width: 0; white-space: nowrap; }
+.lps-split i { width: var(--w); background: #b0000e; color: #fff; font-style: normal; }
+.lps-split b { flex: 1; justify-content: flex-end; background: #1d6a3a; color: #fff; }
+.lps-klist li { padding: 10px 0; border-top: 1px solid #ebebeb; }
+.lps-klist b { font-size: 15px; }
+@media (max-width: 560px) { .lps-kcols { height: 120px; } .lps-split { font-size: 13px; } .lps-split i, .lps-split b { padding: 0 8px; } }

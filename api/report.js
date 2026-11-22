@@ -13,25 +13,28 @@ const crypto = require('crypto');
 const report = require('../lib/report');
 const entity = require('../lib/entity-report');
 const free = require('../lib/free-page');
+const stats = require('../lib/key-stats');
 
 const LIMIT_PER_MIN = 10;
 // Free search-page samples, one per category, full history unlocked.
 const PAGES = {
-  shakira: { type: 'artist', subject: 'Shakira', peers: [] },
-  zara: { type: 'company', subject: 'Zara (retailer)', peers: [] },
-  brazil: { country: 'BR' },
-  benfica: { type: 'company', subject: 'S.L. Benfica', peers: [] },
-  'lula-vs-bolsonaro': { type: 'artist', subject: 'Luiz Inácio Lula da Silva', peers: ['Jair Bolsonaro'] },
+  shakira: { type: 'artist', subject: 'Shakira', peers: [], stats: { cat: 'person', title: 'Shakira', description: 'singer' } },
+  zara: { type: 'company', subject: 'Zara (retailer)', peers: [], stats: { cat: 'brand', title: 'Zara (retailer)', parent: 'Inditex' } },
+  brazil: { country: 'BR', stats: { cat: 'country', iso2: 'BR' } },
+  benfica: { type: 'company', subject: 'S.L. Benfica', peers: [], stats: { cat: 'sport', title: 'S.L. Benfica' } },
+  'lula-vs-bolsonaro': { type: 'artist', subject: 'Luiz Inácio Lula da Silva', peers: ['Jair Bolsonaro'], stats: { election: 'br-2022' } },
 };
 const COUNTRY_NAMES = new Intl.DisplayNames(['en'], { type: 'region' });
+// World Bank rows saved weekly by scripts/worldbank-routine.js, used when the live API is down.
+const savedIndicators = (get) => (iso2) => get(`country_indicators?select=indicator,year,value&country_code=eq.${iso2}&order=year.asc`);
 
 // Free part of a search page, plus a rough category for the colors and the right Gumroad product.
-async function about(fetchImpl, q) {
+async function about(fetchImpl, q, saved = null) {
   const countryOf = (title) => report.COUNTRIES.find((c) => COUNTRY_NAMES.of(c) === title || (c === 'US' && title === 'United States') || (c === 'GB' && title === 'United Kingdom'));
   const classify = (desc, title) => (countryOf(title) ? 'country'
     : entity.TYPES.artist.words.test(desc) || /politician|president|minister|chancellor|mayor|governor|senator|congress|parliament|party leader|monarch|king of|queen of|player|coach|person/i.test(desc) ? 'person'
       : /club|team|football|league/i.test(desc) ? 'sport' : entity.TYPES.company.words.test(desc) ? 'brand' : 'topic');
-  const body = await free.freePage(fetchImpl, q, { countryNames: (c) => COUNTRY_NAMES.of(c), classify });
+  const body = await free.freePage(fetchImpl, q, { countryNames: (c) => COUNTRY_NAMES.of(c), classify, iso2Of: countryOf, saved });
   if (!body) throw fail(404, 'Nothing found for that search.');
   if (body.disambiguation) throw fail(404, 'That name means several things. Try a fuller name.');
   return { ...body, country: countryOf(body.title) || null };
@@ -213,14 +216,15 @@ function createHandler(deps = {}) {
       if (!env.SUPABASE_URL || !env.SUPABASE_KEY) throw fail(500, 'Server is missing its database settings.');
       const get = report.rest(env, fetchImpl);
       if (req.method === 'GET' && req.query.about) {
-        const body = await about(fetchImpl, String(req.query.about).slice(0, 120));
+        const body = await about(fetchImpl, String(req.query.about).slice(0, 120), savedIndicators(get));
         res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=86400');
         return res.status(200).json(body);
       }
       const page = req.method === 'GET' && Object.prototype.hasOwnProperty.call(PAGES, req.query.page) && PAGES[req.query.page];
       if (page) {
-        const body = page.country ? await report.buildReport(get, [page.country], new Date(now), { fetchImpl })
-          : await entity.buildEntityReport(get, page.type, page, { fetchImpl, rest: get, now: new Date(now) });
+        const [built, keyStats] = await Promise.all([page.country ? report.buildReport(get, [page.country], new Date(now), { fetchImpl })
+          : entity.buildEntityReport(get, page.type, page, { fetchImpl, rest: get, now: new Date(now) }), stats.keyStats(fetchImpl, { ...page.stats, saved: savedIndicators(get) })]);
+        const body = { ...built, key_stats: keyStats };
         if (!page.country) await saveStates(env, fetchImpl, body);
         await saveSnapshot(env, fetchImpl, body);
         res.setHeader('Cache-Control', 'public, max-age=300, s-maxage=21600, stale-while-revalidate=86400');

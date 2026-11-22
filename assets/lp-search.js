@@ -101,10 +101,11 @@
       loaded();
       const cat = sample.cat;
       const who = sample.name;
-      page.innerHTML = `<section class="lps-card" style="--cat:${CATS[cat].color}">${profile(data, cat)}</section>
+      page.innerHTML = `<section class="lps-card" style="--cat:${CATS[cat].color}">${profile(data, cat)}</section>${statsHtml(data.key_stats, CATS[cat], slug === 'lula-vs-bolsonaro' ? 'Lula vs Bolsonaro' : who)}
         <section class="lps-card" id="lps-hist" style="--cat:${CATS[cat].color}"><h2>Full history</h2><p class="lps-sub">Graphs since 2017, saved snapshots and downloads. Unlocked in this free sample.</p>
         <div class="lps-acts"><button type="button" data-act="graphs">Graphs</button><button type="button" class="ghost" data-act="pdf">Download PDF presentation</button><button type="button" class="ghost" data-act="xlsx"><span data-no-i18n>${esc(who)}’s</span> data in Excel</button></div>
         <iframe class="lps-frame" id="lps-frame" title="Full history of ${esc(who)}" src="/report?embed=1"></iframe></section>`;
+      liven();
       const frame = document.getElementById('lps-frame');
       const send = (m) => frame.contentWindow && frame.contentWindow.postMessage(m, location.origin);
       window.addEventListener('message', (e) => {
@@ -162,6 +163,35 @@
       ${fol.length ? `<h3>Followers</h3><div class="lps-fol" data-no-i18n>${fol.map((x) => `<div><b>${short(x.followers)}</b><span>${esc(x.platform)} · ${x.year}</span></div>`).join('')}</div>` : ''}
       ${a.website ? `<p class="lps-site"><a href="${esc(a.website)}" target="_blank" rel="noopener">Official website ↗</a></p>` : ''}</section>`;
   }
+  // Real numbers from official or first-party sources (World Bank, SEC, Yahoo Finance, Deezer, TheSportsDB, TSE).
+  const money = (v) => { const a = Math.abs(v), sg = v < 0 ? '−' : ''; return a >= 1e12 ? `${sg}$${(a / 1e12).toFixed(2)}T` : a >= 1e9 ? `${sg}$${(a / 1e9).toFixed(1)}B` : a >= 1e6 ? `${sg}$${(a / 1e6).toFixed(1)}M` : `${sg}$${num(Math.round(a))}`; };
+  function statValue(t, kind) {
+    if (t.unit === 'usd') return money(t.value);
+    if (t.unit === 'pct') return `${t.value}%`;
+    if (t.unit === 'pct_signed') return `${t.value >= 0 ? '+' : '−'}${Math.abs(t.value)}%`;
+    if (t.unit === 'price') return `${esc(t.currency || '')} ${Number(t.value).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`.trim();
+    if (t.unit === 'n') return kind === 'election' ? num(t.value) : short(t.value);
+    return esc(t.value);
+  }
+  const STAT_TITLE = { country: (n) => `<span data-no-i18n>${n}</span>’s economy in numbers`, company: (n) => `<span data-no-i18n>${n}</span> in numbers`,
+    music: (n) => `<span data-no-i18n>${n}</span>’s music in numbers`, club: (n) => `<span data-no-i18n>${n}</span> on the pitch`, election: () => 'Who won the 2022 runoff?' };
+  function statsHtml(k, c, name) {
+    if (!k || !k.tiles || !k.tiles.length) return '';
+    const n = esc(name);
+    const sources = (k.sources || [{ name: k.source, link: k.link }]).map((x) => `<a href="${esc(x.link)}" target="_blank" rel="noopener">${esc(x.name)} ↗</a>`).join(' · ');
+    const tiles = `<dl class="lps-fgrid lps-kgrid">${k.tiles.map((t) => `<div><dt>${esc(t.label)}</dt><dd data-no-i18n>${statValue(t, k.kind)}</dd>${t.year || t.note || t.change != null ? `<small data-no-i18n>${[t.year, t.note].filter(Boolean).map(esc).join(' · ')}${t.change != null ? ` <em class="${t.change >= 0 ? 'up' : 'down'}">${t.change >= 0 ? '▲' : '▼'} ${Math.abs(t.change)}% ${t.change_label ? esc(t.change_label) : 'vs year before'}</em>` : ''}</small>` : ''}</div>`).join('')}</dl>`;
+    const sp = k.split ? (() => { const tot = k.split.a.votes + k.split.b.votes, a = Math.round((k.split.a.votes / tot) * 1000) / 10;
+      return `<div class="lps-split" role="img" aria-label="${esc(k.split.a.name)} ${a}%, ${esc(k.split.b.name)} ${Math.round((100 - a) * 10) / 10}%"><i style="--w:${a}%"><span data-no-i18n>${esc(k.split.a.name)} ${a}%</span></i><b><span data-no-i18n>${esc(k.split.b.name)} ${Math.round((100 - a) * 10) / 10}%</span></b></div><p class="lps-sub">${esc(k.split.label)}. ${esc(k.note || '')}</p>`; })() : '';
+    const pts = k.series && k.series.points || [];
+    const max = Math.max(...pts.map((p) => Math.abs(p.y))) || 1;
+    const fmt = (y) => (k.series.unit === 'usd' ? money(y) : k.series.unit === 'pct' ? `${y}%` : statValue({ unit: 'price', value: y, currency: k.series.currency }));
+    const series = pts.length >= 3 ? `<h3>${esc(k.series.label)}</h3><div class="lps-cols lps-kcols" role="list">${pts.map((p) => `<button type="button" role="listitem" class="${p.y < 0 ? 'neg' : ''}" data-tip="${esc(p.x)}: ${esc(fmt(p.y))}" style="--h:${Math.max(2, Math.round((Math.abs(p.y) / max) * 100))}%"><i></i><span data-no-i18n>’${esc(String(p.x).slice(-2))}</span></button>`).join('')}</div>
+      <p class="lps-tip" aria-live="polite" data-no-i18n>${esc(pts[pts.length - 1].x)}: ${esc(fmt(pts[pts.length - 1].y))}</p>${pts.some((p) => p.y < 0) ? '<p class="lps-sub">Grey bars are years below zero. Tap a year.</p>' : ''}` : '';
+    const list = k.list && k.list.items.length ? `<h3>${esc(k.list.label)}</h3><ul class="lps-news lps-klist" data-no-i18n>${k.list.items.map((x) => `<li><b>${esc(x.title)}</b>${x.sub ? `<span>${esc(x.sub)}</span>` : ''}</li>`).join('')}</ul>` : '';
+    return `<section class="lps-card lps-facts lps-key" style="--cat:${c.color}"><h2>${(STAT_TITLE[k.kind] || STAT_TITLE.company)(n)}</h2>
+      <p class="lps-sub">${k.owner ? `Numbers for <span data-no-i18n>${esc(k.owner)}</span>, the company that owns <span data-no-i18n>${n}</span>. ` : ''}Source: <span data-no-i18n>${sources}</span></p>
+      ${tiles}${sp}${series}${list}</section>`;
+  }
   function freeHtml(a, c) {
     const name = a.name;
     const img = a.country ? `<img class="lps-av flag" src="/assets/flags/${a.country.toLowerCase()}.svg" alt="">` : a.image ? `<img class="lps-av" src="${esc(a.image)}" alt="">` : '';
@@ -173,7 +203,7 @@
       <ul class="lps-news" data-no-i18n>${a.headlines.map((h) => `<li><a href="${esc(h.link)}" target="_blank" rel="noopener"><b>${esc(h.title)}</b><span>${esc(h.source)}${h.day ? ` · ${dayLabel(h.day)}` : ''}</span></a></li>`).join('')}</ul></section>` : '';
     return `<section class="lps-card" style="--cat:${c.color}"><div class="lps-prof">${img}<div class="lps-who"><div class="lps-tags"><span class="lps-tag">${c.label}</span></div><h1 data-no-i18n>${esc(name)}</h1><p>${esc(a.description || a.extract)}</p></div></div>
       <div class="lps-stats three">${stat(`<span class="lps-count" data-n="${a.views_30d}">${short(a.views_30d)}</span>`, 'Wikipedia reads, last 30 days', delta(a.change_pct, 'vs the 30 days before'))}${peak}${stat(`<span class="lps-count" data-n="${a.languages}">${num(a.languages)}</span>`, 'languages have a Wikipedia page about them')}</div></section>
-      ${factsHtml(a, c)}${chart(a.months || [], name)}${where || langs ? `<section class="lps-card lps-two">${where}${langs}</section>` : ''}${news}`;
+      ${statsHtml(a.key_stats, c, name)}${factsHtml(a, c)}${chart(a.months || [], name)}${where || langs ? `<section class="lps-card lps-two">${where}${langs}</section>` : ''}${news}`;
   }
   // Numbers count up, bars grow, months answer a tap: small touches so the page feels alive (off with reduced motion).
   function liven() {
@@ -186,9 +216,9 @@
       requestAnimationFrame(tick);
     });
     requestAnimationFrame(() => requestAnimationFrame(() => page.classList.add('lps-in')));
-    const tip = page.querySelector('.lps-tip');
     page.querySelectorAll('.lps-cols button').forEach((b) => {
-      const show = () => { page.querySelectorAll('.lps-cols button.on').forEach((x) => x.classList.remove('on')); b.classList.add('on'); if (tip) tip.textContent = b.dataset.tip; };
+      const box = b.closest('.lps-card'), tip = box && box.querySelector('.lps-tip');
+      const show = () => { box.querySelectorAll('.lps-cols button.on').forEach((x) => x.classList.remove('on')); b.classList.add('on'); if (tip) tip.textContent = b.dataset.tip; };
       b.addEventListener('click', show); b.addEventListener('pointerenter', show); b.addEventListener('focus', show);
     });
   }
