@@ -193,3 +193,25 @@ html.lp-subj .wrap > section, html.lp-subj .wrap > .tm-tabs { display: none !imp
   .lps-sform button .lps-go { display: block; color: #fff; }
 }
 @media (prefers-reduced-motion: reduce) { .lps-sbox, .lps-samples, .lps-bot.more { transition: none; } }
+/* Slim strip: same 18px corners as the cards, thinner bar and chips, bots mirrored left and right. */
+.lps-search { border-radius: 18px; }
+.lps-sbox, .lps-search:not(.open) .lps-sbox { padding: 8px 16px 22px; }
+.lps-sform { padding: 3px 3px 3px 14px; }
+.lps-sform input { padding: 6px 0; font-size: 16px; }
+.lps-sform button { padding: 7px 16px; font-size: 14px; }
+.lps-search.open .lps-samples { margin-top: 8px; }
+.lps-samples { gap: 5px; }
+.lps-chip { padding: 3px 10px 3px 8px; font-size: 13px; }
+.lps-track { height: 18px; }
+.lps-track::after { bottom: 2px; }
+.lps-bot { width: 24px; height: 14px; }
+.lps-bot svg { width: 24px; height: 14px; }
+.lps-bot.walk { bottom: 2px; }
+.lps-bot.walk::before { width: 26px; bottom: 1px; }
+@media (max-width: 560px) {
+  .lps-sbox, .lps-search:not(.open) .lps-sbox { padding: 7px 8px 20px; }
+  .lps-sform button { width: 34px; height: 34px; padding: 0; }
+  .lps-sl { width: auto; margin: 0 2px 0 0; }
+}
+.lp-head > .lps-search { margin: 16px 0 -24px; }
+@media (max-width: 560px) { .lp-head > .lps-search { margin: 16px 0 0; } .lp-head:has(> .lps-search) { padding-bottom: 8px; } }
