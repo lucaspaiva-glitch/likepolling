@@ -179,6 +179,19 @@
     @media (min-width: 900px) { .rhead, .rsec { aspect-ratio: 16 / 9; display: flex; flex-direction: column; justify-content: center; } .rhead { justify-content: flex-start; } }
     @media (max-width: 600px) { .tight table.cmp { font-size: 12.5px; } .tight table.cmp th, .tight table.cmp td { padding: 6px 5px; } .tight table.cmp thead th { font-size: 10px; letter-spacing: 0; } .tight table.cmp tbody th { width: auto; } }
     @media (max-width: 600px) { .rhead, .rsec { padding: 34px 18px 40px; border-radius: 14px; } .rsec::before, .rsec::after { left: 18px; } .rhead h1 { font-size: 32px; } .rsec h2 { font-size: 22px; } }
+    @media screen and (max-width: 600px) {
+      html.embed main { padding-left: 0; padding-right: 0; }
+      #report { overflow-wrap: break-word; }
+      .ehead { flex-direction: column; align-items: flex-start; }
+      .ehead > div, .col, .tight { min-width: 0; max-width: 100%; }
+      .knows, .srcfoot .gloss { grid-template-columns: minmax(0, 1fr); }
+      .hol li { flex-direction: column; gap: 4px; }
+      .hol b, .aip em { white-space: normal; }
+      ol.rank .rl { flex-wrap: wrap; }
+      .tight table.cmp { min-width: 560px; font-size: 14px; }
+      .tight table.cmp th, .tight table.cmp td { padding: 8px 10px; }
+      .tight table.cmp thead th { font-size: 13px; }
+    }
     @media print {
       @page { size: 13.333in 7.5in; margin: 0; }
       .top, .lang-switch, #lang-switch { display: none !important; }
