@@ -24,8 +24,8 @@ const PAGES = {
   zara: { type: 'company', subject: 'Zara', mid: '/m/044_xs', kind: 'Retail company', peers: [] },
   brazil: { country: 'BR', stats: { cat: 'country', iso2: 'BR' } },
   benfica: { type: 'company', subject: 'S.L. Benfica', mid: '/m/02rh_0', kind: 'Soccer club', peers: [] },
-  'lula-vs-bolsonaro': { type: 'artist', subject: 'Luiz Inácio Lula da Silva', mid: '/m/0pc9q', kind: 'President of Brazil',
-    peers: [{ mid: '/m/04g5q20', title: 'Jair Bolsonaro', kind: 'Former President of Brazil' }], stats: { election: 'br-2022' } },
+  chatgpt: { type: 'company', subject: 'ChatGPT', mid: '/g/11khcfz0y2', kind: 'AI chatbot',
+    peers: [{ mid: '/g/11ts49p01g', title: 'Gemini', kind: 'AI chatbot' }, { mid: '/g/11kq5ghr35', title: 'Claude', kind: 'AI chatbot' }, { mid: '/g/11tsqm45vd', title: 'Microsoft Copilot', kind: 'AI chatbot' }, { mid: '/g/11wvrb0s91', title: 'DeepSeek', kind: 'AI chatbot' }] },
 };
 const COUNTRY_NAMES = new Intl.DisplayNames(['en'], { type: 'region' });
 // World Bank rows saved weekly by scripts/worldbank-routine.js, used when the live API is down.

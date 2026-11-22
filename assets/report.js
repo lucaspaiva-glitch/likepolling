@@ -439,9 +439,10 @@ function releasesSec(data, title) {
     const all = [{ ...s, me: true }, ...data.peers].map((p, k) => ({ ...p, color: COLORS[k] || '#9a9a9a' }));
     let tag = L(artist ? 'Extended People Report' : 'Extended Company Report');
     const d = String(s.description || '');
-    const sub = /\b(club|team)\b/i.test(d) ? 'clubs' : /politician|president|minister|chancellor|senator|mayor|governor|party leader/i.test(d) ? 'politicians'
+    const sub = /\b(club|team)\b/i.test(d) ? 'clubs' : /\b(AI|chatbot|language model|artificial intelligence)\b/i.test(d) ? 'ai' : /politician|president|minister|chancellor|senator|mayor|governor|party leader/i.test(d) ? 'politicians'
       : artist && /footballer|player|athlete|racing driver|boxer|cyclist|swimmer/i.test(d) ? 'athletes' : artist ? 'people' : 'brands';
-    const SIM = { people: 'Compared with {n} similar people.', brands: 'Compared with {n} similar brands.', clubs: 'Compared with {n} similar clubs.', politicians: 'Compared with {n} other politicians.', athletes: 'Compared with {n} similar athletes.' }[sub];
+    const SIM = { people: 'Compared with {n} similar people.', brands: 'Compared with {n} similar brands.', clubs: 'Compared with {n} similar clubs.', politicians: 'Compared with {n} other politicians.', athletes: 'Compared with {n} similar athletes.', ai: 'Compared with {n} similar AI tools.' }[sub];
+    if (sub === 'ai') tag = L('Extended AI Report');
     if (sub === 'clubs') tag = L('Extended Club Report');
     const vsTitle = data.peers_chosen && data.peers.length === 1 ? `${s.title} vs ${data.peers[0].title}` : s.title;
     document.title = `${vsTitle} · ${tag} · Like Polling`;

@@ -6,23 +6,23 @@
     zara: { name: 'Zara', cat: 'brand' },
     brazil: { name: 'Brazil', cat: 'country' },
     benfica: { name: 'Benfica', cat: 'sport' },
-    'lula-vs-bolsonaro': { name: 'Lula vs Bolsonaro', cat: 'topic' },
+    chatgpt: { name: 'ChatGPT', cat: 'ai' },
   };
   const CATS = {
     person: { label: 'Person', color: '#b0000e', buy: 'https://lucaspoll.gumroad.com/l/ijixxs' },
     brand: { label: 'Brand', color: '#141414', buy: 'https://lucaspoll.gumroad.com/l/linzh' },
     country: { label: 'Country', color: '#009c3b', buy: 'https://lucaspoll.gumroad.com/l/udjsyu' },
     sport: { label: 'Sport', color: '#0a7a3d', buy: '' },
+    ai: { label: 'AI', color: '#10a37f', buy: '' },
     topic: { label: 'Topic', color: '#3a4a66', buy: '' },
   };
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const num = (n) => Number(n || 0).toLocaleString('en-US');
   const short = (n) => (n >= 1e6 ? `${(n / 1e6).toFixed(1).replace(/\.0$/, '')}M` : n >= 1e4 ? `${Math.round(n / 1e3)}k` : num(n));
   const delta = (p, what) => (p == null ? '' : `<em class="${p >= 0 ? 'up' : 'down'}">${p >= 0 ? '▲' : '▼'} ${Math.abs(p)}% ${what}</em>`);
-  const plain = (t) => String(t || '').replace(/ \([^)]*\)$/, '');
   const slugOf = (q) => {
     const t = q.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
-    if (/^(lula|bolsonaro) (vs|x|versus|e|and) (lula|bolsonaro)$/.test(t) && /lula/.test(t) && /bolsonaro/.test(t)) return 'lula-vs-bolsonaro';
+    if (/^chat ?gpt$/.test(t)) return 'chatgpt';
     if (t === 'shakira') return 'shakira';
     if (t === 'zara') return 'zara';
     if (/^(brazil|brasil)$/.test(t)) return 'brazil';
@@ -93,10 +93,6 @@
         ${search ? stat(esc(search.query), 'Top Google search', '', true) : ''}${video ? stat(esc(video.title), `Top YouTube video · ${short(video.views)} views`, '', true) : ''}</div>`];
     }
     const s = data.subject;
-    if (slug === 'lula-vs-bolsonaro' && data.peers && data.peers[0] && (s.share_pct != null || data.peers[0].share_pct != null)) {
-      const side = (p) => `<div>${p.image ? `<img src="${esc(p.image)}" alt="">` : ''}<h3 data-no-i18n>${esc(plain(p.title))}</h3><b data-no-i18n>${p.share_pct == null ? '–' : `${p.share_pct}%`}</b><span>of the Google searches for the two, last 4 weeks</span>${p.change_pct != null ? `<b data-no-i18n>${signed(p.change_pct)}</b><span>vs the 4 weeks before</span>` : ''}</div>`;
-      return [`<div class="lps-who">${tags(cat, true)}<h1 data-no-i18n>Lula vs Bolsonaro</h1><p>Brazil’s two biggest political names, side by side.</p></div>`, `<h2>Who is searched more?</h2><p class="lps-sub">Google searches worldwide (Google Trends).</p><div class="lps-vs">${side(s)}${side(data.peers[0])}</div>`];
-    }
     const name = sample.name;
     return [`<div class="lps-prof">${s.image ? `<img class="lps-av" src="${esc(s.image)}" alt="">` : ''}<div class="lps-who">${tags(cat, true)}<h1 data-no-i18n>${esc(name)}</h1><p>${esc(s.description)}</p></div></div>`,
       /<b/.test(searchStats(s, data.world)) ? `<h2>Is <span data-no-i18n>${esc(name)}</span> searched more?</h2>${searchStats(s, data.world)}` : ''];
@@ -111,7 +107,7 @@
       const cat = sample.cat;
       const who = sample.name;
       const [head, attn] = profile(data, cat);
-      page.innerHTML = `<section class="lps-card" style="--cat:${CATS[cat].color}">${head}</section>${statsHtml(data.key_stats, CATS[cat], slug === 'lula-vs-bolsonaro' ? 'Lula vs Bolsonaro' : who)}${attn ? `<section class="lps-card lps-attn" style="--cat:${CATS[cat].color}">${attn}</section>` : ''}
+      page.innerHTML = `<section class="lps-card" style="--cat:${CATS[cat].color}">${head}</section>${statsHtml(data.key_stats, CATS[cat], who)}${attn ? `<section class="lps-card lps-attn" style="--cat:${CATS[cat].color}">${attn}</section>` : ''}
         <section class="lps-card" id="lps-hist" style="--cat:${CATS[cat].color}"><h2>Full history</h2><p class="lps-sub">Graphs since 2017, saved snapshots and every number, ready to download. Unlocked in this free sample.</p>
         <div class="lps-acts lps-dl"><button type="button" data-act="pdf"><b>↓ Graphs</b><small>PDF</small></button><button type="button" data-act="pptx"><b>↓ Presentation</b><small>PowerPoint · Keynote · Google Slides</small></button><button type="button" data-act="xlsx"><b>↓ Excel</b><small>Excel · Google Sheets · Numbers</small></button></div>
         <p class="lps-dlerr" role="status" hidden>Couldn’t make the file. Please try again.</p>
