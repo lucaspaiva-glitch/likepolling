@@ -60,7 +60,7 @@
   if (input) input.value = sample ? sample.name : q;
   page.hidden = false;
   const STEPS = ['Finding {n}', 'Checking Google searches', 'Reading the news', 'Fetching official numbers', 'Building the page'];
-  const wait = (what) => `<section class="lps-card lps-search lps-load" aria-live="polite"><div class="lps-term" aria-hidden="true"><i></i><i></i><i></i><span>bots — build</span></div><div class="lps-wait"><b>Bots are building <span data-no-i18n>${esc(what)}</span>’s page</b>
+  const wait = (what) => `<section class="lps-card lps-search lps-load" aria-live="polite"><div class="lps-term" aria-hidden="true"><i></i><i></i><i></i><span>bots — build</span></div><div class="lps-wait"><b>Bots are building ${esc(what)}’s page</b>
     <div class="lps-bar" role="progressbar" aria-label="Loading" aria-valuemin="0" aria-valuemax="100"><i></i></div><ol class="lps-steps">${STEPS.map((t, i) => `<li data-i="${i}">${esc(t.replace('{n}', what))}</li>`).join('')}</ol></div>
     <div class="lps-track" aria-hidden="true">${document.querySelector('.lps-track') ? document.querySelector('.lps-track').innerHTML : ''}</div></section>`;
   let loadTimer = 0;
@@ -95,7 +95,7 @@
     const s = data.subject;
     const name = sample.name;
     return [`<div class="lps-prof">${s.image ? `<img class="lps-av" src="${esc(s.image)}" alt="">` : ''}<div class="lps-who">${tags(cat, true)}<h1 data-no-i18n>${esc(name)}</h1><p>${esc(s.description)}</p></div></div>`,
-      /<b/.test(searchStats(s, data.world)) ? `<h2>Is <span data-no-i18n>${esc(name)}</span> searched more?</h2>${searchStats(s, data.world)}` : ''];
+      /<b/.test(searchStats(s, data.world)) ? `<h2>Is ${esc(name)} searched more?</h2>${searchStats(s, data.world)}` : ''];
   }
 
   async function openSample() {
@@ -146,7 +146,7 @@
     if (months.length < 3) return '';
     const max = Math.max(...months.map((m) => m.value)) || 1;
     const top = months.reduce((b, m) => (m.value > b.value ? m : b), months[0]);
-    return `<section class="lps-card lps-chart"><h2>Is <span data-no-i18n>${esc(name)}</span> searched more?</h2>
+    return `<section class="lps-card lps-chart"><h2>Is ${esc(name)} searched more?</h2>
       <p class="lps-sub">Google searches worldwide, month by month. 100 = the busiest week. Most searched in <b data-no-i18n>${mon(top.month)}</b>. Tap a month.</p>${extra}
       <div class="lps-cols" role="list">${months.map((m) => `<button type="button" role="listitem" class="${m === top ? 'top' : ''}" data-tip="${mon(m.month)}: ${m.value} of 100" style="--h:${Math.max(2, Math.round((m.value / max) * 100))}%"><i></i><span data-no-i18n>${mon(m.month).split(' ')[0]}</span></button>`).join('')}</div>
       <p class="lps-tip" aria-live="polite" data-no-i18n>${mon(top.month)}: ${top.value} of 100</p></section>`;
@@ -161,8 +161,8 @@
     if (t.unit === 'n') return kind === 'election' ? num(t.value) : short(t.value);
     return esc(t.value);
   }
-  const STAT_TITLE = { country: (n) => `<span data-no-i18n>${n}</span>’s economy in numbers`, company: (n) => `<span data-no-i18n>${n}</span> in numbers`,
-    music: (n) => `<span data-no-i18n>${n}</span>’s music in numbers`, club: (n) => `<span data-no-i18n>${n}</span> on the pitch`, election: () => 'Who won the 2022 runoff?' };
+  const STAT_TITLE = { country: (n) => `${n}’s economy in numbers`, company: (n) => `${n} in numbers`,
+    music: (n) => `${n}’s music in numbers`, club: (n) => `${n} on the pitch`, election: () => 'Who won the 2022 runoff?' };
   function statsHtml(k, c, name) {
     if (!k || !k.tiles || !k.tiles.length) return '';
     const n = esc(name);
@@ -177,7 +177,7 @@
       <p class="lps-tip" aria-live="polite" data-no-i18n>${esc(pts[pts.length - 1].x)}: ${esc(fmt(pts[pts.length - 1].y))}</p>${pts.some((p) => p.y < 0) ? '<p class="lps-sub">Grey bars are years below zero. Tap a year.</p>' : ''}` : '';
     const list = k.list && k.list.items.length ? `<h3>${esc(k.list.label)}</h3><ul class="lps-news lps-klist" data-no-i18n>${k.list.items.map((x) => `<li><b>${esc(x.title)}</b>${x.sub ? `<span>${esc(x.sub)}</span>` : ''}</li>`).join('')}</ul>` : '';
     return `<section class="lps-card lps-facts lps-key" style="--cat:${c.color}"><h2>${(STAT_TITLE[k.kind] || STAT_TITLE.company)(n)}</h2>
-      <p class="lps-sub">${k.owner ? `Numbers for <span data-no-i18n>${esc(k.owner)}</span>, the company that owns <span data-no-i18n>${n}</span>. ` : ''}Source: <span data-no-i18n>${sources}</span></p>
+      <p class="lps-sub">${k.owner ? `Numbers for ${esc(k.owner)}, the company that owns ${n}. ` : ''}Source: <span data-no-i18n>${sources}</span></p>
       ${tiles}${sp}${series}${list}</section>`;
   }
   const signed = (p) => `${p > 0 ? '+' : p < 0 ? '−' : ''}${Math.abs(p)}%`;
@@ -190,8 +190,8 @@
     const name = a.name;
     const img = a.country ? `<img class="lps-av flag" src="/assets/flags/${a.country.toLowerCase()}.svg" alt="" onerror="this.remove()">` : a.image ? `<img class="lps-av" src="${esc(a.image)}" alt="">` : `<span class="lps-av lps-mono" aria-hidden="true">${esc(name[0] || '?')}</span>`;
     const g = a.searches;
-    const where = a.world && a.world.length >= 2 ? `<section class="lps-card"><h2>Where do people search for <span data-no-i18n>${esc(name)}</span>?</h2><p class="lps-sub">Google searches by country, last 12 months. 100 = the country that searches it most for its size.</p>${bars(a.world, (r) => r.name, (r) => r.value, '', true)}</section>` : '';
-    const news = a.headlines && a.headlines.length ? `<section class="lps-card"><h2>What’s in the news?</h2><p class="lps-sub">The latest headlines that name <span data-no-i18n>${esc(name)}</span> (Google News).</p>
+    const where = a.world && a.world.length >= 2 ? `<section class="lps-card"><h2>Where do people search for ${esc(name)}?</h2><p class="lps-sub">Google searches by country, last 12 months. 100 = the country that searches it most for its size.</p>${bars(a.world, (r) => r.name, (r) => r.value, '', true)}</section>` : '';
+    const news = a.headlines && a.headlines.length ? `<section class="lps-card"><h2>What’s in the news?</h2><p class="lps-sub">The latest headlines that name ${esc(name)} (Google News).</p>
       <ul class="lps-news" data-no-i18n>${a.headlines.map((h) => `<li><a href="${esc(h.link)}" target="_blank" rel="noopener"><b>${esc(h.title)}</b><span>${esc(h.source)}${h.day ? ` · ${dayLabel(h.day)}` : ''}</span></a></li>`).join('')}</ul></section>` : '';
     const headCard = `<section class="lps-card" style="--cat:${c.color}"><div class="lps-prof">${img}<div class="lps-who"><div class="lps-tags"><span class="lps-tag">${c.label}</span></div><h1 data-no-i18n>${esc(name)}</h1><p data-no-i18n>${esc(a.description)}</p>${a.website ? `<p class="lps-site"><a href="${esc(a.website)}" target="_blank" rel="noopener">Official website ↗</a></p>` : ''}</div></div></section>`;
     return `${headCard}
@@ -228,7 +228,7 @@
         <form action="/report"><label class="lps-vh" for="lps-key">License key</label><input id="lps-key" placeholder="Paste your key" autocomplete="off" spellcheck="false" required><button type="submit">Open</button></form>`
         : '<p>Full history for this kind of search is coming soon. Meanwhile, try the free samples above.</p>';
       page.innerHTML = `${freeHtml(a, c)}
-        <section class="lps-card lps-buy" style="--cat:${c.color}"><h2>Full history</h2>${c.buy ? `<p>Graphs since 2017, saved snapshots, comparisons with similar names, a PDF presentation and an Excel file about <span data-no-i18n>${esc(name)}</span>. No sign-up.</p>` : ''}${buy}</section>`;
+        <section class="lps-card lps-buy" style="--cat:${c.color}"><h2>Full history</h2>${c.buy ? `<p>Graphs since 2017, saved snapshots, comparisons with similar names, a PDF presentation and an Excel file about ${esc(name)}. No sign-up.</p>` : ''}${buy}</section>`;
       liven();
       const kf = page.querySelector('.lps-buy form');
       if (kf) kf.addEventListener('submit', (e) => { e.preventDefault(); location.href = `/report#k=${encodeURIComponent(document.getElementById('lps-key').value.trim())}`; });
