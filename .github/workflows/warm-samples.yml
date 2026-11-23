@@ -1,0 +1,21 @@
+name: Warm free samples
+
+on: deployment_status
+
+permissions:
+  contents: read
+
+jobs:
+  warm:
+    if: >-
+      github.event.deployment_status.state == 'success' &&
+      github.event.deployment_status.creator.login == 'vercel[bot]' &&
+      github.event.deployment.environment == 'Production – likepolling'
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+      - run: node scripts/warm-samples.js
