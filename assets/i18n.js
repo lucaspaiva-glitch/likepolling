@@ -527,6 +527,7 @@
     "No key yet?": ["Ainda sem chave?", "¿Aún sin clave?", "Noch kein Schlüssel?", "Ещё нет ключа?", "Ще немає ключа?", "아직 키가 없나요?", "まだキーがありませんか?", "Pas encore de clé ?", "还没有密钥？", "अभी तक कोई की नहीं मिली?"],
     "Get a report": ["Peça um relatório", "Consigue un informe", "Bericht holen", "Получить отчёт", "Отримати звіт", "리포트 받기", "レポートを入手", "Obtenir un rapport", "获取报告", "रिपोर्ट प्राप्त करें"],
     "Free samples (PDF)": ["Exemplos grátis (PDF)", "Ejemplos gratis (PDF)", "Kostenlose Beispiele (PDF)", "Бесплатные примеры (PDF)", "Безкоштовні приклади (PDF)", "무료 샘플 (PDF)", "無料サンプル (PDF)", "Exemples gratuits (PDF)", "免费示例 (PDF)", "मुफ़्त नमूने (PDF)"],
+    "Free samples": ["Exemplos grátis", "Ejemplos gratis", "Kostenlose Beispiele", "Бесплатные примеры", "Безкоштовні приклади", "무료 샘플", "無料サンプル", "Exemples gratuits", "免费示例", "मुफ़्त नमूने"],
     "Gathering your report…": ["Preparando seu relatório…", "Preparando tu informe…", "Dein Bericht wird erstellt…", "Готовим ваш отчёт…", "Готуємо ваш звіт…", "리포트를 준비하는 중…", "レポートを準備中…", "Préparation du rapport…", "正在准备您的报告…", "आपकी रिपोर्ट तैयार की जा रही है…"],
     "Extended reports": ["Relatórios completos", "Informes ampliados", "Erweiterte Berichte", "Расширенные отчёты", "Розширені звіти", "확장 리포트", "詳細レポート", "Rapports détaillés", "详细报告", "विस्तृत रिपोर्ट"],
     "Terms of sale": ["Termos de venda", "Términos de venta", "Verkaufsbedingungen", "Условия продажи", "Умови продажу", "판매 약관", "販売条件", "Conditions de vente", "销售条款", "बिक्री की शर्तें"],
