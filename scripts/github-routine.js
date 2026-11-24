@@ -10,6 +10,7 @@
 
 const { MAIN: COUNTRIES } = require('../lib/countries.js');
 const API = 'https://api.github.com/search';
+const MIN_COUNTRIES_WITH_ACCOUNTS = 12;
 const TOPICS = ['ai', 'llm', 'artificial-intelligence', 'machine-learning', 'ai-agents', 'generative-ai'];
 const sleep = (ms) => new Promise((ok) => setTimeout(ok, ms));
 const iso = (d) => d.toISOString().slice(0, 10);
@@ -105,7 +106,10 @@ async function main(env = process.env, now = new Date()) {
     devs.push({ day, country_code: cc, accounts: Number(d.total_count) || 0 });
     await sleep(gap);
   }
-  if (repos.length < 5 || devs.filter((d) => d.accounts).length < 20) throw new Error(`Too little data (${repos.length} repos); not saving.`);
+  const countriesWithAccounts = devs.filter((d) => d.accounts).length;
+  if (repos.length < 5 || countriesWithAccounts < MIN_COUNTRIES_WITH_ACCOUNTS) {
+    throw new Error(`Too little data (${repos.length}/5 repos, ${countriesWithAccounts}/${MIN_COUNTRIES_WITH_ACCOUNTS} countries with new accounts); not saving.`);
+  }
   for (const [table, rows, on] of [['github_ai_repos_weekly', repos, 'day,full_name'], ['github_new_devs_weekly', devs, 'day,country_code'], ['github_ai_repos_top', tops, 'day,period,full_name']]) {
     if (!rows.length) continue;
     if (table !== 'github_new_devs_weekly') await fetch(`${base}/rest/v1/${table}?day=eq.${day}`, { method: 'DELETE', headers: db });
