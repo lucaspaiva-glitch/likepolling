@@ -55,6 +55,7 @@ test('search localizes chart dates and exposes only score and change labels for 
   await new Promise(setImmediate);
   assert.match(page.innerHTML, /datetime="2026-08" data-lps-date="year" data-no-i18n>08\/2026<|datetime="2026-08" data-lps-date="year" data-no-i18n>ago\.? de 2026</i);
   assert.match(page.innerHTML, /data-no-i18n>95<\/span> of 100/);
+  assert.match(page.innerHTML, /<span class="lps-month-name"><time[^>]+>set\.<\/time><\/span><span class="lps-month-number" aria-hidden="true">9<\/span>/);
   assert.match(page.innerHTML, /<small><span data-no-i18n>2025 · Official data<\/span> <em class="up"><span data-no-i18n>▲ 4\.3%<\/span> vs year before<\/em>/);
   assert.match(page.innerHTML, /<h1 data-no-i18n>IKEA<\/h1><p data-no-i18n>Furniture retail company<\/p>/);
   clicks.click();

@@ -160,7 +160,7 @@
     const top = months.reduce((b, m) => (m.value > b.value ? m : b), months[0]);
     return `<section class="lps-card lps-chart"><h2>Is ${esc(name)} searched more?</h2>
       <p class="lps-sub">Google searches worldwide, month by month. 100 = the busiest week. Most searched in <b>${chartDate(top.month, 'year')}</b>. Tap a month.</p>${extra}
-      <div class="lps-cols" role="list">${months.map((m) => `<button type="button" role="listitem" class="${m === top ? 'top' : ''}" data-month="${esc(m.month)}" data-score="${esc(m.value)}" style="--h:${Math.max(2, Math.round((m.value / max) * 100))}%"><i></i><span>${chartDate(m.month, 'month')}</span></button>`).join('')}</div>
+      <div class="lps-cols" role="list">${months.map((m) => `<button type="button" role="listitem" class="${m === top ? 'top' : ''}" data-month="${esc(m.month)}" data-score="${esc(m.value)}" style="--h:${Math.max(2, Math.round((m.value / max) * 100))}%"><i></i><span class="lps-month-name">${chartDate(m.month, 'month')}</span><span class="lps-month-number" aria-hidden="true">${Number(m.month.slice(-2))}</span></button>`).join('')}</div>
       <p class="lps-tip" aria-live="polite">${chartTip(top.month, top.value)}</p></section>`;
   }
   // Real numbers from official or first-party sources (World Bank, SEC, Yahoo Finance, Deezer, TheSportsDB, TSE).
