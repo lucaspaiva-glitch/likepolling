@@ -138,8 +138,20 @@
     } catch (err) { fail(err.message); }
   }
 
-  const mon = (m) => new Date(`${m}-01T00:00:00Z`).toLocaleDateString('en-GB', { month: 'short', year: 'numeric', timeZone: 'UTC' });
   const dayLabel = (d) => new Date(`${d}T00:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' });
+  const DATE_PARTS = { month: { month: 'short' }, year: { month: 'short', year: 'numeric' }, day: { day: 'numeric', month: 'short' } };
+  const dateText = (date, format) => {
+    const i18n = window.LP_I18N;
+    const locale = i18n && i18n.lang !== 'en' ? i18n.locale() : 'en-GB';
+    return new Date(`${date}${format === 'day' ? '' : '-01'}T00:00:00Z`).toLocaleDateString(locale, { ...DATE_PARTS[format], timeZone: 'UTC' });
+  };
+  const chartDate = (date, format) => `<time datetime="${esc(date)}" data-lps-date="${format}" data-no-i18n>${esc(dateText(date, format))}</time>`;
+  const chartTip = (month, score) => `${chartDate(month, 'year')}: <span data-no-i18n>${esc(score)}</span> of 100`;
+  document.addEventListener('lp:lang', () => {
+    page.querySelectorAll('[data-lps-date]').forEach((el) => {
+      el.textContent = dateText(el.dateTime, el.dataset.lpsDate);
+    });
+  });
   const langName = (l) => { try { return new Intl.DisplayNames(['en'], { type: 'language' }).of(l); } catch { return l; } };
   const bars = (rows, label, value, suffix, flag) => `<ul class="lps-bars">${rows.map((r) => `<li>${flag ? `<img src="/assets/flags/${r.code.toLowerCase()}.svg" alt="" width="18" height="13" onerror="this.remove()">` : ''}<span data-no-i18n>${esc(label(r))}</span><i><b style="--w:${Math.max(3, value(r))}%"></b></i><em data-no-i18n>${value(r)}${suffix}</em></li>`).join('')}</ul>`;
   function chart(months, name, extra = '') {
@@ -147,9 +159,9 @@
     const max = Math.max(...months.map((m) => m.value)) || 1;
     const top = months.reduce((b, m) => (m.value > b.value ? m : b), months[0]);
     return `<section class="lps-card lps-chart"><h2>Is ${esc(name)} searched more?</h2>
-      <p class="lps-sub">Google searches worldwide, month by month. 100 = the busiest week. Most searched in <b data-no-i18n>${mon(top.month)}</b>. Tap a month.</p>${extra}
-      <div class="lps-cols" role="list">${months.map((m) => `<button type="button" role="listitem" class="${m === top ? 'top' : ''}" data-tip="${mon(m.month)}: ${m.value} of 100" style="--h:${Math.max(2, Math.round((m.value / max) * 100))}%"><i></i><span data-no-i18n>${mon(m.month).split(' ')[0]}</span></button>`).join('')}</div>
-      <p class="lps-tip" aria-live="polite" data-no-i18n>${mon(top.month)}: ${top.value} of 100</p></section>`;
+      <p class="lps-sub">Google searches worldwide, month by month. 100 = the busiest week. Most searched in <b>${chartDate(top.month, 'year')}</b>. Tap a month.</p>${extra}
+      <div class="lps-cols" role="list">${months.map((m) => `<button type="button" role="listitem" class="${m === top ? 'top' : ''}" data-month="${esc(m.month)}" data-score="${esc(m.value)}" style="--h:${Math.max(2, Math.round((m.value / max) * 100))}%"><i></i><span>${chartDate(m.month, 'month')}</span></button>`).join('')}</div>
+      <p class="lps-tip" aria-live="polite">${chartTip(top.month, top.value)}</p></section>`;
   }
   // Real numbers from official or first-party sources (World Bank, SEC, Yahoo Finance, Deezer, TheSportsDB, TSE).
   const money = (v) => { const a = Math.abs(v), sg = v < 0 ? '−' : ''; return a >= 1e12 ? `${sg}$${(a / 1e12).toFixed(2)}T` : a >= 1e9 ? `${sg}$${(a / 1e9).toFixed(1)}B` : a >= 1e6 ? `${sg}$${(a / 1e6).toFixed(1)}M` : `${sg}$${num(Math.round(a))}`; };
@@ -167,7 +179,7 @@
     if (!k || !k.tiles || !k.tiles.length) return '';
     const n = esc(name);
     const sources = (k.sources || [{ name: k.source, link: k.link }]).map((x) => `<a href="${esc(x.link)}" target="_blank" rel="noopener">${esc(x.name)} ↗</a>`).join(' · ');
-    const tiles = `<dl class="lps-fgrid lps-kgrid">${k.tiles.map((t) => `<div><dt>${esc(t.label)}</dt><dd data-no-i18n>${statValue(t, k.kind)}</dd>${t.year || t.note || t.change != null ? `<small data-no-i18n>${[t.year, t.note].filter(Boolean).map(esc).join(' · ')}${t.change != null ? ` <em class="${t.change >= 0 ? 'up' : 'down'}">${t.change >= 0 ? '▲' : '▼'} ${Math.abs(t.change)}% ${t.change_label ? esc(t.change_label) : 'vs year before'}</em>` : ''}</small>` : ''}</div>`).join('')}</dl>`;
+    const tiles = `<dl class="lps-fgrid lps-kgrid">${k.tiles.map((t) => `<div><dt>${esc(t.label)}</dt><dd data-no-i18n>${statValue(t, k.kind)}</dd>${t.year || t.note || t.change != null ? `<small><span data-no-i18n>${[t.year, t.note].filter(Boolean).map(esc).join(' · ')}</span>${t.change != null ? ` <em class="${t.change >= 0 ? 'up' : 'down'}"><span data-no-i18n>${t.change >= 0 ? '▲' : '▼'} ${Math.abs(t.change)}%</span> ${esc(t.change_label || 'vs year before')}</em>` : ''}</small>` : ''}</div>`).join('')}</dl>`;
     const sp = k.split ? (() => { const tot = k.split.a.votes + k.split.b.votes, a = Math.round((k.split.a.votes / tot) * 1000) / 10;
       return `<div class="lps-split" role="img" aria-label="${esc(k.split.a.name)} ${a}%, ${esc(k.split.b.name)} ${Math.round((100 - a) * 10) / 10}%"><i style="--w:${a}%"><span data-no-i18n>${esc(k.split.a.name)} ${a}%</span></i><b><span data-no-i18n>${esc(k.split.b.name)} ${Math.round((100 - a) * 10) / 10}%</span></b></div><p class="lps-sub">${esc(k.split.label)}. ${esc(k.note || '')}</p>`; })() : '';
     const pts = k.series && k.series.points || [];
@@ -183,7 +195,7 @@
   const signed = (p) => `${p > 0 ? '+' : p < 0 ? '−' : ''}${Math.abs(p)}%`;
   const searchStats = (g, world) => `<div class="lps-stats three">${[
     g && g.change_pct != null ? stat(signed(g.change_pct), 'Google searches, last 4 weeks vs the 4 before') : '',
-    g && g.yoy_pct != null ? stat(signed(g.yoy_pct), 'Google searches vs the same weeks last year') : g && g.peak ? stat(dayLabel(g.peak.day), g.peak.times >= 1.5 ? `its busiest week of the year: ${g.peak.times}× a normal week` : 'its busiest week of the year') : '',
+    g && g.yoy_pct != null ? stat(signed(g.yoy_pct), 'Google searches vs the same weeks last year') : g && g.peak ? stat(chartDate(g.peak.day, 'day'), g.peak.times >= 1.5 ? `its busiest week of the year: ${g.peak.times}× a normal week` : 'its busiest week of the year') : '',
     world && world[0] ? stat(`<span data-no-i18n>${esc(world[0].name)}</span>`, 'searches for it most, for its size', '', true) : '',
   ].join('')}</div>`;
   function freeHtml(a, c) {
@@ -210,7 +222,13 @@
     requestAnimationFrame(() => requestAnimationFrame(() => page.classList.add('lps-in')));
     page.querySelectorAll('.lps-cols button').forEach((b) => {
       const box = b.closest('.lps-card'), tip = box && box.querySelector('.lps-tip');
-      const show = () => { box.querySelectorAll('.lps-cols button.on').forEach((x) => x.classList.remove('on')); b.classList.add('on'); if (tip) tip.textContent = b.dataset.tip; };
+      const show = () => {
+        box.querySelectorAll('.lps-cols button.on').forEach((x) => x.classList.remove('on'));
+        b.classList.add('on');
+        if (!tip) return;
+        if (b.dataset.month) tip.innerHTML = chartTip(b.dataset.month, b.dataset.score);
+        else tip.textContent = b.dataset.tip;
+      };
       b.addEventListener('click', show); b.addEventListener('pointerenter', show); b.addEventListener('focus', show);
     });
   }

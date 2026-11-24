@@ -163,7 +163,8 @@ html.lp-subj .wrap > section, html.lp-subj .wrap > .tm-tabs { display: none !imp
 /* Real numbers card (World Bank, SEC, Yahoo Finance, Deezer, TheSportsDB, TSE) */
 .lps-key .lps-sub a { color: inherit; font-weight: 600; }
 .lps-kgrid div small { display: block; margin-top: 4px; font-size: 13px; line-height: 1.4; color: #6e6e73; overflow-wrap: anywhere; }
-.lps-kgrid div small em { font-style: normal; font-weight: 600; white-space: nowrap; }
+.lps-kgrid div small em { font-style: normal; font-weight: 600; }
+.lps-kgrid div small em > span { white-space: nowrap; }
 .lps-kgrid em.up { color: #0a7a3d; } .lps-kgrid em.down { color: #b0000e; }
 .lps-kcols { grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); height: 150px; }
 .lps-kcols button.neg i { background: #9a9aa0; }
