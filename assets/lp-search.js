@@ -88,7 +88,7 @@
     if (!data.subject) {
       const c = data.countries[0];
       const search = c.searches && c.searches.top && c.searches.top[0], video = c.youtube && c.youtube[0];
-      return [`<div class="lps-prof"><img class="lps-av flag" src="/assets/flags/${c.country.toLowerCase()}.svg" alt=""><div class="lps-who">${tags(cat, true)}<h1 data-no-i18n>Brazil</h1><p>What Brazil searches, watches and is in the news for.</p></div></div>`, `<h2>What Brazil searches and watches</h2>
+      return [`<div class="lps-prof"><img class="lps-av flag" src="/assets/flags/${c.country.toLowerCase()}.svg" alt=""><div class="lps-who">${tags(cat, true)}<h1>Brazil</h1><p>What Brazil searches, watches and is in the news for.</p></div></div>`, `<h2>What Brazil searches and watches</h2>
         <div class="lps-stats">${stat(short(c.news_focus ? c.news_focus.articles : 0), 'News stories about Brazil, 30 days')}
         ${search ? stat(esc(search.query), 'Top Google search', '', true) : ''}${video ? stat(esc(video.title), `Top YouTube video · ${short(video.views)} views`, '', true) : ''}</div>`];
     }

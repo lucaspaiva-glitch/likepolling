@@ -6,7 +6,38 @@ const { join } = require('node:path');
 const { runInNewContext } = require('node:vm');
 
 const script = readFileSync(join(__dirname, '../assets/lp-search.js'), 'utf8');
+const i18nScript = readFileSync(join(__dirname, '../assets/i18n.js'), 'utf8');
 const months = [{ month: '2026-08', value: 95 }, { month: '2026-09', value: 60 }, { month: '2026-10', value: 80 }];
+
+test('Brazil sample country labels use the Portuguese country name and grammar', () => {
+  const window = {};
+  runInNewContext(i18nScript, {
+    window,
+    document: {
+      body: { nodeType: 1, closest: () => null, hasAttribute: () => false },
+      head: { appendChild() {} },
+      documentElement: {},
+      createElement: () => ({ setAttribute() {}, addEventListener() {}, querySelectorAll: () => [] }),
+      createTreeWalker: () => ({ nextNode: () => null }),
+      querySelector: () => null,
+      dispatchEvent() {},
+    },
+    location: { search: '' },
+    navigator: { language: 'en' },
+    NodeFilter: { SHOW_ELEMENT: 1, SHOW_TEXT: 4 },
+    MutationObserver: class { observe() {} disconnect() {} },
+    CustomEvent: class {},
+    URLSearchParams,
+  });
+  for (const lang of ['pt', 'pt-PT']) {
+    window.LP_I18N.setLang(lang);
+    assert.equal(window.LP_I18N.t('Brazil'), 'Brasil');
+    assert.equal(window.LP_I18N.t('Brazil’s economy in numbers'), 'A economia do Brasil em números');
+    assert.equal(window.LP_I18N.t('Portugal’s economy in numbers'), 'A economia de Portugal em números');
+  }
+  window.LP_I18N.setLang('en');
+  assert.equal(window.LP_I18N.t('Brazil’s economy in numbers'), 'Brazil’s economy in numbers');
+});
 
 test('search localizes chart dates and exposes only score and change labels for translation', async () => {
   const events = {};

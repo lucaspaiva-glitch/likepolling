@@ -695,7 +695,11 @@
     [/^Bots are building (.+)’s page$/, ["Os bots estão montando a página de $1", "Los bots están armando la página de $1", "Bots bauen die Seite über $1", "Боты собирают страницу: $1", "Боти збирають сторінку: $1", "봇이 $1 페이지를 만드는 중", "ボットが$1のページを作成中", "Les bots construisent la page de $1", "机器人正在生成 $1 的页面", "बॉट $1 का पेज बना रहे हैं"]],
     [/^Finding (.+)$/, ["Procurando $1", "Buscando $1", "$1 wird gesucht", "Ищем: $1", "Шукаємо: $1", "$1 찾는 중", "$1を検索中", "Recherche de $1", "正在查找 $1", "$1 खोज रहे हैं"]],
     [/^Is (.+) searched more\?$/, ["$1 está sendo mais buscado?", "¿Se busca más $1?", "Wird $1 mehr gesucht?", "$1 ищут чаще?", "$1 шукають частіше?", "$1 검색이 늘고 있나?", "$1の検索は増えている？", "$1 est-il plus recherché ?", "$1 的搜索量在增加吗？", "क्या $1 ज़्यादा खोजा जा रहा है?"]],
-    [/^(.+)’s economy in numbers$/, ["A economia de $1 em números", "La economía de $1 en cifras", "Die Wirtschaft von $1 in Zahlen", "$1: экономика в цифрах", "$1: економіка в цифрах", "숫자로 보는 $1 경제", "数字で見る$1の経済", "L'économie de $1 en chiffres", "数字看 $1 经济", "आँकड़ों में $1 की अर्थव्यवस्था"]],
+    [/^(.+)’s economy in numbers$/, ["A economia $1 em números", "La economía de $1 en cifras", "Die Wirtschaft von $1 in Zahlen", "$1: экономика в цифрах", "$1: економіка в цифрах", "숫자로 보는 $1 경제", "数字で見る$1の経済", "L'économie de $1 en chiffres", "数字看 $1 经济", "आँकड़ों में $1 की अर्थव्यवस्था"], (name, lang) => {
+      const localized = country(name, lang) ?? name;
+      if (lang !== 'pt' && lang !== 'pt-PT') return localized;
+      return name === 'Brazil' ? `do ${localized}` : `de ${localized}`;
+    }],
     [/^(.+)’s music in numbers$/, ["A música de $1 em números", "La música de $1 en cifras", "Die Musik von $1 in Zahlen", "$1: музыка в цифрах", "$1: музика в цифрах", "숫자로 보는 $1의 음악", "数字で見る$1の音楽", "La musique de $1 en chiffres", "数字看 $1 的音乐", "आँकड़ों में $1 का संगीत"]],
     [/^(.+) on the pitch$/, ["$1 em campo", "$1 en el campo", "$1 auf dem Platz", "$1 на поле", "$1 на полі", "경기장 위의 $1", "ピッチ上の$1", "$1 sur le terrain", "$1 场上表现", "मैदान पर $1"]],
     [/^(.+) in numbers$/, ["$1 em números", "$1 en cifras", "$1 in Zahlen", "$1 в цифрах", "$1 у цифрах", "숫자로 보는 $1", "数字で見る$1", "$1 en chiffres", "数字看 $1", "आँकड़ों में $1"]],
