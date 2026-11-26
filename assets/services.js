@@ -7,16 +7,27 @@
   const lang = () => (window.LP_I18N && window.LP_I18N.lang) || 'en';
   const loc = () => (lang() === 'pt' ? 'pt-BR' : lang());
   const D = window.LP_REPORT_DICT || {};
-  const L = (en, v = {}) => ((lang() === 'pt-PT' && D['pt-PT'] && D['pt-PT'][en]) || (D[lang() === 'pt-PT' ? 'pt' : lang()] || {})[en] || en).replace(/\{(\w+)\}/g, (_, k) => v[k]);
+  const L = (en, v = {}) => (D[lang()]?.[en] || (lang() === 'pt-PT' && D.pt?.[en]) || window.LP_I18N?.t(en) || en).replace(/\{(\w+)\}/g, (_, k) => v[k]);
   const region = (c) => { try { return new Intl.DisplayNames([loc()], { type: 'region' }).of(c); } catch { return c; } };
   const num = (n) => Number(n || 0).toLocaleString(loc());
   const esc = (t) => String(t).replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
   const SAMPLES = 'https://iyhaoagslsrwtkcrxylp.supabase.co/storage/v1/object/public/samples';
   const setPdf = () => { $('pv-pdf').href = `${SAMPLES}/${lang()}/country-report.pdf?download=like-polling-country-report.pdf`; $('preview').href = `${SAMPLES}/${lang()}/country-report.pdf`; };
-  setPdf();
-  let data = null;
-  document.addEventListener('lp:lang', () => { setPdf(); if (data) draw(data); });
-  fetch('/api/report?country=BR&compare=PT').then((r) => (r.ok ? r.json() : Promise.reject())).then((d) => { data = d; draw(d); }).catch(() => { $('pv-take').textContent = 'Open the free sample to see a full report.'; });
+  const loading = 'Loading the sample…';
+  const fallback = 'Open the free sample to see a full report.';
+  let data;
+  function render() {
+    setPdf();
+    $('pv-tag').textContent = L('Extended Country Report');
+    $('pv-title').textContent = `${region('BR')} vs ${region('PT')}`;
+    $('pv-nl').textContent = L('News coverage per day');
+    $('pv-rank-l').textContent = data ? `${L('Searched on Google')} · ${region('BR')}` : L('Searched on Google');
+    if (data) draw(data);
+    else $('pv-take').textContent = L(data === undefined ? loading : fallback);
+  }
+  render();
+  document.addEventListener('lp:lang', render);
+  fetch('/api/report?country=BR&compare=PT').then((r) => (r.ok ? r.json() : Promise.reject())).then((d) => { data = d; render(); }).catch(() => { data = null; render(); });
   function draw(d) {
     const [br, pt] = d.countries;
     $('pv-kpis').innerHTML = [[br, 'BR'], [pt, 'PT']].map(([c, n]) => `<div><b>${num(c.news_focus.articles)}</b><span>${L('News articles')} · ${region(n)}</span></div>`).join('');
@@ -28,12 +39,8 @@
       $('pv-chart').innerHTML = `<polygon points="4,${H - 6} ${pts} ${W - 4},${H - 6}" fill="#fbeaec"/><polyline points="${pts}" fill="none" stroke="#b0000e" stroke-width="2.2" stroke-linejoin="round"/><circle cx="${px}" cy="${py}" r="4" fill="#fff" stroke="#b0000e" stroke-width="2.5"/>`;
       const day = new Date(`${nd[pk].day}T00:00:00Z`).toLocaleDateString(loc(), { day: 'numeric', month: 'short', timeZone: 'UTC' });
       $('pv-take').innerHTML = `${region('BR')}: ${L('Busiest day: {day} with {n} articles', { day: `<b>${day}</b>`, n: num(max) })}. ${L('{n} news articles mentioned both countries together.', { n: num(d.shared.articles_together) })}`;
-    }
+    } else $('pv-take').textContent = L(fallback);
     const top = ((br.searches && br.searches.top) || []).slice(0, 3), m = (top[0] && top[0].traffic) || 1;
-    $('pv-tag').textContent = L('Extended Country Report');
-    $('pv-title').textContent = `${region('BR')} vs ${region('PT')}`;
-    $('pv-nl').textContent = L('News coverage per day');
-    $('pv-rank-l').textContent = `${L('Searched on Google')} · ${region('BR')}`;
     $('pv-rank').innerHTML = top.map((w) => `<li><div class="l"><span>${esc(w.query)}</span><b>${num(w.traffic)}</b></div><i style="--w:${((w.traffic / m) * 100).toFixed(0)}%"></i></li>`).join('');
   }
 
