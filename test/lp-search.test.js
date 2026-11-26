@@ -9,11 +9,12 @@ const script = readFileSync(join(__dirname, '../assets/lp-search.js'), 'utf8');
 const i18nScript = readFileSync(join(__dirname, '../assets/i18n.js'), 'utf8');
 const months = [{ month: '2026-08', value: 95 }, { month: '2026-09', value: 60 }, { month: '2026-10', value: 80 }];
 
-test('Brazil sample country labels use the Portuguese country name and grammar', () => {
+function loadI18n() {
   const window = {};
   runInNewContext(i18nScript, {
     window,
     document: {
+      title: 'Like Polling',
       body: { nodeType: 1, closest: () => null, hasAttribute: () => false },
       head: { appendChild() {} },
       documentElement: {},
@@ -29,6 +30,11 @@ test('Brazil sample country labels use the Portuguese country name and grammar',
     CustomEvent: class {},
     URLSearchParams,
   });
+  return window;
+}
+
+test('Brazil sample country labels use the Portuguese country name and grammar', () => {
+  const window = loadI18n();
   for (const lang of ['pt', 'pt-PT']) {
     window.LP_I18N.setLang(lang);
     assert.equal(window.LP_I18N.t('Brazil'), 'Brasil');
@@ -37,6 +43,30 @@ test('Brazil sample country labels use the Portuguese country name and grammar',
   }
   window.LP_I18N.setLang('en');
   assert.equal(window.LP_I18N.t('Brazil’s economy in numbers'), 'Brazil’s economy in numbers');
+});
+
+test('politicians tab and current services data-source FAQ have translations in all locales', () => {
+  const { LP_I18N: i18n } = loadI18n();
+  const politicians = 'Trending politicians';
+  const services = readFileSync(join(__dirname, '../services.html'), 'utf8');
+  const [, faq] = services.match(/<summary>Where does the data come from\?<\/summary><p>([^<]+)<\/p>/);
+  for (const lang of ['pt', 'pt-PT', 'es', 'fr', 'de', 'ru', 'uk', 'zh', 'hi', 'ko', 'ja']) {
+    i18n.setLang(lang);
+    assert.notEqual(i18n.t(politicians), politicians, lang);
+    assert.notEqual(i18n.t(faq), faq, lang);
+    assert.match(i18n.t(faq), /Google Trends/);
+    assert.match(i18n.t(faq), /MusicBrainz/);
+  }
+  i18n.setLang('pt-PT');
+  assert.equal(i18n.t(politicians), 'Políticos em destaque');
+  assert.match(i18n.t(faq), /^Só dados abertos\..*registos diários/);
+  assert.equal(i18n.t(''), '');
+  assert.equal(i18n.t('Like Polling'), 'Like Polling');
+  for (const lang of ['en', 'en-GB']) {
+    i18n.setLang(lang);
+    assert.equal(i18n.t(politicians), politicians);
+    assert.equal(i18n.t(faq), faq);
+  }
 });
 
 test('search localizes chart dates and exposes only score and change labels for translation', async () => {
