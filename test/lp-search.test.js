@@ -59,6 +59,9 @@ test('politicians tab and current services data-source FAQ have translations in 
   }
   i18n.setLang('pt-PT');
   assert.equal(i18n.t('Philippines'), 'Filipinas');
+  assert.equal(i18n.t('Open my report'), 'Abrir o meu relatório');
+  assert.equal(i18n.t('Contact'), 'Contacto');
+  assert.match(i18n.t('Download the sample (PDF)'), /^Descarregar/);
   assert.equal(i18n.t(politicians), 'Políticos em destaque');
   assert.match(i18n.t(faq), /^Só dados abertos\..*registos diários/);
   assert.equal(i18n.t(''), '');
