@@ -58,6 +58,7 @@ test('politicians tab and current services data-source FAQ have translations in 
     assert.match(i18n.t(faq), /MusicBrainz/);
   }
   i18n.setLang('pt-PT');
+  assert.equal(i18n.t('Philippines'), 'Filipinas');
   assert.equal(i18n.t(politicians), 'Políticos em destaque');
   assert.match(i18n.t(faq), /^Só dados abertos\..*registos diários/);
   assert.equal(i18n.t(''), '');
@@ -93,6 +94,7 @@ test('search localizes chart dates and exposes only score and change labels for 
   const data = {
     name: 'IKEA', description: 'Furniture retail company', cat: 'brand',
     searches: { months, peak: { day: '2026-08-16' } },
+    world: [{ code: 'US', name: 'United States', value: 100 }, { code: 'PH', name: 'Philippines', value: 93 }],
     key_stats: { kind: 'country', source: 'World Bank', link: 'https://example.test', tiles: [
       { label: 'Economy size (GDP)', unit: 'usd', value: 200, year: 2025, note: 'Official data', change: 4.3 },
     ] },
@@ -118,6 +120,8 @@ test('search localizes chart dates and exposes only score and change labels for 
   assert.match(page.innerHTML, /data-no-i18n>95<\/span> of 100/);
   assert.match(page.innerHTML, /<span class="lps-month-name"><time[^>]+>set\.<\/time><\/span><span class="lps-month-number" aria-hidden="true">9<\/span>/);
   assert.match(page.innerHTML, /<small><span data-no-i18n>2025 · Official data<\/span> <em class="up"><span data-no-i18n>▲ 4\.3%<\/span> vs year before<\/em>/);
+  assert.match(page.innerHTML, /<b class="txt">United States<\/b><span>searches for it most, for its size<\/span>/);
+  assert.match(page.innerHTML, /<span>Philippines<\/span><i>/);
   assert.match(page.innerHTML, /<h1 data-no-i18n>IKEA<\/h1><p data-no-i18n>Furniture retail company<\/p>/);
   clicks.click();
   assert.match(tip.innerHTML, /datetime="2026-09".*data-no-i18n>60<\/span> of 100/);
