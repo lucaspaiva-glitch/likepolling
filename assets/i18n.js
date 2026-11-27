@@ -844,6 +844,22 @@
     "^Where do people search for (.+)\\?$": "Onde as pessoas pesquisam $1?",
     "^The latest headlines that name (.+) \\(Google News\\)\\.$": "Os últimos títulos que referem $1 (Google News).",
     "^Graphs since 2017, saved snapshots, comparisons with similar names, a PDF presentation and an Excel file about (.+)\\. No sign-up\\.$": "Gráficos desde 2017, retratos guardados, comparações com nomes parecidos, uma apresentação em PDF e um ficheiro Excel sobre $1. Sem registo.",
+    "Open my report": "Abrir o meu relatório",
+    "Inside a country report": "Dentro de um relatório de país",
+    "What's rising, and 3 ideas to adapt": "O que está a subir, e 3 ideias para adaptar",
+    "Download the sample (PDF)": "Descarregar o exemplo (PDF)",
+    "Download a free sample (PDF) ›": "Descarregar exemplo grátis (PDF) ›",
+    "Gathered every day since 24 Oct 2026.": "Recolhido todos os dias desde 24 out 2026.",
+    "Gathered every day since 24 Oct 2026. You choose after paying.": "Recolhido todos os dias desde 24 out 2026. Escolhe depois de pagar.",
+    "Like the Machu Picchu Energy card. Monthly views and clicks included.": "Como o cartão da Machu Picchu Energy. Visualizações e cliques mensais incluídos.",
+    "Every report also charts monthly news share since 2017 (The GDELT Project).": "Cada relatório mostra também a quota mensal nas notícias desde 2017 (The GDELT Project).",
+    "Does the report include YouTube or news headlines?": "O relatório inclui o YouTube ou títulos de notícias?",
+    "No. YouTube rankings and news headlines belong to YouTube and the publishers, so they stay free on likepolling.com and are never sold. You pay for our work: collecting, organising and explaining open data.": "Não. Os rankings do YouTube e os títulos de notícias pertencem ao YouTube e aos meios de comunicação, por isso continuam grátis em likepolling.com e nunca são vendidos. Paga pelo nosso trabalho: recolher, organizar e explicar dados abertos.",
+    "What do you keep about me?": "O que guardam sobre mim?",
+    "Nothing. Our checkout partner handles the payment and your email. Like Polling has no accounts and stores no buyer data.": "Nada. O nosso parceiro de pagamento trata do pagamento e do seu e-mail. O Like Polling não tem contas e não guarda dados de compradores.",
+    "Yes, within 14 days if the report isn't useful to you.": "Sim, até 14 dias, se o relatório não lhe for útil.",
+    "Contact": "Contacto",
+    "Extended reports · Like Polling": "Relatórios completos · Like Polling",
     "^its busiest week of the year: (.+)× a normal week$": "a sua semana mais movimentada do ano: $1× uma semana normal",
   };
   // Narrower wording inside a container: [selector, { English: [pt, es, de, ru, uk, ko, ja, fr, zh, hi] }]
@@ -852,6 +868,7 @@
     ['.ytt', { 'Views': ['Visualiz.', 'Vistas', 'Aufrufe', 'Просм.', 'Перегл.', '조회수', '再生数', "Vues", "观看次数", "व्यूज"] }],
   ];
   const TITLES = {
+    'Extended reports · Like Polling': ["Relatórios completos · Like Polling", "Informes ampliados · Like Polling", "Erweiterte Berichte · Like Polling", "Расширенные отчёты · Like Polling", "Розширені звіти · Like Polling", "확장 리포트 · Like Polling", "詳細レポート · Like Polling", "Rapports détaillés · Like Polling", "详细报告 · Like Polling", "विस्तृत रिपोर्ट · Like Polling"],
     'Like Polling | Human + AI analytics for what the world watches': ["Like Polling | O que o mundo assiste, analisado por humano + IA", "Like Polling | Lo que el mundo ve, analizado por humano + IA", "Like Polling | Was die Welt schaut – analysiert von Mensch + KI", "Like Polling | Аналитика того, что смотрит мир: человек + ИИ", "Like Polling | Аналітика того, що дивиться світ: людина + ШІ", "Like Polling | 사람 + AI가 분석하는 세계가 보는 콘텐츠", "Like Polling | 人 + AI で世界が見ているものを分析", "Like Polling | Analyse par humain + IA de ce que le monde regarde", "Like Polling | 人类 + AI 分析全球观看趋势", "Like Polling | दुनिया क्या देख रही है, इसका मानव + AI विश्लेषण"],
     'Like Polling | YouTube Channel Intelligence': ['Like Polling | Inteligência de canais do YouTube', 'Like Polling | Inteligencia de canales de YouTube', 'Like Polling | YouTube-Kanalanalyse', 'Like Polling | Аналитика YouTube-каналов', 'Like Polling | Аналітика YouTube-каналів', 'Like Polling | YouTube 채널 인텔리전스', 'Like Polling | YouTubeチャンネル分析', "Like Polling | Intelligence de chaîne YouTube", "Like Polling | YouTube 频道情报", "Like Polling | YouTube चैनल इंटेलिजेंस"],
   };
