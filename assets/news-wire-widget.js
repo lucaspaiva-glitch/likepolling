@@ -681,14 +681,19 @@
       const counts = await worldCounts;
       const world = Object.values(counts).some(Boolean);
       let cc = worldPick || ({ en: 'US', 'en-GB': 'GB', pt: 'BR', 'pt-PT': 'PT', es: 'MX', de: 'DE', ru: 'RU', uk: 'UA', ko: 'KR', ja: 'JP', fr: 'FR', zh: 'CN', hi: 'IN' })[lang] || 'US';
-      const inLang = (rs) => rs.map((r) => {
-        const t = r.title_tr || {};
-        const summary = (t.sum && (t.sum[dataLang(lang)] || t.sum.en)) || '';
-        const out = summary ? { ...r, summary } : r;
-        // Headlines already in the reader's language stay as the newspaper wrote them.
-        if (NEWS_LANG[r.country_code] === String(lang).split('-')[0]) return out;
-        return t[dataLang(lang)] && t[dataLang(lang)] !== r.title ? { ...out, title: t[dataLang(lang)], title_orig: r.title } : out;
-      });
+      const native = (r) => NEWS_LANG[r.country_code] === String(lang).split('-')[0];
+      const inLang = (rs) => {
+        // A story whose translation isn't ready yet is left out rather than shown in a foreign language.
+        const ready = rs.filter((r) => native(r) || (r.title_tr && r.title_tr[dataLang(lang)]));
+        return (ready.length ? ready : rs).map((r) => {
+          const t = r.title_tr || {};
+          const summary = (t.sum && (t.sum[dataLang(lang)] || t.sum.en)) || '';
+          const out = summary ? { ...r, summary } : r;
+          // Headlines already in the reader's language stay as the newspaper wrote them.
+          if (native(r)) return out;
+          return t[dataLang(lang)] && t[dataLang(lang)] !== r.title ? { ...out, title: t[dataLang(lang)], title_orig: r.title } : out;
+        });
+      };
       let rows;
       if (world) {
         rows = inLang(await loadWorld(cc));
