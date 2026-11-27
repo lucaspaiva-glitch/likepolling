@@ -117,7 +117,7 @@ html.lp-subj .wrap > section, html.lp-subj .wrap > .tm-tabs { display: none !imp
 .lps-bars li { display: grid; grid-template-columns: auto 110px minmax(0, 1fr) 44px; align-items: center; gap: 8px; font-size: 15px; }
 .lps-bars li:not(:has(img)) { grid-template-columns: 110px minmax(0, 1fr) 44px; }
 .lps-bars img { border-radius: 2px; }
-.lps-bars span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lps-bars span { line-height: 1.25; overflow-wrap: anywhere; }
 .lps-bars i { height: 12px; border-radius: 999px; background: #f5f5f7; overflow: hidden; }
 .lps-bars i b { display: block; height: 100%; width: 0; border-radius: 999px; background: linear-gradient(90deg, #b0000e, #ff4a5c); transition: width .9s cubic-bezier(.2,.8,.2,1); }
 .lps-in .lps-bars i b { width: var(--w); }

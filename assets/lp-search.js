@@ -153,7 +153,7 @@
     });
   });
   const langName = (l) => { try { return new Intl.DisplayNames(['en'], { type: 'language' }).of(l); } catch { return l; } };
-  const bars = (rows, label, value, suffix, flag) => `<ul class="lps-bars">${rows.map((r) => `<li>${flag ? `<img src="/assets/flags/${r.code.toLowerCase()}.svg" alt="" width="18" height="13" onerror="this.remove()">` : ''}<span data-no-i18n>${esc(label(r))}</span><i><b style="--w:${Math.max(3, value(r))}%"></b></i><em data-no-i18n>${value(r)}${suffix}</em></li>`).join('')}</ul>`;
+  const bars = (rows, label, value, suffix, flag) => `<ul class="lps-bars">${rows.map((r) => `<li>${flag ? `<img src="/assets/flags/${r.code.toLowerCase()}.svg" alt="" width="18" height="13" onerror="this.remove()">` : ''}<span${flag ? '' : ' data-no-i18n'}>${esc(label(r))}</span><i><b style="--w:${Math.max(3, value(r))}%"></b></i><em data-no-i18n>${value(r)}${suffix}</em></li>`).join('')}</ul>`;
   function chart(months, name, extra = '') {
     if (months.length < 3) return '';
     const max = Math.max(...months.map((m) => m.value)) || 1;
@@ -196,7 +196,7 @@
   const searchStats = (g, world) => `<div class="lps-stats three">${[
     g && g.change_pct != null ? stat(signed(g.change_pct), 'Google searches, last 4 weeks vs the 4 before') : '',
     g && g.yoy_pct != null ? stat(signed(g.yoy_pct), 'Google searches vs the same weeks last year') : g && g.peak ? stat(chartDate(g.peak.day, 'day'), g.peak.times >= 1.5 ? `its busiest week of the year: ${g.peak.times}× a normal week` : 'its busiest week of the year') : '',
-    world && world[0] ? stat(`<span data-no-i18n>${esc(world[0].name)}</span>`, 'searches for it most, for its size', '', true) : '',
+    world && world[0] ? `<div class="lps-stat"><b class="txt">${esc(world[0].name)}</b><span>searches for it most, for its size</span></div>` : '',
   ].join('')}</div>`;
   function freeHtml(a, c) {
     const name = a.name;
