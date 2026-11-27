@@ -342,7 +342,7 @@ html.nw-lock { overflow: hidden; }
 .nw-front.nw-ranked .nw-row:first-child { padding-top: 0; }
 .nw-front.nw-ranked .nw-row-media { width: calc(100% * (1 - var(--i, 0) * var(--st, .02))); aspect-ratio: 16 / 9; margin-bottom: 9px; }
 .nw-front.nw-ranked .nw-row .nw-hl { -webkit-line-clamp: 2; font-size: calc(16px - var(--i, 0) * .1px); }
-.nw-front.nw-ranked .nw-row-media .nw-cap { left: 8px; right: 8px; bottom: 8px; font-size: 13px; line-height: 1.5; }
+.nw-front.nw-ranked .nw-row-media .nw-cap { left: 10px; right: 10px; bottom: 10px; font-size: 17px; line-height: 1.45; }
 .nw-front.nw-ranked .nw-row-media .nw-cap span { padding: 2px 6px; }
 .nw-front.nw-ranked .nw-row:nth-child(2) { --i: 1; }
 .nw-front.nw-ranked .nw-row:nth-child(3) { --i: 2; }
@@ -371,7 +371,8 @@ html.nw-lock { overflow: hidden; }
 @media (max-width: 560px) {
   .nw-lead .nw-cap { font-size: 13.5px; }
   .nw-row-media .nw-cap { left: 4px; right: 4px; bottom: 4px; font-size: 11px; }
-  .nw-front.nw-ranked .nw-row-media .nw-cap { left: 6px; right: 6px; bottom: 6px; font-size: 12.5px; }
+  .nw-front.nw-ranked .nw-row-media .nw-cap { left: 10px; right: 10px; bottom: 14px; font-size: 22px; line-height: 1.45; }
+  .nw-front.nw-ranked .nw-row-media .nw-cap span { padding: 3px 8px; }
 }
 @media (max-width: 760px) {
   .nw-front.nw-ranked .nw-feed-wrap { grid-template-columns: minmax(0, 1fr); }

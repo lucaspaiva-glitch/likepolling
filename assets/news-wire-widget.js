@@ -266,6 +266,13 @@
   // ranking (or follows the mouse); on touch screens it's the story nearest the middle of the screen.
   const CAP_STEP = 2200;
   const capTouch = matchMedia('(hover: none)').matches;
+  // Ranked photo cards: as many words as fill the bottom half of the photo, up to its middle.
+  const capFit = (cap) => {
+    const fs = parseFloat(getComputedStyle(cap).fontSize) || 16, card = cap.parentElement;
+    const perLine = Math.max(12, Math.floor(cap.clientWidth / (fs * .56)));
+    const lines = Math.max(1, Math.floor((card.clientHeight * .5) / (fs * 1.45)));
+    return Math.max(34, Math.floor(perLine * lines * .9));
+  };
   let capOn = null, capHover = null, capT = 0;
   const capLive = (cap) => { const c = cap.closest('.nw-card'); return !!c && c.classList.contains('nw-on') && !c.classList.contains('nw-paused'); };
   const capReset = (cap) => { cap.nwAt = -1; cap.nwDone = false; cap.firstElementChild.textContent = ''; cap.classList.remove('nw-cap-gap'); };
@@ -311,7 +318,7 @@
     const next = capPick(caps);
     if (next !== capOn || (capOn && capOn.nwDone)) { if (capOn) capReset(capOn); capOn = next; if (next) capReset(next); }
     if (!capOn) return;
-    if (!capOn.nwChunks) capOn.nwChunks = capChunks(capOn.dataset.cap, capOn.closest('.nw-lead') ? 44 : 34);
+    if (!capOn.nwChunks) capOn.nwChunks = capChunks(capOn.dataset.cap, capOn.closest('.nw-lead') ? 44 : capOn.closest('.nw-ranked') ? capFit(capOn) : 34);
     const span = capOn.firstElementChild;
     capOn.nwAt += 1;
     // A blank beat after the last chunk before the next summary starts.
@@ -321,7 +328,8 @@
     void span.offsetWidth;
     span.classList.add('nw-cap-in');
   };
-  const capLoop = () => { clearTimeout(capT); capTick(); capT = setTimeout(capLoop, CAP_STEP); };
+  // Longer chunks stay up longer, so they can still be read.
+  const capLoop = () => { clearTimeout(capT); capTick(); const t = capOn && capOn.nwChunks && capOn.nwChunks[capOn.nwAt]; capT = setTimeout(capLoop, Math.max(CAP_STEP, (t ? t.length : 0) * 60)); };
   let capScroll = 0;
   document.addEventListener('scroll', () => {
     clearTimeout(capScroll);
