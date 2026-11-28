@@ -48,11 +48,15 @@ test('Brazil sample country labels use the Portuguese country name and grammar',
 test('politicians tab and current services data-source FAQ have translations in all locales', () => {
   const { LP_I18N: i18n } = loadI18n();
   const politicians = 'Trending politicians';
+  const politics = readFileSync(join(__dirname, '../assets/politics-widget.js'), 'utf8');
+  const [, note] = politics.match(/<p class="lp-pol-note">([^<]+)<\/p>/);
   const services = readFileSync(join(__dirname, '../services.html'), 'utf8');
   const [, faq] = services.match(/<summary>Where does the data come from\?<\/summary><p>([^<]+)<\/p>/);
   for (const lang of ['pt', 'pt-PT', 'es', 'fr', 'de', 'ru', 'uk', 'zh', 'hi', 'ko', 'ja']) {
     i18n.setLang(lang);
     assert.notEqual(i18n.t(politicians), politicians, lang);
+    assert.notEqual(i18n.t(note), note, lang);
+    for (const label of ['Result', 'Next']) assert.notEqual(i18n.t(label), label, lang);
     assert.notEqual(i18n.t(faq), faq, lang);
     assert.match(i18n.t(faq), /Google Trends/);
     assert.match(i18n.t(faq), /MusicBrainz/);
@@ -63,6 +67,9 @@ test('politicians tab and current services data-source FAQ have translations in 
   assert.equal(i18n.t('Contact'), 'Contacto');
   assert.match(i18n.t('Download the sample (PDF)'), /^Descarregar/);
   assert.equal(i18n.t(politicians), 'Políticos em destaque');
+  assert.match(i18n.t(note), /^Mais mencionados nas manchetes/);
+  assert.equal(i18n.t('Result'), 'Resultado');
+  assert.equal(i18n.t('Norway'), 'Noruega');
   assert.match(i18n.t(faq), /^Só dados abertos\..*registos diários/);
   assert.equal(i18n.t(''), '');
   assert.equal(i18n.t('Like Polling'), 'Like Polling');
@@ -131,4 +138,46 @@ test('search localizes chart dates and exposes only score and change labels for 
   i18n.lang = 'en';
   events['lp:lang']();
   assert.equal(date.textContent, 'Aug 2026');
+});
+
+test('country headings and match statuses can translate without changing provider data', async () => {
+  const country = { name: 'Norway', cat: 'country', description: 'country in Northern Europe' };
+  const club = {
+    name: 'Benfica', cat: 'sport', key_stats: {
+      kind: 'club', source: 'TheSportsDB', link: 'https://example.test',
+      tiles: [{ label: 'League', value: 'Portuguese Primeira Liga' }],
+      list: { label: 'Latest and next matches', items: [
+        { title: 'Benfica 2–1 Porto', sub: 'Result · Portuguese Primeira Liga' },
+        { title: 'Benfica vs Porto', sub: 'Next · Portuguese Primeira Liga' },
+      ] },
+    },
+  };
+  async function render(data) {
+    const page = {
+      querySelector: (selector) => selector === '.lps-bar' ? { firstElementChild: {} } : null,
+      querySelectorAll: () => [],
+    };
+    runInNewContext(script, {
+      document: {
+        querySelector: () => null,
+        getElementById: (id) => id === 'lps-page' ? page : null,
+        documentElement: { classList: { contains: () => true } },
+        addEventListener() {},
+      },
+      location: { pathname: '/s', search: '?find=' + data.name },
+      window: {},
+      URLSearchParams,
+      fetch: async () => ({ ok: true, json: async () => data }),
+      setInterval() {},
+      clearInterval() {},
+      requestAnimationFrame() {},
+      matchMedia: () => ({ matches: true }),
+    });
+    await new Promise(setImmediate);
+    return page.innerHTML;
+  }
+  assert.match(await render(country), /<h1>Norway<\/h1><p data-no-i18n>country in Northern Europe<\/p>/);
+  const matches = await render(club);
+  assert.match(matches, /<b data-no-i18n>Benfica 2–1 Porto<\/b><span>Result<span data-no-i18n> · Portuguese Primeira Liga<\/span><\/span>/);
+  assert.match(matches, /<b data-no-i18n>Benfica vs Porto<\/b><span>Next<span data-no-i18n> · Portuguese Primeira Liga<\/span><\/span>/);
 });

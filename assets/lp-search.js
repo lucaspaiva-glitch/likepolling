@@ -187,7 +187,11 @@
     const fmt = (y) => (k.series.unit === 'usd' ? money(y) : k.series.unit === 'pct' ? `${y}%` : statValue({ unit: 'price', value: y, currency: k.series.currency }));
     const series = pts.length >= 3 ? `<h3>${esc(k.series.label)}</h3><div class="lps-cols lps-kcols" role="list">${pts.map((p) => `<button type="button" role="listitem" class="${p.y < 0 ? 'neg' : ''}" data-tip="${esc(p.x)}: ${esc(fmt(p.y))}" style="--h:${Math.max(2, Math.round((Math.abs(p.y) / max) * 100))}%"><i></i><span data-no-i18n>’${esc(String(p.x).slice(-2))}</span></button>`).join('')}</div>
       <p class="lps-tip" aria-live="polite" data-no-i18n>${esc(pts[pts.length - 1].x)}: ${esc(fmt(pts[pts.length - 1].y))}</p>${pts.some((p) => p.y < 0) ? '<p class="lps-sub">Grey bars are years below zero. Tap a year.</p>' : ''}` : '';
-    const list = k.list && k.list.items.length ? `<h3>${esc(k.list.label)}</h3><ul class="lps-news lps-klist" data-no-i18n>${k.list.items.map((x) => `<li><b>${esc(x.title)}</b>${x.sub ? `<span>${esc(x.sub)}</span>` : ''}</li>`).join('')}</ul>` : '';
+    const list = k.list && k.list.items.length ? `<h3>${esc(k.list.label)}</h3><ul class="lps-news lps-klist">${k.list.items.map((x) => {
+      const match = k.kind === 'club' && /^(Result|Next)( · .+)$/.exec(x.sub);
+      const sub = match ? `<span>${match[1]}<span data-no-i18n>${esc(match[2])}</span></span>` : x.sub ? `<span data-no-i18n>${esc(x.sub)}</span>` : '';
+      return `<li><b data-no-i18n>${esc(x.title)}</b>${sub}</li>`;
+    }).join('')}</ul>` : '';
     return `<section class="lps-card lps-facts lps-key" style="--cat:${c.color}"><h2>${(STAT_TITLE[k.kind] || STAT_TITLE.company)(n)}</h2>
       <p class="lps-sub">${k.owner ? `Numbers for ${esc(k.owner)}, the company that owns ${n}. ` : ''}Source: <span data-no-i18n>${sources}</span></p>
       ${tiles}${sp}${series}${list}</section>`;
@@ -205,7 +209,7 @@
     const where = a.world && a.world.length >= 2 ? `<section class="lps-card"><h2>Where do people search for ${esc(name)}?</h2><p class="lps-sub">Google searches by country, last 12 months. 100 = the country that searches it most for its size.</p>${bars(a.world, (r) => r.name, (r) => r.value, '', true)}</section>` : '';
     const news = a.headlines && a.headlines.length ? `<section class="lps-card"><h2>What’s in the news?</h2><p class="lps-sub">The latest headlines that name ${esc(name)} (Google News).</p>
       <ul class="lps-news" data-no-i18n>${a.headlines.map((h) => `<li><a href="${esc(h.link)}" target="_blank" rel="noopener"><b>${esc(h.title)}</b><span>${esc(h.source)}${h.day ? ` · ${dayLabel(h.day)}` : ''}</span></a></li>`).join('')}</ul></section>` : '';
-    const headCard = `<section class="lps-card" style="--cat:${c.color}"><div class="lps-prof">${img}<div class="lps-who"><div class="lps-tags"><span class="lps-tag">${c.label}</span></div><h1 data-no-i18n>${esc(name)}</h1><p data-no-i18n>${esc(a.description)}</p>${a.website ? `<p class="lps-site"><a href="${esc(a.website)}" target="_blank" rel="noopener">Official website ↗</a></p>` : ''}</div></div></section>`;
+    const headCard = `<section class="lps-card" style="--cat:${c.color}"><div class="lps-prof">${img}<div class="lps-who"><div class="lps-tags"><span class="lps-tag">${c.label}</span></div><h1${a.cat === 'country' ? '' : ' data-no-i18n'}>${esc(name)}</h1><p data-no-i18n>${esc(a.description)}</p>${a.website ? `<p class="lps-site"><a href="${esc(a.website)}" target="_blank" rel="noopener">Official website ↗</a></p>` : ''}</div></div></section>`;
     return `${headCard}
       ${statsHtml(a.key_stats, c, name)}${g ? chart(g.months || [], name, searchStats(g, a.world)) : ''}${where}${news}`;
   }
