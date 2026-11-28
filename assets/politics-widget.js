@@ -21,7 +21,7 @@
       const paint = () => {
         body.innerHTML = `<div class="lp-pol-sw"><button type="button" data-d="-1" aria-label="${esc(tr('Previous country'))}">‹</button><b><img src="/assets/flags/${cc.toLowerCase()}.svg" alt="" width="18" height="13"><span data-no-i18n>${esc(region(cc))}</span></b><button type="button" data-d="1" aria-label="${esc(tr('Next country'))}">›</button></div>
           <ol class="lp-pol-list" data-no-i18n>${by[cc].map((p) => `<li><a href="/s?find=${encodeURIComponent(p.wiki_title || p.name)}"><em>${p.rank}</em><span><b>${esc(p.name)}</b></span><i>${p.headlines}</i></a></li>`).join('')}</ol>
-          <p class="lp-pol-note">${esc(tr('Named in the most top news headlines, last 7 days. The number is how many headlines.'))}</p>`;
+          <p class="lp-pol-note">Named in the most top news headlines, last 7 days. The number is how many headlines.</p>`;
       };
       body.addEventListener('click', (e) => {
         const b = e.target.closest('button[data-d]'); if (!b) return;
