@@ -689,7 +689,17 @@
     ' channel.': ['.', '.', '-Kanal.', '.', '.', ' 채널을 검색하세요.', 'チャンネルを検索。', ".", "频道。", " चैनल।"],
     ' YouTube': [" YouTube", " YouTube", " auf YouTube", " YouTube", " YouTube", " (YouTube)", " (YouTube)", " YouTube", " YouTube", " YouTube"],
   };
-  const PT_COUNTRY_OF = new Map([['Brazil', 'do'], ['Norway', 'da']]);
+  const PT_COUNTRY_OF = Object.fromEntries(Object.entries({
+    do: 'AF AZ BH BI BJ BN BR BT BW CA CD CL EC EG GA GB HT IO IQ IR JP KE KG KH KW KZ LA LB LS ML MW MX NE NP PA PE PK PY QA SD SN SR SS TD TG TJ TM UY UZ VN XK YE ZW',
+    da: 'AL AM AQ AR AS AT AU BA BE BG BO BV BY CF CH CI CN CO CR CX CZ DE DK DM DO DZ EE EH ER ES ET FI FM FR GE GF GL GM GN GQ GR GT GW GY HR HU ID IE IM IN IS IT JM JO KP KR LR LT LV LY MD MK MN MQ MR MY NA NC NF NG NI NO NZ PF PG PL RE RO RS RU SA SE SI SK SO SY TH TN TR TW TZ UA VA VE WS ZA ZM',
+    dos: 'AE BQ CM NL PS TF US',
+    das: 'BM BS CC CK FK FO GS HM KM KY MH MP MV PH PN SB SC TC UM VG VI',
+    de: 'AD AG AI AO AW BB BD BF BL BZ CU CV CW CY DJ FJ GD GG GH GI GP GU HK HN IL JE KI KN LC LI LK LU MA MC ME MF MG MM MO MS MT MU MZ NR NU OM PM PR PT PW RW SG SH SJ SL SM ST SV SX SZ TK TL TO TT TV UG VC VU WF YT',
+  }).flatMap(([of, codes]) => codes.split(' ').map((code) => [code, of])));
+  const PT_COUNTRY_OF_BY_LOCALE = {
+    pt: { AX: 'das', CG: 'da', CY: 'do', DJ: 'do', LK: 'do' },
+    'pt-PT': { AX: 'de', CG: 'do' },
+  };
   const PATTERNS = [
     [/^As of (\d\d:\d\d) UTC$/, ["Às $1 UTC", "A las $1 UTC", "Stand $1 UTC", "На $1 UTC", "Станом на $1 UTC", "$1 UTC 기준", "$1 UTC時点", "À $1 UTC", "$1 UTC 时", "$1 UTC तक"]],
     [/^Updated (.+)$/, ["Atualizado: $1", "Actualizado: $1", "Aktualisiert: $1", "Обновлено: $1", "Оновлено: $1", "업데이트: $1", "更新：$1", "Mis à jour : $1", "更新于：$1", "अपडेट किया गया: $1"], localDate],
@@ -704,7 +714,8 @@
     [/^(.+)’s economy in numbers$/, ["A economia $1 em números", "La economía de $1 en cifras", "Die Wirtschaft von $1 in Zahlen", "$1: экономика в цифрах", "$1: економіка в цифрах", "숫자로 보는 $1 경제", "数字で見る$1の経済", "L'économie de $1 en chiffres", "数字看 $1 经济", "आँकड़ों में $1 की अर्थव्यवस्था"], (name, lang) => {
       const localized = country(name, lang) ?? name;
       if (lang !== 'pt' && lang !== 'pt-PT') return localized;
-      return `${PT_COUNTRY_OF.get(name) ?? 'de'} ${localized}`;
+      const code = countryCode[name];
+      return `${PT_COUNTRY_OF_BY_LOCALE[lang][code] ?? PT_COUNTRY_OF[code] ?? 'de'} ${localized}`;
     }],
     [/^(.+)’s music in numbers$/, ["A música de $1 em números", "La música de $1 en cifras", "Die Musik von $1 in Zahlen", "$1: музыка в цифрах", "$1: музика в цифрах", "숫자로 보는 $1의 음악", "数字で見る$1の音楽", "La musique de $1 en chiffres", "数字看 $1 的音乐", "आँकड़ों में $1 का संगीत"]],
     [/^(.+) on the pitch$/, ["$1 em campo", "$1 en el campo", "$1 auf dem Platz", "$1 на поле", "$1 на полі", "경기장 위의 $1", "ピッチ上の$1", "$1 sur le terrain", "$1 场上表现", "मैदान पर $1"]],
@@ -895,9 +906,9 @@
     for (let a = 65; a <= 90; a++) for (let b = 65; b <= 90; b++) {
       const code = String.fromCharCode(a, b);
       const name = en.of(code);
-      if (name && name !== code) countryCode[name] = code;
+      if (name && name !== code) countryCode[name] = Intl.getCanonicalLocales(`und-${code}`)[0].slice(-2);
     }
-    Object.assign(countryCode, { Turkey: 'TR', 'Türkiye': 'TR', 'South Korea': 'KR', Russia: 'RU', Vietnam: 'VN', 'Czech Republic': 'CZ' });
+    Object.assign(countryCode, { Turkey: 'TR', 'Türkiye': 'TR', 'South Korea': 'KR', 'Republic of Korea': 'KR', Russia: 'RU', Vietnam: 'VN', 'Czech Republic': 'CZ', 'United States of America': 'US' });
   } catch (e) { /* older browsers: country names stay in English */ }
   const regionNames = {};
   function country(name, lang) {
