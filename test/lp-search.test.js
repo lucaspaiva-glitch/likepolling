@@ -4,6 +4,8 @@ const assert = require('node:assert/strict');
 const { readFileSync } = require('node:fs');
 const { join } = require('node:path');
 const { runInNewContext } = require('node:vm');
+const { MAIN } = require('../lib/countries');
+const { COUNTRIES } = require('../lib/report');
 
 const script = readFileSync(join(__dirname, '../assets/lp-search.js'), 'utf8');
 const i18nScript = readFileSync(join(__dirname, '../assets/i18n.js'), 'utf8');
@@ -40,9 +42,30 @@ test('Brazil sample country labels use the Portuguese country name and grammar',
     assert.equal(window.LP_I18N.t('Brazil'), 'Brasil');
     assert.equal(window.LP_I18N.t('Brazil’s economy in numbers'), 'A economia do Brasil em números');
     assert.equal(window.LP_I18N.t('Portugal’s economy in numbers'), 'A economia de Portugal em números');
+    assert.equal(window.LP_I18N.t('Norway’s economy in numbers'), 'A economia da Noruega em números');
   }
   window.LP_I18N.setLang('en');
   assert.equal(window.LP_I18N.t('Brazil’s economy in numbers'), 'Brazil’s economy in numbers');
+  assert.equal(window.LP_I18N.t('Norway’s economy in numbers'), 'Norway’s economy in numbers');
+});
+
+test('Portuguese economy headings use the contraction for each report and World News country', () => {
+  const { LP_I18N: i18n } = loadI18n();
+  const expected = {
+    BR: 'do Brasil', CN: 'da China', DE: 'da Alemanha', ES: 'da Espanha', FR: 'da França',
+    GB: 'do Reino Unido', IN: 'da Índia', JP: 'do Japão', KR: 'da Coreia do Sul', MX: 'do México',
+    PT: 'de Portugal', RU: 'da Rússia', UA: 'da Ucrânia', US: 'dos Estados Unidos',
+    IL: 'de Israel', NL: 'dos Países Baixos', PH: 'das Filipinas', SG: 'de Singapura',
+  };
+  const en = new Intl.DisplayNames('en', { type: 'region' });
+  for (const lang of ['pt', 'pt-PT']) {
+    i18n.setLang(lang);
+    for (const code of new Set([...MAIN, ...COUNTRIES, 'IL', 'NL', 'PH', 'SG'])) {
+      assert.equal(i18n.t(`${en.of(code)}’s economy in numbers`), `A economia ${expected[code]} em números`, `${lang}: ${code}`);
+    }
+    assert.equal(i18n.t('United States of America’s economy in numbers'), 'A economia dos Estados Unidos em números');
+    assert.equal(i18n.t('Atlantis’s economy in numbers'), 'A economia de Atlantis em números');
+  }
 });
 
 test('politicians tab and current services data-source FAQ have translations in all locales', () => {
