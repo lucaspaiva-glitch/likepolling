@@ -689,6 +689,7 @@
     ' channel.': ['.', '.', '-Kanal.', '.', '.', ' 채널을 검색하세요.', 'チャンネルを検索。', ".", "频道。", " चैनल।"],
     ' YouTube': [" YouTube", " YouTube", " auf YouTube", " YouTube", " YouTube", " (YouTube)", " (YouTube)", " YouTube", " YouTube", " YouTube"],
   };
+  const PT_COUNTRY_OF = new Map([['Brazil', 'do'], ['Norway', 'da']]);
   const PATTERNS = [
     [/^As of (\d\d:\d\d) UTC$/, ["Às $1 UTC", "A las $1 UTC", "Stand $1 UTC", "На $1 UTC", "Станом на $1 UTC", "$1 UTC 기준", "$1 UTC時点", "À $1 UTC", "$1 UTC 时", "$1 UTC तक"]],
     [/^Updated (.+)$/, ["Atualizado: $1", "Actualizado: $1", "Aktualisiert: $1", "Обновлено: $1", "Оновлено: $1", "업데이트: $1", "更新：$1", "Mis à jour : $1", "更新于：$1", "अपडेट किया गया: $1"], localDate],
@@ -703,7 +704,7 @@
     [/^(.+)’s economy in numbers$/, ["A economia $1 em números", "La economía de $1 en cifras", "Die Wirtschaft von $1 in Zahlen", "$1: экономика в цифрах", "$1: економіка в цифрах", "숫자로 보는 $1 경제", "数字で見る$1の経済", "L'économie de $1 en chiffres", "数字看 $1 经济", "आँकड़ों में $1 की अर्थव्यवस्था"], (name, lang) => {
       const localized = country(name, lang) ?? name;
       if (lang !== 'pt' && lang !== 'pt-PT') return localized;
-      return name === 'Brazil' ? `do ${localized}` : `de ${localized}`;
+      return `${PT_COUNTRY_OF.get(name) ?? 'de'} ${localized}`;
     }],
     [/^(.+)’s music in numbers$/, ["A música de $1 em números", "La música de $1 en cifras", "Die Musik von $1 in Zahlen", "$1: музыка в цифрах", "$1: музика в цифрах", "숫자로 보는 $1의 음악", "数字で見る$1の音楽", "La musique de $1 en chiffres", "数字看 $1 的音乐", "आँकड़ों में $1 का संगीत"]],
     [/^(.+) on the pitch$/, ["$1 em campo", "$1 en el campo", "$1 auf dem Platz", "$1 на поле", "$1 на полі", "경기장 위의 $1", "ピッチ上の$1", "$1 sur le terrain", "$1 场上表现", "मैदान पर $1"]],

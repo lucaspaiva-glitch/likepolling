@@ -40,9 +40,11 @@ test('Brazil sample country labels use the Portuguese country name and grammar',
     assert.equal(window.LP_I18N.t('Brazil'), 'Brasil');
     assert.equal(window.LP_I18N.t('Brazil’s economy in numbers'), 'A economia do Brasil em números');
     assert.equal(window.LP_I18N.t('Portugal’s economy in numbers'), 'A economia de Portugal em números');
+    assert.equal(window.LP_I18N.t('Norway’s economy in numbers'), 'A economia da Noruega em números');
   }
   window.LP_I18N.setLang('en');
   assert.equal(window.LP_I18N.t('Brazil’s economy in numbers'), 'Brazil’s economy in numbers');
+  assert.equal(window.LP_I18N.t('Norway’s economy in numbers'), 'Norway’s economy in numbers');
 });
 
 test('politicians tab and current services data-source FAQ have translations in all locales', () => {
